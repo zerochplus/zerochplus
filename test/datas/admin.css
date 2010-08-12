@@ -1,0 +1,125 @@
+/*------------------------------------------------------------------------------
+	基本
+ *------------------------------------------------------------------------------*/
+BODY{
+	margin:5px;
+}
+
+td{
+	font-size:12px;
+}
+
+th{
+	font-size:12px;
+}
+
+A{
+	color:steelblue;
+}
+
+/*------------------------------------------------------------------------------
+	ヘッダ
+ *------------------------------------------------------------------------------*/
+div.MainHead{
+	vertical-align:middle;
+	background-color:darkslateblue;
+	font-family:Arial;
+	font-size:20px;
+	color:#ffffff;
+	padding-right:20px;
+	padding-top:5px;
+	padding-bottom:5px;
+}
+
+/*------------------------------------------------------------------------------
+	システムメニュー
+ *------------------------------------------------------------------------------*/
+div.MainMenu{
+	background-color:#ffffff;
+	font-family:Arial;
+	font-size:12px;
+	height:20px;
+}
+
+/*------------------------------------------------------------------------------
+	フッタ
+ *------------------------------------------------------------------------------*/
+div.MainFoot{
+	background-color:white;
+	font-family:Arial;
+	font-size:12px;
+	border-style:solid;
+	border-color:black;
+	border-width:1px 0px 0px 0px;
+	padding-top:3px;
+	color:#336666;
+}
+
+/*------------------------------------------------------------------------------
+	フッタ
+ *------------------------------------------------------------------------------*/
+TD.Content{
+	padding-top:10px;
+}
+
+/*------------------------------------------------------------------------------
+	機能メニューリスト
+ *------------------------------------------------------------------------------*/
+TD.FunctionList{
+	background-color:whitesmoke;
+	font-family:Arial;
+	font-size:12px;
+	padding-top:10px;
+	padding-bottom:10px;
+	padding-left:5px;
+	padding-right:5px;
+	layout-grid-line:10px;
+}
+
+/*------------------------------------------------------------------------------
+	機能ブロック
+ *------------------------------------------------------------------------------*/
+TD.Function{
+	background-color:white;
+	font-size:12px;
+	padding-left:10px;
+	padding-top:10px;
+}
+
+/*------------------------------------------------------------------------------
+	機能タイトル
+ *------------------------------------------------------------------------------*/
+div.FuncTitle{
+	vertical-align:middle;
+	background-color:white;
+	border-style:solid;
+	border-color:black;
+	border-width:1px;
+	padding-left:2px;
+	font-family:Arial;
+	font-size:18px;
+	height:26px;
+}
+
+/*------------------------------------------------------------------------------
+	機能詳細タイトル
+ *------------------------------------------------------------------------------*/
+TD.DetailTitle{
+	font-family:Arial;
+	font-size:12px;
+	font-weight:bold;
+	border-width:0px 0px 1px 0px;
+	border-color:silver;
+	border-style:solid;
+	background-color:#efefef;
+}
+
+/*------------------------------------------------------------------------------
+	レス表示
+ *------------------------------------------------------------------------------*/
+TD.Response{
+	font-size:12px;
+	border-width:0px 0px 1px 0px;
+	border-color:silver;
+	border-style:solid;
+}
