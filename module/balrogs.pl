@@ -19,8 +19,8 @@ package	BALROGS;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj);
+	my $this = shift;
+	my ($obj);
 	
 	$obj = {
 		'SYS'		=> undef,
@@ -28,7 +28,7 @@ sub new
 		'SEARCHSET'	=> undef,
 		'RESULTSET'	=> undef
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -48,68 +48,68 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Create
 {
-	my		$this = shift;
-	my		($SYS,$mode,$type,$bbs,$thread) = @_;
-	my		($pSearchSet);
+	my $this = shift;
+	my ($SYS, $mode, $type, $bbs, $thread) = @_;
+	my ($pSearchSet);
 	
-	$this->{'SYS'}	= $SYS;
-	$this->{'TYPE'}	= $type;
-	undef(@{$this->{'SEARCHSET'}});
+	$this->{'SYS'} = $SYS;
+	$this->{'TYPE'} = $type;
+	undef @{$this->{'SEARCHSET'}};
 	$pSearchSet = $this->{'SEARCHSET'};
 	
 	# 鯖内全検索
-	if	($mode == 0){
-		require('./module/baggins.pl');
-		require('./module/nazguls.pl');
-		my	$BBSs		= new NAZGUL;
-		my	$Threads	= new BILBO;
-		my	(@bbsSet,@threadSet,$bbsID,$threadID,$set);
+	if ($mode == 0) {
+		require './module/baggins.pl';
+		require './module/nazguls.pl';
+		my $BBSs = new NAZGUL;
+		my $Threads = new BILBO;
+		my (@bbsSet, @threadSet, $bbsID, $threadID, $set);
 		
 		$BBSs->Load($SYS);
-		$BBSs->GetKeySet('ALL','',\@bbsSet);
+		$BBSs->GetKeySet('ALL', '', \@bbsSet);
 		
-		foreach	$bbsID (@bbsSet){
-			$dir = $BBSs->Get('DIR',$bbsID);
+		foreach $bbsID (@bbsSet) {
+			$dir = $BBSs->Get('DIR', $bbsID);
 			
-			$SYS->Set('BBS',$dir);
+			$SYS->Set('BBS', $dir);
 			$Threads->Load($SYS);
-			$Threads->GetKeySet('ALL','',\@threadSet);
+			$Threads->GetKeySet('ALL', '', \@threadSet);
 			
-			foreach	$threadID (@threadSet){
+			foreach $threadID (@threadSet) {
 				$set = "$dir<>$threadID";
-				push(@$pSearchSet,$set);
+				push @$pSearchSet, $set;
 			}
-			undef(@threadSet);
+			undef @threadSet;
 		}
 	}
 	# 掲示板内全検索
-	elsif	($mode == 1){
-		require('./module/baggins.pl');
-		my	$Threads = new BILBO;
-		my	(@threadSet,$threadID,$set);
+	elsif ($mode == 1) {
+		require './module/baggins.pl';
+		my $Threads = new BILBO;
+		my (@threadSet, $threadID, $set);
 		
-		$SYS->Set('BBS',$bbs);
+		$SYS->Set('BBS', $bbs);
 		$Threads->Load($SYS);
-		$Threads->GetKeySet('ALL','',\@threadSet);
+		$Threads->GetKeySet('ALL', '', \@threadSet);
 		
-		foreach	$threadID (@threadSet){
+		foreach $threadID (@threadSet) {
 			$set = "$bbs<>$threadID";
-			push(@$pSearchSet,$set);
+			push @$pSearchSet, $set;
 		}
 	}
 	# スレッド内全検索
-	elsif	($mode == 2){
+	elsif ($mode == 2) {
 		$set = "$bbs<>$thread";
-		push(@$pSearchSet,$set);
+		push @$pSearchSet, $set;
 	}
 	# 指定がおかすぃ
-	else{
+	else {
 		return;
 	}
 	
 	# datモジュール読み込み
-	if	($this->{'ARAGORN'} eq undef){
-		require('./module/gondor.pl');
+	if ($this->{'ARAGORN'} eq undef) {
+		require './module/gondor.pl';
 		$this->{'ARAGORN'} = new ARAGORN;
 	}
 }
@@ -125,17 +125,17 @@ sub Create
 #------------------------------------------------------------------------------------------------------------
 sub Run
 {
-	my		$this = shift;
-	my		($word,$f) = @_;
-	my		($pSearchSet,$bbs,$key);
+	my $this = shift;
+	my ($word, $f) = @_;
+	my ($pSearchSet, $bbs, $key);
 	
 	$pSearchSet = $this->{'SEARCHSET'};
 	
-	foreach	(@$pSearchSet){
-		($bbs,$key) = split(/<>/);
-		$this->{'SYS'}->Set('BBS',$bbs);
-		$this->{'SYS'}->Set('KEY',$key);
-		Search($this,$word);
+	foreach (@$pSearchSet) {
+		($bbs, $key) = split(/<>/, $_);
+		$this->{'SYS'}->Set('BBS', $bbs);
+		$this->{'SYS'}->Set('KEY', $key);
+		Search($this, $word);
 	}
 	return($this->{'RESULTSET'});
 }
@@ -150,7 +150,7 @@ sub Run
 #------------------------------------------------------------------------------------------------------------
 sub GetResultSet
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	return($this->{'RESULTSET'});
 }
@@ -166,46 +166,46 @@ sub GetResultSet
 #------------------------------------------------------------------------------------------------------------
 sub Search
 {
-	my		($this,$word) = @_;
-	my		($pDAT,$pResultSet,$SetStr);
-	my		($bbs,$key,$i,$bFind);
+	my ($this, $word) = @_;
+	my ($pDAT, $pResultSet, $SetStr);
+	my ($bbs, $key, $i, $bFind);
 	
 	$bbs	= $this->{'SYS'}->Get('BBS');
 	$key	= $this->{'SYS'}->Get('KEY');
 	$Path	= $this->{'SYS'}->Get('BBSPATH') . "/$bbs/dat/$key.dat";
 	
-	if	($this->{'ARAGORN'}->Load($this->{'SYS'},$Path,1)){
-		$pResultSet	= $this->{'RESULTSET'};
-		$bFind		= 0;
+	if ($this->{'ARAGORN'}->Load($this->{'SYS'}, $Path, 1)) {
+		$pResultSet = $this->{'RESULTSET'};
+		$bFind = 0;
 		# すべてのレス数でループ
-		for	($i = 0;$i < $this->{'ARAGORN'}->Size();$i++){
+		for ($i = 0 ; $i < $this->{'ARAGORN'}->Size() ; $i++) {
 			$pDat = $this->{'ARAGORN'}->Get($i);
-			@elem = split(/<>/,$$pDat);
+			@elem = split(/<>/, $$pDat);
 			# 名前検索
-			if	($this->{'TYPE'} == 0 || $this->{'TYPE'} & 1){
-				if	(index($elem[0],$word) > -1){
+			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 1) {
+				if (index($elem[0], $word) > -1) {
 					$elem[0] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
 					$bFind = 1;
 				}
 			}
 			# 本文検索
-			if	($this->{'TYPE'} == 0 || $this->{'TYPE'} & 2){
-				if	(index($elem[3],$word) > -1){
+			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 2) {
+				if (index($elem[3], $word) > -1) {
 					$elem[3] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
 					$bFind = 1;
 				}
 			}
 			# ID or 日付検索
-			if	($this->{'TYPE'} == 0 || $this->{'TYPE'} & 4){
-				if	(index($elem[2],$word) > -1){
+			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 4) {
+				if (index($elem[2], $word) > -1) {
 					$elem[2] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
 					$bFind = 1;
 				}
 			}
-			if	($bFind){
-				$SetStr = "$bbs<>$key<>" . ($i + 1) . "<>";
-				$SetStr .= join('<>',@elem);
-				push(@$pResultSet,$SetStr);
+			if ($bFind) {
+				$SetStr = "$bbs<>$key<>" . ($i + 1) . '<>';
+				$SetStr .= join('<>', @elem);
+				push @$pResultSet, $SetStr;
 			}
 			$bFind = 0;
 		}

@@ -27,25 +27,25 @@ exit(TrackBackCGI());
 #------------------------------------------------------------------------------------------------------------
 sub TrackBackCGI
 {
-	my	($sys,$form,$bbs,$thread,$res);
+	my ($sys, $form, $bbs, $thread, $res);
 	
 	# PATHINFOの解析
-	($bbs,$thread,$res) = getPathInfo();
+	($bbs, $thread, $res) = getPathInfo();
 	
 	# post情報の解析
-	require('./module/samwise.pl');
+	require './module/samwise.pl';
 	$form = new SAMWISE;
 	$form->DecodeForm(1);
 	
-	require('./module/melkor.pl');
+	require './module/melkor.pl';
 	$sys = new MELKOR;
 	$sys->Init();
 	
 	#---------------------------------------------------------------------------
 	# RSSモード
-	if($form->Equal('__mode','rss')){
+	if ($form->Equal('__mode', 'rss')) {
 		# PATH_INFOのチェック
-		if($bbs eq ''){
+		if ($bbs eq '') {
 			sendTBResponse(1);
 			return -2;
 		}
@@ -53,23 +53,24 @@ sub TrackBackCGI
 	}
 	#---------------------------------------------------------------------------
 	# トラックバックモード
-	else{
+	else {
 		# PATH_INFOのチェック
-		if(($bbs eq '') || ($thread eq '')){
+		if ($bbs eq '' || $thread eq '') {
 			sendTBResponse(1);
 			return -1;
 		}
 		
 		# 受信情報をチェック
-		if($form->Equal('url','')){
+		if ($form->Equal('url', '')) {
 			sendTBResponse(1);
 			return -10;
 		}
 		
 		# datの更新
-		if(updateResponse($sys,$form,$bbs,$thread,$res) == 0){
+		if (updateResponse($sys, $form, $bbs, $thread, $res) == 0) {
 			sendTBResponse(0);
-		}else{
+		}
+		else {
 			sendTBResponse(1);
 		}
 	}
@@ -87,8 +88,8 @@ sub TrackBackCGI
 #------------------------------------------------------------------------------------------------------------
 sub getPathInfo
 {
-	@infos = split(/\//,$ENV{'PATH_INFO'});
-	return ($infos[1],$infos[2],$infos[3]);
+	@infos = split(/\//, $ENV{'PATH_INFO'});
+	return ($infos[1], $infos[2], $infos[3]);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -101,16 +102,16 @@ sub getPathInfo
 #------------------------------------------------------------------------------------------------------------
 sub sendTBResponse
 {
-	my	($err) = @_;
-	my	($errmsg,$body);
+	my ($err) = @_;
+	my ($errmsg, $body);
 	
-	if($err != 0){
+	if ($err != 0) {
 		$errmsg = '<message>ERROR!</message>';
 	}
 	
-	$body .= "Content-type: text/html\n\n";
+	$body = "Content-type: text/html\n\n";
 	$body .= '<?xml version="1.0" encoding="iso-8859-1"?>';
-	$body .= '<response><error>' . $err . '</error>';
+	$body .= "<response><error>$err</error>";
 	$body .= $errmsg;
 	$body .= '</response>';
 	
@@ -131,47 +132,47 @@ sub sendTBResponse
 #------------------------------------------------------------------------------------------------------------
 sub updateResponse
 {
-	my	($sys,$form,$bbs,$thread,$res) = @_;
-	my	($Logger,$oBBSupport,$bbspath,$id,$ret);
+	my ($sys, $form, $bbs, $thread, $res) = @_;
+	my ($Logger, $oBBSupport, $bbspath, $id, $ret);
 	
-	if(!$form->IsExist('title')){
-		$form->Set('title','（無題）');
+	if (! $form->IsExist('title')) {
+		$form->Set('title', '（無題）');
 	}
 	
 	#---------------------------------------------------------------------------
 	# ログの書き込み
-	require('./module/galadriel.pl');
-	require('./module/imrahil.pl');
+	require './module/galadriel.pl';
+	require './module/imrahil.pl';
 	$Logger = new IMRAHIL;
-	$bbspath = $sys->Get('BBSPATH') . '/' . $bbs;
-	$id = GALADRIEL::MakeID(undef,$sys->Get('SERVER'),8);
-	$sys->Set('BBS',$bbs);
+	$bbspath = $sys->Get('BBSPATH') . "/$bbs";
+	$id = GALADRIEL::MakeID(undef, $sys->Get('SERVER'), 8);
+	$sys->Set('BBS', $bbs);
 	
-	if($Logger->Open("$bbspath/info/tb_$thread",$sys->Get('HISMAX'),2 | 4) == 0){
+	if ($Logger->Open("$bbspath/info/tb_$thread", $sys->Get('HISMAX'), 2 | 4) == 0) {
 		my @result;
-		if($Logger->search(1,$id,\@result) > 0){
+		if ($Logger->search(1, $id, \@result) > 0) {
 			$Logger->Close();
 			return -1;
 		}
-		$Logger->Put($id,$thread,$res,$form->Get('url'),$form->Get('title'));
+		$Logger->Put($id, $thread, $res, $form->Get('url'), $form->Get('title'));
 		$Logger->Write();
 		$Logger->Close();
 	}
 	
 	#---------------------------------------------------------------------------
 	# datを更新する
-	if(($ret = updateDatFile($sys,$form,$bbs,$thread,$res,$id)) != 0){
+	if (($ret = updateDatFile($sys, $form, $bbs, $thread, $res, $id)) != 0) {
 		return $ret;
 	}
 	
 	#---------------------------------------------------------------------------
 	# 掲示板の更新
-	require('./module/varda.pl');
+	require './module/varda.pl';
 	$oBBSupport = new VARDA;
 	
-	eval{
-		$sys->Set('MODE','CREATE');
-		$oBBSupport->Init($sys,undef);
+	eval {
+		$sys->Set('MODE', 'CREATE');
+		$oBBSupport->Init($sys, undef);
 		$oBBSupport->CreateIndex();
 		$oBBSupport->CreateIIndex();
 		$oBBSupport->CreateSubback();
@@ -194,32 +195,32 @@ sub updateResponse
 #------------------------------------------------------------------------------------------------------------
 sub updateDatFile
 {
-	my	($sys,$form,$bbs,$thread,$res,$id) = @_;
-	my	($ret,$bbspath,$datpath);
+	my ($sys, $form, $bbs, $thread, $res, $id) = @_;
+	my ($ret, $bbspath, $datpath);
 	
-	require('./module/gondor.pl');
-	$bbspath = $sys->Get('BBSPATH') . '/' . $bbs;
-	$datpath = $bbspath . '/dat/' . $thread . '.dat';
+	require './module/gondor.pl';
+	$bbspath = $sys->Get('BBSPATH') . "/$bbs";
+	$datpath = "$bbspath/dat/$thread.dat";
 	$ret = -1000;
 	
 	#---------------------------------------------------------------------------
 	# レス指定がある場合はレスへのトラックバック
-	if($res > 0){
+	if ($res > 0) {
 		my $Dat = new ARAGORN;
-		if($Dat->Load($sys,$datpath,0)){
-			eval{
+		if ($Dat->Load($sys, $datpath, 0)) {
+			eval {
 				my $pRes = $Dat->Get($res - 1);
-				my @elem = split(/<>/,$$pRes);
+				my @elem = split(/<>/, $$pRes);
 				
 				# 区切りがない場合は区切りを付加する
-				if(!($elem[3] =~ /<hr><small>■/)){
+				if (! ($elem[3] =~ /<hr><small>■/)) {
 					$elem[3] .= '<hr><small>■このレスへのトラックバック</small>';
 				}
 				$elem[3] .= '<br><small>[' . $form->Get('title') . '] ' . $form->Get('url') . '</small>';
 				
 				# datの保存
-				my $data = join('<>',@elem);
-				$Dat->Set($res - 1,$data);
+				my $data = join('<>', @elem);
+				$Dat->Set($res - 1, $data);
 				$Dat->Save($sys);
 			};
 			$Dat->Close();
@@ -228,24 +229,24 @@ sub updateDatFile
 	}
 	#---------------------------------------------------------------------------
 	# レス指定がない場合はスレッドへのトラックバック
-	else{
-		require('./module/galadriel.pl');
-		if(($res = ARAGORN::GetNumFromFile($datpath)) < ($sys->Get('RESMAX') - 1)){
-			my ($data,$msg);
-			my $date = GALADRIEL::GetDate(undef,undef) . ' ID:' . $id . '0';
+	else {
+		require './module/galadriel.pl';
+		if (($res = ARAGORN::GetNumFromFile($datpath)) < ($sys->Get('RESMAX') - 1)) {
+			my ($data, $msg);
+			my $date = GALADRIEL::GetDate(undef, undef) . " ID:$id0";
 			$msg .= '【トラックバック来たよ】（ver.0.10）<br>';
 			$msg .= '[タイトル] ' . $form->Get('title') . '<br>';
 			$msg .= '[発ブログ] ' . $form->Get('blog_name') . '<br>' . $form->Get('url') . '<br>';
 			$msg .= '[＝要約＝]<br>' . $form->Get('excerpt');
-			$data = 'トラックバック ★<>sage<>' . $date . '<>' . $msg . "<>\n";
+			$data = "トラックバック ★<>sage<>$date<>$msg<>\n";
 			
 			# datへ追記
-			if(ARAGORN::DirectAppend($sys,$datpath,$data) == 0){
+			if (ARAGORN::DirectAppend($sys, $datpath, $data) == 0) {
 				# subjectの更新
-				require('./module/baggins.pl');
+				require './module/baggins.pl';
 				my $threadList = new BILBO;
 				$threadList->Load($sys);
-				$threadList->Set($thread,'RES',$res + 1);
+				$threadList->Set($thread, 'RES', $res + 1);
 				$threadList->Save($sys);
 				$ret = 0;
 			}

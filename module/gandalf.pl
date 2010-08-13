@@ -6,7 +6,7 @@
 #	2004.09.11 start
 #
 #============================================================================================================
-package	GANDALF;;
+package	GANDALF;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -18,8 +18,8 @@ package	GANDALF;;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj);
+	my $this = shift;
+	my ($obj);
 	
 	$obj = {
 		'TO'		=> undef,
@@ -44,24 +44,24 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef($this->{'TO'});
-	undef($this->{'FROM'});
-	undef($this->{'SUBJECT'});
-	undef($this->{'TEXT'});
-	undef($this->{'DATE'});
+	undef $this->{'TO'};
+	undef $this->{'FROM'};
+	undef $this->{'SUBJECT'};
+	undef $this->{'TEXT'};
+	undef $this->{'DATE'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	if	(-e $path){
-		open(NOTICE,"<$path");
-		while	(<NOTICE>){
-			chomp($_);
-			@elem = split(/<>/,$_);
+	if (-e $path) {
+		open NOTICE, "< $path";
+		while (<NOTICE>) {
+			chomp $_;
+			@elem = split(/<>/, $_);
 			$this->{'TO'}->{$elem[0]}		= $elem[1];
 			$this->{'FROM'}->{$elem[0]}		= $elem[2];
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[3];
@@ -69,7 +69,7 @@ sub Load
 			$this->{'DATE'}->{$elem[0]}		= $elem[5];
 			$this->{'LIMIT'}->{$elem[0]}	= $elem[6];
 		}
-		close(NOTICE);
+		close NOTICE;
 	}
 }
 
@@ -83,30 +83,33 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	eval{
-		open(NOTICE,"+>$path");
-		flock(NOTICE,2);
-		binmode(NOTICE);
-		truncate(NOTICE,0);
-		seek(NOTICE,0,0);
-		foreach	(keys %{$this->{'TO'}}){
-			$data = $_ . '<>' . $this->{TO}->{$_};
-			$data = $data . '<>' . $this->{FROM}->{$_};
-			$data = $data . '<>' . $this->{SUBJECT}->{$_};
-			$data = $data . '<>' . $this->{TEXT}->{$_};
-			$data = $data . '<>' . $this->{DATE}->{$_};
-			$data = $data . '<>' . $this->{LIMIT}->{$_};
+	eval {
+		open NOTICE, "+>$path";
+		flock NOTICE, 2;
+		binmode NOTICE;
+		truncate NOTICE, 0;
+		seek NOTICE, 0, 0;
+		foreach (keys %{$this->{'TO'}}) {
+			$data = join('<>',
+				$_,
+				$this->{TO}->{$_},
+				$this->{FROM}->{$_},
+				$this->{SUBJECT}->{$_},
+				$this->{TEXT}->{$_},
+				$this->{DATE}->{$_},
+				$this->{LIMIT}->{$_}
+			);
 			
 			print NOTICE "$data\n";
 		}
-		close(NOTICE);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close NOTICE;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
 }
 
@@ -122,22 +125,22 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (keys(%{$this->{TO}})){
-			push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach $key (keys(%{$this->{TO}})) {
+			push @$pBuf, $key;
 			$n++;
 		}
 	}
-	else{
-		foreach	$key (keys(%{$this->{$kind}})){
-			if	(($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach $key (keys(%{$this->{$kind}})) {
+			if (($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')) {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -157,8 +160,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -176,19 +179,19 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($to,$from,$subj,$text,$limit) = @_;
-	my		($id);
+	my $this = shift;
+	my ($to, $from, $subj, $text, $limit) = @_;
+	my ($id);
 	
-	$id = time();
-	while	(exists($this->{'TO'}->{$id})){
-		$id ++;
+	$id = time;
+	while (exists $this->{'TO'}->{$id}) {
+		$id++;
 	}
 	$this->{'TO'}->{$id}		= $to;
 	$this->{'FROM'}->{$id}		= $from;
 	$this->{'SUBJECT'}->{$id}	= $subj;
 	$this->{'TEXT'}->{$id}		= $text;
-	$this->{'DATE'}->{$id}		= time();
+	$this->{'DATE'}->{$id}		= time;
 	$this->{'LIMIT'}->{$id}		= $limit;
 	
 	return $id;
@@ -206,10 +209,10 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists $this->{$kind}->{$id}) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -224,15 +227,15 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
+	my $this = shift;
+	my ($id) = @_;
 	
-	delete($this->{'TO'}->{$id});
-	delete($this->{'FROM'}->{$id});
-	delete($this->{'SUBJECT'}->{$id});
-	delete($this->{'TEXT'}->{$id});
-	delete($this->{'DATE'}->{$id});
-	delete($this->{'LIMIT'}->{$id});
+	delete $this->{'TO'}->{$id};
+	delete $this->{'FROM'}->{$id};
+	delete $this->{'SUBJECT'}->{$id};
+	delete $this->{'TEXT'}->{$id};
+	delete $this->{'DATE'}->{$id};
+	delete $this->{'LIMIT'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -246,20 +249,18 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub IsInclude
 {
-	my		$this = shift;
-	my		($id,$user) = @_;
-	my		(@users);
+	my $this = shift;
+	my ($id, $user) = @_;
+	my (@users);
 	
 	# 全体通知
-	if	($this->{'TO'}->{$id} eq '*'){
+	if ($this->{'TO'}->{$id} eq '*') {
 		return 1;
 	}
 	
-	@users = split(/\,/,$this->{'TO'}->{$id});
-	foreach	(@users){
-		if	($_ eq $user){
-			return 1;
-		}
+	@users = split(/\,/, $this->{'TO'}->{$id});
+	foreach (@users) {
+		return 1 if ($_ eq $user);
 	}
 	return 0;
 }
@@ -274,14 +275,14 @@ sub IsInclude
 #------------------------------------------------------------------------------------------------------------
 sub IsLimitOut
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		(@users);
+	my $this = shift;
+	my ($id) = @_;
+	my (@users);
 	
 	# 全体通知の場合のみ
-	if	($this->{'TO'}->{$id} eq '*'){
-		$now = time();
-		if	($now > $this->{'LIMIT'}->{$id}){
+	if ($this->{'TO'}->{$id} eq '*') {
+		$now = time;
+		if ($now > $this->{'LIMIT'}->{$id}) {
 			return 1;
 		}
 	}
@@ -299,41 +300,41 @@ sub IsLimitOut
 #------------------------------------------------------------------------------------------------------------
 sub RemoveToUser
 {
-	my		$this = shift;
-	my		($id,$user) = @_;
-	my		(@users,@news);
+	my $this = shift;
+	my ($id, $user) = @_;
+	my (@users, @news);
 	
 	# 全体通知は個別削除不可
-	if	($this->{'TO'}->{$id} eq '*'){
+	if ($this->{'TO'}->{$id} eq '*') {
 		return;
 	}
 	
-	undef(@news);
-	@users = split(/\,/,$this->{'TO'}->{$id});
+	undef @news;
+	@users = split(/\,/, $this->{'TO'}->{$id});
 	
-	foreach	(@users){
-		if	($_ ne $user){
-			push(@news,$_);
+	foreach (@users) {
+		if ($_ ne $user) {
+			push(@news, $_);
 		}
 	}
 	
 	# すべての通知先ユーザが削除されたら、その通知は破棄する
-	if	(@news == 0){
+	if (@news == 0) {
 		$this->Delete($id);
 	}
-	else{
-		$this->{'TO'}->{$id} = join(',',@news);
+	else {
+		$this->{'TO'}->{$id} = join(',', @news);
 	}
 }
 
 sub DEBUG
 {
-	my		$this = shift;
-	my		($Page) = @_;
-	my		($id);
+	my $this = shift;
+	my ($Page) = @_;
+	my ($id);
 	
 	$Page->Print("<b>DEBUG START</b><br>\n");
-	foreach	$id (keys(%{$this->{'TO'}})){
+	foreach $id (keys %{$this->{'TO'}}) {
 		$Page->Print("　 To:" . $this->{'TO'}->{$id} . "<br>\n");
 		$Page->Print("　 From:" . $this->{'FROM'}->{$id} . "<br>\n");
 		$Page->Print("　 Subject:" . $this->{'SUBJECT'}->{$id} . "<br>\n");

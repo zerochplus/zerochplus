@@ -23,14 +23,14 @@ package	ORALD;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj);
+	my $this = shift;
+	my ($obj);
 	
 	$obj = {
 		'SUBJECT' => undef,
 		'MESSAGE' => undef
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -45,24 +45,23 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($M) = @_;
-	my		(@readBuff,$path);
-	my		($err,$subj,$msg);
+	my $this = shift;
+	my ($M) = @_;
+	my (@readBuff, $path, $err, $subj, $msg);
 	
-	undef(%{$this->{'ERR'}});
-	$path = "." . $M->Get('INFO') . '/errmsg.cgi';
+	undef %{$this->{'ERR'}};
+	$path = '.' . $M->Get('INFO') . '/errmsg.cgi';
 	
-	if	(-e "$path"){																# ファイルが存在すれば
-		open(ERR,"<$path");															# ファイルオープン
+	if (-e $path) {				# ファイルが存在すれば
+		open ERR, "< $path";	# ファイルオープン
 		@readBuff = <ERR>;
-		close(ERR);
+		close ERR;
 		
-		foreach	(@readBuff){
+		foreach (@readBuff) {
 			# '#' はコメント行なので読まない
-			unless	(/^#.*/){
-				chomp($_);
-				@elem = split(/<>/,$_);
+			unless	(/^#.*/) {
+				chomp $_;
+				@elem = split(/<>/, $_);
 				$this->{'SUBJECT'}->{$elem[0]} = $elem[1];
 				$this->{'MESSAGE'}->{$elem[0]} = $elem[2];
 			}
@@ -80,8 +79,8 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($err,$kind) = @_;
+	my $this = shift;
+	my ($err, $kind) = @_;
 	
 	return $this->{$kind}->{$err};
 }
@@ -98,9 +97,9 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
-	my		$this = shift;
-	my		($Sys,$Page,$err,$mode) = @_;
-	my		($Form,$SYS,$version,$bbsPath,$message,$host);
+	my $this = shift;
+	my ($Sys, $Page, $err, $mode) = @_;
+	my ($Form, $SYS, $version, $bbsPath, $message, $host);
 	
 	$Form		= $Sys->{'FORM'};
 	$SYS		= $Sys->{'SYS'};
@@ -109,50 +108,50 @@ sub Print
 	$message	= $this->{'MESSAGE'}->{$err};
 	
 	# エラーメッセージの置換
-	while	($message =~ /{!(.*?)!}/){
-		my	$rep	= $SYS->Get($1);
-		$message	=~ s/{!$1!}/$rep/;
+	while ($message =~ /{!(.*?)!}/) {
+		my $rep = $SYS->Get($1);
+		$message =~ s/{!$1!}/$rep/;
 	}
 	
 	# リモートホストの取得
 	$host = $Form->Get('HOST');
-	if	($host eq ""){
+	if ($host eq '') {
 		$host = $Sys->{'CONV'}->GetRemoteHost();
 	}
 	
 	# エラーログを保存
 	{
-		require('./module/peregrin.pl');
-		my	$P = new PEREGRIN;
-		$P->Load($SYS,"ERR","");
-		$P->Set("",$err,$version,$host);
+		require './module/peregrin.pl';
+		my $P = new PEREGRIN;
+		$P->Load($SYS, 'ERR', '');
+		$P->Set('', $err, $version, $host);
 		$P->Save($SYS);
 	}
 	
-	if	($mode){
-		my	$subject = $this->{'SUBJECT'}->{$err};
+	if ($mode) {
+		my $subject = $this->{'SUBJECT'}->{$err};
 		$Page->Print("Content-type: text/html\n\n<html><head><title>");
 		$Page->Print("ＥＲＲＯＲ！</title></head><!--nobanner-->\n");
 		$Page->Print("<body><font color=red>ERROR:$subject</font><hr>");
 		$Page->Print("$message<hr><a href=\"$bbsPath/i/index.html\">こちら</a>");
 		$Page->Print("から戻ってください</body></html>");
 	}
-	else{
-		my	$COOKIE = $Sys->{'COOKIE'};
-		my	$oSET = $Sys->{'SET'};
-		my	($name,$mail,$msg);
+	else {
+		my $COOKIE = $Sys->{'COOKIE'};
+		my $oSET = $Sys->{'SET'};
+		my ($name, $mail, $msg);
 		
-		$name	= $Form->Get('NAME');
-		$mail	= $Form->Get('MAIL');
-		$msg	= $Form->Get('MESSAGE');
+		$name = $Form->Get('NAME');
+		$mail = $Form->Get('MAIL');
+		$msg = $Form->Get('MESSAGE');
 		
 		# cookie情報の出力
-		$COOKIE->Set('NAME',$name)	if	($oSET->Equal('BBS_NAMECOOKIE_CHECK','checked'));
-		$COOKIE->Set('MAIL',$mail)	if	($oSET->Equal('BBS_MAILCOOKIE_CHECK','checked'));
-		$COOKIE->Out($Page,$oSET->Get('BBS_COOKIEPATH'),60 * 24 * 30);
+		$COOKIE->Set('NAME', $name) if ($oSET->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+		$COOKIE->Set('MAIL', $mail) if ($oSET->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+		$COOKIE->Out($Page, $oSET->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -185,7 +184,7 @@ $msg
 </body>
 </html>
 HTML
-
+		
 	}
 }
 

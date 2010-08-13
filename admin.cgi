@@ -21,46 +21,46 @@ exit(AdminCGI());
 #------------------------------------------------------------------------------------------------------------
 sub AdminCGI
 {
-	my		($Sys,$Form,%SYS);
-	my		($oModule,$modName,$userID);
+	my ($Sys, $Form, %SYS);
+	my ($oModule, $modName, $userID);
 	
 	# システム初期設定
 	SystemSetting(\%SYS);
 	
 	# 0chシステム情報を取得
-	require("$SYS{'MAINCGI'}/module/melkor.pl");
+	require "$SYS{'MAINCGI'}/module/melkor.pl";
 	$Sys = new MELKOR;
 	$Sys->Init();
-	$Sys->Set('ADMIN',\%SYS);
+	$Sys->Set('ADMIN', \%SYS);
 	$SYS{'SECINFO'}->Init($Sys);
 	
 	# フォーム情報を取得
-	require("$SYS{'MAINCGI'}/module/samwise.pl");
+	require "$SYS{'MAINCGI'}/module/samwise.pl";
 	$Form = new SAMWISE;
 	$Form->DecodeForm(0);
 	
 	# ログインユーザ設定
-	$userID	= $SYS{'SECINFO'}->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+	$userID	= $SYS{'SECINFO'}->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 	$SYS{'USER'} = $userID;
 	
 	# 処理モジュール名を取得
 	$modName = $Form->Get('MODULE') eq '' ? 'login' : $Form->Get('MODULE');
 	
 	# 処理モジュールオブジェクトの生成
-	require("./mordor/$modName.pl");
+	require "./mordor/$modName.pl";
 	$oModule = new MODULE;
 	
 	# 表示モード
-	if		($Form->Get('MODE') eq 'DISP'){
-		$oModule->DoPrint($Sys,$Form,\%SYS);
+	if ($Form->Get('MODE') eq 'DISP') {
+		$oModule->DoPrint($Sys, $Form, \%SYS);
 	}
 	# 機能モード
-	elsif	($Form->Get('MODE') eq 'FUNC'){
-		$oModule->DoFunction($Sys,$Form,\%SYS);
+	elsif ($Form->Get('MODE') eq 'FUNC') {
+		$oModule->DoFunction($Sys, $Form, \%SYS);
 	}
 	# ログイン
-	else{
-		$oModule->DoPrint($Sys,$Form,\%SYS);
+	else {
+		$oModule->DoPrint($Sys, $Form, \%SYS);
 	}
 	$SYS{'LOGGER'}->Write();
 	
@@ -77,22 +77,22 @@ sub AdminCGI
 #------------------------------------------------------------------------------------------------------------
 sub SystemSetting
 {
-	my		($pSYS) = @_;
+	my ($pSYS) = @_;
 	
 	%$pSYS = (
-		'MAINCGI'	=> '../test',		# cgi設置パス(未対応)
-		'SECINFO'	=> undef,			# セキュリティ情報
-		'LOGGER'	=> undef,			# ログオブジェクト
-		'AD_BBS'	=> undef,			# BBS情報オブジェクト
-		'AD_DAT'	=> undef,			# dat情報オブジェクト
-		'USER'		=> undef			# ログインユーザID
+		'MAINCGI'	=> '../test',	# cgi設置パス(未対応)
+		'SECINFO'	=> undef,		# セキュリティ情報
+		'LOGGER'	=> undef,		# ログオブジェクト
+		'AD_BBS'	=> undef,		# BBS情報オブジェクト
+		'AD_DAT'	=> undef,		# dat情報オブジェクト
+		'USER'		=> undef		# ログインユーザID
 	);
 	
-	require('./module/elves.pl');
-	require('./module/imrahil.pl');
+	require './module/elves.pl';
+	require './module/imrahil.pl';
 	
 	$pSYS->{'SECINFO'}	= new ARWEN;
 	$pSYS->{'LOGGER'}	= new IMRAHIL;
-	$pSYS->{'LOGGER'}->Open('./info/AdminLog',100,2 | 4);
+	$pSYS->{'LOGGER'}->Open('./info/AdminLog', 100, 2 | 4);
 }
 

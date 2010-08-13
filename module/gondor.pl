@@ -18,8 +18,8 @@ package	ARAGORN;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LINES);
+	my $this = shift;
+	my ($obj, @LINES);
 	
 	$obj = {
 		'LINE'		=> \@LINES,
@@ -31,7 +31,7 @@ sub new
 		'PERM'		=> 0,
 		'MODE'		=> 0
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -46,15 +46,15 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DESTROY
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	# ファイルオープン状態の場合はクローズする
-	if	($this->{'STAT'}){
-		my	$handle	= $this->{'HANDLE'};
-		if	($handle){
-			eval{
-				close($handle);
-				chmod($this->{'PERM'},$this->{'PATH'});
+	if ($this->{'STAT'}) {
+		my $handle	= $this->{'HANDLE'};
+		if ($handle) {
+			eval {
+				close $handle;
+				chmod $this->{'PERM'}, $this->{'PATH'};
 			};
 		}
 	}
@@ -72,34 +72,34 @@ sub DESTROY
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($SYS,$szPath,$readOnly) = @_;
+	my $this = shift;
+	my ($SYS, $szPath, $readOnly) = @_;
 	
-	eval{
+	eval {
 		$this->{'RES'} = 0;
 		
 		# 状態が初期状態なら読み込み開始
-		if	($this->{'STAT'} == 0){
-			undef(@{$this->{'LINE'}});
-			$this->{'MAX'}	= $SYS->Get('RESMAX');
-			$this->{'PATH'}	= $szPath;
+		if ($this->{'STAT'} == 0) {
+			undef @{$this->{'LINE'}};
+			$this->{'MAX'} = $SYS->Get('RESMAX');
+			$this->{'PATH'} = $szPath;
 			$this->{'PERM'} = GetPermission($szPath);
 			$this->{'MODE'} = $readOnly;
 			
-			if	(-e $szPath){
-				chmod(0777,$szPath);
-				open(DATFILE,"< $szPath");
-				binmode(DATFILE);
-				while	(<DATFILE>){
-					push(@{$this->{'LINE'}},$_);
+			if (-e $szPath) {
+				chmod 0777, $szPath;
+				open DATFILE, "< $szPath";
+				binmode DATFILE;
+				while (<DATFILE>) {
+					push @{$this->{'LINE'}}, $_;
 				}
 				
 				# 書き込みモードの場合
-				if	(!$readOnly){
-					close(DATFILE);
-					open(DATFILE,"+> $szPath");
-					flock(DATFILE,2);
-					binmode(DATFILE);
+				if (!$readOnly) {
+					close DATFILE;
+					open DATFILE, "+> $szPath";
+					flock DATFILE, 2;
+					binmode DATFILE;
 				}
 				
 				# ハンドルを保存し状態を読み込み状態にする
@@ -123,12 +123,12 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub ReLoad
 {
-	my		$this = shift;
-	my		($SYS,$readOnly) = @_;
+	my $this = shift;
+	my ($SYS, $readOnly) = @_;
 	
-	if	($this->{'STAT'}){
+	if ($this->{'STAT'}) {
 		$this->Close();
-		return $this->Load($SYS,$this->{'PATH'},$readOnly);
+		return $this->Load($SYS, $this->{'PATH'}, $readOnly);
 	}
 	return 0;
 }
@@ -143,24 +143,25 @@ sub ReLoad
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($SYS) = @_;
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($handle);
 	
 	# ファイルオープン状態なら書き込みを実行する
-	if	($this->{'STAT'} && $this->{'HANDLE'}){
-		if	(!$this->{'MODE'}){
-			my	$handle = $this->{'HANDLE'};
-			eval{
-				truncate($handle,0);
-				seek($handle,0,0);
+	if ($this->{'STAT'} && $this->{'HANDLE'}) {
+		if (! $this->{'MODE'}) {
+			$handle = $this->{'HANDLE'};
+			eval {
+				truncate $handle, 0;
+				seek $handle, 0, 0;
 				print $handle @{$this->{'LINE'}};
-				close($handle);
-				chmod($this->{'PERM'},$this->{'PATH'});
+				close $handle;
+				chmod $this->{'PERM'}, $this->{'PATH'};
 			};
 			$this->{'STAT'}		= 0;
 			$this->{'HANDLE'}	= undef;
 		}
-		else{
+		else {
 			$this->Close();
 		}
 	}
@@ -176,14 +177,14 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub Close
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	# ファイルオープン状態の場合はクローズする
-	if	($this->{'STAT'}){
-		eval{
-			my	$handle	= $this->{'HANDLE'};
-			close($handle);
-			chmod($this->{'PERM'},$this->{'PATH'});
+	if ($this->{'STAT'}) {
+		eval {
+			my $handle	= $this->{'HANDLE'};
+			close $handle;
+			chmod $this->{'PERM'}, $this->{'PATH'};
 			$this->{'STAT'}		= 0;
 			$this->{'HANDLE'}	= undef;
 		}
@@ -201,8 +202,8 @@ sub Close
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($line,$data) = @_;
+	my $this = shift;
+	my ($line, $data) = @_;
 	
 	$this->{'LINE'}->[$line] = $data;
 }
@@ -217,10 +218,10 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($line) = @_;
+	my $this = shift;
+	my ($line) = @_;
 	
-	if	($line >= 0 && $line < $this->{'RES'}){
+	if ($line >= 0 && $line < $this->{'RES'}) {
 		return \($this->{'LINE'}->[$line]);
 	}
 	return undef;
@@ -236,13 +237,13 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($data) = @_;
+	my $this = shift;
+	my ($data) = @_;
 	
 	# 最大データ数内なら追加する
-	if	($this->{'MAX'} > $this->{'RES'}){
-		push(@{$this->{'LINE'}},$data);
-		$this->{'RES'} ++;
+	if ($this->{'MAX'} > $this->{'RES'}) {
+		push @{$this->{'LINE'}}, $data;
+		$this->{'RES'}++;
 	}
 }
 
@@ -256,11 +257,11 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($num) = @_;
+	my $this = shift;
+	my ($num) = @_;
 	
-	splice(@{$this->{'LINE'}},$num,1);
-	$this->{'RES'} --;
+	splice @{$this->{'LINE'}}, $num, 1;
+	$this->{'RES'}--;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -273,7 +274,7 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub Size
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	return $this->{'RES'};
 }
@@ -288,12 +289,12 @@ sub Size
 #------------------------------------------------------------------------------------------------------------
 sub GetSubject
 {
-	my		$this = shift;
-	my		(@elem,$subject);
+	my $this = shift;
+	my (@elem, $subject);
 	
-	@elem = split(/<>/,$this->{'LINE'}->[0]);
+	@elem = split(/<>/, $this->{'LINE'}->[0]);
 	$subject = $elem[4];
-	chomp($subject);
+	chomp $subject;
 	
 	return $subject;
 }
@@ -308,25 +309,25 @@ sub GetSubject
 #------------------------------------------------------------------------------------------------------------
 sub Stop
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		($stopData,$res);
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($stopData, $res);
 	
 	# ↓スレスト文言
 	$stopData = "書けませんよ。。。<>停止<>停止<>真・スレッドストッパー。。。（￣ー￣）ﾆﾔﾘｯ<>\n";
 	$res = 0;
 	
-	eval{
+	eval {
 		# レス最大数超えてる場合はスレスト不可
-		if	($this->Size() <= $SYS->Get('RESMAX')){
+		if ($this->Size() <= $SYS->Get('RESMAX')) {
 			# 停止状態じゃない場合のみ実行
-			if	($this->{'PERM'} ne $SYS->Get('PM-STOP')){
+			if ($this->{'PERM'} ne $SYS->Get('PM-STOP')) {
 				# 停止データを追加して強制的にセーブする
 				$this->Add($stopData);
 				$this->Save($SYS);
 				
 				# パーミッションを停止用に設定する
-				chmod($SYS->Get('PM-STOP'),$this->{'PATH'});
+				chmod $SYS->Get('PM-STOP'), $this->{'PATH'};
 				$res = 1;
 			}
 		}
@@ -344,21 +345,21 @@ sub Stop
 #------------------------------------------------------------------------------------------------------------
 sub Start
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		($res,$line);
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($res, $line);
 	
 	$res = 0;
-	eval{
+	eval {
 		# 停止状態の場合のみ実行
-		if	($this->{'PERM'} eq $SYS->Get('PM-STOP')){
+		if ($this->{'PERM'} eq $SYS->Get('PM-STOP')) {
 			# 最終行を削除して保存
 			$line = $this->{'RES'} - 1;
 			$this->Delete($line);
 			$this->Save($SYS);
 			
 			# パーミッションを通常用に設定する
-			chmod($SYS->Get('PM-DAT'),$this->{'PATH'});
+			chmod $SYS->Get('PM-DAT'), $this->{'PATH'};
 			$res = 1;
 		}
 	};
@@ -376,23 +377,23 @@ sub Start
 #------------------------------------------------------------------------------------------------------------
 sub DirectAppend
 {
-	my		($SYS,$path,$data) = @_;
-	my		$ret = 0;
+	my ($SYS, $path, $data) = @_;
+	my $ret = 0;
 	
-	eval{
-		if	(GetPermission($path) ne $SYS->Get('PM-STOP')){
-			open(DATFILE,">>$path");
-			flock(DATFILE,2);
-			binmode(DATFILE);
+	eval {
+		if (GetPermission($path) ne $SYS->Get('PM-STOP')) {
+			open DATFILE, ">> $path";
+			flock DATFILE, 2;
+			binmode DATFILE;
 			print DATFILE "$data";
-			close(DATFILE);
-			chmod($SYS->Get('PM-DAT'),$path);
+			close DATFILE;
+			chmod $SYS->Get('PM-DAT'), $path;
 		}
-		else{
+		else {
 			$ret = 2;
 		}
 	};
-	if	($@ ne ''){
+	if ($@ ne '') {
 		$ret = 1;
 	}
 	return $ret;
@@ -408,15 +409,15 @@ sub DirectAppend
 #------------------------------------------------------------------------------------------------------------
 sub GetNumFromFile
 {
-	my		($path) = @_;
-	my		$cnt = 0;
+	my ($path) = @_;
+	my $cnt = 0;
 	
-	if	(-e $path){
-		open(FILE,"<$path");
-		while	(<FILE>){
+	if (-e $path) {
+		open FILE, "< $path";
+		while (<FILE>) {
 			$cnt++;
 		}
-		close(FILE);
+		close FILE;
 	}
 	return $cnt;
 }
@@ -431,9 +432,9 @@ sub GetNumFromFile
 #------------------------------------------------------------------------------------------------------------
 sub GetPermission
 {
-	my	($path) = @_;
+	my ($path) = @_;
 	
-	return ((stat($path))[2] % 01000);
+	return ((stat $path)[2] % 01000);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -446,18 +447,18 @@ sub GetPermission
 #------------------------------------------------------------------------------------------------------------
 sub IsMoved
 {
-	my	($path) = @_;
-	my	(@elem,$line);
+	my ($path) = @_;
+	my (@elem, $line);
 	
-	if	(-e $path){
-		open(FILE,"<$path");
-		while (<FILE>){
+	if (-e $path) {
+		open FILE, "< $path";
+		while (<FILE>) {
 			$line = $_;
 			last;
 		}
-		close(FILE);
-		@elem = split(/<>/,$line);
-		if	($elem[2] eq '移転'){
+		close FILE;
+		@elem = split(/<>/, $line);
+		if ($elem[2] eq '移転') {
 			return 1;
 		}
 		return 0;
@@ -475,8 +476,8 @@ sub IsMoved
 #------------------------------------------------------------------------------------------------------------
 sub DEBUG
 {
-	my		$this = shift;
-	my		($pStream) = @_;
+	my $this = shift;
+	my ($pStream) = @_;
 	
 	print $pStream "DEBUG MODE ------- \n";
 	print $pStream @{$this->{'LINE'}};

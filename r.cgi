@@ -21,39 +21,39 @@ exit(ReadCGI());
 #------------------------------------------------------------------------------------------------------------
 sub ReadCGI
 {
-	my		(%SYS,$Page,$err);
+	my (%SYS, $Page, $err);
 	
-	require('./module/thorin.pl');
+	require './module/thorin.pl';
 	$Page = new THORIN;
 	
 	# 初期化・準備に成功したら内容表示
-	if	(($err = Initialize(\%SYS,$Page)) == 0){
+	if (($err = Initialize(\%SYS, $Page)) == 0) {
 		# ヘッダ表示
-		PrintReadHead(\%SYS,$Page);
+		PrintReadHead(\%SYS, $Page);
 		
 		# メニュー表示
-		PrintReadMenu(\%SYS,$Page);
+		PrintReadMenu(\%SYS, $Page);
 		
 		# 内容表示
-		PrintReadContents(\%SYS,$Page);
+		PrintReadContents(\%SYS, $Page);
 		
 		# フッタ表示
-		PrintReadFoot(\%SYS,$Page);
+		PrintReadFoot(\%SYS, $Page);
 	}
 	# 初期化に失敗したらエラー表示
-	else{
+	else {
 		# 対象スレッドが見つからなかった場合は探索画面を表示する
-		if	($err == 1003){
-			PrintReadSearch(\%SYS,$Page,$err);
+		if ($err == 1003) {
+			PrintReadSearch(\%SYS, $Page, $err);
 		}
 		# それ以外は通常エラー
-		else{
-			PrintReadError(\%SYS,$Page,$err);
+		else {
+			PrintReadError(\%SYS, $Page, $err);
 		}
 	}
 	
 	# 表示結果を出力
-	$Page->Flush(0,0,'');
+	$Page->Flush(0, 0, '');
 	
 	return $err;
 }
@@ -68,16 +68,16 @@ sub ReadCGI
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
-	my		($pSYS,$Page) = @_;
-	my		(@elem,@regs,$path);
+	my ($pSYS, $Page) = @_;
+	my (@elem, @regs, $path);
 	
 	# 各使用モジュールの生成と初期化
-	require('./module/melkor.pl');
-	require('./module/isildur.pl');
-	require('./module/gondor.pl');
-	require('./module/galadriel.pl');
+	require './module/melkor.pl';
+	require './module/isildur.pl';
+	require './module/gondor.pl';
+	require './module/galadriel.pl';
 	
-	my		($oSYS,$oSET,$oCONV,$oDAT);
+	my ($oSYS, $oSET, $oCONV, $oDAT);
 	
 	$oSYS	= new MELKOR;
 	$oSET	= new ISILDUR;
@@ -99,37 +99,37 @@ sub Initialize
 	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
 	
 	# BBS指定がおかしい
-	if	($elem[0] eq ''){
+	if ($elem[0] eq '') {
 		return 1001;
 	}
 	# スレッドキー指定がおかしい
-	elsif	($elem[1] eq '' || $elem[1] =~ /[^0-9]/ || length($elem[1]) != 10){
+	elsif ($elem[1] eq '' || $elem[1] =~ /[^0-9]/ || length($elem[1]) != 10) {
 		return 1002;
 	}
 	
 	# システム変数設定
-	$pSYS->{'SYS'}->Set('MODE',0);
-	$pSYS->{'SYS'}->Set('BBS',$elem[0]);
-	$pSYS->{'SYS'}->Set('KEY',$elem[1]);
-	$pSYS->{'SYS'}->Set('AGENT',$elem[7]);
+	$pSYS->{'SYS'}->Set('MODE', 0);
+	$pSYS->{'SYS'}->Set('BBS', $elem[0]);
+	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
+	$pSYS->{'SYS'}->Set('AGENT', $elem[7]);
 	
 	$path = $pSYS->{'SYS'}->Get('BBSPATH') . "/$elem[0]/dat/$elem[1].dat";
 	
 	# datファイルの読み込みに失敗
-	if	($pSYS->{'DAT'}->Load($pSYS->{'SYS'},$path,1) == 0){
+	if ($pSYS->{'DAT'}->Load($pSYS->{'SYS'}, $path, 1) == 0) {
 		return 1003;
 	}
 	$pSYS->{'DAT'}->Close();
 	
 	# 設定ファイルの読み込みに失敗
-	if	($pSYS->{'SET'}->Load($pSYS->{'SYS'}) == 0){
+	if ($pSYS->{'SET'}->Load($pSYS->{'SYS'}) == 0) {
 		return 1004;
 	}
 	
 	# 表示開始終了位置の設定
 	@regs = $pSYS->{'CONV'}->RegularDispNum(
-				$pSYS->{'SYS'},$pSYS->{'DAT'},$elem[2],$elem[3],$elem[4]);
-	$pSYS->{'SYS'}->SetOption($elem[2],$regs[0],$regs[1],$elem[5],$elem[6]);
+				$pSYS->{'SYS'}, $pSYS->{'DAT'}, $elem[2], $elem[3], $elem[4]);
+	$pSYS->{'SYS'}->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
 	
 	return 0;
 }
@@ -144,10 +144,10 @@ sub Initialize
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadHead
 {
-	my		($Sys,$Page) = @_;
-	my		($Caption,$Banner,$code,$title);
+	my ($Sys, $Page) = @_;
+	my ($Caption, $Banner, $code, $title);
 	
-	require('./module/denethor.pl');
+	require './module/denethor.pl';
 	$Banner = new DENETHOR;
 	$Banner->Load($Sys->{'SYS'});
 	
@@ -156,8 +156,8 @@ sub PrintReadHead
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
-	$Page->Print('<html><head><title>' . $title . '</title>');
-	$Page->Print('<meta http-equiv=Content-Type content="text/html;charset=' . $code . '">');
+	$Page->Print("<html><head><title>$title</title>");
+	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
 	$Page->Print('</head><!--nobanner-->');
 	
 	# <body>タグ出力
@@ -166,7 +166,7 @@ sub PrintReadHead
 	}
 	
 	# バナー出力
-	$Banner->Print($Page,100,2,1);
+	$Banner->Print($Page, 100, 2, 1);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -179,9 +179,9 @@ sub PrintReadHead
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadMenu
 {
-	my		($Sys,$Page) = @_;
-	my		($oSYS,$bbs,$key,$baseBBS,$resNum);
-	my		($pathBBS,$pathAll,$pathLast,$pathMenu,$pathNext,$pathPrev);
+	my ($Sys, $Page) = @_;
+	my ($oSYS, $bbs, $key, $baseBBS, $resNum);
+	my ($pathBBS, $pathAll, $pathLast, $pathMenu, $pathNext, $pathPrev);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -189,13 +189,13 @@ sub PrintReadMenu
 	$key		= $oSYS->Get('KEY');
 	$baseBBS	= $oSYS->Get('SERVER') . '/' . $bbs;
 	$pathBBS	= $baseBBS . '/i/index.html';
-	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS,1,$bbs,$key,'1-10n');
-	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS,1,$bbs,$key,'l10');
+	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
+	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
 	$resNum		= $Sys->{'DAT'}->Size();
 	
 	# 前、次番号の取得
 	{
-		my	($st,$ed,$b1,$b2,$f1,$f2);
+		my ($st, $ed, $b1, $b2, $f1, $f2);
 		
 		$st = $oSYS->GetOption(2);
 		$ed = $oSYS->GetOption(3);
@@ -204,8 +204,8 @@ sub PrintReadMenu
 		$f1 = ($ed + 1 < $resNum) ? ($ed + 1) : $resNum;
 		$f2 = ($ed + 10 < $resNum) ? ($ed + 10) : $resNum;
 		
-		$pathNext = $Sys->{'CONV'}->CreatePath($oSYS,1,$bbs,$key,"${f1}-${f2}n");
-		$pathPrev = $Sys->{'CONV'}->CreatePath($oSYS,1,$bbs,$key,"${b1}-${b2}n");
+		$pathNext = $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, "${f1}-${f2}n");
+		$pathPrev = $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, "${b1}-${b2}n");
 	}
 	
 	# メニューの表示
@@ -218,8 +218,8 @@ sub PrintReadMenu
 	
 	# スレッドタイトル表示
 	{
-		my	$title	= $Sys->{'DAT'}->GetSubject();
-		my	$ttlCol	= $Sys->{'SET'}->Get('BBS_SUBJECT_COLOR');
+		my $title	= $Sys->{'DAT'}->GetSubject();
+		my $ttlCol	= $Sys->{'SET'}->Get('BBS_SUBJECT_COLOR');
 		$Page->Print("<dl><font color=$ttlCol size=+1>$title</font><br><br>\n");
 	}
 }
@@ -234,19 +234,19 @@ sub PrintReadMenu
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadContents
 {
-	my		($Sys,$Page) = @_;
-	my		($work,@elem,$i);
+	my ($Sys, $Page) = @_;
+	my ($work, @elem, $i);
 	
-	$work	= $Sys->{'SYS'}->Get('OPTION');
-	@elem	= split(/\,/,$work);
+	$work = $Sys->{'SYS'}->Get('OPTION');
+	@elem = split(/\,/, $work);
 	
 	# 1表示フラグがTRUEで開始が1でなければ1を表示する
-	if	($elem[3] == 0 && $elem[1] != 1){
-		PrintResponse($Sys,$Page,1);
+	if ($elem[3] == 0 && $elem[1] != 1) {
+		PrintResponse($Sys, $Page, 1);
 	}
 	# 残りのレスを表示する
-	for	($i = $elem[1];$i <= $elem[2];$i++){
-		PrintResponse($Sys,$Page,$i);
+	for ($i = $elem[1] ; $i <= $elem[2] ; $i++) {
+		PrintResponse($Sys, $Page, $i);
 	}
 }
 
@@ -260,8 +260,8 @@ sub PrintReadContents
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadFoot
 {
-	my		($Sys,$Page) = @_;
-	my		($oSYS,$Conv,$bbs,$key,$ver,$rmax,$pathNext,$pathPrev);
+	my ($Sys, $Page) = @_;
+	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $pathNext, $pathPrev);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -273,7 +273,7 @@ sub PrintReadFoot
 	
 	# 前、次番号の取得
 	{
-		my	($st,$ed,$b1,$b2,$f1,$f2);
+		my ($st, $ed, $b1, $b2, $f1, $f2);
 		
 		$st = $oSYS->GetOption(2);
 		$ed = $oSYS->GetOption(3);
@@ -282,8 +282,8 @@ sub PrintReadFoot
 		$f1 = ($ed + 1 < $rmax) ? ($ed + 1) : $rmax;
 		$f2 = ($ed + 10 < $rmax) ? ($ed + 10) : $rmax;
 		
-		$pathNext = $Conv->CreatePath($oSYS,1,$bbs,$key,"${f1}-${f2}n");
-		$pathPrev = $Conv->CreatePath($oSYS,1,$bbs,$key,"${b1}-${b2}n");
+		$pathNext = $Conv->CreatePath($oSYS, 1, $bbs, $key, "${f1}-${f2}n");
+		$pathPrev = $Conv->CreatePath($oSYS, 1, $bbs, $key, "${b1}-${b2}n");
 	}
 	$Page->Print('</dl><hr>');
 	$Page->Print("<a href=\"$pathPrev\">前</a> ");
@@ -291,8 +291,8 @@ sub PrintReadFoot
 	
 	# 投稿フォームの表示
 	# レス最大数を超えている場合はフォーム表示しない
-	if	($rmax > $Sys->{'DAT'}->Size()){
-		my	($tm,$cgiPath);
+	if ($rmax > $Sys->{'DAT'}->Size()) {
+		my ($tm, $cgiPath);
 		
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
@@ -319,37 +319,37 @@ sub PrintReadFoot
 #------------------------------------------------------------------------------------------------------------
 sub PrintResponse
 {
-	my		($Sys,$Page,$n) = @_;
-	my		($oSYS,$oConv,$pDat,@elem,$maxLen,$len);
+	my ($Sys, $Page, $n) = @_;
+	my ($oSYS, $oConv, $pDat, @elem, $maxLen, $len);
 	
 	$oSYS	= $Sys->{'SYS'};
 	$oConv	= $Sys->{'CONV'};
 	$pDat	= $Sys->{'DAT'}->Get($n -1);
-	@elem	= split(/<>/,$$pDat);
-	$len	= length($elem[3]);
+	@elem	= split(/<>/, $$pDat);
+	$len	= length $elem[3];
 	$maxLen	= $Sys->{'SET'}->Get('BBS_LINE_NUMBER');
-	$maxLen	= int(($maxLen / 4) * 20);
+	$maxLen	= int($maxLen * 5);
 	
 	# 表示範囲内か指定表示ならすべて表示する
-	if	($oSYS->GetOption(5) == 1 || $len <= $maxLen){
-		$oConv->ConvertURL($oSYS,$Sys->{'SET'},1,\$elem[3]);
-		$oConv->ConvertQuotation($oSYS,\$elem[3],1);
+	if ($oSYS->GetOption(5) == 1 || $len <= $maxLen) {
+		$oConv->ConvertURL($oSYS, $Sys->{'SET'}, 1, \$elem[3]);
+		$oConv->ConvertQuotation($oSYS, \$elem[3], 1);
 	}
 	# 表示範囲を超えていたら省略表示をする
-	else{
-		my		($bbs,$key,$path);
+	else {
+		my ($bbs, $key, $path);
 		
 		$bbs		= $oSYS->Get('BBS');
 		$key		= $oSYS->Get('KEY');
-		$elem[3]	= $oConv->DeleteText(\$elem[3],$maxLen);
+		$elem[3]	= $oConv->DeleteText(\$elem[3], $maxLen);
 		$maxLen		= int(($len - length($elem[3])) / 20);
-		$path		= $oConv->CreatePath($oSYS,1,$bbs,$key,"${n}n");
+		$path		= $oConv->CreatePath($oSYS, 1, $bbs, $key, "${n}n");
 		
-		$oConv->ConvertURL($oSYS,$Sys->{'SET'},1,\$elem[3]);
-		$oConv->ConvertQuotation($oSYS,\$elem[3],1);
+		$oConv->ConvertURL($oSYS, $Sys->{'SET'}, 1, \$elem[3]);
+		$oConv->ConvertQuotation($oSYS, \$elem[3], 1);
 		
-		if	($maxLen){
-			$elem[3]	.= " <a href=\"$path\">省$maxLen</a>";
+		if ($maxLen) {
+			$elem[3] .= " <a href=\"$path\">省$maxLen</a>";
 		}
 	}
 	$Page->Print("<hr>[$n]$elem[0]</b>：$elem[2]<br>$elem[3]<br>\n");
@@ -365,7 +365,7 @@ sub PrintResponse
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadSearch
 {
-	my		($Sys,$Page) = @_;
+	my ($Sys, $Page) = @_;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -378,15 +378,15 @@ sub PrintReadSearch
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadError
 {
-	my		($Sys,$Page,$err) = @_;
-	my		$code;
+	my ($Sys, $Page, $err) = @_;
+	my $code;
 	
 	$code = 'Shift_JIS';
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print('<html><head><title>ＥＲＲＯＲ！！</title>');
-	$Page->Print('<meta http-equiv=Content-Type content="text/html;charset=' . $code . '">');
+	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
 	$Page->Print('</head><!--nobanner-->');
 	$Page->Print('<html><body>');
 	$Page->Print("<b>$err</b>");

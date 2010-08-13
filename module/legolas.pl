@@ -21,10 +21,10 @@ package	LEGOLAS;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(@HEAD,$TEXT,$URL,$PATH,$FILE,$obj);
+	my $this = shift;
+	my (@HEAD, $TEXT, $URL, $PATH, $FILE, $obj);
 	
-	undef(@HEAD);
+	undef @HEAD;
 	$PATH = "";
 	$FILE = "";
 	
@@ -36,7 +36,7 @@ sub new
 		'FILE'	=> $FILE
 	};
 	
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -52,24 +52,24 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys,$kind) = @_;
-	my		(@head,$path,$file);
+	my $this = shift;
+	my ($Sys, $kind) = @_;
+	my (@head, $path, $file);
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
-	if	($kind eq 'HEAD'){	$file = 'head.txt';	}
-	if	($kind eq 'FOOT'){	$file = 'foot.txt';	}
-	if	($kind eq 'META'){	$file = 'meta.txt';	}
+	if ($kind eq 'HEAD') { $file = 'head.txt'; }
+	if ($kind eq 'FOOT') { $file = 'foot.txt'; }
+	if ($kind eq 'META') { $file = 'meta.txt'; }
 	
 	$this->{'TEXT'} = $Sys->Get('HEADTEXT');
-	$this->{'URL'}	= $Sys->Get('HEADURL');
+	$this->{'URL'} = $Sys->Get('HEADURL');
 	$this->{'PATH'} = $path;
 	$this->{'FILE'} = $file;
 	
-	if	(-e "$path/$file"){
-		open(HEAD,"<$path/$file");
+	if (-e "$path/$file") {
+		open(HEAD, "< $path/$file");
 		@{$this->{'HEAD'}} = <HEAD>;
-		close(HEAD);
+		close HEAD;
 		return 0;
 	}
 	return -1;
@@ -85,21 +85,21 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$file);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $file);
 	
 	$path = $this->{'PATH'};
 	$file = $this->{'FILE'};
 	
-	if	($path){
-		eval{
-			chmod(0666,"$path/$file");
-			open(HEAD,">$path/$file");
-			flock(HEAD,2);
+	if ($path) {
+		eval {
+			chmod 0666, "$path/$file";
+			open HEAD, ">$path/$file";
+			flock HEAD, 2;
 			print HEAD @{$this->{'HEAD'}};
-			close(HEAD);
-			chmod($Sys->Get('PM-TXT'),"$path/$file");
+			close HEAD;
+			chmod $Sys->Get('PM-TXT'), "$path/$file";
 		};
 	}
 }
@@ -114,15 +114,15 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($head) = @_;
-	my		@work;
+	my $this = shift;
+	my ($head) = @_;
+	my @work;
 	
-	undef(@{$this->{'HEAD'}});
+	undef @{$this->{'HEAD'}};
 	
-	@work = split(/\n/,$$head);
-	foreach	(@work){
-		push(@{$this->{'HEAD'}},"$_\n");
+	@work = split(/\n/, $$head);
+	foreach (@work) {
+		push @{$this->{'HEAD'}}, "$_\n";
 	}
 }
 
@@ -136,7 +136,7 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	return \@{$this->{'HEAD'}};
 }
@@ -152,18 +152,18 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
-	my		$this = shift;
-	my		($Page,$Set) = @_;
-	my		($bbs,$tcol,$text,$url);
+	my $this = shift;
+	my ($Page, $Set) = @_;
+	my ($bbs, $tcol, $text, $url);
 	
 	# head.txtの場合はヘッダ全てを表示する
-	if	($this->{'FILE'} eq 'head.txt'){
-		$bbs	= $Set->Get('BBS_SUBTITLE');
-		$tcol	= $Set->Get('BBS_MENU_COLOR');
-		$text	= $this->{'TEXT'};
-		$url	= $this->{'URL'};
-
-$Page->Print(<<HEAD);
+	if ($this->{'FILE'} eq 'head.txt') {
+		$bbs = $Set->Get('BBS_SUBTITLE');
+		$tcol = $Set->Get('BBS_MENU_COLOR');
+		$text = $this->{'TEXT'};
+		$url = $this->{'URL'};
+	
+	$Page->Print(<<HEAD);
 <a name="info"></a>
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tcol" style="margin-bottom:1.2em;" align="center">
  <tr>
@@ -176,8 +176,8 @@ $Page->Print(<<HEAD);
    <tr>
     <td colspan="2">
 HEAD
-
-		foreach	(@{$this->{'HEAD'}}){
+		
+		foreach (@{$this->{'HEAD'}}) {
 			$Page->Print("    $_");
 		}
 		
@@ -187,7 +187,7 @@ HEAD
 		$Page->Print("  </td>\n");
 		$Page->Print(" </tr>\n");
 		
-		if ( $text ne "" ) {
+		if ($text ne "") {
 			$Page->Print(" <tr>\n");
 			$Page->Print("  <td align=\"center\"><a href=\"$url\" target=\"_blank\">$text</a></td>\n");
 			$Page->Print(" </tr>\n");
@@ -197,15 +197,15 @@ HEAD
 		#$Page->Print("<br>\n");
 	}
 	# META.txtはインデント
-	elsif ( $this->{'FILE'} eq 'meta.txt' ) {
-		foreach	(@{$this->{'HEAD'}}){
+	elsif ($this->{'FILE'} eq 'meta.txt') {
+		foreach (@{$this->{'HEAD'}}) {
 			$Page->Print(" $_");
 		}
 		$Page->Print("\n");
 	}
 	# その他は内容をそのまま表示
-	else{
-		foreach	(@{$this->{'HEAD'}}){
+	else {
+		foreach (@{$this->{'HEAD'}}) {
 			$Page->Print("$_");
 		}
 	}
