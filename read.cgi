@@ -7,6 +7,9 @@
 #	2002.12.04 start
 #	2004.04.04 システム改変に伴う変更
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 システム改変に伴う変更
+#
 #============================================================================================================
 
 # CGIの実行結果を終了コードとする
@@ -90,7 +93,7 @@ sub Initialize
 		'SET'	=> $oSET,
 		'CONV'	=> $oCONV,
 		'DAT'	=> $oDAT,
-		'CODE'	=> 'sjis'
+		'CODE'	=> 'Shift_JIS'
 	);
 	
 	# システム初期化
@@ -101,12 +104,12 @@ sub Initialize
 	
 	# BBS指定がおかしい
 	if	($elem[0] eq ''){
-		return 1001;
+		return 2011;
 	}
 	# スレッドキー指定がおかしい
 	elsif	(($elem[1] eq '') || ($elem[1] =~ /[^0-9]/) ||
 			(length($elem[1]) != 10 && length($elem[1]) != 9)){
-		return 1002;
+		return 3001;
 	}
 	
 	# システム変数設定
@@ -142,6 +145,9 @@ sub Initialize
 #	-------------------------------------------------------------------------------------
 #	@param	なし
 #	@return	なし
+#
+#	2010.08.12 windyakin ★
+#	 -> 告知欄表示が任意設定できるようになったので変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadHead
@@ -191,7 +197,7 @@ HTML
 	}
 	
 	# バナー出力
-	$Banner->Print($Page,100,2,0);
+	$Banner->Print($Page,100,2,0) if( $Sys->{'SYS'}->Get('BANNER') );
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -206,7 +212,8 @@ sub PrintReadMenu
 {
 	my		($Sys,$Page) = @_;
 	my		($oSYS,$bbs,$key,$baseBBS,$baseCGI,$st,$ed,$i,$resNum);
-	my		($pathBBS,$pathAll,$pathLast,$pathMenu);
+	my		($pathBBS,$pathAll,$pathLast,$pathMenu,$account);
+	my		($PRtext,$PRlink);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -214,12 +221,30 @@ sub PrintReadMenu
 	$key		= $oSYS->Get('KEY');
 	$baseBBS	= $oSYS->Get('SERVER') . '/' . $bbs;
 	$baseCGI	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
+	$account	= $oSYS->Get('COUNTER');
+	$Prtext		= $oSYS->Get('PRTEXT');
+	$Prlink		= $oSYS->Get('PRLINK');
 	$pathBBS	= $baseBBS;
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS,0,$bbs,$key,'');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS,0,$bbs,$key,'l50');
 	$resNum		= $Sys->{'DAT'}->Size();
 	
-	$Page->Print("\n<div style=\"margin-top:1em;\">\n");
+	# カウンター表示
+	$Page->Print("<div style=\"margin:0px;\">\n");
+	$Page->Print('<a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/');
+	$Page->Print( 'disp/'.$account.'/00813400.gif" alt="無料アクセスカウンターofuda.cc「全世界カウント計画」"></a>'."\n");
+
+$Page->Print(<<HTML);
+<script type="text/javascript">
+<!--
+document.write('<iframe src="http://p2.2ch.io/getf.cgi?'+ location + '" width="460" height="15"');
+document.write(' marginheight="0" marginwidth="0" scrolling="no" allowtransparency="true" frameborder="0"></iframe>');
+//-->
+</script>
+HTML
+	
+	$Page->Print("<div style=\"margin-top:1em;\">\n");
+	$Page->Print(" <span style=\"float:left;\">\n");
 	$Page->Print(" <a href=\"$pathBBS/\">■掲示板に戻る■</a>\n");
 	$Page->Print(" <a href=\"$pathAll\">全部</a>\n");
 	
@@ -236,6 +261,10 @@ sub PrintReadMenu
 		}
 	}
 	$Page->Print(" <a href=\"$pathLast\">最新50</a>\n");
+	$Page->Print(" </span>\n");
+	$Page->Print(" <span style=\"float:right;\">\n [PR]");
+	$Page->Print("<a href=\"$Prlink\" target=\"_blank\">$Prtext</a>");
+	$Page->Print("[PR]\n </span>&nbsp;\n");
 	$Page->Print("</div>\n\n");
 	
 	# レス数限界警告表示
@@ -482,18 +511,27 @@ sub PrintReadSearch
 	my		($Sys,$Page) = @_;
 	if (PrintDiscovery($Sys,$Page)){ return; }
 	my		($oSys,$oDat,$size,$i,$nameCol);
-	my		(@elem,$pDat,$var);
+	my		(@elem,$pDat,$var,$bbs);
 	
 	$oSys		= $Sys->{'SYS'};
 	$oDat		= $Sys->{'DAT'};
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
-	$var		= $oSys->Get('VERSION');
+	$var		= $Sys->{'SYS'}->Get('VERSION');
+	$bbs		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS') . '/';
 	
 	# エラー用datの読み込み
 	$oDat->Load($oSys,'.' . $oSys->Get('DATA') . '/2000000000.dat',1);
 	$size = $oDat->Size();
 	
 	PrintReadHead($Sys,$Page);
+	
+	$Page->Print("\n<div style=\"margin-top:1em;\">\n");
+	$Page->Print(" <a href=\"$bbs\">■掲示板に戻る■</a>\n");
+	$Page->Print("</div>\n");
+	
+	$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
+	$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">指定されたスレッドは存在しません</h1>\n\n");
+	
 	$Page->Print("\n<dl class=\"thread\">\n");
 	
 	for	($i = 0;$i < $size;$i++){
@@ -515,9 +553,10 @@ sub PrintReadSearch
 	$Page->Print("<hr>\n\n");
 	
 $Page->Print(<<HTML);
-<div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
-$var
+<div style="margin-top:4em;">
+<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+READ.CGI - $var<br>
+<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
 
 </body>
@@ -553,9 +592,11 @@ sub PrintReadError
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	read.cgi過去ログなんたらかんたら
+#	read.cgi過去ログ倉庫探索
 #	--------------------------------------------------------------------------------------
-#	なんとも言え無い
+#	@param	なし
+#	@return	ログがどこにも見つからなければ 0 を返す
+#			ログがあるなら 1 を返す
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintDiscovery
@@ -585,7 +626,7 @@ sub PrintDiscovery
 		PrintReadHead($Sys,$Page);
 		$Page->Print("\n<blockquote>\n");
 		$Page->Print("$key.datはhtml化を待っています。");
-		$Page->Print('ここは待つしかない・・・。<br>'."$spath/kako/$kh/$key.html\n");
+		$Page->Print('ここは待つしかない・・・。<br>'."\n");
 		$Page->Print("</blockquote>\n");
 		
 	}
@@ -600,9 +641,10 @@ $Page->Print(<<HTML);
 
 <hr>
 
-<div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
-$var
+<div style="margin-top:4em;">
+<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+READ.CGI - $ver<br>
+<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
 
 </body>

@@ -5,6 +5,10 @@
 #	-------------------------------------------------------------------------------------
 #	2004.03.27 start
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 規制選択性導入のため仕様変更
+#	2010.08.13 ログ保存形式変更による仕様変更
+#
 #============================================================================================================
 package	VARA;
 
@@ -94,6 +98,9 @@ sub Init
 #			$M   : MELKORオブジェクト
 #	戻り値：なし
 #
+#	2010.08.13 windyakin ★
+#	 -> ログ保存形式変更による規制チェック位置の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Write
 {
@@ -109,10 +116,6 @@ sub Write
 	}
 	# 入力内容チェック(本文)
 	if	(($err = NormalizationContents($this))){
-		return $err;
-	}
-	# 規制チェック
-	if	(($err = IsRegulation($this))){
 		return $err;
 	}
 	
@@ -139,6 +142,12 @@ sub Write
 		$date		= $date . $oConv->GetIDPart($oSet,$oForm,$this->{'SECURITY'},$id,$oSys->Get('CAPID'),$oSys->Get('AGENT'));
 		$data		= "$elem[1]<>$elem[2]<>$date<>$elem[3]<>$elem[0]\n";
 		$datPath	= $oSys->Get('DATPATH');
+		
+		# 規制チェック
+		# なぜこんなところに？ -> http://yakin.38-ch.net/test/read.cgi/windyakin/1281101424/597
+		if	(($err = IsRegulation($this,join('<>',($elem[1],$elem[2],$date,$elem[3],$elem[0]))))){
+			return $err;
+		}
 		
 		# リモートホスト保存(SETTING.TXT変更により、常に保存)
 		SaveHost($oSys,$oForm);
@@ -288,24 +297,33 @@ sub ReadyBeforeWrite
 #
 #	規制チェック
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	$this, $datas
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
+#
+#	2010.08.12 windyakin ★
+#	 -> ２重かきこの規制を選択性にしたので変更
+#	 -> 規制ユーザーホスト表示時のの仕様変更
+#
+#	2010.08.13 windyakin ★
+#	 -> ログ出力形式変更による引数の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub IsRegulation
 {
-	my		($this) = @_;
+	my		($this,$datas) = @_;
 	my		($oSYS,$oSET,$oSEC);
-	my		($err,$host,$bbs,$datPath,$capID);
+	my		($err,$host,$bbs,$datPath,$capID,$Samba,$from);
 	
 	$oSYS		= $this->{'SYS'};
 	$oSET		= $this->{'SET'};
 	$oSEC		= $this->{'SECURITY'};
 	$host		= $this->{'FORM'}->Get('HOST');
 	$bbs		= $this->{'FORM'}->Get('BBS');
+	$from		= $this->{'FORM'}->Get('FROM');
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
+	$Samba		= $oSYS->Get('SAMBA');
 	
 	# 規制ユーザ・NGワードチェック
 	{
@@ -318,9 +336,15 @@ sub IsRegulation
 		if	($check == 4){
 			return 601;
 		}
-		if	($check == 2){
-			$this->{'FORM'}->Set('FROM',"<font color=tomato>$host</font>");
+		if	($check == 2) {
+			if ( $from =~ /$host/i ) {
+				$this->{'FORM'}->Set('FROM',"</b>[´･ω･｀] <b>".$from);
+			}
+			else {
+				return 601;
+			}
 		}
+		
 		# NGワード
 		require('./module/wormtongue.pl');
 		$ngWord = new WORMTONGUE;
@@ -334,7 +358,7 @@ sub IsRegulation
 			$ngWord->Method($this->{'FORM'},\@checkKey);
 		}
 		if	($check == 2){
-			$this->{'FORM'}->Set('FROM',$this->{'FORM'}->Get('FROM') . "<font color=tomato>$host</font>");
+			$this->{'FORM'}->Set('FROM',$from."<font color=\"tomato\">$host</font>");
 		}
 	}
 	
@@ -367,7 +391,8 @@ sub IsRegulation
 	# PROXYチェック
 	if	($oSET->Equal('BBS_PROXY_CHECK','checked')){
 		if	($this->{'CONV'}->IsProxy(\$host)){
-			return 997;
+			$this->{'FORM'}->Set('FROM','</b> [―{}@{}@{}-] <b>'.$from);
+			return 997 if(!$oSEC->IsAuthority($capID,19,$bbs));
 		}
 	}
 	# 読取専用
@@ -431,21 +456,23 @@ sub IsRegulation
 		}
 		# レス書き込み(二重投稿)
 		if	(!$oSEC->IsAuthority($capID,11,$bbs)){
-			if	($LOG->Search($host,1) == length($this->{'FORM'}->Get('MESSAGE'))){
-				return 502;
+			if	( $this->{'SYS'}->Get('KAKIKO') eq 1 ) {
+				if	($LOG->Search($host,1) == length($this->{'FORM'}->Get('MESSAGE'))){
+					return 502;
+				}
 			}
 		}
 		# Samba規制
 		
 		# 短時間投稿
 		if	(!$oSEC->IsAuthority($capID,12,$bbs)){
-			my $tm = $LOG->IsTime(60,$host);
+			my $tm = $LOG->IsTime($Samba,$host);
 			if	($tm > 0){
 				$oSYS->Set('WAIT',$tm);
 				return 503;
 			}
 		}
-		$LOG->Set($oSET,length($this->{'FORM'}->Get('MESSAGE')),$oSYS->Get('VERSION'),$host);
+		$LOG->Set($oSET,length($this->{'FORM'}->Get('MESSAGE')),$oSYS->Get('VERSION'),$host,$datas);
 		$LOG->Save($oSYS);
 	}
 	
@@ -463,13 +490,16 @@ sub IsRegulation
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
 #
+#	2010.08.12 windyakin ★
+#	 -> トリップ変換処理の順番を変更(禁則文字,fusianasan変換の前へ)
+#
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationNameMail
 {
 	my		($this) = @_;
 	my		($Form,$oSEC,$oSET,$Sys);
 	my		($name,$mail,$subject,$bbs);
-	my		($capName,$capID);
+	my		($capName,$capID,$key);
 	
 	$Sys		= $this->{'SYS'};
 	$Form		= $this->{'FORM'};
@@ -522,20 +552,30 @@ sub NormalizationNameMail
 	unless	($name){	$name = $oSET->Get('BBS_NONAME_NAME');	}
 	unless	($mail){	$mail = '';								}
 	
+	# トリップキーと名前をここで切り離す
+	if ( $name =~ /#.+/ ) {
+		$key		= substr($name,index($name,'#')+1);
+		$name		= substr($name,0,index($name,'#'));
+		
+		# トリップ変換
+		$key = $this->{'CONV'}->ConvertTrip(\$key,$oSET->Get('BBS_TRIPCOLUMN'));
+	}
+	
+	
 	# 禁則文字変換
 	$this->{'CONV'}->ConvertCharacter(\$name,1);
 	$this->{'CONV'}->ConvertCharacter(\$mail,0);
 	
 	# fusiana変換
 	if	(index($name,'fusianasan') eq 0){
-		$name =~ s/fusianasan/<\/b>$host<b>/g;
+		$name =~ s/fusianasan/<\/b>$host<b> /g;
 	}
 	else{
-		$name =~ s/fusianasan/ <\/b>$host<b>/g;
+		$name =~ s/fusianasan/ <\/b>$host<b> /g;
 	}
 	
-	# トリップ変換
-	$this->{'CONV'}->ConvertTrip(\$name,$oSET->Get('BBS_TRIPCOLUMN'));
+	# トリップと名前を結合する
+	$name .= " </b>◆$key<b> " if ( $key ne "" );
 	
 	# キャップ名結合
 	if	($capName ne ''){

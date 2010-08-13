@@ -5,6 +5,9 @@
 #	---------------------------------------------------------------------------
 #	2004.07.17 start
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 キャップ権限追加
+#
 #============================================================================================================
 package	MODULE;
 
@@ -277,7 +280,7 @@ sub PrintGroupSetting
 		@user = split(/\,/,$Group->Get('CAPS',$Form->Get('SELECT_CAPGROUP')));
 		
 		# 権限番号マッピング配列を作成
-		for	($i = 0;$i < 18;$i++){
+		for	($i = 0;$i < 19;$i++){
 			$authNum[$i] = '';
 		}
 		foreach	$num (@auth){
@@ -320,6 +323,7 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_MOBILETHREAD $authNum[15] value=on>携帯からのスレッド作成<br>");
 	$Page->Print("<input type=checkbox name=C_FIXHANLDLE $authNum[16] value=on>コテハン★表\示<br>");
 	$Page->Print("<input type=checkbox name=C_SAMBA $authNum[17] value=on>Samba規制解除<br>");
+	$Page->Print("<input type=checkbox name=C_PROXY $authNum[18] value=on>プロキシ規制解除<br>");
 	$Page->Print("</td>\n<td valign=top>");
 	
 	# 所属ユーザ一覧表示
@@ -452,6 +456,9 @@ sub PrintGroupImport
 #	@param	$pLog	ログ用
 #	@return	エラーコード
 #
+#	2010.08.12 windyakin ★
+#	 -> キャップ権限の追加
+#
 #------------------------------------------------------------------------------------------------------------
 sub FunctionGroupSetting
 {
@@ -507,8 +514,9 @@ sub FunctionGroupSetting
 	$authNum[15]	= $Form->Equal('C_MOBILETHREAD','on') ? 1 : 0;
 	$authNum[16]	= $Form->Equal('C_FIXHANLDLE','on') ? 1 : 0;
 	$authNum[17]	= $Form->Equal('C_SAMBA','on') ? 1 : 0;
+	$authNum[18]	= $Form->Equal('C_PROXY','on') ? 1 : 0;
 	
-	for	($i = 1;$i < 19;$i++){
+	for	($i = 1;$i < 20;$i++){
 		if	($authNum[$i - 1]){
 			$auth .= "$i,";
 		}
