@@ -376,6 +376,9 @@ sub FunctionLogDelete
 				EARENDIL::DeleteDirectory($removePath2);
 				$Logs->Delete((grep { $Logs->{'PATH'}->{$_} eq $logPath2 } keys %{$Logs->{'PATH'}})[0]);
 			}
+			else {
+				last;
+			}
 		}
 		
 	}

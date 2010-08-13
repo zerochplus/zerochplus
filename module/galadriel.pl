@@ -479,7 +479,7 @@ sub ConvertTrip
 		if ($mark eq '#' || $mark eq '$') {
 			if ($$key =~ m|^#([0-9a-zA-Z]{16})([./0-9A-Za-z]{0,2})$|) {
 				$key2 = pack('H*', $1);
-				$salt = substr("$2..", 0, 2);
+				$salt = substr($2 . '..', 0, 2);
 				$salt =~ s/[^\.-z]/\./go;
 				$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 				
@@ -500,7 +500,7 @@ sub ConvertTrip
 	}
 	else {
 		# ]—ˆ‚ÌƒgƒŠƒbƒv¶¬•û®
-		$salt = substr("$$keyH.", 1, 2);
+		$salt = substr($$key . 'H.', 1, 2);
 		$salt =~ s/[^\.-z]/\./go;
 		$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 		
