@@ -7,6 +7,9 @@
 #	2003.10.20 外部ファイル対応に変更
 #	2004.04.24 モジュール整理
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 設定項目追加
+#
 #============================================================================================================
 package	MELKOR;
 
@@ -218,6 +221,9 @@ sub SetOption
 #	戻り値：なし
 #	備　考：(*)マークがついている項目のみ手動で変更可能です
 #
+#	2010.08.12 windyakin ★
+#	 -> Samba値の設定, 告知欄表示の設定, ２重カキコ規制の設定
+#
 #------------------------------------------------------------------------------------------------------------
 sub InitSystemValue
 {
@@ -232,7 +238,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',													# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',														# 掲示板設置パス(*)
 		'DEBUG'		=> 1,															# デバグモード(*)
-		'VERSION'	=> '0ch BBS Plus 2010/08/11',									# CGIバージョン
+		'VERSION'	=> '0ch BBS Plus 2010/08/13',									# CGIバージョン
 		'PM-DAT'	=> 0644,														# datパーミション(*)
 		'PM-TXT'	=> 0644,														# TXTパーミション(*)
 		'PM-LOG'	=> 0770,														# LOGパーミション(*)
@@ -247,13 +253,21 @@ sub InitSystemValue
 		'ADMMAX'	=> 500,															# 管理操作ログ最大保持数
 		'HISMAX'	=> 20,															# 書き込み履歴最大保持数
 		'ANKERS'	=> 10,															# 最大アンカー数
-		'URLLINK'	=> 'FALSE',														# URLへの自動リンク
+		'URLLINK'	=> 'TRUE',														# URLへの自動リンク
 		'LINKST'	=> 23,															# リンク禁止開始時間
 		'LINKED'	=> 2,															# リンク禁止終了時間
 		'PATHKIND'	=> 0,															# 生成パスの種類
 		'HEADTEXT'	=> '<small>■<b>掲示板一覧</b>■</small>',						# ヘッダ下部の表示文字列
 		'HEADURL'	=> '../index.html',												# ヘッダ下部のURL
-		'FASTMODE'	=> 0															# 高速モード
+		'FASTMODE'	=> 0,															# 高速モード
+		
+		# ここからぜろプラオリジナル
+		'SAMBA'		=> 10,															# 連続書き込み規制時間
+		'BANNER'	=> 1,															# read.cgi他の告知欄の表示
+		'KAKIKO'	=> 1,															# 2重かきこですか？？
+		'COUNTER'	=> '1002000420550000',											# ofuda.cc アカウント
+		'PRTEXT'	=> 'ぜろちゃんねるプラス',										# PR欄の表示文字列
+		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',							# PR欄のリンクURL
 	);
 	
 	# 情報保持キー
@@ -262,6 +276,7 @@ sub InitSystemValue
 		'PM-DAT','PM-TXT','PM-LOG','PM-ADM','PM-ADIR','PM-BDIR','PM-LDIR','PM-STOP',
 		'ERRMAX','SUBMAX','RESMAX','ADMMAX','HISMAX','ANKERS','URLLINK',
 		'LINKST','LINKED','PATHKIND','HEADTEXT','HEADURL','FASTMODE',
+		'SAMBA','BANNER','KAKIKO','COUNTER',
 	);
 }
 

@@ -5,6 +5,9 @@
 #	---------------------------------------------------------------------------
 #	2004.02.14 start
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 設定項目追加による改変
+#
 #============================================================================================================
 package	MODULE;
 
@@ -73,6 +76,9 @@ sub DoPrint
 	elsif	($subMode eq 'OTHER'){													# その他設定画面
 		PrintOtherSetting($Page,$Sys,$Form);
 	}
+	elsif	($subMode eq 'PLUS'){													# ぜろプラスオリジナル
+		PrintPlusSetting($Page,$Sys,$Form);
+	}
 	elsif	($subMode eq 'PLUGIN'){													# 拡張機能設定画面
 		PrintPluginSetting($Page,$Sys,$Form);
 	}
@@ -122,6 +128,9 @@ sub DoFunction
 	elsif	($subMode eq 'OTHER'){													# その他設定
 		$err = FunctionOtherSetting($Sys,$Form,$this->{'LOG'});
 	}
+	elsif	($subMode eq 'PLUS'){													# ぜろプラスオリジナル
+		$err = FunctionPlusSetting($Sys,$Form,$this->{'LOG'});
+	}
 	elsif	($subMode eq 'SET_PLUGIN'){												# 拡張機能情報設定
 		$err = FunctionPluginSetting($Sys,$Form,$this->{'LOG'});
 	}
@@ -163,6 +172,7 @@ sub SetMenuList
 		$Base->SetMenu("パーミッション設定","'sys.setting','DISP','PERMISSION'");
 		$Base->SetMenu("リミッタ設定","'sys.setting','DISP','LIMITTER'");
 		$Base->SetMenu("その他設定","'sys.setting','DISP','OTHER'");
+		$Base->SetMenu("ぜろプラオリジナル設定","'sys.setting','DISP','PLUS'");
 		$Base->SetMenu("<hr>",'');
 		$Base->SetMenu("拡張機能\設定","'sys.setting','DISP','PLUGIN'");
 	}
@@ -298,6 +308,9 @@ sub PrintPermissionSetting
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
+#	2010.08.12 windyakin ★
+#	 -> システム変更に伴う設定項目の追加
+#
 #------------------------------------------------------------------------------------------------------------
 sub PrintLimitterSetting
 {
@@ -401,6 +414,71 @@ sub PrintOtherSetting
 	$Page->Print("<tr><td colspan=2 align=right>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	ぜろちゃんねるプラスオリジナル設定画面の表示
+#	-------------------------------------------------------------------------------------
+#	@param	$Page	ページコンテキスト
+#	@param	$SYS	システム変数
+#	@param	$Form	フォーム変数
+#	@return	なし
+#
+#	2010.08.12 windyakin ★
+#	 -> 新規作成
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintPlusSetting
+{
+	my		($Page,$SYS,$Form) = @_;
+	my		($Banner,$Kakiko,$Counter,$Samba,$Prtext,$Prlink);
+	my		($banner,$kakiko);
+	my		($common);
+	
+	$SYS->Set('_TITLE','System ZerochPlus Original Setting');
+	
+	$Banner		= $SYS->Get('BANNER');
+	$Kakiko		= $SYS->Get('KAKIKO');
+	$Counter	= $SYS->Get('COUNTER');
+	$Samba		= $SYS->Get('SAMBA');
+	$Prtext		= $SYS->Get('PRTEXT');
+	$Prlink		= $SYS->Get('PRLINK');
+	
+	$banner		= ($Banner == 1 ? 'checked' : '');
+	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
+	
+	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
+	
+	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=2>各項目を設定して[設定]ボタンを押してください。</td></tr>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">Read.cgi関連</td></tr>\n");
+	$Page->Print("<tr><td>ofuda.ccのアカウント名を入力</td>");
+	$Page->Print("<td><input type=text size=60 name=COUNTER value=\"$Counter\"></td></tr>\n");
+	$Page->Print("<tr><td>PR欄の表\示文字列</td>");
+	$Page->Print("<td><input type=text size=60 name=PRTEXT value=\"$Prtext\"></td></tr>\n");
+	$Page->Print("<tr><td>PR欄のリンクURL</td>");
+	$Page->Print("<td><input type=text size=60 name=PRLINK value=\"$Prlink\"></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">告知欄表\示</td></tr>\n");
+	$Page->Print("<tr><td>index.html以外の告知欄を表\示する</td>");
+	$Page->Print("<td><input type=checkbox name=BANNER $banner value=on></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">２重かきこですか？？</td></tr>\n");
+	$Page->Print("<tr><td>同じIPからの書き込みの文字数が変化しない場合規制する</td>");
+	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制</td></tr>\n");
+	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
+	$Page->Print("<td><input type=text size=60 name=SAMBA value=\"$Samba\"></td></tr>\n");
+	
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
+	$Page->Print("</table>");
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -671,6 +749,58 @@ sub FunctionOtherSetting
 		push(@$pLog,"　　　 　終了時間：" . $SYSTEM->Get('LINKED'));
 		push(@$pLog,"　　　 PATH種別：" . $SYSTEM->Get('PATHKIND'));
 		push(@$pLog,"　　　 高速モード：" . $SYSTEM->Get('FASTMODE'));
+	}
+	return 0;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	ぜろちゃんねるプラスオリジナル設定
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	システム変数
+#	@param	$Form	フォーム変数
+#	@param	$pLog	ログ用
+#	@return	エラーコード
+#
+#	2010.08.12 windyakin ★
+#	 -> 新規作成
+#
+#------------------------------------------------------------------------------------------------------------
+sub FunctionPlusSetting
+{
+	my		($Sys,$Form,$pLog) = @_;
+	my		($SYSTEM);
+	
+	# 権限チェック
+	{
+		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		
+		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+			return 1000;
+		}
+	}
+	require('./module/melkor.pl');
+	$SYSTEM = new MELKOR;
+	$SYSTEM->Init();
+	
+	$SYSTEM->Set('COUNTER',$Form->Get('COUNTER'));
+	$SYSTEM->Set('PRTEXT',$Form->Get('PRTEXT'));
+	$SYSTEM->Set('PRLINK',$Form->Get('PRLINK'));
+	$SYSTEM->Set('BANNER',($Form->Equal('BANNER','on') ? 1 : 0));
+	$SYSTEM->Set('KAKIKO',($Form->Equal('KAKIKO','on') ? 1 : 0));
+	$SYSTEM->Set('SAMBA',$Form->Get('SAMBA'));
+	
+	$SYSTEM->Save();
+	
+	# ログの設定
+	{
+		push(@$pLog,"　　　 カウンターアカウント：" . $SYSTEM->Get('COUNTER'));
+		push(@$pLog,"　　　 PR欄表\示文字列：" . $SYSTEM->Get('PRTEXT'));
+		push(@$pLog,"　　　 PR欄リンクURL：" . $SYSTEM->Get('PRLINK'));
+		push(@$pLog,"　　　 バナー表\示：" . $SYSTEM->Get('BANNER'));
+		push(@$pLog,"　　　 2重カキコ規制：" . $SYSTEM->Get('KAKIKO'));
+		push(@$pLog,"　　　 連続投稿規制秒数：" . $SYSTEM->Get('SAMBA'));
 	}
 	return 0;
 }

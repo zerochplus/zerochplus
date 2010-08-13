@@ -7,6 +7,9 @@
 #	2003.02.07 cookie関係を別モジュールに
 #	           DeleteText追加
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 新仕様トリップ対応
+#
 #============================================================================================================
 package	GALADRIEL;
 
@@ -173,16 +176,16 @@ sub ConvertURL
 			$$text =~ s{$reg1}{<$1::$2>}g;											# URL1次変換
 			while($$text =~ m{$reg2}){												# 2次変換
 				if	($2 =~ m{$server}){												# 自鯖リンク
-					$$text =~ s{$reg2}{<a href="$1://$2" target=new>$1://$2</a>};	# クッションなし
+					$$text =~ s{$reg2}{<a href="$1://$2" target="_blank">$1://$2</a>};# クッションなし
 				}
 				else{																# 自鯖以外
 					$$text =~ s{$reg2}
-							{<a href="$1://$cushion$2" target=new>$1://$2</a>};		# クッション付加
+							{<a href="$1://$cushion$2" target="_blank">$1://$2</a>};# クッション付加
 				}
 			}
 		}
 		else{																		# クッション無し
-			$$text =~ s{$reg1}{<a href="$1://$2" target=new>$1://$2</a>}g;			# 通常URL変換
+			$$text =~ s{$reg1}{<a href="$1://$2" target="_blank">$1://$2</a>}g;		# 通常URL変換
 		}
 	}
 	return $text;
@@ -216,13 +219,13 @@ sub ConvertQuotation
 		$buf .= '&nofirst=true';
 		
 		$$text	=~ s{&gt;&gt;(\d+)-(\d+)}											# 引用 n-m
-					{$buf&st=$1&to=$2" target=_blank>>>$1-$2</a>}g;
+					{$buf&st=$1&to=$2" target="_blank">>>$1-$2</a>}g;
 		$$text	=~ s{&gt;&gt;(\d+)-}												# 引用 n-
-					{$buf&st=$1&to=-1" target=_blank>>>$1-</a>}g;
+					{$buf&st=$1&to=-1" target="_blank">>>$1-</a>}g;
 		$$text	=~ s{&gt;&gt;-(\d+)}												# 引用 -n
-					{$buf&st=1&to=$1" target=_blank>>>$1-</a>}g;
+					{$buf&st=1&to=$1" target="_blank">>>$1-</a>}g;
 		$$text	=~ s{&gt;&gt;(\d+)}													# 引用 n
-					{$buf&st=$1&to=$1" target=_blank>>>$1</a>}g;
+					{$buf&st=$1&to=$1" target="_blank">>>$1</a>}g;
 	}
 	else{
 		# URLベースを生成
@@ -230,10 +233,10 @@ sub ConvertQuotation
 		$buf	.= $pathCGI . ($mode ? '/r.cgi/' : '/read.cgi/');
 		$buf	.= $Sys->Get('BBS') . '/' . $Sys->Get('KEY');
 		
-		$$text	=~ s{&gt;&gt;(\d+)-(\d+)}{$buf/$1-$2n" target=_blank>>>$1-$2</a>}g;	# 引用 n-m
-		$$text	=~ s{&gt;&gt;(\d+)-}{$buf/$1-" target=_blank>>>$1-</a>}g;			# 引用 n-
-		$$text	=~ s{&gt;&gt;-(\d+)}{$buf/-$1" target=_blank>>>-$1</a>}g;			# 引用 -n
-		$$text	=~ s{&gt;&gt;(\d+)}{$buf/$1" target=_blank>>>$1</a>}g;				# 引用 n
+		$$text	=~ s{&gt;&gt;(\d+)-(\d+)}{$buf/$1-$2n" target="_blank">>>$1-$2</a>}g;	# 引用 n-m
+		$$text	=~ s{&gt;&gt;(\d+)-}{$buf/$1-" target="_blank">>>$1-</a>}g;			# 引用 n-
+		$$text	=~ s{&gt;&gt;-(\d+)}{$buf/-$1" target="_blank">>>-$1</a>}g;			# 引用 -n
+		$$text	=~ s{&gt;&gt;(\d+)}{$buf/$1" target="_blank">>>$1</a>}g;				# 引用 n
 	}
 	$$text	=~ s{>>(\d+)}{&gt;&gt;$1}g;												# &gt;変換
 	
@@ -448,32 +451,82 @@ sub MakeID
 #
 #	トリップ作成関数 - ConvertTrip
 #	--------------------------------------
-#	引　数：$pName  : 変換元文字列
+#	引　数：$key    : トリップキー
 #			$column : 桁数
 #	戻り値：変換後文字列
+#
+#	2010.08.12 windyakin ★
+#	 -> 生キー変換, 新仕様トリップ(12桁) に対応
+#		詳細は副産物のtriptestを参考のこと
 #
 #------------------------------------------------------------------------------------------------------------
 sub ConvertTrip
 {
 	my		$this = shift;
-	my		($pName,$column) = @_;
-	my		($k,$s,$t,$n);
+	my		($key,$column) = @_;
+	my		($trip,$mark,$salt,$nama);
 	
-	if	($$pName =~ /#(.+)/){
-		$column	= -1 * $column;
-		$n		= substr($$pName,0,index($$pName,'#'));
-		$k		= substr($$pName,index($$pName,'#')+1);
-		$s		= substr(substr($k,0,8).'H.', 1, 2);
-		$s		=~ s/[^\.-z]/\./go;
-		$s		=~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
-		$t		= substr(crypt($k, $s), $column);
-		if	($n ne ""){
-			$$pName = "$n <\/b>◆$t <b>";
+	# cryptのときの桁取得
+	$column	= -1 * $column;
+	
+	# それらのデコード
+	$$key =~ s/&quot;/"/g; #"
+	$$key =~ s/&lt;/</g;
+	$$key =~ s/&gt;/>/g;
+	
+	if ( length $$key >= 12 ) {
+	
+		# 先頭文字列の取得
+		$mark = substr( $$key, 0, 1 );
+		
+		if ( $mark eq '#' || $mark eq '$' ) {
+			if ( $$key =~ m|^#([0-9a-zA-Z]{16})([./0-9A-Za-z]{0,2})$| ) {
+				# 生キー変換
+				$nama = $1;
+				$salt = $2;
+				if ( $nama =~ /^((..)+)80/ ) { $nama = $1; } # 0x80問題再現
+				$trip = substr( crypt( pack( 'H*', $nama ), "$salt.." ), $column );
+			}
+			else {
+				# 将来の拡張用
+				$trip = '???';
+			}
 		}
-		else{
-			$$pName = "<\/b>◆$t <b>";
+		else {
+			# SHA1(新仕様)トリップ
+			$trip = substr( sha1_base64($$key), 0, 12);
+			$trip =~ tr/+/./;
 		}
 	}
+	else {
+		# 従来のトリップ生成方式
+		
+		# 0x80を確かめるために一度生キーへ変換
+		$nama = $$key;
+		$nama =~ s/(.)/unpack('H2', $1)/eg;
+		
+		if( $nama =~ /^((..)+)80/ ) {
+			
+			$nama = $1;
+			$nama .= "0" x (16-length $nama);
+			
+			$salt = substr( pack( 'H*', $nama ).'H.', 1, 2 );
+			$salt =~ s/[^\.-z]/\./go;
+			$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
+			
+			$trip = substr( crypt( pack( 'H*', $nama ), "$salt.." ), $column );
+			
+		}
+		else {
+			$salt = substr( $$key.'H.', 1, 2 );
+			$salt =~ s/[^\.-z]/\./go;
+			$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
+			$trip = substr( crypt( $$key, $salt ), $column );
+		}
+	}
+	
+	return $trip;
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -788,23 +841,28 @@ sub IsReferer
 #	引　数：なし
 #	戻り値：プロクシなら対象ポート番号
 #
+#	2010.08.12 windyakin ★
+#	 -> BBQ, BBX, スパムちゃんぷるー のDNSBL問い合わせ式に変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub IsProxy
 {
 	my		$this = shift;
 	my		($host) = @_;
-	my		(@pList,$port);
+	my		($addr,@dnsbls);
 	
-	if	($$host =~ /\D/){															# ホスト名に数字以外有り
-		if	($$host =~ /proxy/){													# ホスト名にproxyあり
-			return 1;
+	if ( $host !~ /\.(?:docomo|ezweb|vodafone|jp-[a-z]|softbank|prin)\.ne\.jp$/ ){
+		
+		$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'} )));
+		@dnsbls = ('niku.2ch.net', 'bbx.2ch.net', 'dnsbl.spam-champuru.livedoor.com');
+		foreach my $dnsbl (@dnsbls) {
+			return ( 1 ) if ( join('.', unpack('C*', gethostbyname("$addr.$dnsbl"))) eq '127.0.0.2' );
 		}
-		if	($$host =~ /(\.(co|ne)\.jp)$/){											# co,ne.jpはスルー
-			return 0;
-		}
-		return 0;
+		
 	}
-	return 1;																		# 生IP
+	
+	return 0;
+	
 }
 
 #============================================================================================================
