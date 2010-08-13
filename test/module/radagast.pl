@@ -19,13 +19,13 @@ package		RADAGAST;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%COOKIE);
+	my $this = shift;
+	my ($obj, %COOKIE);
 	
 	$obj = {
 		'COOKIE'	=> \%COOKIE
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -40,19 +40,19 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Init
 {
-	my		$this = shift;
-	my		(@pairs,$name,$value,$gCode);
+	my $this = shift;
+	my (@pairs, $name, $value, $gCode);
 	
-	require("./module/jcode.pl");
-	undef($this->{'COOKIE'});
+	require './module/jcode.pl';
+	undef $this->{'COOKIE'};
 	
-	if	($ENV{'HTTP_COOKIE'}){
-		@pairs = split(/;/,$ENV{'HTTP_COOKIE'});
-		foreach	(@pairs){
-			($name,$value) = split(/=/,$_);
+	if ($ENV{'HTTP_COOKIE'}) {
+		@pairs = split(/;/, $ENV{'HTTP_COOKIE'});
+		foreach (@pairs) {
+			($name, $value) = split(/=/, $_);
 			$name =~ s/ //g;
-			$gCode = jcode'getcode(*value);
-			&jcode'convert(*value,$gCode);
+			$gCode = jcode::getcode(*value);
+			jcode::convert(*value, $gCode);
 			$this->{'COOKIE'}->{$name} = $value;
 		}
 		return 1;
@@ -70,8 +70,8 @@ sub Init
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($key,$value) = @_;
+	my $this = shift;
+	my ($key, $value) = @_;
 	
 	$this->{'COOKIE'}->{$key} = $value;
 }
@@ -86,8 +86,8 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return $this->{'COOKIE'}->{$key};
 }
@@ -102,10 +102,10 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
-	delete($this->{'COOKIE'}->{$key});
+	delete $this->{'COOKIE'}->{$key};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -118,8 +118,8 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub IsExist
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return exists($this->{'COOKIE'}->{$key});
 }
@@ -136,21 +136,21 @@ sub IsExist
 #------------------------------------------------------------------------------------------------------------
 sub Out
 {
-	my		$this = shift;
-	my		($oOut,$path,$limit) = @_;
+	my $this = shift;
+	my ($oOut, $path, $limit) = @_;
 	
 	# 日付情報の設定
-	@gmt	= gmtime(time + $limit * 60);
-	@week	= ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
-	@month	= ('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
+	@gmt = gmtime(time + $limit * 60);
+	@week = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+	@month = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
 	
 	# 有効期限文字列生成
-	$date	= sprintf("%s\, %02d\-%s\-%04d %02d:%02d:%02d GMT",
-					$week[$gmt[6]],$gmt[3],$month[$gmt[4]],$gmt[5] +1900,
-					$gmt[2],$gmt[1],$gmt[0]);
+	$date = sprintf('%s, %02d-%s-%04d %02d:%02d:%02d GMT',
+					$week[$gmt[6]], $gmt[3], $month[$gmt[4]], $gmt[5] + 1900,
+					$gmt[2], $gmt[1], $gmt[0]);
 	
 	# 設定されているcookieを全て出力する
-	foreach	$key (keys(%{$this->{'COOKIE'}})){
+	foreach $key (keys %{$this->{'COOKIE'}}) {
 		$value = $this->{'COOKIE'}->{$key};
 		$oOut->Print("Set-Cookie: $key=$value; expires=$date; path=$path\n");
 	}
@@ -166,38 +166,37 @@ sub Out
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
-	my		$this = shift;
-	my		($oOut) = @_;
+	my $this = shift;
+	my ($oOut) = @_;
 	
-
-$oOut->Print(<<JavaScript);
+	$oOut->Print(<<JavaScript);
 <script language="JavaScript" type="text/javascript">
 <!--
-function l(e){
-	var N=getCookie("NAME"),M=getCookie("MAIL"),i;
+function l(e) {
+	var N = getCookie("NAME"), M = getCookie("MAIL"), i;
 	with(document)
-	for(i=0;i<forms.length;i++)
-	if(forms[i].FROM&&forms[i].mail)
-	with(forms[i]){
-		FROM.value=N;
-		mail.value=M;
-	}
+		for(var i = 0 ; i < forms.length ; i++)
+			if(forms[i].FROM && forms[i].mail)
+				with(forms[i]) {
+					FROM.value = N;
+					mail.value = M;
+				}
 }
-window.onload=l;
-function getCookie(key, tmp1, tmp2, xx1, xx2, xx3){
-	tmp1=" "+document.cookie+";";
-	xx1=xx2=0;
-	len=tmp1.length;
-	while(xx1<len){
-		xx2=tmp1.indexOf(";",xx1);
-		tmp2=tmp1.substring(xx1+1,xx2);
-		xx3=tmp2.indexOf("=");
-		if(tmp2.substring(0,xx3)==key){
-			return(unescape(tmp2.substring(xx3 + 1, xx2 - xx1 - 1)));
+window.onload = l;
+function getCookie(key, tmp1, tmp2, xx1, xx2, xx3) {
+	tmp1 = " " + document.cookie + ";";
+	xx1 = xx2 = 0;
+	len = tmp1.length;
+	while (xx1 < len) {
+		xx2 = tmp1.indexOf(";", xx1);
+		tmp2 = tmp1.substring(xx1 + 1, xx2);
+		xx3 = tmp2.indexOf("=");
+		if ( tmp2.substring(0, xx3) == key) {
+			return unescape(tmp2.substring(xx3 + 1, xx2 - xx1 - 1));
 		}
-		xx1=xx2 + 1;
+		xx1 = xx2 + 1;
 	}
-	return("");
+	return "";
 }
 //-->
 </script>

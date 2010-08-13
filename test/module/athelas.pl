@@ -18,8 +18,8 @@ package	ATHELAS;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%FILES,%CLASSES,%NAMES,%EXPS,%TYPES,%VALIDS);
+	my $this = shift;
+	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS);
 	
 	$obj = {
 		'FILE'	=> \%FILES,
@@ -29,7 +29,7 @@ sub new
 		'TYPE'	=> \%TYPES,
 		'VALID'	=> \%VALIDS
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	return $obj;
 }
 
@@ -43,26 +43,26 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef($this->{'FILE'});
-	undef($this->{'CLASS'});
-	undef($this->{'NAME'});
-	undef($this->{'EXPL'});
-	undef($this->{'TYPE'});
-	undef($this->{'VALID'});
+	undef $this->{'FILE'};
+	undef $this->{'CLASS'};
+	undef $this->{'NAME'};
+	undef $this->{'EXPL'};
+	undef $this->{'TYPE'};
+	undef $this->{'VALID'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	if	(-e $path){
-		open(PLUGINS,"<$path");
-		while	(<PLUGINS>){
-			chomp($_);
-			@elem = split(/<>/,$_);
-			if(@elem >= 7){
+	if	(-e $path) {
+		open PLUGINS, "< $path";
+		while (<PLUGINS>) {
+			chomp $_;
+			@elem = split(/<>/, $_);
+			if (@elem >= 7) {
 				$this->{'FILE'}->{$elem[0]}		= $elem[1];
 				$this->{'CLASS'}->{$elem[0]}	= $elem[2];
 				$this->{'NAME'}->{$elem[0]}		= $elem[3];
@@ -71,7 +71,7 @@ sub Load
 				$this->{'VALID'}->{$elem[0]}	= $elem[6];
 			}
 		}
-		close(PLUGINS);
+		close PLUGINS;
 	}
 }
 
@@ -85,30 +85,33 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	eval{
-		open(PLUGINS,"+>$path");
-		flock(PLUGINS,2);
-		binmode(PLUGINS);
-		truncate(PLUGINS,0);
-		seek(PLUGINS,0,0);
-		foreach	(keys %{$this->{'FILE'}}){
-			$data = $_ . '<>' . $this->{'FILE'}->{$_};
-			$data = $data . '<>' . $this->{'CLASS'}->{$_};
-			$data = $data . '<>' . $this->{'NAME'}->{$_};
-			$data = $data . '<>' . $this->{'EXPL'}->{$_};
-			$data = $data . '<>' . $this->{'TYPE'}->{$_};
-			$data = $data . '<>' . $this->{'VALID'}->{$_};
+	eval {
+		open PLUGINS, "+> $path";
+		flock PLUGINS, 2;
+		binmode PLUGINS;
+		truncate PLUGINS, 0;
+		seek PLUGINS, 0, 0;
+		foreach (keys %{$this->{'FILE'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'FILE'}->{$_},
+				$this->{'CLASS'}->{$_},
+				$this->{'NAME'}->{$_},
+				$this->{'EXPL'}->{$_},
+				$this->{'TYPE'}->{$_},
+				$this->{'VALID'}->{$_}
+			);
 			
 			print PLUGINS "$data\n";
 		}
-		close(PLUGINS);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close PLUGINS;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
 }
 
@@ -124,22 +127,22 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (keys %{$this->{NAME}}){
-			push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach	$key (keys %{$this->{NAME}}) {
+			push @$pBuf, $key;
 			$n++;
 		}
 	}
-	else{
-		foreach	$key (keys %{$this->{$kind}}){
-			if	(($this->{$kind}->{$key} eq $name) || ($name eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach	$key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $name eq 'ALL') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -159,8 +162,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -177,10 +180,10 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists($this->{$kind}->{$id})) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -196,19 +199,19 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($file,$valid) = @_;
-	my		($id,$ret);
+	my $this = shift;
+	my ($file, $valid) = @_;
+	my ($id, $ret);
 	
 	$ret = undef;
-	$id = time();
-	while(exists($this->{'FILE'}->{$id})){
+	$id = time;
+	while (exists $this->{'FILE'}->{$id}) {
 		$id ++;
 	}
-	if(-e "./plugin/$file"){
-		if($file =~ /0ch_(.*)\.pl/){
-			my $className = 'ZPL_' . $1;
-			eval{
+	if (-e "./plugin/$file") {
+		if ($file =~ /0ch_(.*)\.pl/) {
+			my $className = "ZPL_$1";
+			eval {
 				require("./plugin/$file");
 				my $plugin = new $className;
 				$this->{'FILE'}->{$id}	= $file;
@@ -234,15 +237,15 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
+	my $this = shift;
+	my ($id) = @_;
 	
-	delete($this->{'FILE'}->{$id});
-	delete($this->{'CLASS'}->{$id});
-	delete($this->{'NAME'}->{$id});
-	delete($this->{'EXPL'}->{$id});
-	delete($this->{'TYPE'}->{$id});
-	delete($this->{'VALID'}->{$id});
+	delete $this->{'FILE'}->{$id};
+	delete $this->{'CLASS'}->{$id};
+	delete $this->{'NAME'}->{$id};
+	delete $this->{'EXPL'}->{$id};
+	delete $this->{'TYPE'}->{$id};
+	delete $this->{'VALID'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -255,55 +258,55 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub Update
 {
-	my		$this = shift;
-	my		(@files,$file,$plugin,@buff,$exist);
+	my $this = shift;
+	my (@files, $file, $plugin, @buff, $exist);
 	
-	if(-e './plugin'){
-		opendir(PLUGINS,'./plugin');
-		@files = readdir(PLUGINS);
-		closedir(PLUGINS);
+	if (-e './plugin') {
+		opendir PLUGINS, './plugin';
+		@files = readdir PLUGINS;
+		closedir PLUGINS;
 		# プラグイン追加・更新フェイズ
-		foreach $file (@files){
-			if($file =~ /^0ch_(.*)\.pl/){
-				my $className = 'ZPL_' . $1;
-				if($this->GetKeySet('FILE',$file,\@buff) > 0){
-					require("./plugin/$file");
+		foreach $file (@files) {
+			if ($file =~ /^0ch_(.*)\.pl/) {
+				my $className = "ZPL_$1";
+				if ($this->GetKeySet('FILE', $file, \@buff) > 0) {
+					require "./plugin/$file";
 					$plugin = new $className;
 					$this->{'NAME'}->{$buff[0]} = $plugin->getName();
 					$this->{'EXPL'}->{$buff[0]} = $plugin->getExplanation();
 					$this->{'TYPE'}->{$buff[0]} = $plugin->getType();
 					$plugin = undef;
 				}
-				else{
-					$this->Add($file,0);
+				else {
+					$this->Add($file, 0);
 				}
-				undef(@buff);
+				undef @buff;
 			}
 		}
 		# プラグイン削除フェイズ
-		if($this->GetKeySet('ALL','',\@buff) > 0){
+		if ($this->GetKeySet('ALL', '', \@buff) > 0) {
 			$exist = 0;
-			foreach $plugin (@buff){
-				foreach $file (@files){
-					if($this->Get('FILE',$plugin) eq $file){
+			foreach $plugin (@buff) {
+				foreach $file (@files) {
+					if ($this->Get('FILE', $plugin) eq $file) {
 						$exist = 1;
 						last;
 					}
 				}
-				if($exist == 0){
+				if ($exist == 0) {
 					$this->Delete($plugin);
 				}
 				$exist = 0;
 			}
 		}
 	}
-	else{
-		undef($this->{'FILE'});
-		undef($this->{'CLASS'});
-		undef($this->{'NAME'});
-		undef($this->{'EXPL'});
-		undef($this->{'TYPE'});
-		undef($this->{'VALID'});
+	else {
+		undef $this->{'FILE'};
+		undef $this->{'CLASS'};
+		undef $this->{'NAME'};
+		undef $this->{'EXPL'};
+		undef $this->{'TYPE'};
+		undef $this->{'VALID'};
 	}
 }
 

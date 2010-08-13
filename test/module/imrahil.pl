@@ -26,9 +26,9 @@ package	IMRAHIL;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my	$this = shift;
-	my	($File,$Limit,$Mode) = @_;
-	my	($obj,@LOGS);
+	my $this = shift;
+	my ($File, $Limit, $Mode) = @_;
+	my ($obj, @LOGS);
 	local *HANDLE;
 	
 	$obj = {
@@ -40,7 +40,7 @@ sub new
 		'STAT'		=> 0,
 		'MODE'		=> $Mode
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -55,14 +55,14 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DESTROY
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	# ファイルオープン状態の場合はクローズする
-	if	($this->{'STAT'}){
-		my	$handle	= $this->{'HANDLE'};
-		if	($handle){
-			eval{
-				close($handle);
+	if ($this->{'STAT'}) {
+		my $handle = $this->{'HANDLE'};
+		if ($handle) {
+			eval {
+				close $handle;
 			};
 		}
 	}
@@ -80,37 +80,37 @@ sub DESTROY
 #------------------------------------------------------------------------------------------------------------
 sub Open
 {
-	my	$this = shift;
-	my	($File,$Limit,$Mode) = @_;
-	my	$ret = -1;
+	my $this = shift;
+	my ($File, $Limit, $Mode) = @_;
+	my $ret = -1;
 	
-	if($File ne undef && $Limit ne undef && $Mode ne undef){
+	if ($File ne undef && $Limit ne undef && $Mode ne undef) {
 		$this->{'PATH'} = $File;
 		$this->{'LIMIT'} = $Limit;
 		$this->{'MODE'} = $Mode;
 	}
-	else{
+	else {
 		$File = $this->{'PATH'};
 		$Limit = $this->{'LIMIT'};
 		$Mode = $this->{'MODE'};
 	}
 	
-	if($this->{'HANDLE'} eq undef){
+	if ($this->{'HANDLE'} eq undef) {
 		local *HANDLE;
 		$this->{'HANDLE'} = *HANDLE;
 	}
 	$File .= '.cgi';
 	
-	eval{
-		if($this->{'STAT'} == 0){
+	eval {
+		if ($this->{'STAT'} == 0) {
 			my $handle = $this->{'HANDLE'};
-			open($handle,"+>>$File");
-			flock($handle,2) if($Mode & 1);
-			binmode($handle);
+			open $handle, "+>> $File";
+			flock $handle, 2 if ($Mode & 1);
+			binmode $handle;
 			
 			$this->{'STAT'} = 1;
 			$ret = 0;
-			if($Mode & 2){
+			if ($Mode & 2) {
 				$ret = $this->Read();
 			}
 		}
@@ -128,12 +128,12 @@ sub Open
 #------------------------------------------------------------------------------------------------------------
 sub Close
 {
-	my	$this = shift;
+	my $this = shift;
 	
-	if($this->{'STAT'} == 1){
-		eval{
+	if ($this->{'STAT'} == 1) {
+		eval {
 			my $handle = $this->{'HANDLE'};
-			close($handle);
+			close $handle;
 			$this->{'STAT'} = 0;
 		};
 	}
@@ -149,18 +149,18 @@ sub Close
 #------------------------------------------------------------------------------------------------------------
 sub Read
 {
-	my	$this = shift;
-	my	$ret = -1;
+	my $this = shift;
+	my $ret = -1;
 	
-	if($this->{'STAT'} == 1){
-		eval{
+	if ($this->{'STAT'} == 1) {
+		eval {
 			my $handle = $this->{'HANDLE'};
 			my $count = 0;
-			undef(@{$this->{'LOGS'}});
-			seek($handle,0,0);
-			while(<$handle>){
-				chomp($_);
-				push(@{$this->{'LOGS'}},$_);
+			undef @{$this->{'LOGS'}};
+			seek $handle, 0, 0;
+			while (<$handle>) {
+				chomp $_;
+				push @{$this->{'LOGS'}}, $_;
 				$count++;
 			}
 			$this->{'SIZE'} = $count;
@@ -180,23 +180,23 @@ sub Read
 #------------------------------------------------------------------------------------------------------------
 sub Write
 {
-	my	$this = shift;
+	my $this = shift;
 	
 	# ファイルオープン状態なら書き込みを実行する
-	if	($this->{'STAT'}){
-		if	(!($this->{'MODE'} & 1)){
-			my	$handle = $this->{'HANDLE'};
-			eval{
-				truncate($handle,0);
-				seek($handle,0,0);
-				for($i = 0;$i < $this->{'SIZE'};$i++){
+	if ($this->{'STAT'}) {
+		if (!($this->{'MODE'} & 1)) {
+			my $handle = $this->{'HANDLE'};
+			eval {
+				truncate $handle, 0;
+				seek $handle, 0, 0;
+				for ($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
 					print $handle $this->{'LOGS'}->[$i] . "\n";
 				}
-				close($handle);
+				close $handle;
 			};
 			$this->{'STAT'} = 0;
 		}
-		else{
+		else {
 			$this->Close();
 		}
 	}
@@ -212,10 +212,10 @@ sub Write
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my	$this = shift;
-	my	($line) = @_;
+	my $this = shift;
+	my ($line) = @_;
 	
-	if($line < $this->{'SIZE'}){
+	if ($line < $this->{'SIZE'}) {
 		return $this->{'LOGS'}->[$line];
 	}
 	return undef;
@@ -231,29 +231,29 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Put
 {
-	my	$this = shift;
-	my	(@datas) = @_;
-	my	($logData,$tm);
+	my $this = shift;
+	my (@datas) = @_;
+	my ($logData, $tm);
 	
-	if($this->{'SIZE'} + 1 > $this->{'LIMIT'}){
-		my $old = shift(@{$this->{'LOGS'}});
-		if($this->{'MODE'} & 4){
+	if ($this->{'SIZE'} + 1 > $this->{'LIMIT'}) {
+		my $old = shift @{$this->{'LOGS'}};
+		if ($this->{'MODE'} & 4) {
 			my $logName = $this->{'PATH'} . '_old.cgi';
-			eval{
-				open(OLDLOG,">>$logName");
-				flock(OLDLOG,2);
-				binmode(OLDLOG);
+			eval {
+				open OLDLOG, ">> $logName";
+				flock OLDLOG, 2;
+				binmode OLDLOG;
 				print OLDLOG "$old\n";
-				close(OLDLOG);
+				close OLDLOG;
 			};
 		}
-		$this->{'SIZE'} --;
+		$this->{'SIZE'}--;
 	}
-	$tm = time();
-	$logData = $tm . '<>' . join('<>',@datas);
+	$tm = time;
+	$logData = join('<>', $tm, @datas);
 	
-	push(@{$this->{'LOGS'}},$logData);
-	$this->{'SIZE'} ++;
+	push @{$this->{'LOGS'}}, $logData;
+	$this->{'SIZE'}++;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -266,7 +266,7 @@ sub Put
 #------------------------------------------------------------------------------------------------------------
 sub Size
 {
-	my	$this = shift;
+	my $this = shift;
 	return $this->{'SIZE'};
 }
 
@@ -280,17 +280,17 @@ sub Size
 #------------------------------------------------------------------------------------------------------------
 sub MoveToOld
 {
-	my	$this = shift;
-	my	($i);
+	my $this = shift;
+	my ($i);
 	
-	eval{
-		open(OLDLOG,">>" . $this->{'PATH'} . '_old.cgi');
-		flock(OLDLOG,2);
-		binmode(OLDLOG);
-		for($i = 0;$i < $this->{'SIZE'};$i++){
+	eval {
+		open OLDLOG, ">> " . $this->{'PATH'} . '_old.cgi';
+		flock OLDLOG, 2;
+		binmode OLDLOG;
+		for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
 			print OLDLOG $this->{'LOGS'}->[$i] . "\n";
 		}
-		close(OLDLOG);
+		close OLDLOG;
 	};
 }
 
@@ -304,9 +304,9 @@ sub MoveToOld
 #------------------------------------------------------------------------------------------------------------
 sub Clear
 {
-	my	$this = shift;
+	my $this = shift;
 	
-	undef(@{$this->{'LOGS'}});
+	undef @{$this->{'LOGS'}};
 	$this->{'SIZE'} = 0;
 }
 
@@ -322,15 +322,15 @@ sub Clear
 #------------------------------------------------------------------------------------------------------------
 sub search
 {
-	my	$this = shift;
-	my	($index,$word,$pResult) = @_;
-	my	($i,@elem,$num);
+	my $this = shift;
+	my ($index, $word, $pResult) = @_;
+	my ($i, @elem, $num);
 	
 	$num = 0;
-	for($i = 0;$i < $this->{'SIZE'};$i++){
-		@elem = split(/<>/,$this->{'LOGS'}->[$i]);
-		if($elem[$index] eq $word){
-			push(@$pResult,$this->{'LOGS'}->[$i]);
+	for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
+		@elem = split(/<>/, $this->{'LOGS'}->[$i]);
+		if ($elem[$index] eq $word) {
+			push @$pResult, $this->{'LOGS'}->[$i];
 			$num++;
 		}
 	}

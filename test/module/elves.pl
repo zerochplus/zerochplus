@@ -34,8 +34,8 @@ package	GLORFINDEL;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%NAME,%PASS,%FULL,%EXPLAN);
+	my $this = shift;
+	my ($obj, %NAME, %PASS, %FULL, %EXPLAN);
 	
 	$obj = {
 		'NAME'	=> \%NAME,
@@ -45,7 +45,7 @@ sub new
 		'SYSAD'	=> 0
 	};
 	
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -60,31 +60,31 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef($this->{'NAME'});
-	undef($this->{'PASS'});
-	undef($this->{'FULL'});
-	undef($this->{'EXPL'});
-	undef($this->{'SYSAD'});
+	undef $this->{'NAME'};
+	undef $this->{'PASS'};
+	undef $this->{'FULL'};
+	undef $this->{'EXPL'};
+	undef $this->{'SYSAD'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
-	if	(-e $path){
-		open(USERS,"<$path");
-		while	(<USERS>){
-			chomp($_);
-			@elem = split(/<>/,$_);
+	if (-e $path) {
+		open USERS, "< $path";
+		while (<USERS>) {
+			chomp $_;
+			@elem = split(/<>/, $_);
 			$this->{'NAME'}->{$elem[0]}		= $elem[1];
 			$this->{'PASS'}->{$elem[0]}		= $elem[2];
 			$this->{'FULL'}->{$elem[0]}		= $elem[3];
 			$this->{'EXPL'}->{$elem[0]}		= $elem[4];
 			$this->{'SYSAD'}->{$elem[0]}	= $elem[5];
 		}
-		close(USERS);
+		close USERS;
 	}
 }
 
@@ -98,27 +98,27 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
-	eval{
-		open(USERS,"+>$path");
-		flock(USERS,2);
-		binmode(USERS);
-		truncate(USERS,0);
-		seek(USERS,0,0);
-		foreach	(keys %{$this->{'NAME'}}){
-			$data = $_ . '<>' . $this->{NAME}->{$_} . '<>' . $this->{PASS}->{$_};
-			$data = $data . '<>' . $this->{FULL}->{$_} . '<>' . $this->{EXPL}->{$_};
-			$data = $data . '<>' . $this->{SYSAD}->{$_};
+	eval {
+		open USERS, "+> $path";
+		flock USERS, 2;
+		binmode USERS;
+		truncate USERS, 0;
+		seek USERS, 0, 0;
+		foreach (keys %{$this->{'NAME'}}) {
+			$data = "$_<>" . $this->{NAME}->{$_} . '<>' . $this->{PASS}->{$_};
+			$data .= '<>' . $this->{FULL}->{$_} . '<>' . $this->{EXPL}->{$_};
+			$data .= '<>' . $this->{SYSAD}->{$_};
 			
 			print USERS "$data\n";
 		}
-		close(USERS);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close USERS;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
 }
 
@@ -134,22 +134,22 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (keys %{$this->{NAME}}){
-			push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach $key (keys %{$this->{NAME}}) {
+			push @$pBuf, $key;
 			$n++;
 		}
 	}
-	else{
-		foreach	$key (keys %{$this->{$kind}}){
-			if	(($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach $key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -169,8 +169,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -188,13 +188,13 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($name,$pass,$full,$explan,$sysad) = @_;
-	my		($id);
+	my $this = shift;
+	my ($name, $pass, $full, $explan, $sysad) = @_;
+	my ($id);
 	
 	$id = time;
 	$this->{'NAME'}->{$id}	= $name;
-	$this->{'PASS'}->{$id}	= $this->GetStrictPass($pass,$id);
+	$this->{'PASS'}->{$id}	= $this->GetStrictPass($pass, $id);
 	$this->{'EXPL'}->{$id}	= $explan;
 	$this->{'FULL'}->{$id}	= $full;
 	$this->{'SYSAD'}->{$id}	= $sysad;
@@ -214,12 +214,12 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
-		if	($kind eq 'PASS'){
-			$val = $this->GetStrictPass($val,$id);
+	if (exists $this->{$kind}->{$id}) {
+		if ($kind eq 'PASS') {
+			$val = $this->GetStrictPass($val, $id);
 		}
 		$this->{$kind}->{$id} = $val;
 	}
@@ -235,14 +235,14 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
+	my $this = shift;
+	my ($id) = @_;
 	
-	delete($this->{'NAME'}->{$id});
-	delete($this->{'PASS'}->{$id});
-	delete($this->{'FULL'}->{$id});
-	delete($this->{'EXPL'}->{$id});
-	delete($this->{'SYSAD'}->{$id});
+	delete $this->{'NAME'}->{$id};
+	delete $this->{'PASS'}->{$id};
+	delete $this->{'FULL'}->{$id};
+	delete $this->{'EXPL'}->{$id};
+	delete $this->{'SYSAD'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -256,10 +256,10 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub GetStrictPass
 {
-	my		$this = shift;
-	my		($pass,$key) = @_;
+	my $this = shift;
+	my ($pass, $key) = @_;
 	
-	return(substr(crypt($pass,substr(crypt($key,'ZC'),-2)),-10));
+	return substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
 }
 
 
@@ -283,8 +283,8 @@ package	GILDOR;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%NAME,%EXPLAN,%RANGE,%AUTHOR,%USERS);
+	my $this = shift;
+	my ($obj, %NAME, %EXPLAN, %RANGE, %AUTHOR, %USERS);
 	
 	$obj = {
 		'NAME'	=> \%NAME,
@@ -293,7 +293,7 @@ sub new
 		'USERS'	=> \%USERS
 	};
 	
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -308,30 +308,30 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem,@auth);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem, @auth);
 	
 	# ハッシュ初期化
-	undef($this->{'NAME'});
-	undef($this->{'EXPL'});
-	undef($this->{'AUTH'});
-	undef($this->{'USERS'});
+	undef $this->{'NAME'};
+	undef $this->{'EXPL'};
+	undef $this->{'AUTH'};
+	undef $this->{'USERS'};
 	
 	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-	eval{
-		if	(-e $path){
-			open(GROUPS,"<$path");
-			while	(<GROUPS>){
-				chomp($_);
-				@elem = split(/<>/,$_);
+	eval {
+		if (-e $path) {
+			open GROUPS, "< $path";
+			while (<GROUPS>) {
+				chomp $_;
+				@elem = split(/<>/, $_);
 				$this->{'NAME'}->{$elem[0]}		= $elem[1];
 				$this->{'EXPL'}->{$elem[0]}		= $elem[2];
 				$this->{'AUTH'}->{$elem[0]}		= $elem[3];
 				$this->{'USERS'}->{$elem[0]}	= $elem[4];
 			}
-			close(GROUPS);
+			close GROUPS;
 		}
 	};
 }
@@ -346,26 +346,31 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-	eval{
-		open(GROUPS,"+>$path");
-		flock(GROUPS,2);
-		binmode(GROUPS);
-		truncate(GROUPS,0);
-		seek(GROUPS,0,0);
-		foreach	(keys %{$this->{'NAME'}}){
-			$data = $_ . '<>' . $this->{NAME}->{$_} . '<>' . $this->{EXPL}->{$_};
-			$data = $data . '<>' . $this->{AUTH}->{$_} . '<>' . $this->{USERS}->{$_};
+	eval {
+		open GROUPS, "+> $path";
+		flock GROUPS, 2;
+		binmode GROUPS;
+		truncate GROUPS, 0;
+		seek GROUPS, 0, 0;
+		foreach (keys %{$this->{'NAME'}}) {
+			$data = join('<>',
+				$_,
+				$this->{NAME}->{$_},
+				$this->{EXPL}->{$_},
+				$this->{AUTH}->{$_},
+				$this->{USERS}->{$_}
+			);
 			
 			print GROUPS "$data\n";
 		}
-		close(GROUPS);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close GROUPS;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
 }
 
@@ -379,14 +384,14 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($pBuf) = @_;
-	my		($n);
+	my $this = shift;
+	my ($pBuf) = @_;
+	my ($n);
 	
 	$n = 0;
 	
-	foreach	(keys %{$this->{NAME}}){
-		push(@$pBuf,$_);
+	foreach (keys %{$this->{NAME}}) {
+		push @$pBuf, $_;
 		$n++;
 	}
 	return $n;
@@ -403,8 +408,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -422,9 +427,9 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($name,$explan,$authors,$users) = @_;
-	my		($id);
+	my $this = shift;
+	my ($name, $explan, $authors, $users) = @_;
+	my ($id);
 	
 	$id = time;
 	$this->{'NAME'}->{$id}	= $name;
@@ -446,17 +451,17 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub AddUser
 {
-	my		$this = shift;
-	my		($id,$user) = @_;
-	my		(@users,@match,$nuser);
+	my $this = shift;
+	my ($id, $user) = @_;
+	my (@users, @match, $nuser);
 	
-	@users = split(/\,/,$this->{'USERS'}->{$id});
-	@match = grep($user,@users);
-	$nuser = @match;
+	@users = split(/\,/, $this->{'USERS'}->{$id});
+	@match = grep($user, @users);
+	$nuser = $#match;
 	
 	# 登録済みのユーザは重複登録しない
-	if	($nuser == 0){
-		$this->{'USERS'}->{$id} += ",$user";
+	if ($nuser == 0) {
+		$this->{'USERS'}->{$id} .= ",$user";
 	}
 }
 
@@ -472,10 +477,10 @@ sub AddUser
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists $this->{$kind}->{$id}) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -490,13 +495,13 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
+	my $this = shift;
+	my ($id) = @_;
 	
-	delete($this->{'NAME'}->{$id});
-	delete($this->{'EXPL'}->{$id});
-	delete($this->{'AUTH'}->{$id});
-	delete($this->{'USERS'}->{$id});
+	delete $this->{'NAME'}->{$id};
+	delete $this->{'EXPL'}->{$id};
+	delete $this->{'AUTH'}->{$id};
+	delete $this->{'USERS'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -509,14 +514,14 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub GetBelong
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		(@users,$group,$user);
+	my $this = shift;
+	my ($id) = @_;
+	my (@users, $group, $user);
 	
-	foreach	$group (keys %{$this->{'USERS'}}){
-		@users = split(/\,/,$this->{'USERS'}->{$group});
-		foreach	$user (@users){
-			if	($id eq $user){
+	foreach $group (keys %{$this->{'USERS'}}) {
+		@users = split(/\,/, $this->{'USERS'}->{$group});
+		foreach $user (@users) {
+			if ($id eq $user) {
 				return $group;
 			}
 		}
@@ -545,8 +550,8 @@ package ARWEN;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj);
+	my $this = shift;
+	my ($obj);
 	
 	$obj = {
 		'SYS'	=> undef,
@@ -554,7 +559,7 @@ sub new
 		'GROUP'	=> undef,
 		'BBS'	=> undef
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -569,13 +574,13 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Init
 {
-	my		$this = shift;
-	my		($Sys) = @_;
+	my $this = shift;
+	my ($Sys) = @_;
 	
 	$this->{'SYS'} = $Sys;
 	
 	# 2重ロード防止
-	if	($this->{'USER'} eq undef){
+	if ($this->{'USER'} eq undef) {
 		$this->{'USER'} = new GLORFINDEL;
 		$this->{'GROUP'} = new GILDOR;
 		$this->{'USER'}->Load($Sys);
@@ -593,20 +598,20 @@ sub Init
 #------------------------------------------------------------------------------------------------------------
 sub IsLogin
 {
-	my		$this = shift;
-	my		($name,$pass) = @_;
-	my		(@userSet,$User,$lPass,$id);
+	my $this = shift;
+	my ($name, $pass) = @_;
+	my (@userSet, $User, $lPass, $id);
 	
 	$User = $this->{'USER'};
 	
 	# ユーザ名でユーザIDセットを取得
-	$User->GetKeySet('NAME',$name,\@userSet);
+	$User->GetKeySet('NAME', $name, \@userSet);
 	
 	# 取得したIDセットからユーザ名とパスワードが同じものを検索
-	foreach	$id (@userSet){
-		$lPass	= $User->Get('PASS',$id);
-		$pass	= $User->GetStrictPass($pass,$id);
-		if	($lPass eq $pass){
+	foreach $id (@userSet) {
+		$lPass = $User->Get('PASS', $id);
+		$pass = $User->GetStrictPass($pass, $id);
+		if ($lPass eq $pass) {
 			return $id;
 		}
 	}
@@ -623,17 +628,17 @@ sub IsLogin
 #------------------------------------------------------------------------------------------------------------
 sub SetGroupInfo
 {
-	my		$this = shift;
-	my		($bbs) = @_;
-	my		($oldBBS);
+	my $this = shift;
+	my ($bbs) = @_;
+	my ($oldBBS);
 	
 	$oldBBS = $this->{'SYS'}->Get('BBS');
-	$this->{'SYS'}->Set('BBS',$bbs);
+	$this->{'SYS'}->Set('BBS', $bbs);
 	$this->{'BBS'} = $bbs;
 	
 	$this->{'GROUP'}->Load($this->{'SYS'});
 	
-	$this->{'SYS'}->Set('BBS',$oldBBS);
+	$this->{'SYS'}->Set('BBS', $oldBBS);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -648,30 +653,30 @@ sub SetGroupInfo
 #------------------------------------------------------------------------------------------------------------
 sub IsAuthority
 {
-	my		$this = shift;
-	my		($id,$author,$bbs) = @_;
-	my		($sysad,$group,$auth,@authors);
+	my $this = shift;
+	my ($id, $author, $bbs) = @_;
+	my ($sysad, $group, $auth, @authors);
 	
 	# システム管理権限グループなら無条件OK
-	$sysad	= $this->{'USER'}->Get('SYSAD',$id);
-	if	($sysad){
+	$sysad	= $this->{'USER'}->Get('SYSAD', $id);
+	if ($sysad) {
 		return 1;
 	}
-	if	($bbs eq '*'){
+	if ($bbs eq '*') {
 		return 0;
 	}
 	
 	# 対象BBSに所属しているか確認
 	$group = $this->{'GROUP'}->GetBelong($id);
-	if	($group eq ''){
+	if ($group eq '') {
 		return 0;
 	}
 	
 	# 権限を持っているか確認
-	$auth = $this->{'GROUP'}->Get('AUTH',$group);
-	@authors = split(/\,/,$auth);
-	foreach	$auth (@authors){
-		if	($auth eq $author){
+	$auth = $this->{'GROUP'}->Get('AUTH', $group);
+	@authors = split(/\,/, $auth);
+	foreach $auth (@authors) {
+		if ($auth eq $author) {
 			return 1;
 		}
 	}
@@ -690,33 +695,33 @@ sub IsAuthority
 #------------------------------------------------------------------------------------------------------------
 sub GetBelongBBSList
 {
-	my		$this = shift;
-	my		($id,$oBBS,$pBBS) = @_;
-	my		(@bbsSet,$bbsDir,$bbsID,$n,$origBBS);
+	my $this = shift;
+	my ($id, $oBBS, $pBBS) = @_;
+	my (@bbsSet, $bbsDir, $bbsID, $n, $origBBS);
 	
 	# システム管理ユーザは全てのBBSに所属とする
-	if	($this->{'USER'}->Get('SYSAD',$id)){
-		$oBBS->GetKeySet('ALL','',$pBBS);
+	if ($this->{'USER'}->Get('SYSAD', $id)) {
+		$oBBS->GetKeySet('ALL', '', $pBBS);
 		$n = @$pBBS;
 	}
 	# 一般ユーザは所属グループから判断する
-	else{
-		$oBBS->GetKeySet('ALL','',\@bbsSet);
+	else {
+		$oBBS->GetKeySet('ALL', '', \@bbsSet);
 		$origBBS = $this->{'BBS'};
 		$n = 0;
 		
-		foreach	$bbsID (@bbsSet){
-			$bbsDir = $oBBS->Get('DIR',$bbsID);
-			SetGroupInfo($this,$bbsDir);
-			if	($this->{'GROUP'}->GetBelong($id) ne ''){
-				push(@$pBBS,$bbsID);
-				$n ++;
+		foreach $bbsID (@bbsSet) {
+			$bbsDir = $oBBS->Get('DIR', $bbsID);
+			SetGroupInfo($this, $bbsDir);
+			if ($this->{'GROUP'}->GetBelong($id) ne '') {
+				push @$pBBS, $bbsID;
+				$n++;
 			}
 		}
 		
 		# 後処理
-		if	($origBBS ne undef){
-			SetGroupInfo($this,$origBBS);
+		if ($origBBS ne undef) {
+			SetGroupInfo($this, $origBBS);
 		}
 	}
 	return $n;

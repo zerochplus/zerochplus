@@ -25,23 +25,23 @@ package	EARENDIL;
 #------------------------------------------------------------------------------------------------------------
 sub Copy
 {
-	my		($src,$dst) = @_;
-	my		($perm);
+	my ($src, $dst) = @_;
+	my ($perm);
 	
-	eval{
-		if	(-e $src){
-			$perm = (stat($src))[2];												# パーミッション取得
-			open(SRC,"<$src");
-			open(DST,">$dst");
-			flock(DST,2);
-			binmode(SRC);
-			binmode(DST);
-			while	(<SRC>){
+	eval {
+		if (-e $src) {
+			$perm = (stat $src)[2];	# パーミッション取得
+			open SRC, "< $src";
+			open DST, "> $dst";
+			flock DST, 2;
+			binmode SRC;
+			binmode DST;
+			while (<SRC>) {
 				print DST $_;
 			}
-			close(DST);
-			close(SRC);
-			chmod($perm,$dst);														# パーミッション設定
+			close DST;
+			close SRC;
+			chmod $perm, $dst;	# パーミッション設定
 		}
 	};
 }
@@ -57,24 +57,24 @@ sub Copy
 #------------------------------------------------------------------------------------------------------------
 sub Move
 {
-	my		($src,$dst) = @_;
-	my		($perm);
+	my ($src, $dst) = @_;
+	my ($perm);
 	
-	eval{
-		if	(-e $src){
-			$perm = (stat($src))[2];												# パーミッション取得
-			open(SRC,"<$src");
-			open(DST,">$dst");
-			flock(DST,2);
-			binmode(SRC);
-			binmode(DST);
-			while	(<SRC>){
+	eval {
+		if (-e $src) {
+			$perm = (stat $src)[2];	# パーミッション取得
+			open SRC, "< $src";
+			open DST, "> $dst";
+			flock DST, 2;
+			binmode SRC;
+			binmode DST;
+			while (<SRC>) {
 				print DST $_;
 			}
-			close(DST);
-			close(SRC);
-			chmod($perm,$dst);														# パーミッション設定
-			unlink($src);															# コピー元削除
+			close DST;
+			close SRC;
+			chmod $perm, $dst;	# パーミッション設定
+			unlink $src;		# コピー元削除
 		}
 	};
 }
@@ -89,24 +89,24 @@ sub Move
 #------------------------------------------------------------------------------------------------------------
 sub DeleteDirectory
 {
-	my		($path) = @_;
-	my		(%fileList,$file,$attr,$dumy);
+	my ($path) = @_;
+	my (%fileList, $file, $attr);
 	
 	# ファイル情報を取得
-	GetFileInfoList($path,\%fileList);
+	GetFileInfoList($path, \%fileList);
 	
-	foreach	$file (keys(%fileList)){
-		if	($file ne '.' && $file ne '..'){
-			($dumy,$dumy,$attr) = split(/<>/,$fileList{$file});
-			if	($attr & 1){														# ディレクトリなら
-				DeleteDirectory($path . '/' . $file);								# 再帰呼び出し
+	foreach $file (keys %fileList) {
+		if ($file ne '.' && $file ne '..') {
+			(undef, undef, $attr) = split(/<>/, $fileList{$file});
+			if ($attr & 1) {						# ディレクトリなら
+				DeleteDirectory("$path/$file");		# 再帰呼び出し
 			}
-			else{																	# ファイルなら
-				unlink($path . '/' . $file);										# そのまま削除
+			else {									# ファイルなら
+				unlink "$path/$file";				# そのまま削除
 			}
 		}
 	}
-	rmdir($path);
+	rmdir $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -120,21 +120,21 @@ sub DeleteDirectory
 #------------------------------------------------------------------------------------------------------------
 sub GetFileInfoList
 {
-	my		($Path,$pList) = @_;
-	my		(@arFiles,$file,$Full,$Attr,$Size,$Perm);
+	my ($Path, $pList) = @_;
+	my (@arFiles, $file, $Full, $Attr, $Size, $Perm);
 	
-	opendir(DIR,$Path);
-	@arFiles = readdir(DIR);
-	closedir(DIR);
+	opendir DIR, $Path;
+	@arFiles = readdir DIR;
+	closedir DIR;
 	
 	# ディレクトリ内の全ファイルを走査
-	foreach	$file (@arFiles){
-		$Full = $Path . '/' . $file;
+	foreach $file (@arFiles) {
+		$Full = "$Path/$file";
 		$Attr = 0;
-		$Size = -s $Full;															# サイズ取得
-		$Perm = substr(sprintf("%o",(stat($Full))[2]),-4,4);						# パーミッション取得
-		$Attr |= 1	if	(-d	$Full);													# ディレクトリ？
-		$Attr |= 2	if	(-T	$Full);													# テキストファイル？
+		$Size = -s $Full;										# サイズ取得
+		$Perm = substr(sprintf('%o', (stat $Full)[2]), -4, 4);	# パーミッション取得
+		$Attr |= 1 if (-d $Full);								# ディレクトリ？
+		$Attr |= 2 if (-T $Full);								# テキストファイル？
 		$pList->{$file} = "$Size<>$Perm<>$Attr";
 	}
 }
@@ -151,20 +151,20 @@ sub GetFileInfoList
 #------------------------------------------------------------------------------------------------------------
 sub GetFileList
 {
-	my		($path,$pList,$opt) = @_;
-	my		(@files,$file,$num);
+	my ($path, $pList, $opt) = @_;
+	my (@files, $file, $num);
 	
 	$num = 0;
-	opendir(DIR,$path);
-	@files = readdir(DIR);
-	closedir(DIR);
+	opendir DIR, $path;
+	@files = readdir DIR;
+	closedir DIR;
 	
-	foreach	$file (@files){
+	foreach $file (@files) {
 		# ディレクトリじゃなく抽出条件が一致したら配列にプッシュする
-		if	(!(-d "$path/$file")){
-			if	($file =~ /$opt/){
-				push(@$pList,$file);
-				$num ++;
+		if (! -d "$path/$file") {
+			if ($file =~ /$opt/) {
+				push @$pList, $file;
+				$num++;
 			}
 		}
 	}
@@ -182,10 +182,10 @@ sub GetFileList
 #------------------------------------------------------------------------------------------------------------
 sub CreateDirectory
 {
-	my		($path,$perm) = @_;
+	my ($path, $perm) = @_;
 	
-	if	(! -e $path){
-		return mkdir($path,$perm);
+	if (! -e $path) {
+		return mkdir($path, $perm);
 	}
 	return 0;
 }
@@ -200,22 +200,22 @@ sub CreateDirectory
 #-------------------------------------------------------------------------------------------------------------
 sub CreateFolderHierarchy
 {
-	my	($path) = @_;
+	my ($path) = @_;
 	
-	while	(1){
-		if	(-d $path){
+	while (1) {
+		if (-d $path) {
 			return;
 		}
-		else{
-			if	(mkdir($path,0777)){
+		else {
+			if (mkdir($path, 0777)) {
 				return;
 			}
 			# ディレクトリ作成失敗時は再帰的に1つ下の階層を作成する
-			else{
-				my	@elem = split(/[\\\/]/,$path);
-				my	$n = $#elem - 1;
-				my	@parts = @elem[0..$n];
-				my	$upath = join('/',@parts);
+			else {
+				my @elem = split(/[\\\/]/, $path);
+				my $n = $#elem - 1;
+				my @parts = @elem[0 .. $n];
+				my $upath = join('/', @parts);
 				
 				CreateFolderHierarchy($upath);
 			}
@@ -234,22 +234,22 @@ sub CreateFolderHierarchy
 #------------------------------------------------------------------------------------------------------------
 sub GetFolderHierarchy
 {
-	my		($path,$pHash) = @_;
-	my		(@elements,$elem);
+	my ($path, $pHash) = @_;
+	my (@elements, $elem);
 	
-	opendir(DIR,"$path");
-	@elements = readdir(DIR);
-	closedir(DIR);
+	opendir DIR, $path;
+	@elements = readdir DIR;
+	closedir DIR;
 	
-	foreach	$elem (sort(@elements)){
+	foreach $elem (sort @elements) {
 		# ディレクトリが見つかったら再帰的に探索する
-		if	((-d "$path/$elem") && $elem ne '.' && $elem ne '..'){
-			my	(%folders);
-			GetFolderHierarchy("$path/$elem",\%folders);
-			if	(keys(%folders) > 0){
+		if (-d "$path/$elem" && $elem ne '.' && $elem ne '..') {
+			my (%folders);
+			GetFolderHierarchy("$path/$elem", \%folders);
+			if (keys(%folders) > 0) {
 				$pHash->{$elem} = \%folders;
 			}
-			else{
+			else {
 				$pHash->{$elem} = undef;
 			}
 		}
@@ -269,13 +269,13 @@ sub GetFolderHierarchy
 #------------------------------------------------------------------------------------------------------------
 sub GetFolderList
 {
-	my		($pHash,$pList,$base) = @_;
-	my		($key);
+	my ($pHash, $pList, $base) = @_;
+	my ($key);
 	
-	foreach	$key (keys(%$pHash)){
-		push(@$pList,"$base/$key");
-		if	($pHash->{$key} ne undef){
-			GetFolderList($pHash->{$key},$pList,"$base/$key");
+	foreach $key (keys %$pHash) {
+		push @$pList, "$base/$key";
+		if ($pHash->{$key} ne undef) {
+			GetFolderList($pHash->{$key}, $pList, "$base/$key");
 		}
 	}
 }

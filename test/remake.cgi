@@ -21,30 +21,30 @@ exit(REMAKECGI());
 #------------------------------------------------------------------------------------------------------------
 sub REMAKECGI
 {
-	my		(%SYS,$Page,$err);
+	my (%SYS, $Page, $err);
 	
-	require('./module/thorin.pl');
+	require './module/thorin.pl';
 	$Page = new THORIN;
 	
 	# 初期化に成功したら更新処理を開始
-	if	(($err = Initialize(\%SYS)) == 0){
-				require('./module/varda.pl');
-				my	$BBSAid = new VARDA;
+	if (($err = Initialize(\%SYS)) == 0) {
+				require './module/varda.pl';
+				my $BBSAid = new VARDA;
 				
-				eval{
-					$BBSAid->Init($SYS{'SYS'},$SYS{'SET'});
+				eval {
+					$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
 					$BBSAid->CreateIndex();
 					$BBSAid->CreateIIndex();
 					$BBSAid->CreateSubback();
 				};
-			PrintBBSJump(\%SYS,$Page);
+			PrintBBSJump(\%SYS, $Page);
 	}
-	else{
-		PrintBBSError(\%SYS,$Page,$err);
+	else {
+		PrintBBSError(\%SYS, $Page, $err);
 	}
 	
 	# 結果の表示
-	$Page->Flush('',0,0);
+	$Page->Flush('', 0, 0);
 	
 	return $err;
 }
@@ -59,14 +59,14 @@ sub REMAKECGI
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
-	my		($Sys) = @_;
+	my ($Sys) = @_;
 	
 	# 使用モジュールの初期化
-	require('./module/melkor.pl');
-	require('./module/isildur.pl');
-	require('./module/radagast.pl');
-	require('./module/galadriel.pl');
-	require('./module/samwise.pl');
+	require './module/melkor.pl';
+	require './module/isildur.pl';
+	require './module/radagast.pl';
+	require './module/galadriel.pl';
+	require './module/samwise.pl';
 	
 	%$Sys = (
 		'SYS'		=> new MELKOR,
@@ -80,18 +80,18 @@ sub Initialize
 	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# システム情報設定
-	if	($Sys->{'SYS'}->Init()){
+	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
-	if ($Sys->{'FORM'}->Get('bbs') =~ /\W/){
+	if ($Sys->{'FORM'}->Get('bbs') =~ /\W/) {
 		return 999;
 	}
-	$Sys->{'SYS'}->Set('BBS',$Sys->{'FORM'}->Get('bbs'));
-	$Sys->{'SYS'}->Set('AGENT',$Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
-	$Sys->{'SYS'}->Set('MODE','CREATE');
+	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs'));
+	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
+	$Sys->{'SYS'}->Set('MODE', 'CREATE');
 	
 	# SETTING.TXTの読み込み
-	if	(!$Sys->{'SET'}->Load($Sys->{'SYS'})){
+	if (!$Sys->{'SET'}->Load($Sys->{'SYS'})) {
 		return 999;
 	}
 	
@@ -109,22 +109,22 @@ sub Initialize
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSJump
 {
-	my		($Sys,$Page) = @_;
-	my		($SYS,$bbsPath);
+	my ($Sys, $Page) = @_;
+	my ($SYS, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# 携帯用表示
-	if	(!$SYS->Equal('AGENT',0)){
+	if (!$SYS->Equal('AGENT', 0)) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>indexを更新しました。<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");
 		$Page->Print("から掲示板へ戻ってください。\n");
 	}
 	# PC用表示
-	else{
-		my	$oSET = $Sys->{'SET'};
+	else {
+		my $oSET = $Sys->{'SET'};
 		
 		$Page->Print("Content-type: text/html\n\n<html><head><title>");
 		$Page->Print('indexを更新しました。</title><!--nobanner-->');
@@ -136,11 +136,11 @@ sub PrintBBSJump
 		
 	}
 	# 告知欄表示(表示させたくない場合はコメントアウトか条件を0に)
-	if	(0){
-		require('./module/denethor.pl');
-		my	$BANNER = new DENETHOR;
+	if (0) {
+		require './module/denethor.pl';
+		my $BANNER = new DENETHOR;
 		$BANNER->Load($SYS);
-		$BANNER->Print($Page,100,0,$SYS->Get('AGENT'));
+		$BANNER->Print($Page, 100, 0, $SYS->Get('AGENT'));
 	}
 	$Page->Print('</body></html>');
 }
@@ -155,12 +155,12 @@ sub PrintBBSJump
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSError
 {
-	my		($Sys,$Page,$err) = @_;
+	my ($Sys, $Page, $err) = @_;
 	
-	require('./module/orald.pl');
+	require './module/orald.pl';
 	$ERROR = new ORALD;
 	$ERROR->Load($Sys->{'SYS'});
 	
-	$ERROR->Print($Sys,$Page,$err,$Sys->{'SYS'}->Get('AGENT'));
+	$ERROR->Print($Sys, $Page, $err, $Sys->{'SYS'}->Get('AGENT'));
 }
 

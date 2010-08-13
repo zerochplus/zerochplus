@@ -35,8 +35,8 @@ package	BILBO;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%SUBJECT,%RES,@SORT);
+	my $this = shift;
+	my ($obj, %SUBJECT, %RES, @SORT);
 	
 	$obj = {
 		'SUBJECT'	=> \%SUBJECT,
@@ -44,28 +44,28 @@ sub new
 		'SORT'		=> \@SORT,
 		'NUM'		=> 0
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
 
 sub DESTROY
 {
-	my		$this = shift;
+	my $this = shift;
 	
-	if	(0){
-		open(DBG,">>dbg_BILBO.log");
+	if (0) {
+		open DBG, ">> dbg_BILBO.log";
 		print DBG ">>SUBJECTS\n";
-		foreach	(@{$this->{'SORT'}}){
-			if	(exists($this->{'SUBJECT'}->{$_})){
+		foreach (@{$this->{'SORT'}}) {
+			if (exists $this->{'SUBJECT'}->{$_}) {
 				print DBG "$_ : " . $this->{'SUBJECT'}->{$_} . " : " . $this->{'RES'}->{$_} . "\n";
 			}
-			else{
+			else {
 				print DBG "### missing\n";
 			}
 		}
 		print DBG "--- End\n\n";
-		close(DBG);
+		close DBG;
 	}
 }
 
@@ -79,9 +79,9 @@ sub DESTROY
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem,$dmy,$num);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem, $dmy, $num);
 	
 	undef($this->{'SUBJECT'});
 	undef($this->{'RES'});
@@ -90,20 +90,20 @@ sub Load
 	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
 	$num	= 0;
 	
-	if	(-e $path){
-		open(SUBJ,"<$path");
-		while	(<SUBJ>){
-			@elem = split(/<>/,$_);
-			($elem[0],$dmy) = split(/\./,$elem[0]);
+	if (-e $path) {
+		open(SUBJ, "< $path");
+		while (<SUBJ>) {
+			@elem = split(/<>/, $_);
+			($elem[0], $dmy) = split(/\./, $elem[0]);
 			$elem[1] =~ s/\((\d+)\)\n//;
 			$elem[2] = $1;
 			
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
 			$this->{'RES'}->{$elem[0]}		= $elem[2];
-			push(@{$this->{'SORT'}},$elem[0]);
-			$num ++;
+			push @{$this->{'SORT'}}, $elem[0];
+			$num++;
 		}
-		close(SUBJ);
+		close SUBJ;
 		$this->{'NUM'} = $num;
 	}
 }
@@ -118,26 +118,26 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
 	
-	eval{
-		open(SUBJ,"+>$path");
-		flock(SUBJ,2);
-		truncate(SUBJ,0);
-		seek(SUBJ,0,0);
-		binmode(SUBJ);
-		foreach	(@{$this->{'SORT'}}){
-			$data = $_ . '.dat<>' . $this->{'SUBJECT'}->{$_};
-			$data = $data . '(' . $this->{'RES'}->{$_} . ')';
+	eval {
+		open SUBJ, "+> $path";
+		flock SUBJ, 2;
+		truncate SUBJ, 0;
+		seek SUBJ, 0, 0;
+		binmode SUBJ;
+		foreach (@{$this->{'SORT'}}) {
+			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_};
+			$data = "$data(" . $this->{'RES'}->{$_} . ')';
 			
 			print SUBJ "$data\n";
 		}
-		close(SUBJ);
-		chmod($Sys->Get('PM-TXT'),$path);
+		close SUBJ;
+		chmod $Sys->Get('PM-TXT'), $path;
 	};
 }
 
@@ -153,22 +153,22 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (@{$this->{SORT}}){
-			push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach $key (@{$this->{SORT}}) {
+			push @$pBuf, $key;
 			$n++;
 		}
 	}
-	else{
-		foreach	$key (keys %{$this->{$kind}}){
-			if	(($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach $key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -188,8 +188,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -204,12 +204,12 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($id,$subject,$res) = @_;
+	my $this = shift;
+	my ($id, $subject, $res) = @_;
 	
 	$this->{'SUBJECT'}->{$id}	= $subject;
 	$this->{'RES'}->{$id}		= $res;
-	unshift(@{$this->{'SORT'}},$id);
+	unshift @{$this->{'SORT'}}, $id;
 	
 	return $id;
 }
@@ -226,10 +226,10 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists($this->{$kind}->{$id})) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -244,20 +244,20 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		($lid,$n);
+	my $this = shift;
+	my ($id) = @_;
+	my ($lid, $n);
 	
-	delete($this->{'SUBJECT'}->{$id});
-	delete($this->{'RES'}->{$id});
+	delete $this->{'SUBJECT'}->{$id};
+	delete $this->{'RES'}->{$id};
 	
 	$n = 0;
-	foreach	$lid (@{$this->{'SORT'}}){
-		if	($id eq $lid){
-			splice(@{$this->{'SORT'}},$n,1);
+	foreach $lid (@{$this->{'SORT'}}) {
+		if ($id eq $lid) {
+			splice @{$this->{'SORT'}}, $n, 1;
 			last;
 		}
-		$n ++;
+		$n++;
 	}
 }
 
@@ -271,7 +271,7 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub GetNum
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	return $this->{'NUM'};
 }
@@ -286,18 +286,18 @@ sub GetNum
 #------------------------------------------------------------------------------------------------------------
 sub AGE
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		($lid,$n);
+	my $this = shift;
+	my ($id) = @_;
+	my ($lid, $n);
 	
 	$n = 0;
-	foreach	$lid (@{$this->{'SORT'}}){
-		if	($id eq $lid){
-			splice(@{$this->{'SORT'}},$n,1);
-			unshift(@{$this->{'SORT'}},$lid);
+	foreach $lid (@{$this->{'SORT'}}) {
+		if ($id eq $lid) {
+			splice @{$this->{'SORT'}}, $n, 1;
+			unshift @{$this->{'SORT'}}, $lid;
 			last;
 		}
-		$n ++;
+		$n++;
 	}
 }
 
@@ -311,18 +311,18 @@ sub AGE
 #------------------------------------------------------------------------------------------------------------
 sub DAME
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		($lid,$n);
+	my $this = shift;
+	my ($id) = @_;
+	my ($lid, $n);
 	
 	$n = 0;
-	foreach	$lid (@{$this->{'SORT'}}){
-		if	($id eq $lid){
-			splice(@{$this->{'SORT'}},$n,1);
-			push(@{$this->{'SORT'}},$lid);
+	foreach $lid (@{$this->{'SORT'}}) {
+		if ($id eq $lid) {
+			splice @{$this->{'SORT'}}, $n, 1;
+			push @{$this->{'SORT'}}, $lid;
 			last;
 		}
-		$n ++;
+		$n++;
 	}
 }
 
@@ -336,20 +336,20 @@ sub DAME
 #------------------------------------------------------------------------------------------------------------
 sub Update
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		($id,$base,$n);
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($id, $base, $n);
 	
 	$base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
 	
-	foreach	$id (@{$this->{'SORT'}}){
+	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
-		if	(-e "$base/$id.dat"){
-			open(DAT,"<$base/$id.dat");
-			while	(<DAT>){
-				$n ++;
+		if (-e "$base/$id.dat") {
+			open DAT, "< $base/$id.dat";
+			while (<DAT>) {
+				$n++;
 			}
-			close(DAT);
+			close DAT;
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -365,40 +365,40 @@ sub Update
 #------------------------------------------------------------------------------------------------------------
 sub UpdateAll
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		(@dirSet,$id,$base,$n,$num,$first,$dumy,$subj);
+	my $this = shift;
+	my ($SYS) = @_;
+	my (@dirSet, $id, $base, $n, $num, $first, $subj);
 	
-	undef($this->{'SUBJECT'});
-	undef($this->{'RES'});
-	undef($this->{'SORT'});
+	undef $this->{'SUBJECT'};
+	undef $this->{'RES'};
+	undef $this->{'SORT'};
 	
 	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
 	$num	= 0;
 	
 	# ディレクトリ内一覧を取得
-	opendir(DATDIR,$base);
-	@dirSet = readdir(DATDIR);
-	closedir(DATDIR);
+	opendir DATDIR, $base;
+	@dirSet = readdir DATDIR;
+	closedir DATDIR;
 	
-	foreach	$el	(@dirSet){
-		if	($el =~ /(.*)\.dat/){
+	foreach $el	(@dirSet) {
+		if ($el =~ /(.*)\.dat/) {
 			$n	= 0;
 			$id	= $1;
-			open(DAT,"$base/$el");
-			while	(<DAT>){
-				if	($n == 0){
-					chomp($_);
+			open DAT, "$base/$el";
+			while (<DAT>) {
+				if ($n == 0) {
+					chomp $_;
 					$first = $_;
 				}
-				$n ++;
+				$n++;
 			}
-			close(DAT);
-			($dumy,$dumy,$dumy,$dumy,$subj) = split(/<>/,$first);
+			close DAT;
+			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;
-			unshift(@{$this->{'SORT'}},$id);
-			$num ++;
+			unshift @{$this->{'SORT'}}, $id;
+			$num++;
 		}
 	}
 	$this->{'NUM'} = $num;
@@ -414,16 +414,16 @@ sub UpdateAll
 #------------------------------------------------------------------------------------------------------------
 sub GetPosition
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		($iid,$n);
+	my $this = shift;
+	my ($id) = @_;
+	my ($iid, $n);
 	
 	$n = 0;
-	foreach	$iid (@{$this->{'SORT'}}){
-		if	($iid eq $id){
+	foreach $iid (@{$this->{'SORT'}}) {
+		if ($iid eq $id) {
 			return $n;
 		}
-		$n ++;
+		$n++;
 	}
 	return -1;
 }
@@ -449,8 +449,8 @@ package	FRODO;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,%SUBJECT,%RES,@SORT);
+	my $this = shift;
+	my ($obj, %SUBJECT, %RES, @SORT);
 	
 	$obj = {
 		'SUBJECT'	=> \%SUBJECT,
@@ -458,7 +458,7 @@ sub new
 		'SORT'		=> \@SORT,
 		'NUM'		=> 0
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -473,31 +473,31 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,@elem,$dmy,$num);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, @elem, $num);
 	
-	undef($this->{'SUBJECT'});
-	undef($this->{'RES'});
-	undef($this->{'SORT'});
+	undef $this->{'SUBJECT'};
+	undef $this->{'RES'};
+	undef $this->{'SORT'};
 	
-	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
-	$num	= 0;
+	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
+	$num = 0;
 	
-	if	(-e $path){
-		open(SUBJ,"<$path");
-		while	(<SUBJ>){
-			@elem = split(/<>/,$_);
-			($elem[0],$dmy) = split(/\./,$elem[0]);
+	if (-e $path) {
+		open SUBJ, "< $path";
+		while (<SUBJ>) {
+			@elem = split(/<>/, $_);
+			($elem[0], undef) = split(/\./, $elem[0]);
 			$elem[1] =~ s/\((\d+)\)\n//;
 			$elem[2] = $1;
 			
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
 			$this->{'RES'}->{$elem[0]}		= $elem[2];
-			push(@{$this->{'SORT'}},$elem[0]);
-			$num ++;
+			push @{$this->{'SORT'}}, $elem[0];
+			$num++;
 		}
-		close(SUBJ);
+		close SUBJ;
 		$this->{'NUM'} = $num;
 	}
 }
@@ -512,26 +512,26 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $data);
 	
 	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	
-	eval{
-		open(SUBJ,"+> $path");
-		flock(SUBJ,2);
-		truncate(SUBJ,0);
-		seek(SUBJ,0,0);
-		binmode(SUBJ);
-		foreach	(@{$this->{'SORT'}}){
-			$data = $_ . '.dat<>' . $this->{SUBJECT}->{$_};
-			$data = $data . '(' . $this->{RES}->{$_} . ')';
+	eval {
+		open SUBJ, "+> $path";
+		flock SUBJ, 2;
+		truncate SUBJ, 0;
+		seek SUBJ, 0, 0;
+		binmode SUBJ;
+		foreach (@{$this->{'SORT'}}) {
+			$data = "$_.dat<>" . $this->{SUBJECT}->{$_};
+			$data = "$data(" . $this->{RES}->{$_} . ')';
 			
 			print SUBJ "$data\n";
 		}
-		close(SUBJ);
-		chmod($Sys->Get('PM-TXT'),$path);
+		close SUBJ;
+		chmod $Sys->Get('PM-TXT'), $path;
 	};
 }
 
@@ -547,22 +547,22 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (@{$this->{SORT}}){
-			push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach $key (@{$this->{SORT}}) {
+			push @$pBuf, $key;
 			$n++;
 		}
 	}
-	else{
-		foreach	$key (keys %{$this->{$kind}}){
-			if	(($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach $key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -582,8 +582,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -598,12 +598,12 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($id,$subject,$res) = @_;
+	my $this = shift;
+	my ($id, $subject, $res) = @_;
 	
 	$this->{'SUBJECT'}->{$id}	= $subject;
 	$this->{'RES'}->{$id}		= $res;
-	unshift(@{$this->{'SORT'}},$id);
+	unshift @{$this->{'SORT'}}, $id;
 	
 	return $id;
 }
@@ -620,10 +620,10 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists $this->{$kind}->{$id}) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -638,20 +638,20 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
-	my		($lid,$n);
+	my $this = shift;
+	my ($id) = @_;
+	my ($lid, $n);
 	
-	delete($this->{'SUBJECT'}->{$id});
-	delete($this->{'RES'}->{$id});
+	delete $this->{'SUBJECT'}->{$id};
+	delete $this->{'RES'}->{$id};
 	
 	$n = 0;
-	foreach	$lid (@{$this->{'SORT'}}){
-		if	($id eq $lid){
-			splice(@{$this->{'SORT'}},$n,1);
+	foreach $lid (@{$this->{'SORT'}}) {
+		if ($id eq $lid) {
+			splice @{$this->{'SORT'}}, $n, 1;
 			last;
 		}
-		$n ++;
+		$n++;
 	}
 }
 
@@ -665,7 +665,7 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub GetNum
 {
-	my		$this = shift;
+	my $this = shift;
 	
 	return $this->{'NUM'};
 }
@@ -680,20 +680,20 @@ sub GetNum
 #------------------------------------------------------------------------------------------------------------
 sub Update
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		($id,$base,$n);
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($id, $base, $n);
 	
 	$base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
 	
-	foreach	$id (@{$this->{'SORT'}}){
+	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
-		if	(-e "$base/$id.cgi"){
-			open(DAT,"<$base/$id.cgi");
-			while	(<DAT>){
-				$n ++;
+		if (-e "$base/$id.cgi") {
+			open DAT, "< $base/$id.cgi";
+			while (<DAT>) {
+				$n++;
 			}
-			close(DAT);
+			close DAT;
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -709,40 +709,40 @@ sub Update
 #------------------------------------------------------------------------------------------------------------
 sub UpdateAll
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		(@dirSet,$id,$base,$n,$num,$first,$dumy,$subj);
+	my $this = shift;
+	my ($SYS) = @_;
+	my (@dirSet, $id, $base, $n, $num, $first, $subj);
 	
-	undef($this->{'SUBJECT'});
-	undef($this->{'RES'});
-	undef($this->{'SORT'});
+	undef $this->{'SUBJECT'};
+	undef $this->{'RES'};
+	undef $this->{'SORT'};
 	
 	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
 	$num	= 0;
 	
 	# ディレクトリ内一覧を取得
-	opendir(DATDIR,$base);
-	@dirSet = readdir(DATDIR);
-	closedir(DATDIR);
+	opendir DATDIR, $base;
+	@dirSet = readdir DATDIR;
+	closedir DATDIR;
 	
-	foreach	$el	(@dirSet){
-		if	($el =~ /(\d+)\.cgi/){
+	foreach $el (@dirSet) {
+		if ($el =~ /(\d+)\.cgi/) {
 			$n	= 0;
 			$id	= $1;
-			open(DAT,"$base/$el");
-			while	(<DAT>){
-				if	($n == 0){
-					chomp($_);
+			open DAT, "$base/$el";
+			while (<DAT>) {
+				if ($n == 0) {
+					chomp $_;
 					$first = $_;
 				}
-				$n ++;
+				$n++;
 			}
-			close(DAT);
-			($dumy,$dumy,$dumy,$dumy,$subj) = split(/<>/,$first);
+			close DAT;
+			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;
-			unshift(@{$this->{'SORT'}},$id);
-			$num ++;
+			unshift @{$this->{'SORT'}}, $id;
+			$num++;
 		}
 	}
 	$this->{'NUM'} = $num;
