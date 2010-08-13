@@ -18,13 +18,13 @@ package	THORIN;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(@BUFF,$obj);
+	my $this = shift;
+	my (@BUFF, $obj);
 	
-	$obj = {																		# thorinオブジェクト
-		'BUFF'	=> \@BUFF,															# 出力バッファ
+	$obj = {				# thorinオブジェクト
+		'BUFF'	=> \@BUFF,	# 出力バッファ
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -39,10 +39,10 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
-	my		$this = shift;
-	my		($line) = @_;
+	my $this = shift;
+	my ($line) = @_;
 	
-	push(@{$this->{'BUFF'}},$line);
+	push @{$this->{'BUFF'}}, $line;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -57,13 +57,13 @@ sub Print
 #------------------------------------------------------------------------------------------------------------
 sub HTMLInput
 {
-	my		$this = shift;
-	my		($kind,$name,$value) = @_;
-	my		$line;
+	my $this = shift;
+	my ($kind, $name, $value) = @_;
+	my $line;
 	
 	$line = "<input type=$kind name=\"$name\" value=\"$value\">\n";
 	
-	push(@{$this->{'BUFF'}},$line);
+	push @{$this->{'BUFF'}}, $line;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -78,23 +78,23 @@ sub HTMLInput
 #------------------------------------------------------------------------------------------------------------
 sub Flush
 {
-	my		$this = shift;
-	my		($flag,$perm,$szFilePath) = @_;
+	my $this = shift;
+	my ($flag, $perm, $szFilePath) = @_;
 	
 	# ファイルへ出力
-	if	($flag){
-		eval{
-			open(OUTPUT,"+> $szFilePath");
-			flock(OUTPUT,2);
-			truncate(OUTPUT,0);
-			seek(OUTPUT,0,0);
+	if ($flag) {
+		eval {
+			open OUTPUT, "+> $szFilePath";
+			flock OUTPUT, 2;
+			truncate OUTPUT, 0;
+			seek OUTPUT, 0, 0;
 			print OUTPUT @{$this->{'BUFF'}};
-			close(OUTPUT);
-			chmod($perm,$szFilePath);
+			close OUTPUT;
+			chmod $perm, $szFilePath;
 		};
 	}
 	# 標準出力に出力
-	else{
+	else {
 		print @{$this->{'BUFF'}};
 	}
 }
@@ -109,9 +109,9 @@ sub Flush
 #------------------------------------------------------------------------------------------------------------
 sub Clear
 {
-	my		$this = shift;
+	my $this = shift;
 	
-	undef(@{$this->{'BUFF'}});
+	undef @{$this->{'BUFF'}};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -124,11 +124,11 @@ sub Clear
 #------------------------------------------------------------------------------------------------------------
 sub Merge
 {
-	my		$this = shift;
-	my		($thorin) = @_;
+	my $this = shift;
+	my ($thorin) = @_;
 	
-	foreach	(@{$thorin->{'BUFF'}}){
-		push(@{$this->{'BUFF'}},$_);
+	foreach (@{$thorin->{'BUFF'}}) {
+		push @{$this->{'BUFF'}}, $_;
 	}
 }
 

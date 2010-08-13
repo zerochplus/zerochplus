@@ -21,8 +21,8 @@ use strict;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my	$this = shift;
-	my	($obj,%PARAMETER);
+	my $this = shift;
+	my ($obj, %PARAMETER);
 	
 	$obj = {
 		'METHOD'		=> 'GET',
@@ -35,7 +35,7 @@ sub new
 		'REFERER'		=> '0ch.mine.nu',
 		'RESPONSE'		=> undef
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	return $obj;
 }
 
@@ -49,7 +49,7 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub init
 {
-	my	$this = shift;
+	my $this = shift;
 	
 	$this->{'PORT'} = 80;
 	$this->{'AGENT'} = '0ch/Monazilla';
@@ -71,27 +71,27 @@ sub init
 #------------------------------------------------------------------------------------------------------------
 sub request
 {
-	my	$this = shift;
-	my	(@uris,$host,$uri,$request);
+	my $this = shift;
+	my (@uris, $host, $uri, $request);
 	
 	# httpリクエスト文字列の生成
-	@uris = split(/\//,$this->{'URI'});
-	if(($host = getTargetAddress($uris[2])) eq undef){
+	@uris = split(/\//, $this->{'URI'});
+	if (($host = getTargetAddress($uris[2])) eq undef) {
 		return -1;
 	}
 	$uri = $this->{'URI'};
-	$request = createRequestString($this,$host,$uri);
+	$request = createRequestString($this, $host, $uri);
 	
-	eval{
-		my	($sockaddr,$response,$uri);
+	eval {
+		my ($sockaddr, $response, $uri);
 		
 		# ソケットの作成
-		socket(SOCK, PF_INET,SOCK_STREAM, getprotobyname('tcp')) || die('ERROR');
-		select(SOCK);
+		socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die('ERROR');
+		select SOCK;
 		$| =1;
-		select(STDOUT);
+		select STDOUT;
 		$sockaddr = sockaddr_in($this->{'PORT'}, inet_aton($host));
-		connect(SOCK,$sockaddr) || die('ERROR');
+		connect(SOCK, $sockaddr) || die('ERROR');
 		
 		# リクエスト送信
 		print SOCK $request;
@@ -100,11 +100,11 @@ sub request
 		while (<SOCK>) {
 		    $response .= $_;
 		}
-		close(SOCK);
+		close SOCK;
 		
 		$this->{'RESPONSE'} = $response;
 	};
-	if($@ ne ''){
+	if ($@ ne '') {
 		$this->{'RESPONSE'} = $@;
 		return -100;
 	}
@@ -122,7 +122,7 @@ sub request
 #------------------------------------------------------------------------------------------------------------
 sub getResponse
 {
-	my	$this = shift;
+	my $this = shift;
 	return $this->{'RESPONSE'};
 }
 
@@ -136,8 +136,8 @@ sub getResponse
 #------------------------------------------------------------------------------------------------------------
 sub setURI
 {
-	my	$this = shift;
-	my	($uri) = @_;
+	my $this = shift;
+	my ($uri) = @_;
 	$this->{'URI'} = $uri;
 }
 
@@ -151,8 +151,8 @@ sub setURI
 #------------------------------------------------------------------------------------------------------------
 sub setPort
 {
-	my	$this = shift;
-	my	($port) = @_;
+	my $this = shift;
+	my ($port) = @_;
 	$this->{'PORT'} = $port;
 }
 
@@ -166,8 +166,8 @@ sub setPort
 #------------------------------------------------------------------------------------------------------------
 sub setMethod
 {
-	my	$this = shift;
-	my	($method) = @_;
+	my $this = shift;
+	my ($method) = @_;
 	$this->{'METHOD'} = $method;
 }
 
@@ -182,8 +182,8 @@ sub setMethod
 #------------------------------------------------------------------------------------------------------------
 sub setAgent
 {
-	my	$this = shift;
-	my	($agent) = @_;
+	my $this = shift;
+	my ($agent) = @_;
 	$this->{'AGENT'} = $agent;
 }
 
@@ -198,8 +198,8 @@ sub setAgent
 #------------------------------------------------------------------------------------------------------------
 sub setParameter
 {
-	my	$this = shift;
-	my	($key,$value) = @_;
+	my $this = shift;
+	my ($key, $value) = @_;
 	$this->{'PARAMETER'}->{$key} = $value;
 }
 
@@ -213,8 +213,8 @@ sub setParameter
 #------------------------------------------------------------------------------------------------------------
 sub setContentType
 {
-	my	$this = shift;
-	my	($type) = @_;
+	my $this = shift;
+	my ($type) = @_;
 	$this->{'CONTENT_TYPE'} = $type;
 }
 
@@ -228,8 +228,8 @@ sub setContentType
 #------------------------------------------------------------------------------------------------------------
 sub setContentType
 {
-	my	$this = shift;
-	my	($conn) = @_;
+	my $this = shift;
+	my ($conn) = @_;
 	$this->{'CONNECTION'} = $conn;
 }
 
@@ -243,8 +243,8 @@ sub setContentType
 #------------------------------------------------------------------------------------------------------------
 sub setReferer
 {
-	my	$this = shift;
-	my	($ref) = @_;
+	my $this = shift;
+	my ($ref) = @_;
 	$this->{'REFERER'} = $ref;
 }
 
@@ -258,17 +258,17 @@ sub setReferer
 #------------------------------------------------------------------------------------------------------------
 sub getTargetAddress
 {
-	my	($host) = @_;
-	my	(@addrs,$addr);
+	my ($host) = @_;
+	my (@addrs, $addr);
 	
-	@addrs = unpack('C4', (gethostbyname($host))[4]);
+	@addrs = unpack('C4', (gethostbyname $host)[4]);
 	if ($addrs[0] !~ /^[0-9]+$/ || $addrs[0] < 0 || $addrs[0] > 256 ||
 	    $addrs[1] !~ /^[0-9]+$/ || $addrs[1] < 0 || $addrs[1] > 256 ||
 	    $addrs[2] !~ /^[0-9]+$/ || $addrs[2] < 0 || $addrs[2] > 256 ||
 	    $addrs[3] !~ /^[0-9]+$/ || $addrs[3] < 0 || $addrs[3] > 256) {
 		return undef;
 	}
-	$addr = $addrs[0] . "." . $addrs[1] . "." . $addrs[2] . "." . $addrs[3];
+	$addr = join('.', @addrs);
 	
 	return $addr;
 }
@@ -283,16 +283,16 @@ sub getTargetAddress
 #------------------------------------------------------------------------------------------------------------
 sub getRelativeURI
 {
-	my	($uriList) = @_;
-	my	($i,$count,$uri);
+	my ($uriList) = @_;
+	my ($i, $count, $uri);
 	
 	$count = @$uriList;
 	$uri = '';
-	for($i = 3;$i < $count;$i++){
+	for($i = 3;$i < $count;$i++) {
 		$uri .= '/' . $uriList->[$i];
 	}
 	
-	if($uri eq ''){
+	if ($uri eq '') {
 		$uri = '/';
 	}
 	return $uri;
@@ -310,29 +310,29 @@ sub getRelativeURI
 sub createRequestString
 {
 	my $this = shift;
-	my ($host,$uri) = @_;
-	my ($request,$params,$len);
+	my ($host, $uri) = @_;
+	my ($request, $params, $len);
 	
 	# httpボディ(パラメータ)の作成
-	foreach(keys(%{$this->{'PARAMETER'}})){
-		$params .= $_ . '=' . encode($this->{'PARAMETER'}->{$_}) . '&';
+	foreach (keys %{$this->{'PARAMETER'}}) {
+		$params .= "$_=" . encode($this->{'PARAMETER'}->{$_}) . '&';
 	}
-	if($params ne ''){
-		$params = substr($params,0,length($params) - 1);
-		$len = length($params);
+	if ($params ne '') {
+		$params = substr($params, 0, length($params) - 1);
+		$len = length $params;
 	}
 	
 	# httpリクエストヘッダの作成
-	$request .= $this->{'METHOD'} . ' ' . $uri . " HTTP/1.0\r\n";
+	$request .= $this->{'METHOD'} . " $uri HTTP/1.0\r\n";
 	$request .= 'User-Agent: ' . $this->{'AGENT'} . "\r\n";
-	$request .= 'Host: ' . $host . "\r\n";
+	$request .= "Host: $host\r\n";
 	$request .= 'Connection: ' . $this->{'CONNECTION'} . "\r\n";
 	$request .= 'Content-Type: ' . $this->{'CONTENT_TYPE'} . "\r\n";
-	$request .= 'Content-Length: ' . $len . "\r\n";
+	$request .= "Content-Length: $len\r\n";
 	$request .= "\r\n";
 	
 	# httpボディを連結
-	if($len > 0){
+	if ($len > 0) {
 		$request .= $params;
 	}
 	
@@ -350,7 +350,7 @@ sub createRequestString
 sub encode
 {
 	my ($text) = @_;
-	$text =~ s/(\W)/sprintf("%%%02X",unpack("C",$1))/eg;
+	$text =~ s/(\W)/sprintf('%%%02X', unpack('C', $1))/eg;
 	return($text);
 }
 
@@ -364,7 +364,7 @@ sub encode
 #------------------------------------------------------------------------------------------------------------
 sub onTimeout
 {
-	die('ERRROR');
+	die 'ERRROR';
 }
 
 #============================================================================================================
