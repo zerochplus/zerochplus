@@ -6,6 +6,9 @@
 #	2003.02.06 start
 #	2004.03.31 内容変更
 #
+#	ぜろちゃんねるプラス
+#	2010.08.12 システム改変に伴う変更
+#
 #============================================================================================================
 package	VARDA;
 
@@ -187,6 +190,9 @@ sub CreateIIndex
 #	@param	なし
 #	@return	なし
 #
+#	2010.08.12 windyakin ★
+#	 -> 告知欄表示が任意設定できるようになったので変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub CreateSubback
 {
@@ -234,7 +240,7 @@ HTML
 	$Page->Print("</head>\n<body>\n\n");
 	
 	# バナー表示
-	$this->{'BANNER'}->Print($Page,100,2,0);
+	$this->{'BANNER'}->Print($Page,100,2,0) if ( $Sys->Get('BANNER') );
 	
 	$Page->Print("<div class=\"threads\">");
 	$Page->Print("<small>\n");
@@ -543,17 +549,21 @@ KAKIKO
 #	@param	$Caption	
 #	@return	なし
 #
+#	2010.08.12 windyakin ★
+#	 -> Samba値の表示
+#
 #------------------------------------------------------------------------------------------------------------
 sub PrintIndexFoot
 {
 	my		($this,$Page,$Caption) = @_;
-	my		($SYS,$tblCol,$cgiPath,$bbs,$ver,$tm);
+	my		($SYS,$tblCol,$cgiPath,$bbs,$ver,$tm,$samba);
 	
 	$SYS		= $this->{'SYS'};
 	$tblCol		= $this->{'SET'}->Get('BBS_MAKETHREAD_COLOR');
 	$cgiPath	= $SYS->Get('SERVER') . $SYS->Get('CGIPATH');
 	$bbs		= $SYS->Get('BBS');
 	$ver		= $SYS->Get('VERSION');
+	$samba		= $SYS->Get('SAMBA');
 	$tm			= time;
 	
 	# スレッド作成画面を別画面で表示
@@ -602,8 +612,12 @@ FORM
 $Page->Print(<<FOOT);
 <div style="margin-top:1.2em;">
 <a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
-<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
-BBS.CGI - $ver<br>
+<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> <a href="http://zerochplus.sourceforge.jp/">プラス</a>
+BBS.CGI - $ver (Perl)
++<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>
++BBX
++<a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">スパムちゃんぷるー</a>
++Samba24=$samba<br>
 ページのおしまいだよ。。と</div>
 
 FOOT

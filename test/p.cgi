@@ -177,6 +177,9 @@ sub PrintFoot
 #	@param	$pHash	ハッシュの参照
 #	@return	なし
 #
+#	2010.08.12 windyakin ★
+#	 -> http://0ch.mine.nu/test/read.cgi/jikken/1273239400/5 対応
+#
 #------------------------------------------------------------------------------------------------------------
 sub GetPathData
 {
@@ -184,7 +187,8 @@ sub GetPathData
 	my		(@plist,$var,$val);
 	
 	if	($ENV{'PATH_INFO'}){
-		@plist = split(/\//,$ENV{'PATH_INFO'});
+		use CGI;
+		@plist = split(/\//,CGI::escapeHTML($ENV{'PATH_INFO'}));
 		$pHash->{'bbs'} = $plist[1];
 		$pHash->{'st'} = $plist[2];
 	}
