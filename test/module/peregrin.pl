@@ -8,6 +8,9 @@
 #	2003.03.06 ログ検索時のエラーをFIX
 #	2003.06.25 Addメソッド追加
 #
+#	ぜろちゃんねるプラス
+#	2010.08.13 一部ログ出力形式を変更
+#
 #============================================================================================================
 package	PEREGRIN;
 
@@ -140,14 +143,18 @@ sub Save
 #			$data1 : 汎用データ1
 #			$data2 : 汎用データ2
 #			$host  : リモートホスト
+#			$data  : DAT形式のログ
 #	戻り値：なし
+#
+#	2010.08.12 windyakin ★
+#	 -> 通常書き込みログ出力形式を２ちゃんねる形式へ変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
 	my		$this = shift;
-	my		($I,$data1,$data2,$host) = @_;
-	my		($work,$nm,$tm,$bf,$kind);
+	my		($I,$data1,$data2,$host,$data) = @_;
+	my		($work,$nm,$tm,$bf,$kind,@logdat);
 	
 	$bf		= 0;
 	$nm		= $this->{'NUM'};														# ログ数取得
@@ -159,7 +166,18 @@ sub Set
 		elsif	($kind == 3 && $nm >= $I->Get('timecount')){		$bf = 1;	}	# 書き込みログ
 		
 		$tm		= time;
-		$work	= "$tm<>$data1<>$data2<>$host\n";
+		
+		if ( $kind eq 3 ) {
+			
+			@logdat = split(/<>/, $data);
+			
+			$work	= "$logdat[0]<>$logdat[1]<>$logdat[2]<>".substr($logdat[3],0,30)."<>$logdat[4]<>";
+			$work  .= "$ENV{'REMOTE_HOST'}<>$ENV{'REMOTE_ADDR'}<>$data1<>$ENV{'HTTP_USER_AGENT'}\n";
+			
+		}
+		else {
+			$work	= "$tm<>$data1<>$data2<>$host\n";
+		}
 		
 		push(@{$this->{'LOG'}},$work);												# 末尾へ追加
 		$this->{'NUM'} ++;
@@ -200,6 +218,9 @@ sub Get
 #			$f    : サーチモード
 #	戻り値：見つかれば1,なければ0
 #
+#	2010.08.13 windyakin ★
+#	 -> ログ保存形式変更によるシステムの変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Search
 {
@@ -212,7 +233,7 @@ sub Search
 		for	($i = $num - 1;$i >= 0;$i--){
 			$dmy = $this->{'LOG'}->[$i];
 			chomp($dmy);
-			($dmy,$dat,$dmy,$key) = split(/<>/,$dmy);
+			(undef,undef,undef,undef,undef,$key,undef,$dat) = split(/<>/,$dmy);
 			if	($data eq $key){
 				return $dat;
 			}

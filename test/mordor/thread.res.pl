@@ -209,6 +209,9 @@ sub SetMenuList
 #	@param	$Dat	dat変数
 #	@return	なし
 #
+#	2010.08.12 windyakin ★
+#	 -> デフォルト表示最新１０に変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub PrintResList
 {
@@ -219,7 +222,7 @@ sub PrintResList
 	$Sys->Set('_TITLE','Res List');
 	
 	# 表示書式の設定
-	$format = $Form->Get('DISP_FORMAT') eq '' ? '-10' : $Form->Get('DISP_FORMAT');
+	$format = $Form->Get('DISP_FORMAT') eq '' ? 'l10' : $Form->Get('DISP_FORMAT');
 	($dispSt,$dispEd) = AnalyzeFormat($format,$Dat);
 	
 	$common	= "DoSubmit('thread.res','DISP','LIST');";
