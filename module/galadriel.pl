@@ -478,15 +478,16 @@ sub MakeID
 sub ConvertTrip
 {
 	my $this = shift;
-	my ($key, $column, $orz) = @_;
+	my ($key, $column, $shatrip) = @_;
 	my ($trip, $mark, $salt, $key2);
 	
 	# cryptのときの桁取得
 	$column = -1 * $column;
 	
-	if ( (length $$key >= 12) && ($orz eq 1) ) {
+	$trip = '';
 	
-		# 先頭文字列の取得
+	if (length $$key >= 12) {
+		# 先頭2文字の取得
 		$mark = substr($$key, 0, 1);
 		
 		if ($mark eq '#' || $mark eq '$') {
@@ -494,7 +495,8 @@ sub ConvertTrip
 				$key2 = pack('H*', $1);
 				$salt = substr($2 . '..', 0, 2);
 				
-				$key2 =~ s/\x80[\x00-\xff]*$//;	# 0x80問題再現
+				# 0x80問題再現
+				$key2 =~ s/\x80[\x00-\xff]*$//;
 				
 				$trip = substr(crypt($key2, $salt), $column);
 			}
@@ -503,20 +505,22 @@ sub ConvertTrip
 				$trip = '???';
 			}
 		}
-		else {
+		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
 			use Digest::SHA1 qw(sha1_base64);
 			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
-	else {
+	
+	if ($trip eq '') {
 		# 従来のトリップ生成方式
 		$salt = substr($$key . 'H.', 1, 2);
 		$salt =~ s/[^\.-z]/\./go;
 		$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 		
-		$$key =~ s/\x80[\x00-\xff]*$//;	# 0x80問題再現
+		# 0x80問題再現
+		$$key =~ s/\x80[\x00-\xff]*$//;
 		
 		$trip = substr(crypt($$key, $salt), $column);
 	}
