@@ -314,7 +314,7 @@ sub IsRegulation
 {
 	my ($this, $datas) = @_;
 	my ($oSYS, $oSET, $oSEC);
-	my ($err, $host, $bbs, $datPath, $capID, $Samba, $from);
+	my ($err, $host, $bbs, $datPath, $capID, $Samba, $from, $mode);
 	
 	$oSYS		= $this->{'SYS'};
 	$oSET		= $this->{'SET'};
@@ -325,6 +325,7 @@ sub IsRegulation
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
 	$Samba		= $oSYS->Get('SAMBA');
+	$mode		= $oSYS->Get('AGENT');
 	
 	# 規制ユーザ・NGワードチェック
 	{
@@ -421,7 +422,7 @@ sub IsRegulation
 		$datPath = "$tPath$key.dat";
 		
 		# スレッド作成(携帯から)
-		if ($oSYS->Get('AGENT') != 0) {
+		if ($oSYS->Get('AGENT') eq "O") {
 			if (! $oSEC->IsAuthority($capID, 16, $bbs)) {
 				return 204;
 			}
@@ -473,7 +474,7 @@ sub IsRegulation
 				return 503;
 			}
 		}
-		$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas);
+		$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
 		$LOG->Save($oSYS);
 	}
 	
@@ -493,13 +494,14 @@ sub IsRegulation
 #
 #	2010.08.12 windyakin ★
 #	 -> トリップ変換処理の順番を変更(禁則文字,fusianasan変換の前へ)
+#	 -> 文字列変換処理の順番を変更(文字数チェックの前へ)
 #
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationNameMail
 {
 	my ($this) = @_;
 	my ($Form, $oSEC, $oSET, $Sys);
-	my ($name, $mail, $subject, $bbs, $capName, $capID, $key);
+	my ($name, $mail, $subject, $bbs, $capName, $capID, $key, $host);
 	
 	$Sys		= $this->{'SYS'};
 	$Form		= $this->{'FORM'};
@@ -517,13 +519,44 @@ sub NormalizationNameMail
 		$capName = $oSEC->Get($capID, 'NAME', 1);
 	}
 	
+	# トリップキーと名前をここで切り離す
+	if ($name =~ /^(.*?)#(.+)$/) {
+		($name, $key) = ($1, $2);
+		
+		# トリップ変換
+		$key = $this->{'CONV'}->ConvertTrip(\$key, $oSET->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
+	}
+	else {
+		$key = '';
+	}
+	
+	# 禁則文字変換
+	$this->{'CONV'}->ConvertCharacter(\$name, 0);
+	$this->{'CONV'}->ConvertCharacter(\$mail, 1);
+	
+	# fusiana変換 2ch互換
+	$name =~ s|fusianasan|</b>$host<b>|;
+	$name =~ s|fusianasan| </b>$host<b>|g;
+	
+	# 2ch互換
+	$name = substr($name, 1) if (index($name, ' ') == 0);
+	
+	# トリップと名前を結合する
+	$name .= " </b>◆$key <b>" if ($key ne '');
+	
+	# キャップ名結合
+	if ($capName ne '') {
+		$name = ($Form->Get('NAME') ? "$name＠" : '') . "$capName ★";
+	}
+	
+	
 	# スレッド作成時
 	if ($Sys->Equal('MODE', 1)) {
 		if ($subject eq '') {
 			return 150;
 		}
 		# サブジェクト欄の文字数確認
-		if (!$oSEC->IsAuthority($capID, 1, $bbs)) {
+		if (! $oSEC->IsAuthority($capID, 1, $bbs)) {
 			if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject)) {
 				return 101;
 			}
@@ -531,19 +564,19 @@ sub NormalizationNameMail
 	}
 	
 	# 名前欄の文字数確認
-	if (!$oSEC->IsAuthority($capID, 2, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 2, $bbs)) {
 		if ($oSET->Get('BBS_NAME_COUNT') < length($name)) {
 			return 101;
 		}
 	}
 	# メール欄の文字数確認
-	if (!$oSEC->IsAuthority($capID, 3, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 3, $bbs)) {
 		if ($oSET->Get('BBS_MAIL_COUNT') < length($mail)) {
 			return 102;
 		}
 	}
 	# 名前欄の入力確認
-	if (!$oSEC->IsAuthority($capID, 7, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 7, $bbs)) {
 		if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '') {
 			return 152;
 		}
@@ -551,36 +584,6 @@ sub NormalizationNameMail
 	# 名無し設定
 	unless ($name) { $name = $oSET->Get('BBS_NONAME_NAME'); }
 	unless ($mail) { $mail = ''; }
-	
-	# トリップキーと名前をここで切り離す
-	if ($name =~ /#.+/) {
-		$key = substr($name, index($name, '#') + 1);
-		$name = substr($name, 0, index($name, '#'));
-		
-		# トリップ変換
-		$key = $this->{'CONV'}->ConvertTrip(\$key, $oSET->Get('BBS_TRIPCOLUMN'));
-	}
-	
-	
-	# 禁則文字変換
-	$this->{'CONV'}->ConvertCharacter(\$name, 1);
-	$this->{'CONV'}->ConvertCharacter(\$mail, 0);
-	
-	# fusiana変換
-	if (index($name, 'fusianasan') eq 0) {
-		$name =~ s/fusianasan/<\/b>$host<b> /g;
-	}
-	else {
-		$name =~ s/fusianasan/ <\/b>$host<b> /g;
-	}
-	
-	# トリップと名前を結合する
-	$name .= " </b>◆$key<b> " if ($key ne '');
-	
-	# キャップ名結合
-	if ($capName ne '') {
-		$name = ($Form->Get('NAME') ? "$name＠" : '') . "$capName ★";
-	}
 	
 	# 正規化した内容を再度設定
 	$Form->Set('FROM', $name);
@@ -618,19 +621,19 @@ sub NormalizationContents
 		return 151;
 	}
 	# 本文が長すぎ
-	if (!$oSEC->IsAuthority($capID, 4, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 4, $bbs)) {
 		if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text)) {
 			return 103;
 		}
 	}
 	# 改行が多すぎ
-	if (!$oSEC->IsAuthority($capID, 5, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 5, $bbs)) {
 		if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln) {
 			return 105;
 		}
 	}
 	# 1行が長すぎ
-	if (!$oSEC->IsAuthority($capID, 6, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 6, $bbs)) {
 		if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl) {
 			return 104;
 		}
@@ -642,7 +645,7 @@ sub NormalizationContents
 		}
 	}
 	# 本文ホスト表示
-	if (!$oSEC->IsAuthority($capID, 15, $bbs)) {
+	if (! $oSEC->IsAuthority($capID, 15, $bbs)) {
 		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->{'SYS'}->Equal('MODE', 1)) {
 			$text .= '<hr><font color=tomato face=Arial><b>';
 			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";

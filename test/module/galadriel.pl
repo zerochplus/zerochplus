@@ -9,6 +9,8 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.12 新仕様トリップ対応
+#	2010.08.14 ID仕様変更 トリップ仕様変更
+#	           禁則処理2ch完全互換
 #
 #============================================================================================================
 package	GALADRIEL;
@@ -77,7 +79,8 @@ sub GetArgument
 			$retArg[6] = 1;
 		}
 	}
-	$retArg[7] = GetAgentMode($this, $pENV->{'HTTP_USER_AGENT'});					# エージェントモード
+	# ユーザーエージェント取得
+	$retArg[7] = GetAgentMode($this, $pENV->{'HTTP_USER_AGENT'});
 	
 	return @retArg;
 }
@@ -363,22 +366,33 @@ sub GetTextInfo
 #
 #	エージェントモード取得 - GetAgentMode
 #	--------------------------------------------
-#	引　数：$UA : ユーザーエージェント
+#	引　数：$UA   : ユーザーエージェント
 #	戻り値：エージェントモード
+#
+#	2010.08.13 windyakin ★
+#	 -> ID末尾文字正規化のため変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub GetAgentMode
 {
 	my $this = shift;
 	my ($UA) = @_;
+	my ($host);
 	
-	$_ = $UA;
-	if (m/DoCoMo/) {		return 1; }	# docomo携帯
-	if (m/J-PHONE/) {		return 2; }	# J-Phone携帯
-	if (m/UP\.Browser/) {	return 3; }	# au携帯
-	if (m/DDIPOCKET/) {		return 4; }	# エアエッジホン
+	$host = $ENV{'REMOTE_HOST'};
 	
-	return 0;
+	if ( $host =~ /\.docomo.ne.jp/ ) {				return "O"; }			# docomo
+	if ( $host =~ /\.jp-[a-z].ne.jp/ ) {			return "O"; }			# J-Phone
+	if ( $host =~ /\.vodafone.ne.jp/ ) {			return "O"; }			# Vodafone
+	if ( $host =~ /\.softbank.ne.jp/ ) {			return "O"; }			# SoftBank
+	if ( $host =~ /\.ezweb.ne.jp/ ) {				return "O"; }			# au
+	if ( $host =~ /\.prin.ne.jp/ ) {				return "O"; }			# Willcom
+	if ( $host =~ /cw43.razil.jp/ ) {				return "P"; }			# 公式p2
+	if ( $host =~ /\.panda-world.ne.jp/ ) {			return "i"; }			# iPhone( 3G )
+	if ( $UA =~ /iPhone; U; CPU iPhone/ ) {			return "I";	}			# iPhone(WiFi)
+	if ( $UA =~ /Debug Mobile Phone/ ) {			return "S"; }			# デバッグ用
+	
+	return "0";
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -450,28 +464,27 @@ sub MakeID
 #	--------------------------------------
 #	引　数：$key    : トリップキー
 #			$column : 桁数
+#			$orz    : 新仕様ON/OFF
 #	戻り値：変換後文字列
 #
 #	2010.08.12 windyakin ★
 #	 -> 生キー変換, 新仕様トリップ(12桁) に対応
 #		詳細は副産物のtriptestを参考のこと
 #
+#	2010.08.14 windyakin ★
+#	 -> 新仕様トリップの選択性に対応
+#
 #------------------------------------------------------------------------------------------------------------
 sub ConvertTrip
 {
 	my $this = shift;
-	my ($key, $column) = @_;
+	my ($key, $column, $orz) = @_;
 	my ($trip, $mark, $salt, $key2);
 	
 	# cryptのときの桁取得
 	$column = -1 * $column;
 	
-	# それらのデコード
-	$$key =~ s/&quot;/"/g;	#"
-	$$key =~ s/&lt;/</g;
-	$$key =~ s/&gt;/>/g;
-	
-	if (length $$key >= 12) {
+	if ( (length $$key >= 12) && ($orz eq 1) ) {
 	
 		# 先頭文字列の取得
 		$mark = substr($$key, 0, 1);
@@ -480,8 +493,6 @@ sub ConvertTrip
 			if ($$key =~ m|^#([0-9a-zA-Z]{16})([./0-9A-Za-z]{0,2})$|) {
 				$key2 = pack('H*', $1);
 				$salt = substr($2 . '..', 0, 2);
-				$salt =~ s/[^\.-z]/\./go;
-				$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 				
 				$key2 =~ s/\x80[\x00-\xff]*$//;	# 0x80問題再現
 				
@@ -494,6 +505,7 @@ sub ConvertTrip
 		}
 		else {
 			# SHA1(新仕様)トリップ
+			use Digest::SHA1 qw(sha1_base64);
 			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
@@ -712,7 +724,7 @@ sub GetIDPart
 	
 	# PC・携帯識別番号付加
 	if ($Set->Equal('BBS_SLIP', 'checked')) {
-		$mode = ($agent == 0 ? '0' : 'O');
+		$mode = $agent;
 		$id .= $mode;
 	}
 	
@@ -755,15 +767,36 @@ sub GetIDPart
 sub ConvertCharacter
 {
 	my $this = shift;
-	my ($data, $f) = @_;
+	my ($data, $mode) = @_;
 	
-	$$data =~ s/★/☆/g;
-	$$data =~ s/◆/◇/g;
-	$$data =~ s/削除/”削除”/g;
+	# name mail text
+	$$data =~ s/</&lt;/g;
+	$$data =~ s/>/&gt;/g;
 	
-	if ($f) {
+	# name mail
+	if ($mode == 0 || $mode == 1) {
+		$$data =~ s/★/☆/g;
+		$$data =~ s/◆/◇/g;
+		$$data =~ s/削除/”削除”/g;
+	}
+	
+	# name
+	if ($mode == 0) {
 		$$data =~ s/管理/”管理”/g;
 		$$data =~ s/管直/”管直”/g;
+	}
+	
+	# mail
+	if ($mode == 1) {
+		$$data =~ s/"/&quot;/g;
+	}
+	
+	# text
+	if ($mode == 2) {
+		$$data =~ s/\n/ <br> /g;
+	}
+	else {
+		$$data =~ s/\n//g;
 	}
 }
 

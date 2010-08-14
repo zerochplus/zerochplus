@@ -268,6 +268,7 @@ sub InitSystemValue
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
 		'PRTEXT'	=> 'ぜろちゃんねるプラス',					# PR欄の表示文字列
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
+		'TRIP12'	=> 0,										# 12桁トリップを変換するかどうか
 	);
 	
 	# 情報保持キー
@@ -276,7 +277,7 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBA',	'BANNER',	'KAKIKO',	'COUNTER',
+		'SAMBA',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
 	);
 }
 
