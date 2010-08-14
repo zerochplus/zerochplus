@@ -25,66 +25,66 @@ exit(BBSCGI());
 #------------------------------------------------------------------------------------------------------------
 sub BBSCGI
 {
-	my		(%SYS,$Page,$err);
+	my (%SYS, $Page, $err);
 	
-	require('./module/thorin.pl');
+	require './module/thorin.pl';
 	$Page = new THORIN;
 	
 	# 初期化に成功したら書き込み処理を開始
-	if	(($err = Initialize(\%SYS)) == 0){
+	if (($err = Initialize(\%SYS)) == 0) {
 		
-		require('./module/vara.pl');
-		my	$WriteAid = new VARA;
-		$WriteAid->Init($SYS{'SYS'},$SYS{'FORM'},$SYS{'SET'},undef,$SYS{'CONV'});
+		require './module/vara.pl';
+		my $WriteAid = new VARA;
+		$WriteAid->Init($SYS{'SYS'}, $SYS{'FORM'}, $SYS{'SET'}, undef, $SYS{'CONV'});
 		
 		# 書き込みに成功したら掲示板構成要素を更新する
-		if	(($err = $WriteAid->Write()) == 0){
-			if	(!$SYS{'SYS'}->Equal('FASTMODE',1)){
-				require('./module/varda.pl');
-				my	$BBSAid = new VARDA;
+		if (($err = $WriteAid->Write()) == 0) {
+			if (! $SYS{'SYS'}->Equal('FASTMODE', 1)) {
+				require './module/varda.pl';
+				my $BBSAid = new VARDA;
 				
-				eval{
-					$BBSAid->Init($SYS{'SYS'},$SYS{'SET'});
+				eval {
+					$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
 					$BBSAid->CreateIndex();
 					$BBSAid->CreateIIndex();
 					$BBSAid->CreateSubback();
 				};
 			}
-			PrintBBSJump(\%SYS,$Page);
+			PrintBBSJump(\%SYS, $Page);
 		}
-		else{
-			PrintBBSError(\%SYS,$Page,$err);
+		else {
+			PrintBBSError(\%SYS, $Page, $err);
 		}
 	}
-	else{
+	else {
 		# スレッド作成画面表示
-		if		($err == 9000){
-			PrintBBSThreadCreate(\%SYS,$Page);
+		if ($err == 9000) {
+			PrintBBSThreadCreate(\%SYS, $Page);
 			$err = 0;
 		}
 		# cookie確認画面表示
-		elsif	($err == 9001){
-			PrintBBSCookieConfirm(\%SYS,$Page);
+		elsif ($err == 9001) {
+			PrintBBSCookieConfirm(\%SYS, $Page);
 			$err = 0;
 		}
 		# 書き込み確認画面表示
-		elsif	($err == 9002){
-			PrintBBSWriteConfirm(\%SYS,$Page);
+		elsif ($err == 9002) {
+			PrintBBSWriteConfirm(\%SYS, $Page);
 			$err = 0;
 		}
 		# 携帯からのスレッド作成画面表示
-		elsif	($err == 9003){
-			PrintBBSMobileThreadCreate($SYS{'SYS'},$Page,$SYS{'SET'});
+		elsif ($err == 9003) {
+			PrintBBSMobileThreadCreate($SYS{'SYS'}, $Page, $SYS{'SET'});
 			$err = 0;
 		}
 		# エラー画面表示
-		else{
-			PrintBBSError(\%SYS,$Page,$err);
+		else {
+			PrintBBSError(\%SYS, $Page, $err);
 		}
 	}
 	
 	# 結果の表示
-	$Page->Flush('',0,0);
+	$Page->Flush('', 0, 0);
 	
 	return $err;
 }
@@ -99,14 +99,14 @@ sub BBSCGI
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
-	my		($Sys) = @_;
+	my ($Sys) = @_;
 	
 	# 使用モジュールの初期化
-	require('./module/melkor.pl');
-	require('./module/isildur.pl');
-	require('./module/radagast.pl');
-	require('./module/galadriel.pl');
-	require('./module/samwise.pl');
+	require './module/melkor.pl';
+	require './module/isildur.pl';
+	require './module/radagast.pl';
+	require './module/galadriel.pl';
+	require './module/samwise.pl';
 	
 	%$Sys = (
 		'SYS'		=> new MELKOR,
@@ -120,67 +120,69 @@ sub Initialize
 	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# システム情報設定
-	if	($Sys->{'SYS'}->Init()){
+	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
-	$Sys->{'SYS'}->Set('ENCODE','Shift_JIS');
-	$Sys->{'SYS'}->Set('BBS',$Sys->{'FORM'}->Get('bbs'));
-	$Sys->{'SYS'}->Set('KEY',$Sys->{'FORM'}->Get('key'));
-	$Sys->{'SYS'}->Set('AGENT',$Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
+	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
+	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs'));
+	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
+	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
 	# ホスト情報設定.携帯の場合は機種情報を設定
-	if($Sys->{'SYS'}->Equal('AGENT',0)){
-		$Sys->{'FORM'}->Set('HOST',$Sys->{'CONV'}->GetRemoteHost());
-	}else{
-		if(!$Sys->{'FORM'}->Equal('mobile','true')){
-			my $product = GetProductInfo($Sys->{'CONV'},$ENV{'HTTP_USER_AGENT'});
-			if($product eq undef){
-				return 950;
-			}
-			$Sys->{'FORM'}->Set('HOST',$product);
+	if (!$Sys->{'SYS'}->Equal('AGENT', "O") && !$Sys->{'SYS'}->Equal('AGENT', "P")) {
+		$Sys->{'FORM'}->Set('HOST', $Sys->{'CONV'}->GetRemoteHost());
+	}
+	else {
+		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
+		
+		if ($product eq undef) {
+			return 950;
+		}
+		else {
+			$Sys->{'FORM'}->Set('HOST', $product);
 		}
 	}
 	
 	# SETTING.TXTの読み込み
-	if	(!$Sys->{'SET'}->Load($Sys->{'SYS'})){
+	if (! $Sys->{'SET'}->Load($Sys->{'SYS'})) {
 		return 999;
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
-	if	(!$Sys->{'SYS'}->Equal('AGENT',0) && $Sys->{'FORM'}->IsExist('mobile')){
+	if ($Sys->{'SYS'}->Equal('AGENT', "O") && $Sys->{'FORM'}->IsExist('mobile')) {
 		return 9003;
 	}
 	
 	# form情報にkeyが存在したらレス書き込み
-	if	($Sys->{'FORM'}->IsExist('key')){	$Sys->{'SYS'}->Set('MODE',2);	}
-	else{									$Sys->{'SYS'}->Set('MODE',1);	}
+	if ($Sys->{'FORM'}->IsExist('key'))	{ $Sys->{'SYS'}->Set('MODE', 2); }
+	else								{ $Sys->{'SYS'}->Set('MODE', 1); }
 	
 	# cookieの存在チェック(PCのみ)
-	if	($Sys->{'SYS'}->Equal('AGENT',0)){
-		if	($Sys->{'SET'}->Equal('SUBBBS_CGI_ON',1)){
+	if (!$Sys->{'SYS'}->Equal('AGENT', "O")) {
+		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
-			return 9001	if	(!$Sys->{'COOKIE'}->Init());
+			return 9001	if (!$Sys->{'COOKIE'}->Init());
 			
 			# 名前欄cookie
-			if	($Sys->{'SET'}->Equal('BBS_NAMECOOKIE_CHECK','checked')
-				&& !$Sys->{'COOKIE'}->IsExist('NAME')){
+			if ($Sys->{'SET'}->Equal('BBS_NAMECOOKIE_CHECK', 'checked')
+				&& ! $Sys->{'COOKIE'}->IsExist('NAME')) {
 				return 9001;
 			}
 			# メール欄cookie
-			if	($Sys->{'SET'}->Equal('BBS_MAILCOOKIE_CHECK','checked')
-				&& !$Sys->{'COOKIE'}->IsExist('MAIL')){
+			if ($Sys->{'SET'}->Equal('BBS_MAILCOOKIE_CHECK', 'checked')
+				&& ! $Sys->{'COOKIE'}->IsExist('MAIL')) {
 				return 9001;
 			}
 		}
 	}
 	
 	# スレッド作成モードでMESSAGEが無い：スレッド作成画面
-	if	($Sys->{'SYS'}->Equal('MODE',1)){
-		if	(!$Sys->{'FORM'}->IsExist('MESSAGE')){
+	if ($Sys->{'SYS'}->Equal('MODE', 1)) {
+		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
 			return 9000;
 		}
-		$Sys->{'FORM'}->Set('key',time());
-		$Sys->{'SYS'}->Set('KEY',$Sys->{'FORM'}->Get('key'));
+		$Sys->{'FORM'}->Set('key', time);
+		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	}
 	
 	return 0;
@@ -196,12 +198,12 @@ sub Initialize
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSThreadCreate
 {
-	my		($Sys,$Page) = @_;
-	my		($Caption,$title,$link,$image,$code);
+	my ($Sys, $Page) = @_;
+	my ($Caption, $title, $link, $image, $code);
 	
-	require('./module/legolas.pl');
+	require './module/legolas.pl';
 	$Caption = new LEGOLAS;
-	$Caption->Load($Sys->{'SYS'},'META');
+	$Caption->Load($Sys->{'SYS'}, 'META');
 	
 	$SET	= $Sys->{'SET'};
 	$title	= $SET->Get('BBS_TITLE');
@@ -215,13 +217,13 @@ sub PrintBBSThreadCreate
 	$Page->Print("<html lang=\"ja\">\n");
 	$Page->Print("<head>\n");
 	$Page->Print(' <meta http-equiv="Content-Type" content="text/html;charset=Shift_JIS">'."\n\n");
-	$Caption->Print($Page,undef);
+	$Caption->Print($Page, undef);
 	$Page->Print(" <title>$title</title>\n\n");
 	$Page->Print("</head>\n<!--nobanner-->\n");
 	
 	# <body>タグ出力
 	{
-		my	@work;
+		my @work;
 		$work[0] = $SET->Get('BBS_BG_COLOR');
 		$work[1] = $SET->Get('BBS_TEXT_COLOR');
 		$work[2] = $SET->Get('BBS_LINK_COLOR');
@@ -236,25 +238,25 @@ sub PrintBBSThreadCreate
 
 	$Page->Print("<div align=\"center\">");
 	# 看板画像表示あり
-	if	($image ne ''){
+	if ($image ne '') {
 		# 看板画像からのリンクあり
-		if	($link ne ''){
+		if ($link ne '') {
 			$Page->Print("<a href=\"$link\"><img src=\"$image\" border=\"0\" alt=\"$image\"></a><br>");
 		}
 		# 看板画像にリンクはなし
-		else{
+		else {
 			$Page->Print("<img src=\"$image\" border=\"0\"><br>");
 		}
 	}
 	$Page->Print("</div>");
 
 	# ヘッダテーブルの表示
-	$Caption->Load($Sys->{'SYS'},'HEAD');
-	$Caption->Print($Page,$SET);
+	$Caption->Load($Sys->{'SYS'}, 'HEAD');
+	$Caption->Print($Page, $SET);
 	
 	# スレッド作成フォームの表示
 	{
-		my	($tblCol,$name,$mail,$cgiPath,$bbs,$tm,$ver);
+		my ($tblCol, $name, $mail, $cgiPath, $bbs, $tm, $ver);
 		$tblCol		= $SET->Get('BBS_MAKETHREAD_COLOR');
 		$name		= $Sys->{'COOKIE'}->Get('NAME');
 		$mail		= $Sys->{'COOKIE'}->Get('MAIL');
@@ -263,7 +265,7 @@ sub PrintBBSThreadCreate
 		$ver		= $Sys->{'SYS'}->Get('VERSION');
 		$server		= $Sys->{'SYS'}->Get('SERVER');
 		
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
  <tr>
   <td>
@@ -308,22 +310,22 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSMobileThreadCreate
 {
-	my		($Sys,$Page,$Set) = @_;
-	my		($title,$bbs,$tm);
+	my ($Sys, $Page, $Set) = @_;
+	my ($title, $bbs, $tm);
 	
-	require('./module/denethor.pl');
+	require './module/denethor.pl';
 	$Banner = new DENETHOR;
 	$Banner->Load($Sys);
 	
 	$title	= $Set->Get('BBS_TITLE');
 	$bbs	= $Sys->Get('BBS');
-	$tm		= time();
+	$tm		= time;
 	
 	$Page->Print("Content-type: text/html\n\n");
-	$Page->Print('<html><head><title>' . $title . '</title></head><!--nobanner-->');
+	$Page->Print("<html><head><title>$title</title></head><!--nobanner-->");
 	$Page->Print("\n<body><form action=\"./bbs.cgi\" method=\"POST\" utn><center>$title<hr>");
 	
-	$Banner->Print($Page,100,2,1);
+	$Banner->Print($Page, 100, 2, 1);
 	
 	$Page->Print("</center>\n");
 	$Page->Print("タイトル<br><input type=text name=subject><br>");
@@ -346,8 +348,8 @@ sub PrintBBSMobileThreadCreate
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSCookieConfirm
 {
-	my		($Sys,$Page) = @_;
-	my		($code,$name,$mail,$msg,$bbs,$tm,$subject,$COOKIE,$oSET);
+	my ($Sys, $Page) = @_;
+	my ($code, $name, $mail, $msg, $bbs, $tm, $subject, $COOKIE, $oSET);
 	
 	$Form		= $Sys->{'FORM'};
 	$oSET		= $Sys->{'SET'};
@@ -361,12 +363,12 @@ sub PrintBBSCookieConfirm
 	$subject	= $Form->Get('subject');
 	
 	# cookie情報の出力
-	$COOKIE->Set('NAME',$name)	if	($oSET->Equal('BBS_NAMECOOKIE_CHECK','checked'));
-	$COOKIE->Set('MAIL',$mail)	if	($oSET->Equal('BBS_MAILCOOKIE_CHECK','checked'));
-	$COOKIE->Out($Page,$oSET->Get('BBS_COOKIEPATH'),60 * 24 * 30);
+	$COOKIE->Set('NAME', $name)	if ($oSET->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+	$COOKIE->Set('MAIL', $mail)	if ($oSET->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+	$COOKIE->Out($Page, $oSET->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 	
 	$Page->Print("Content-type: text/html\n\n");
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <!-- 2ch_X:cookie -->
@@ -379,10 +381,10 @@ $Page->Print(<<HTML);
 </head>
 <!--nobanner-->
 HTML
-
+	
 	# <body>タグ出力
 	{
-		my	@work;
+		my @work;
 		$work[0] = $Sys->{'SET'}->Get('BBS_THREAD_COLOR');
 		$work[1] = $Sys->{'SET'}->Get('BBS_TEXT_COLOR');
 		$work[2] = $Sys->{'SET'}->Get('BBS_LINK_COLOR');
@@ -392,8 +394,8 @@ HTML
 		$Page->Print("<body bgcolor=\"$work[0]\" text=\"$work[1]\" link=\"$work[2]\" ");
 		$Page->Print("alink=\"$work[3]\" vlink=\"$work[4]\">\n");
 	}
-
-$Page->Print(<<HTML);
+	
+	$Page->Print(<<HTML);
 <font size="4" color="#FF0000"><b>書きこみ＆クッキー確認</b></font>
 <blockquote style="margin-top:4em;">
  名前： $name<br>
@@ -416,19 +418,19 @@ HTML
 	
 	$msg =~ s/<br>/\n/g;
 	
-	$Page->HTMLInput('hidden','subject',$subject);
-	$Page->HTMLInput('hidden','FROM',$name);
-	$Page->HTMLInput('hidden','mail',$mail);
-	$Page->HTMLInput('hidden','MESSAGE',$msg);
-	$Page->HTMLInput('hidden','bbs',$bbs);
-	$Page->HTMLInput('hidden','time',$tm);
+	$Page->HTMLInput('hidden', 'subject', $subject);
+	$Page->HTMLInput('hidden', 'FROM', $name);
+	$Page->HTMLInput('hidden', 'mail', $mail);
+	$Page->HTMLInput('hidden', 'MESSAGE', $msg);
+	$Page->HTMLInput('hidden', 'bbs', $bbs);
+	$Page->HTMLInput('hidden', 'time', $tm);
 	
 	# レス書き込みモードの場合はkeyを設定する
-	if	($Sys->{'SYS'}->Equal('MODE',2)){
-		$Page->HTMLInput('hidden','key',$Form->Get('key'));
+	if ($Sys->{'SYS'}->Equal('MODE', 2)) {
+		$Page->HTMLInput('hidden', 'key', $Form->Get('key'));
 	}
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <input type="submit" value="上記全てを承諾して書き込む"><br>
 </form>
 
@@ -456,8 +458,8 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSWriteConfirm
 {
-	my		($Sys,$Page) = @_;
-	my		($Form,$bbs,$key,$tm,$subject,$name,$mail,$msg,$code);
+	my ($Sys, $Page) = @_;
+	my ($Form, $bbs, $key, $tm, $subject, $name, $mail, $msg, $code);
 	
 	$Form		= $Sys->{'FORM'};
 	$bbs		= $Form->Get('bbs');
@@ -469,7 +471,7 @@ sub PrintBBSWriteConfirm
 	$code		= $Sys->{'SYS'}->Get('ENCODE');
 	
 	$Page->Print("Content-type: text/html\n\n");
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <!-- 2ch_X:cookie -->
@@ -482,7 +484,7 @@ HTML
 
 	# <body>タグ出力
 	{
-		my	@work;
+		my @work;
 		$work[0] = $Sys->{'SET'}->Get('BBS_THREAD_COLOR');
 		$work[1] = $Sys->{'SET'}->Get('BBS_TEXT_COLOR');
 		$work[2] = $Sys->{'SET'}->Get('BBS_LINK_COLOR');
@@ -493,7 +495,7 @@ HTML
 		$Page->Print("alink=\"$work[3]\" vlink=\"$work[4]\">\n");
 	}
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <font size="+1" color="#FF0000">書き込み確認。</font><br>
 <br>
 書き込みに関して様々なログ情報が記録されています。<br>
@@ -509,18 +511,18 @@ $msg
 HTML	
 	$msg =~ s/<br>/\n/g;
 	
-	$Page->HTMLInput('hidden','subject',$subject);
-	$Page->HTMLInput('hidden','FROM',$name);
-	$Page->HTMLInput('hidden','mail',$mail);
-	$Page->HTMLInput('hidden','MESSAGE',$msg);
-	$Page->HTMLInput('hidden','bbs',$bbs);
-	$Page->HTMLInput('hidden','time',$tm);
+	$Page->HTMLInput('hidden', 'subject', $subject);
+	$Page->HTMLInput('hidden', 'FROM', $name);
+	$Page->HTMLInput('hidden', 'mail', $mail);
+	$Page->HTMLInput('hidden', 'MESSAGE', $msg);
+	$Page->HTMLInput('hidden', 'bbs', $bbs);
+	$Page->HTMLInput('hidden', 'time', $tm);
 	
 	# レス書き込みモードの場合はkeyを設定する
-	if	($Sys->{'SYS'}->Equal('MODE',2)){
-		$Page->HTMLInput('hidden','key',$Form->Get('key'));
+	if ($Sys->{'SYS'}->Equal('MODE', 2)) {
+		$Page->HTMLInput('hidden', 'key', $Form->Get('key'));
 	}
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <br>
 <br>
 <input type="submit" value="全責任を負うことを承諾して書き込む"><br>
@@ -542,32 +544,32 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSJump
 {
-	my		($Sys,$Page) = @_;
-	my		($SYS,$bbsPath);
+	my ($Sys, $Page) = @_;
+	my ($SYS, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# 携帯用表示
-	if	(!$SYS->Equal('AGENT',0)){
+	if ($SYS->Equal('AGENT', "O")) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");
 		$Page->Print("から掲示板へ戻ってください。\n");
 	}
 	# PC用表示
-	else{
-		my	$COOKIE = $Sys->{'COOKIE'};
-		my	$oSET = $Sys->{'SET'};
-		my	$name = $Sys->{'FORM'}->Get('NAME');
-		my	$mail = $Sys->{'FORM'}->Get('MAIL');
+	else {
+		my $COOKIE = $Sys->{'COOKIE'};
+		my $oSET = $Sys->{'SET'};
+		my $name = $Sys->{'FORM'}->Get('NAME');
+		my $mail = $Sys->{'FORM'}->Get('MAIL');
 		
-		$COOKIE->Set('NAME',$name)	if	($oSET->Equal('BBS_NAMECOOKIE_CHECK','checked'));
-		$COOKIE->Set('MAIL',$mail)	if	($oSET->Equal('BBS_MAILCOOKIE_CHECK','checked'));
-		$COOKIE->Out($Page,$oSET->Get('BBS_COOKIEPATH'),60 * 24 * 30);
+		$COOKIE->Set('NAME', $name)	if ($oSET->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+		$COOKIE->Set('MAIL', $mail)	if ($oSET->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+		$COOKIE->Out($Page, $oSET->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
 <html>
 <head>
 	<title>書きこみました。</title>
@@ -588,14 +590,14 @@ HTML
 	
 	}
 	# 告知欄表示(表示させたくない場合はコメントアウトか条件を0に)
-	if	(0){
-		require('./module/denethor.pl');
-		my	$BANNER = new DENETHOR;
+	if (0) {
+		require './module/denethor.pl';
+		my $BANNER = new DENETHOR;
 		$BANNER->Load($SYS);
-		$BANNER->Print($Page,100,0,$SYS->Get('AGENT'));
+		$BANNER->Print($Page, 100, 0, $SYS->Get('AGENT'));
 	}
 	# デバッグ用表示
-	if	(0){
+	if (0) {
 		$Page->Print('MODE:' . $Sys->{'SYS'}->Get('MODE') . '<br>');
 		$Page->Print('KEY:' . $Sys->{'FORM'}->Get('key') . '<br>');
 		$Page->Print('SUBJECT:' . $Sys->{'FORM'}->Get('subject') . '<br>');
@@ -616,13 +618,13 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSError
 {
-	my		($Sys,$Page,$err) = @_;
+	my ($Sys, $Page, $err) = @_;
 	
-	require('./module/orald.pl');
+	require './module/orald.pl';
 	$ERROR = new ORALD;
 	$ERROR->Load($Sys->{'SYS'});
 	
-	$ERROR->Print($Sys,$Page,$err,$Sys->{'SYS'}->Get('AGENT'));
+	$ERROR->Print($Sys, $Page, $err, $Sys->{'SYS'}->Get('AGENT'));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -633,17 +635,48 @@ sub PrintBBSError
 #	@param	$agent	HTTP_USER_AGENT値
 #	@return	個体識別番号
 #
+#	2010.08.14 windyakin ★
+#	 -> 主要3キャリア+公式p2を取れるように変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub GetProductInfo
 {
-	my	($oConv,$agent) = @_;
-	my	$product = undef;
+	my ($oConv, $agent, $host) = @_;
+	my $product = undef;
 	
-	if($agent =~ /DoCoMo/){
-		$agent =~ /(ser[a-zA-Z0-9]+)/;
-		$product = $1;
+	# docomo
+	if ( $host =~ /\.docomo.ne.jp$/ ) {
+		# $ENV{'HTTP_X_DCMGUID'} - 端末製造番号, 個体識別情報, ユーザID, iモードID
+		$product = $ENV{'HTTP_X_DCMGUID'};
+		$product =~ s/^X-DCMGUID: ([a-zA-Z0-9]+)$/$1/i;
 	}
-	else{
+	# SoftBank
+	elsif ( $host =~ /\.(?:jp-.|vodafone|softbank).ne.jp$/ ) {
+		# USERAGENTに含まれる15桁の数字 - 端末シリアル番号
+		$product = $agent;
+		$product =~ s/.+\/SN([A-Za-z0-9]+)\ .+/$1/;
+	}
+	# au
+	elsif ( $host =~ /\.ezweb.ne.jp$/ ) {
+		# $ENV{'HTTP_X_UP_SUBNO'} - サブスクライバID, EZ番号
+		$product = $ENV{'HTTP_X_UP_SUBNO'};
+		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
+	}
+	# 公式p2
+	elsif ( $host =~ /cw43.razil.jp$/ ) {
+		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (発言者のホスト)
+		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (発言者のIP)
+		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (発言者の固体識別番号)
+		$ENV{'REMOTE_ADDR'} = $ENV{'HTTP_X_P2_CLIENT_IP'};
+		if( $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} ne "" ) {
+			$product = $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'};
+		}
+		else {
+			$product = $agent;
+			$product =~ s/.+p2-user-hash: (.+)\)/$1/i;
+		}
+	}
+	else {
 		$product = $oConv->GetRemoteHost();
 	}
 	return $product;
