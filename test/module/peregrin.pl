@@ -10,6 +10,7 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.13 一部ログ出力形式を変更
+#	2010.08.14 一部ログ出力形式を変更
 #
 #============================================================================================================
 package	PEREGRIN;
@@ -25,8 +26,8 @@ package	PEREGRIN;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(@LOG,$PATH,$FILE,$MAX,$MAXA,$MAXH,$KIND,$obj);
+	my $this = shift;
+	my (@LOG, $PATH, $FILE, $MAX, $MAXA, $MAXH, $KIND, $obj);
 	
 	$obj = {
 		'LOG'	=> \@LOG,
@@ -39,7 +40,7 @@ sub new
 		'NUM'	=> 0
 	};
 	
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -68,11 +69,11 @@ sub DESTROY
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($M,$log,$key) = @_;
-	my		($path,$file,$kind);
+	my $this = shift;
+	my ($M, $log, $key) = @_;
+	my ($path, $file, $kind);
 	
-	undef(@{$this->{'LOG'}});
+	undef @{$this->{'LOG'}};
 	$this->{'PATH'}	= "";
 	$this->{'FILE'}	= "";
 	$this->{'KIND'}	= 0;
@@ -81,26 +82,26 @@ sub Load
 	$this->{'MAXH'}	= $M->Get('HISMAX');
 	$this->{'NUM'}	= 0;
 	
-	$path = $M->Get('BBSPATH') . '/' . $M->Get('BBS') . '/log';						# 掲示板パス
+	$path = $M->Get('BBSPATH') . '/' . $M->Get('BBS') . '/log';		# 掲示板パス
 	
-	if		($log eq 'ERR'){	$file = 'errs.cgi';	$kind = 1;	}					# エラーログ
-	elsif	($log eq 'THR'){	$file = 'IP.cgi';	$kind = 2;	}					# スレッド作成ログ
-	elsif	($log eq 'WRT'){	$file = "$key.cgi";	$kind = 3;	}					# 書き込みログ
-	elsif	($log eq 'HST'){	$file = "HOSTs.cgi";$kind = 5;	}					# ホストログ
-	elsif	($log eq 'SMB'){	$file = "samba.cgi";$kind = 6;	}					# Sambaログ
-	else{																			# 異常
-		$file = "";
+	if ($log eq 'ERR')		{ $file = 'errs.cgi';	$kind = 1; }	# エラーログ
+	elsif ($log eq 'THR')	{ $file = 'IP.cgi';		$kind = 2; }	# スレッド作成ログ
+	elsif ($log eq 'WRT')	{ $file = "$key.cgi";	$kind = 3; }	# 書き込みログ
+	elsif ($log eq 'HST')	{ $file = "HOSTs.cgi";	$kind = 5; }	# ホストログ
+	elsif ($log eq 'SMB')	{ $file = "samba.cgi";	$kind = 6; }	# Sambaログ
+	else {															# 異常
+		$file = '';
 		$kind = 0;
 	}
 	
-	if	($kind){																	# 正常に設定
-		if	(-e "$path/$file"){
-			open(LOG,"<$path/$file");
-			while	(<LOG>){
-				push(@{$this->{'LOG'}},$_);
-				$this->{'NUM'} ++;
+	if ($kind) {													# 正常に設定
+		if (-e "$path/$file") {
+			open LOG, "<$path/$file";
+			while (<LOG>) {
+				push @{$this->{'LOG'}}, $_;
+				$this->{'NUM'}++;
 			}
-			close(LOG);
+			close LOG;
 		}
 		$this->{'PATH'} = $path;
 		$this->{'FILE'} = $file;
@@ -118,20 +119,20 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($M) = @_;
-	my		($path,$file);
+	my $this = shift;
+	my ($M) = @_;
+	my ($path, $file);
 	
 	$path	= $this->{'PATH'};
 	$file	= $this->{'FILE'};
 	
-	if	($this->{'KIND'}){
-		eval{	chmod(0666,"$path/$file");	};										# パーミッション設定
-		open(LOG,">$path/$file");
-		eval{	flock(LOG,2);	};
+	if ($this->{'KIND'}) {
+		eval { chmod 0666, "$path/$file"; };				# パーミッション設定
+		open LOG, ">$path/$file";
+		eval { flock LOG, 2; };
 		print LOG @{$this->{'LOG'}};
-		close(LOG);
-		eval{	chmod($M->Get('PM-LOG'),"$path/$file");	};							# パーミッション設定
+		close LOG;
+		eval { chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
 	}
 }
 
@@ -144,47 +145,75 @@ sub Save
 #			$data2 : 汎用データ2
 #			$host  : リモートホスト
 #			$data  : DAT形式のログ
+#			$mode  : ID末尾分
 #	戻り値：なし
 #
 #	2010.08.12 windyakin ★
 #	 -> 通常書き込みログ出力形式を２ちゃんねる形式へ変更
 #
+#	2010.08.14 windyakin ★
+#	 -> 携帯,p2のHOST部分のログ出力を変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($I,$data1,$data2,$host,$data) = @_;
-	my		($work,$nm,$tm,$bf,$kind,@logdat);
+	my $this = shift;
+	my ($I, $data1, $data2, $host, $data, $mode) = @_;
+	my ($work, $nm, $tm, $bf, $kind, $tsw, @logdat);
 	
 	$bf		= 0;
 	$nm		= $this->{'NUM'};														# ログ数取得
 	$kind	= $this->{'KIND'};
+	$tsw	= $ENV{'REMOTE_HOST'};
 	
-	if	($kind){																	# 読み込み済み
-		if		($kind == 1 && $nm >= $this->{'MAX'}){				$bf = 1;	}	# エラーログ
-		elsif	($kind == 2 && $nm >= $I->Get('BBS_THREAD_TATESUGI')){	$bf = 1;	}	# スレッドログ
-		elsif	($kind == 3 && $nm >= $I->Get('timecount')){		$bf = 1;	}	# 書き込みログ
+	if ($mode ne "0") {
+		if ($mode eq "P") {
+			$host = "$tsw($host)$ENV{'REMOTE_ADDR'}";
+		}
+		else {
+			$host = "$tsw($host)";
+		}
+	}
+	
+	if ($kind) {																	# 読み込み済み
+		if ($kind == 1 && $nm >= $this->{'MAX'}) { $bf = 1; }						# エラーログ
+		elsif ($kind == 2 && $nm >= $I->Get('BBS_THREAD_TATESUGI')) { $bf = 1; }	# スレッドログ
+		elsif ($kind == 3 && $nm >= $I->Get('timecount')) { $bf = 1; }				# 書き込みログ
 		
-		$tm		= time;
+		$tm = time;
 		
-		if ( $kind eq 3 ) {
+		if ($kind eq 3) {
 			
 			@logdat = split(/<>/, $data);
 			
-			$work	= "$logdat[0]<>$logdat[1]<>$logdat[2]<>".substr($logdat[3],0,30)."<>$logdat[4]<>";
-			$work  .= "$ENV{'REMOTE_HOST'}<>$ENV{'REMOTE_ADDR'}<>$data1<>$ENV{'HTTP_USER_AGENT'}\n";
+			$work = join('<>',
+				$logdat[0],
+				$logdat[1],
+				$logdat[2],
+				substr($logdat[3], 0, 30),
+				$logdat[4],
+				$host,
+				$ENV{'REMOTE_ADDR'},
+				$data1,
+				$ENV{'HTTP_USER_AGENT'}
+			) . "\n";
 			
 		}
 		else {
-			$work	= "$tm<>$data1<>$data2<>$host\n";
+			$work = join('<>',
+				$tm,
+				$data1,
+				$data2,
+				$host
+			) . "\n";
 		}
 		
-		push(@{$this->{'LOG'}},$work);												# 末尾へ追加
-		$this->{'NUM'} ++;
+		push @{$this->{'LOG'}}, $work;												# 末尾へ追加
+		$this->{'NUM'}++;
 		
-		if	($bf){																	# ログ最大値を越えた
-			shift(@{$this->{'LOG'}});												# 先頭ログの削除
-			$this->{'NUM'} --;
+		if ($bf) {																	# ログ最大値を越えた
+			shift @{$this->{'LOG'}};												# 先頭ログの削除
+			$this->{'NUM'}--;
 		}
 	}
 }
@@ -199,15 +228,15 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($ln) = @_;
-	my		($tm,$data1,$data2,$host,$work);
+	my $this = shift;
+	my ($ln) = @_;
+	my ($tm, $data1, $data2, $host, $work);
 	
 	$work = $this->{'LOG'}->[$ln];
-	chomp($work);
-	($tm,$data1,$data2,$host) = split(/<>/,$work);
+	chomp $work;
+	($tm, $data1, $data2, $host) = split(/<>/, $work);
 	
-	return ($tm,$data1,$data2,$host);
+	return ($tm, $data1, $data2, $host);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -224,29 +253,29 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Search
 {
-	my		$this = shift;
-	my		($data,$f) = @_;
-	my		($key,$dmy,$num,$i,$dat);
+	my $this = shift;
+	my ($data, $f) = @_;
+	my ($key, $dmy, $num, $i, $dat);
 	
-	if	($f == 1){																	# data1で検索
+	if ($f == 1) {												# data1で検索
 		$num = @{$this->{'LOG'}};
-		for	($i = $num - 1;$i >= 0;$i--){
+		for ($i = $num - 1 ; $i >= 0 ; $i--) {
 			$dmy = $this->{'LOG'}->[$i];
-			chomp($dmy);
-			(undef,undef,undef,undef,undef,$key,undef,$dat) = split(/<>/,$dmy);
-			if	($data eq $key){
+			chomp $dmy;
+			($key, $dat) = (split(/<>/, $dmy))[5, 7];
+			if ($data eq $key) {
 				return $dat;
 			}
 		}
 	}
-	elsif	($f == 2){																# host出現数
+	elsif ($f == 2) {											# host出現数
 		$num = 0;
 		$dat = @{$this->{'LOG'}};
-		for	($i = $dat - 1;$i >= 0;$i--){
+		for ($i = $dat - 1;$i >= 0;$i--) {
 			$dmy = $this->{'LOG'}->[$i];
-			chomp($dmy);
-			($dmy,$dmy,$dmy,$key) = split(/<>/,$dmy);
-			if	($data eq $key){
+			chomp $dmy;
+			(undef, undef, undef, $key) = split(/<>/, $dmy);
+			if ($data eq $key) {
 				$num++;
 			}
 		}
@@ -266,20 +295,20 @@ sub Search
 #------------------------------------------------------------------------------------------------------------
 sub IsTime
 {
-	my		$this = shift;
-	my		($tmn,$host) = @_;
-	my		($i,$n,$work,$tm,$nw,$dmy,$hst);
+	my $this = shift;
+	my ($tmn, $host) = @_;
+	my ($i, $n, $work, $tm, $nw, $hst);
 	
-	$nw	= time;
-	$n	= @{$this->{'LOG'}};
+	$nw = time;
+	$n = @{$this->{'LOG'}};
 	
-	for	($i = $n - 1;$i >= 0;$i--){
-		($tm,$dmy,$dmy,$hst) = split(/<>/,$this->{'LOG'}->[$i]);
-		chomp($hst);
-		if	($host eq $hst){
-			if	(($nw - $tm) > $tmn){	return 0;	}
-			else{
-				return ($tmn - ($nw - $tm));										# 残り秒数を返す
+	for ($i = $n - 1 ; $i >= 0 ; $i--) {
+		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
+		chomp $hst;
+		if ($host eq $hst) {
+			if ($nw - $tm > $tmn) { return 0; }
+			else {
+				return ($tmn - ($nw - $tm));	# 残り秒数を返す
 			}
 		}
 	}
@@ -298,25 +327,25 @@ sub IsTime
 #------------------------------------------------------------------------------------------------------------
 sub IsSamba
 {
-	my		$this = shift;
-	my		($sb,$host) = @_;
-	my		(@iplist,$i,$n,$tm,$nw,$dmy,$hst);
+	my $this = shift;
+	my ($sb, $host) = @_;
+	my (@iplist, $i, $n, $tm, $nw, $hst);
 	
-	$nw	= time;
-	$n	= @{$this->{'LOG'}};
+	$nw = time;
+	$n = @{$this->{'LOG'}};
 	
-	for	($i = 0;$i < $n;$i++){
-		($tm,$dmy,$dmy,$hst) = split(/<>/,$this->{'LOG'}->[$i]);
-		chomp($hst);
-		if	(($host eq $hst) && ($sb >= ($nw - $tm))){
-			push(@iplist,$tm);
+	for ($i = 0 ; $i < $n ; $i++) {
+		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
+		chomp $hst;
+		if (($host eq $hst) && ($sb >= $nw - $tm)) {
+			push(@iplist, $tm);
 		}
 	}
-	$n	= @iplist;
-	if	($n){
-		return ($n,($nw - $iplist[0]));
+	$n = @iplist;
+	if ($n) {
+		return ($n, ($nw - $iplist[0]));
 	}
-	return (0,0);
+	return (0, 0);
 }
 
 #============================================================================================================

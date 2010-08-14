@@ -19,13 +19,13 @@ package	ISILDUR;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(%SET,$obj);
+	my $this = shift;
+	my (%SET, $obj);
 	
 	$obj = {
 		'SETTING'	=> \%SET
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -40,24 +40,24 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$key,$val);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $key, $val);
 	
-	undef(%{$this->{'SETTING'}});
+	undef %{$this->{'SETTING'}};
 	InitSettingData($this->{'SETTING'});
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
-	if	(-e $path){
-		eval{
-			open(SETTING,"<$path");
-			while	(<SETTING>){
-				chomp($_);
-				($key,$val) = split(/=/,$_);
+	if (-e $path) {
+		eval {
+			open SETTING, "< $path";
+			while (<SETTING>) {
+				chomp $_;
+				($key, $val) = split(/=/, $_);
 				$this->{'SETTING'}->{$key} = $val;
 			}
-			close(SETTING);
+			close SETTING;
 		};
 		return 1;
 	}
@@ -74,24 +74,24 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path,$key,$val);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path, $key, $val);
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
-	eval{
-		open(SETTING,"+> $path");
-		flock(SETTING,2);
-		binmode(SETTING);
-		truncate(SETTING,0);
-		seek(SETTING,0,0);
-		foreach	$key (keys(%{$this->{'SETTING'}})){
+	eval {
+		open SETTING, "+> $path";
+		flock SETTING, 2;
+		binmode SETTING;
+		truncate SETTING, 0;
+		seek SETTING, 0, 0;
+		foreach $key (keys %{$this->{'SETTING'}}) {
 			$val = $this->{'SETTING'}->{$key};
 			print SETTING "$key=$val\n";
 		}
-		close(SETTING);
-		chmod($M->Get('PM-TXT'),$path);
+		close SETTING;
+		chmod $M->Get('PM-TXT'), $path;
 	};
 }
 
@@ -105,21 +105,21 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub LoadFrom
 {
-	my		$this = shift;
-	my		($path) = @_;
-	my		($key,$val);
+	my $this = shift;
+	my ($path) = @_;
+	my ($key, $val);
 	
-	undef(%{$this->{'SETTING'}});
+	undef %{$this->{'SETTING'}};
 	
-	if	(-e $path){
-		eval{
-			open(SETTING,"<$path");
-			while	(<SETTING>){
-				chomp($_);
-				($key,$val) = split(/=/,$_);
+	if (-e $path) {
+		eval {
+			open SETTING, "< $path";
+			while (<SETTING>) {
+				chomp $_;
+				($key, $val) = split(/=/, $_);
 				$this->{'SETTING'}->{$key} = $val;
 			}
-			close(SETTING);
+			close SETTING;
 		};
 		return 1;
 	}
@@ -136,22 +136,22 @@ sub LoadFrom
 #------------------------------------------------------------------------------------------------------------
 sub SaveAs
 {
-	my		$this = shift;
-	my		($path) = @_;
-	my		($key,$val);
+	my $this = shift;
+	my ($path) = @_;
+	my ($key, $val);
 	
-	eval{
-		open(SETTING,"+> $path");
-		flock(SETTING,2);
-		binmode(SETTING);
-		truncate(SETTING,0);
-		seek(SETTING,0,0);
-		foreach	$key (keys(%{$this->{'SETTING'}})){
+	eval {
+		open SETTING, "+> $path";
+		flock SETTING, 2;
+		binmode SETTING;
+		truncate SETTING, 0;
+		seek SETTING, 0, 0;
+		foreach $key (keys %{$this->{'SETTING'}}) {
 			$val = $this->{'SETTING'}->{$key};
 			print SETTING "$key=$val\n";
 		}
-		close(SETTING);
-		chmod($M->Get('PM-TXT'),$path);
+		close SETTING;
+		chmod $M->Get('PM-TXT'), $path;
 	};
 }
 
@@ -165,11 +165,11 @@ sub SaveAs
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($keySet) = @_;
+	my $this = shift;
+	my ($keySet) = @_;
 	
-	foreach	(keys(%{$this->{'SETTING'}})){
-		push(@$keySet,$_);
+	foreach (keys %{$this->{'SETTING'}}) {
+		push @$keySet, $_;
 	}
 }
 
@@ -184,8 +184,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Equal
 {
-	my		$this = shift;
-	my		($key,$val) = @_;
+	my $this = shift;
+	my ($key, $val) = @_;
 	
 	return($this->{'SETTING'}->{$key} eq $val);
 }
@@ -200,8 +200,8 @@ sub Equal
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return($this->{'SETTING'}->{$key});
 }
@@ -217,8 +217,8 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($key,$val) = @_;
+	my $this = shift;
+	my ($key, $val) = @_;
 	
 	$this->{'SETTING'}->{$key} = $val;
 }
@@ -233,7 +233,7 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub InitSettingData
 {
-	my		($pSET) = @_;
+	my ($pSET) = @_;
 	
 	%$pSET = (
 		# ‚Q‚¿‚á‚ñ‚Ë‚éŒÝŠ·Ý’è€–Ú
@@ -285,7 +285,7 @@ sub InitSettingData
 		'BBS_YMD_WEEKS'			=> '“ú/ŒŽ/‰Î/…/–Ø/‹à/“y',
 		
 		# ˆÈ‰º0chƒIƒŠƒWƒiƒ‹Ý’è€–Ú
-		'BBS_DATMAX',			=> 512,
+		'BBS_DATMAX'			=> 512,
 		'BBS_COOKIEPATH'		=> '/',
 		'BBS_READONLY'			=> 'caps',
 		'BBS_REFERER_CUSHION'	=> 'ime.nu/',

@@ -25,44 +25,46 @@ package SessionManager;
 #------------------------------------------------------------------------------------------------------------
 sub getSession
 {
-	my ($session,$id,$filePath,$check);
-	my ($key,$value);
+	my ($session, $id, $filePath, $check);
+	my ($key, $value);
 	
 	$session = new Session;
 	$id = createSessionID();
-	$filePath = './info/session/' . $id;
+	$filePath = "./info/session/$id";
 	$check = 1;
 	
 	# セッション情報ファイルが存在する場合はそれを読み込む
-	if(-e $filePath){
-		open(SESSION,"<$filePath");
-		while(<SESSION>){
-			chomp($_);
+	if (-e $filePath) {
+		open SESSION, "< $filePath";
+		while (<SESSION>) {
+			chomp $_;
 			# 1行目(セッション開始時間)を取得
-			if($check){
+			if ($check) {
 				$check = 0;
 				$session->setId($_);
-				if((time() - $_) > 3600){
-					$session->setId(time());
+				if (time - $_ > 3600) {
+					$session->setId(time);
 					last;
 				}
 			# 2行目以降(セッション属性値)を取得
-			}else{
-				($key,$value) = split(/=/,$_);
+			}
+			else {
+				($key, $value) = split(/=/, $_);
 				$value =~ s/&equal;/=/g;
-				$session->setAttribute($key,$value);
+				$session->setAttribute($key, $value);
 			}
 		}
-		close(SESSION);
+		close SESSION;
 	# セッション情報ファイルが存在しない場合は空ファイルを作成する
-	}else{
-		if(!(-e './info/session') || !(-d './info/session')){
-			require('./module/earendil.pl');
-			EARENDIL::CreateDirectory('./info/session',0770);
+	}
+	else {
+		if (! -e './info/session' || ! -d './info/session') {
+			require './module/earendil.pl';
+			EARENDIL::CreateDirectory('./info/session', 0770);
 		}
-		open(SESSION,">$filePath");
-		close(SESSION);
-		$session->setId(time());
+		open SESSION, "> $filePath";
+		close SESSION;
+		$session->setId(time);
 	}
 	return $session;
 }
@@ -78,27 +80,27 @@ sub getSession
 sub setSession
 {
 	my ($session) = @_;
-	my ($id,$filePath,$key,$value);
+	my ($id, $filePath, $key, $value);
 	
 	$id = createSessionID($ENV{'REMOTE_ADDR'});
 	$filePath = './info/session/' . $id;
 	
-	eval{
-		if(-e $filePath){
-			open(SESSION,"+>$filePath");
-			flock(SESSION,2);
-			truncate(SESSION,0);
-			seek(SESSION,0,0);
-			binmode(SESSION);
+	eval {
+		if (-e $filePath) {
+			open SESSION, "+> $filePath";
+			flock SESSION, 2;
+			truncate SESSION, 0;
+			seek SESSION, 0, 0;
+			binmode SESSION;
 			
 			print SESSION $session->getId() . "\n";
-			foreach $key (keys(%{$session->{'ATTRIBUTE'}})){
+			foreach $key (keys %{$session->{'ATTRIBUTE'}}) {
 				$value = $session->getAttribute($key);
 				$value =~ s/=/&equal;/g;
 				print SESSION "$key=$value\n";
 			}
 			
-			close(SESSION);
+			close SESSION;
 		}
 	};
 }
@@ -113,12 +115,12 @@ sub setSession
 #------------------------------------------------------------------------------------------------------------
 sub removeSession
 {
-	my ($id,$filePath);
+	my ($id, $filePath);
 	
 	$id = createSessionID($ENV{'REMOTE_ADDR'});
-	$filePath = './info/session/' . $id;
+	$filePath = "./info/session/$id";
 	
-	unlink($filePath);
+	unlink $filePath;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -131,11 +133,11 @@ sub removeSession
 #------------------------------------------------------------------------------------------------------------
 sub createSessionID
 {
-	my $key = $ENV{'REMOTE_ADDR'};;
+	my $key = $ENV{'REMOTE_ADDR'};
 	
 	$key =~ s/\.//g;
-	$key = substr($ENV{'REMOTE_ADDR'},-8);
-	return(substr(crypt($key,substr(crypt($key,'ZC'),-2)),-26));
+	$key = substr($ENV{'REMOTE_ADDR'}, -8);
+	return substr(crypt($key, substr(crypt($key, 'ZC'), -2)), -26);
 }
 
 #============================================================================================================
@@ -157,13 +159,13 @@ package Session;
 sub new
 {
 	my $this = shift;
-	my ($obj,%ATTRIBUTE);
+	my ($obj, %ATTRIBUTE);
 	
 	$obj = {
 		'ID'		=> undef,
 		'ATTRIBUTE'	=> \%ATTRIBUTE
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -180,7 +182,7 @@ sub DESTROY
 {
 	my $this = shift;
 	
-	if($this->{'ID'} ne undef){
+	if ($this->{'ID'} ne undef) {
 		SessionManager::setSession($this);
 	}
 }
@@ -197,7 +199,7 @@ sub DESTROY
 sub setAttribute
 {
 	my $this = shift;
-	my ($key,$value) = @_;
+	my ($key, $value) = @_;
 	
 	$this->{'ATTRIBUTE'}->{$key} = $value;
 }
@@ -231,7 +233,7 @@ sub removeAttribute
 	my $this = shift;
 	my ($key) = @_;
 	
-	delete($this->{'ATTRIBUTE'}->{$key});
+	delete $this->{'ATTRIBUTE'}->{$key};
 }
 
 #------------------------------------------------------------------------------------------------------------
