@@ -94,6 +94,9 @@ sub Get
 #			$f       : モード(1:携帯用,0:PC用)
 #	戻り値：なし
 #
+#	2010.08.13 windyakin ★
+#	 -> ID末尾改造による変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
@@ -128,7 +131,7 @@ sub Print
 		$P->Save($SYS);
 	}
 	
-	if ($mode) {
+	if ($mode eq "O") {
 		my $subject = $this->{'SUBJECT'}->{$err};
 		$Page->Print("Content-type: text/html\n\n<html><head><title>");
 		$Page->Print("ＥＲＲＯＲ！</title></head><!--nobanner-->\n");

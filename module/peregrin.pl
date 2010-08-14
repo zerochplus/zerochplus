@@ -10,6 +10,7 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.13 一部ログ出力形式を変更
+#	2010.08.14 一部ログ出力形式を変更
 #
 #============================================================================================================
 package	PEREGRIN;
@@ -144,21 +145,35 @@ sub Save
 #			$data2 : 汎用データ2
 #			$host  : リモートホスト
 #			$data  : DAT形式のログ
+#			$mode  : ID末尾分
 #	戻り値：なし
 #
 #	2010.08.12 windyakin ★
 #	 -> 通常書き込みログ出力形式を２ちゃんねる形式へ変更
 #
+#	2010.08.14 windyakin ★
+#	 -> 携帯,p2のHOST部分のログ出力を変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
 	my $this = shift;
-	my ($I, $data1, $data2, $host, $data) = @_;
-	my ($work, $nm, $tm, $bf, $kind, @logdat);
+	my ($I, $data1, $data2, $host, $data, $mode) = @_;
+	my ($work, $nm, $tm, $bf, $kind, $tsw, @logdat);
 	
 	$bf		= 0;
 	$nm		= $this->{'NUM'};														# ログ数取得
 	$kind	= $this->{'KIND'};
+	$tsw	= $ENV{'REMOTE_HOST'};
+	
+	if ($mode ne "0") {
+		if ($mode eq "P") {
+			$host = "$tsw($host)$ENV{'REMOTE_ADDR'}";
+		}
+		else {
+			$host = "$tsw($host)";
+		}
+	}
 	
 	if ($kind) {																	# 読み込み済み
 		if ($kind == 1 && $nm >= $this->{'MAX'}) { $bf = 1; }						# エラーログ
@@ -177,7 +192,7 @@ sub Set
 				$logdat[2],
 				substr($logdat[3], 0, 30),
 				$logdat[4],
-				$ENV{'REMOTE_HOST'},
+				$host,
 				$ENV{'REMOTE_ADDR'},
 				$data1,
 				$ENV{'HTTP_USER_AGENT'}

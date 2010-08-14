@@ -129,14 +129,16 @@ sub Initialize
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
 	# ホスト情報設定.携帯の場合は機種情報を設定
-	if ($Sys->{'SYS'}->Equal('AGENT', 0)) {
+	if (!$Sys->{'SYS'}->Equal('AGENT', "O") && !$Sys->{'SYS'}->Equal('AGENT', "P")) {
 		$Sys->{'FORM'}->Set('HOST', $Sys->{'CONV'}->GetRemoteHost());
-	}else {
-		if (! $Sys->{'FORM'}->Equal('mobile', 'true')) {
-			my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'});
-			if ($product eq undef) {
-				return 950;
-			}
+	}
+	else {
+		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
+		
+		if ($product eq undef) {
+			return 950;
+		}
+		else {
 			$Sys->{'FORM'}->Set('HOST', $product);
 		}
 	}
@@ -147,7 +149,7 @@ sub Initialize
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
-	if (! $Sys->{'SYS'}->Equal('AGENT', 0) && $Sys->{'FORM'}->IsExist('mobile')) {
+	if ($Sys->{'SYS'}->Equal('AGENT', "O") && $Sys->{'FORM'}->IsExist('mobile')) {
 		return 9003;
 	}
 	
@@ -156,7 +158,7 @@ sub Initialize
 	else								{ $Sys->{'SYS'}->Set('MODE', 1); }
 	
 	# cookieの存在チェック(PCのみ)
-	if ($Sys->{'SYS'}->Equal('AGENT', 0)) {
+	if (!$Sys->{'SYS'}->Equal('AGENT', "O")) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
 			return 9001	if (!$Sys->{'COOKIE'}->Init());
@@ -549,7 +551,7 @@ sub PrintBBSJump
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# 携帯用表示
-	if (!$SYS->Equal('AGENT', 0)) {
+	if ($SYS->Equal('AGENT', "O")) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");
@@ -633,15 +635,46 @@ sub PrintBBSError
 #	@param	$agent	HTTP_USER_AGENT値
 #	@return	個体識別番号
 #
+#	2010.08.14 windyakin ★
+#	 -> 主要3キャリア+公式p2を取れるように変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub GetProductInfo
 {
-	my ($oConv, $agent) = @_;
+	my ($oConv, $agent, $host) = @_;
 	my $product = undef;
 	
-	if ($agent =~ /DoCoMo/) {
-		$agent =~ /(ser[a-zA-Z0-9]+)/;
-		$product = $1;
+	# docomo
+	if ( $host =~ /\.docomo.ne.jp$/ ) {
+		# $ENV{'HTTP_X_DCMGUID'} - 端末製造番号, 個体識別情報, ユーザID, iモードID
+		$product = $ENV{'HTTP_X_DCMGUID'};
+		$product =~ s/^X-DCMGUID: ([a-zA-Z0-9]+)$/$1/i;
+	}
+	# SoftBank
+	elsif ( $host =~ /\.(?:jp-.|vodafone|softbank).ne.jp$/ ) {
+		# USERAGENTに含まれる15桁の数字 - 端末シリアル番号
+		$product = $agent;
+		$product =~ s/.+\/SN([A-Za-z0-9]+)\ .+/$1/;
+	}
+	# au
+	elsif ( $host =~ /\.ezweb.ne.jp$/ ) {
+		# $ENV{'HTTP_X_UP_SUBNO'} - サブスクライバID, EZ番号
+		$product = $ENV{'HTTP_X_UP_SUBNO'};
+		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
+	}
+	# 公式p2
+	elsif ( $host =~ /cw43.razil.jp$/ ) {
+		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (発言者のホスト)
+		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (発言者のIP)
+		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (発言者の固体識別番号)
+		$ENV{'REMOTE_ADDR'} = $ENV{'HTTP_X_P2_CLIENT_IP'};
+		if( $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} ne "" ) {
+			$product = $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'};
+		}
+		else {
+			$product = $agent;
+			$product =~ s/.+p2-user-hash: (.+)\)/$1/i;
+		}
 	}
 	else {
 		$product = $oConv->GetRemoteHost();

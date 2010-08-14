@@ -432,8 +432,8 @@ sub PrintOtherSetting
 sub PrintPlusSetting
 {
 	my		($Page,$SYS,$Form) = @_;
-	my		($Banner,$Kakiko,$Counter,$Samba,$Prtext,$Prlink);
-	my		($banner,$kakiko);
+	my		($Banner,$Kakiko,$Counter,$Samba,$Prtext,$Prlink,$Trip12);
+	my		($banner,$kakiko,$trip12);
 	my		($common);
 	
 	$SYS->Set('_TITLE','System ZerochPlus Original Setting');
@@ -444,9 +444,11 @@ sub PrintPlusSetting
 	$Samba		= $SYS->Get('SAMBA');
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
+	$Trip12		= $SYS->Get('TRIP12');
 	
 	$banner		= ($Banner == 1 ? 'checked' : '');
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
+	$trip12		= ($Trip12 == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
 	
@@ -473,6 +475,10 @@ sub PrintPlusSetting
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制</td></tr>\n");
 	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
 	$Page->Print("<td><input type=text size=60 name=SAMBA value=\"$Samba\"></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
+	$Page->Print("<tr><td>新仕様トリップ(12桁,生キー)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
+	$Page->Print("<td><input type=checkbox name=TRIP12 $trip12 value=on></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");
@@ -790,6 +796,7 @@ sub FunctionPlusSetting
 	$SYSTEM->Set('BANNER',($Form->Equal('BANNER','on') ? 1 : 0));
 	$SYSTEM->Set('KAKIKO',($Form->Equal('KAKIKO','on') ? 1 : 0));
 	$SYSTEM->Set('SAMBA',$Form->Get('SAMBA'));
+	$SYSTEM->Set('TRIP12',($Form->Equal('TRIP12','on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
@@ -801,6 +808,7 @@ sub FunctionPlusSetting
 		push(@$pLog,"　　　 バナー表\示：" . $SYSTEM->Get('BANNER'));
 		push(@$pLog,"　　　 2重カキコ規制：" . $SYSTEM->Get('KAKIKO'));
 		push(@$pLog,"　　　 連続投稿規制秒数：" . $SYSTEM->Get('SAMBA'));
+		push(@$pLog,"　　　 12桁トリップ：" . $SYSTEM->Get('TRIP12'));
 	}
 	return 0;
 }

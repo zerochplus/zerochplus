@@ -5,6 +5,8 @@
 #	---------------------------------------------
 #	2002.12.13 start
 #	2003.02.10 IsInput,IsInputAll追加
+#	2010.08.14 文字コード変換処理廃止
+#	           禁則処理移動
 #
 #============================================================================================================
 package	SAMWISE;
@@ -54,23 +56,23 @@ sub DecodeForm
 	my ($mode) = @_;
 	my ($var, $val, $code);
 	
-	require './module/jcode.pl';										# jcode.pl要求
+	#require './module/jcode.pl';										# jcode.pl要求
 	undef %{$this->{'FORM'}};
 	
 	foreach (@{$this->{'SRC'}}) {										# 各データごとに処理
 		($var, $val) = split(/=/, $_);									# name/valueで分離
 		$val =~ tr/+/ /;
-		$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
-		$code = jcode::getcode(*val);									# コード取得
-		jcode::convert(*val, $code);									# 漢字コードを統一
+		$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
+		#$code = jcode::getcode(*val);									# コード取得
+		#jcode::convert(*val, $code);									# 漢字コードを統一
 		$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
 		$val =~ s/\0//g;												# ぬるぽ
-		if ($mode) {
-			$val =~ s/"/&quot;/g;										# 特殊文字対策 "
-			$val =~ s/</&lt;/g;											# 特殊文字対策 <
-			$val =~ s/>/&gt;/g;											# 特殊文字対策 >
-			$val =~ s/\n/<br>/g;										# 改行
-		}
+		#if ($mode) {
+		#	$val =~ s/"/&quot;/g;										# 特殊文字対策 "
+		#	$val =~ s/</&lt;/g;											# 特殊文字対策 <
+		#	$val =~ s/>/&gt;/g;											# 特殊文字対策 >
+		#	$val =~ s/\n/<br>/g;										# 改行
+		#}
 		$this->{'FORM'}->{$var} = $val;									# データセット
 	}
 }
@@ -90,7 +92,7 @@ sub GetAtArray
 	my ($key, $f) = @_;
 	my ($var, $val, $code, @ret);
 	
-	require './module/jcode.pl';											# jcode.pl要求
+	#require './module/jcode.pl';											# jcode.pl要求
 	undef @ret;
 	
 	foreach (@{$this->{'SRC'}}) {											# 各データごとに処理
@@ -98,8 +100,8 @@ sub GetAtArray
 		if ($key eq $var) {													# 指定キー
 			$val =~ tr/+/ /;
 			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
-			$code = jcode::getcode(*val);									# コード取得
-			jcode::convert(*val, $code);									# 漢字コードを統一'
+			#$code = jcode::getcode(*val);									# コード取得
+			#jcode::convert(*val, $code);									# 漢字コードを統一'
 			$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
 			$val =~ s/\0//g;												# ぬるぽ
 			if ($f) {

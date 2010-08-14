@@ -6,6 +6,9 @@
 #	2004.02.18 start
 #	2004.04.10 パッケージSACKBIL追加
 #	2004.09.04 パッケージSACKBIL削除
+#
+#	ぜろちゃんねるプラス
+#	2010.08.14 subject.txtの2ch完全互換
 #	-------------------------------------------------------------------------------------
 #	このモジュールはスレッド情報を管理します。
 #	以下の3つのパッケージによって構成されます
@@ -81,7 +84,7 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem, $dmy, $num);
+	my ($path, @elem, $num);
 	
 	undef($this->{'SUBJECT'});
 	undef($this->{'RES'});
@@ -94,8 +97,8 @@ sub Load
 		open(SUBJ, "< $path");
 		while (<SUBJ>) {
 			@elem = split(/<>/, $_);
-			($elem[0], $dmy) = split(/\./, $elem[0]);
-			$elem[1] =~ s/\((\d+)\)\n//;
+			($elem[0], undef) = split(/\./, $elem[0]);
+			$elem[1] =~ s/ ?\((\d+)\)\n//;
 			$elem[2] = $1;
 			
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
@@ -131,8 +134,7 @@ sub Save
 		seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
-			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_};
-			$data = "$data(" . $this->{'RES'}->{$_} . ')';
+			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
 			
 			print SUBJ "$data\n";
 		}
@@ -485,11 +487,11 @@ sub Load
 	$num = 0;
 	
 	if (-e $path) {
-		open SUBJ, "< $path";
+		open SUBJ, $path;
 		while (<SUBJ>) {
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
-			$elem[1] =~ s/\((\d+)\)\n//;
+			$elem[1] =~ s/ ?\((\d+)\)\n//;
 			$elem[2] = $1;
 			
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
@@ -525,8 +527,7 @@ sub Save
 		seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
-			$data = "$_.dat<>" . $this->{SUBJECT}->{$_};
-			$data = "$data(" . $this->{RES}->{$_} . ')';
+			$data = "$_.dat<>" . $this->{SUBJECT}->{$_} . ' (' . $this->{RES}->{$_} . ')';
 			
 			print SUBJ "$data\n";
 		}
