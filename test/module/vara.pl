@@ -240,6 +240,8 @@ sub ReadyBeforeCheck
 	# datƒpƒX‚Ì¶¬
 	my $datPath	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
 	$Sys->Set('DATPATH', $datPath);
+	
+	$this->ExecutePlugin(32);
 }
 
 #------------------------------------------------------------------------------------------------------------
