@@ -533,6 +533,7 @@ sub NormalizationNameMail
 	# ‹Ö‘¥•¶Žš•ÏŠ·
 	$this->{'CONV'}->ConvertCharacter(\$name, 0);
 	$this->{'CONV'}->ConvertCharacter(\$mail, 1);
+	$this->{'CONV'}->ConvertCharacter(\$subject, 3);
 	
 	# fusiana•ÏŠ· 2chŒÝŠ·
 	$name =~ s|fusianasan|</b>$host<b>|;
@@ -588,6 +589,7 @@ sub NormalizationNameMail
 	# ³‹K‰»‚µ‚½“à—e‚ðÄ“xÝ’è
 	$Form->Set('FROM', $name);
 	$Form->Set('mail', $mail);
+	$Form->Set('subject', $subject);
 	
 	return 0;
 }
@@ -614,6 +616,10 @@ sub NormalizationContents
 	$text		= $Form->Get('MESSAGE');
 	$host		= $Form->Get('HOST');
 	$capID		= $Sys->{'SYS'}->Get('CAPID');
+	
+	# ‹Ö‘¥•¶Žš•ÏŠ·
+	$Sys->{'CONV'}->ConvertCharacter(\$text, 2);
+	
 	($ln, $cl)	= $Sys->{'CONV'}->GetTextInfo(\$text);
 	
 	# –{•¶‚ª–³‚¢
@@ -650,8 +656,9 @@ sub NormalizationContents
 			$text .= '<hr><font color=tomato face=Arial><b>';
 			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";
 		}
-		$Form->Set('MESSAGE', $text);
 	}
+	
+	$Form->Set('MESSAGE', $text);
 	
 	return 0;
 }
