@@ -350,7 +350,7 @@ sub GetTextInfo
 	my ($text) = @_;
 	my (@lines, $ln, $mx);
 	
-	@lines = split(/<br>/, $$text);
+	@lines = split(/ ?<br> ?/, $$text);
 	$ln = @lines;
 	$mx = 0;
 	
@@ -478,15 +478,16 @@ sub MakeID
 sub ConvertTrip
 {
 	my $this = shift;
-	my ($key, $column, $orz) = @_;
+	my ($key, $column, $shatrip) = @_;
 	my ($trip, $mark, $salt, $key2);
 	
 	# crypt‚Ì‚Æ‚«‚ÌŒ…æ“¾
 	$column = -1 * $column;
 	
-	if ( (length $$key >= 12) && ($orz eq 1) ) {
+	$trip = '';
 	
-		# æ“ª•¶š—ñ‚Ìæ“¾
+	if (length $$key >= 12) {
+		# æ“ª2•¶š‚Ìæ“¾
 		$mark = substr($$key, 0, 1);
 		
 		if ($mark eq '#' || $mark eq '$') {
@@ -494,7 +495,8 @@ sub ConvertTrip
 				$key2 = pack('H*', $1);
 				$salt = substr($2 . '..', 0, 2);
 				
-				$key2 =~ s/\x80[\x00-\xff]*$//;	# 0x80–â‘èÄŒ»
+				# 0x80–â‘èÄŒ»
+				$key2 =~ s/\x80[\x00-\xff]*$//;
 				
 				$trip = substr(crypt($key2, $salt), $column);
 			}
@@ -503,20 +505,22 @@ sub ConvertTrip
 				$trip = '???';
 			}
 		}
-		else {
+		elsif ($shatrip eq 1) {
 			# SHA1(Vd—l)ƒgƒŠƒbƒv
 			use Digest::SHA1 qw(sha1_base64);
 			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
-	else {
+	
+	if ($trip eq '') {
 		# ]—ˆ‚ÌƒgƒŠƒbƒv¶¬•û®
 		$salt = substr($$key . 'H.', 1, 2);
 		$salt =~ s/[^\.-z]/\./go;
 		$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 		
-		$$key =~ s/\x80[\x00-\xff]*$//;	# 0x80–â‘èÄŒ»
+		# 0x80–â‘èÄŒ»
+		$$key =~ s/\x80[\x00-\xff]*$//;
 		
 		$trip = substr(crypt($$key, $salt), $column);
 	}
@@ -769,7 +773,7 @@ sub ConvertCharacter
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
-	# name mail text
+	# all
 	$$data =~ s/</&lt;/g;
 	$$data =~ s/>/&gt;/g;
 	
@@ -784,6 +788,7 @@ sub ConvertCharacter
 	if ($mode == 0) {
 		$$data =~ s/ŠÇ—/hŠÇ—h/g;
 		$$data =~ s/ŠÇ’¼/hŠÇ’¼h/g;
+		$$data =~ s/•œ‹A/h•œ‹Ah/g;
 	}
 	
 	# mail
@@ -795,6 +800,7 @@ sub ConvertCharacter
 	if ($mode == 2) {
 		$$data =~ s/\n/ <br> /g;
 	}
+	# not text
 	else {
 		$$data =~ s/\n//g;
 	}
