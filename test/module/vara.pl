@@ -8,6 +8,7 @@
 #	ぜろちゃんねるプラス
 #	2010.08.12 規制選択性導入のため仕様変更
 #	2010.08.13 ログ保存形式変更による仕様変更
+#	2010.08.15 0ch本家プラグインとの互換性復活
 #
 #============================================================================================================
 package	VARA;
@@ -100,6 +101,8 @@ sub Init
 #
 #	2010.08.13 windyakin ★
 #	 -> ログ保存形式変更による規制チェック位置の変更
+#	2010.08.15 色々
+#	 -> プラグイン1,2の実行順序変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub Write
@@ -199,15 +202,17 @@ sub Write
 #	@param	$this
 #	@return	なし
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub ReadyBeforeCheck
 {
 	my ($this) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet, $type);
+	my ($Sys, $Form, @pluginSet);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
-	$Plugin = $this->{'PLUGIN'};
 	
 	# cookie用にオリジナルを保存する
 	my ($from, $mail);
@@ -237,23 +242,13 @@ sub ReadyBeforeCheck
 	}
 	
 	# datパスの生成
-	my $datPath	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
+	my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
 	$Sys->Set('DATPATH', $datPath);
 	
-	# 有効な拡張機能一覧を取得
-	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
-	$type = $Sys->Get('MODE');
-	foreach $id (@pluginSet) {
-		# タイプが先呼び出しの場合はロードして実行
-		if ($Plugin->Get('TYPE', $id) & $type) {
-			my $file = $Plugin->Get('FILE', $id);
-			my $className = $Plugin->Get('CLASS', $id);
-			my $command;
-			require "./plugin/$file";
-			$command = new $className;
-			$command->execute($Sys, $Form, $type);
-		}
-	}
+	# 本文禁則文字変換
+	my $text = $Form->Get('MESSAGE');
+	$this->{'CONV'}->ConvertCharacter1(\$text, 2);
+	$Form->Set('MESSAGE', $text);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -268,11 +263,10 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet);
+	my ($Sys, $Form, @pluginSet);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
-	$Plugin = $this->{'PLUGIN'};
 	
 	# pluginに渡す値を設定
 	$Sys->Set('_ERR', 0);
@@ -280,16 +274,41 @@ sub ReadyBeforeWrite
 	$Sys->Set('_THREAD_', $this->{'THREADS'});
 	$Sys->Set('_SET_', $this->{'SET'});
 	
+	$this->ExecutePlugin(16);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン処理
+#	-------------------------------------------------------------------------------------
+#	@param	$this
+#	@param	$type
+#	@return	なし
+#
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
+#------------------------------------------------------------------------------------------------------------
+sub ExecutePlugin
+{
+	my ($this, $type) = @_;
+	my ($Sys, $Form, $Plugin, $id, @pluginSet);
+	
+	$Sys = $this->{'SYS'};
+	$Form = $this->{'FORM'};
+	$Plugin = $this->{'PLUGIN'};
+	
 	# 有効な拡張機能一覧を取得
 	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
 	foreach $id (@pluginSet) {
-		if ($Plugin->Get('TYPE', $id) & 16) {
+		# タイプが先呼び出しの場合はロードして実行
+		if ($Plugin->Get('TYPE', $id) & $type) {
 			my $file = $Plugin->Get('FILE', $id);
 			my $className = $Plugin->Get('CLASS', $id);
 			my $command;
 			require "./plugin/$file";
 			$command = new $className;
-			$command->execute($Sys, $Form, 16);
+			$command->execute($Sys, $Form, $type);
 		}
 	}
 }
@@ -496,6 +515,9 @@ sub IsRegulation
 #	 -> トリップ変換処理の順番を変更(禁則文字,fusianasan変換の前へ)
 #	 -> 文字列変換処理の順番を変更(文字数チェックの前へ)
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationNameMail
 {
@@ -519,9 +541,9 @@ sub NormalizationNameMail
 		$capName = $oSEC->Get($capID, 'NAME', 1);
 	}
 	
-	# トリップキーと名前をここで切り離す
-	if ($name =~ /^(.*?)#(.+)$/) {
-		($name, $key) = ($1, $2);
+	# トリップキーを切り離す
+	if ($name =~ /#(.+)$/) {
+		$key = $1;
 		
 		# トリップ変換
 		$key = $this->{'CONV'}->ConvertTrip(\$key, $oSET->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
@@ -530,19 +552,33 @@ sub NormalizationNameMail
 		$key = '';
 	}
 	
-	# 禁則文字変換
-	$this->{'CONV'}->ConvertCharacter(\$name, 0);
-	$this->{'CONV'}->ConvertCharacter(\$mail, 1);
+	# 特殊文字変換
+	$this->{'CONV'}->ConvertCharacter1(\$name, 0);
+	$this->{'CONV'}->ConvertCharacter1(\$mail, 1);
+	$this->{'CONV'}->ConvertCharacter1(\$subject, 3);
 	
-	# fusiana変換 2ch互換
-	$name =~ s|fusianasan|</b>$host<b>|;
-	$name =~ s|fusianasan| </b>$host<b>|g;
+	# プラグイン実行 フォーム情報再取得
+	$this->ExecutePlugin($Sys->Get('MODE'));
+	$name		= $Form->Get('FROM');
+	$mail		= $Form->Get('mail');
+	$subject	= $Form->Get('subject');
+	$bbs		= $Form->Get('bbs');
+	$host		= $Form->Get('HOST');
 	
 	# 2ch互換
 	$name = substr($name, 1) if (index($name, ' ') == 0);
 	
+	# 禁則文字変換
+	$this->{'CONV'}->ConvertCharacter2(\$name, 0);
+	$this->{'CONV'}->ConvertCharacter2(\$mail, 1);
+	$this->{'CONV'}->ConvertCharacter2(\$subject, 3);
+	
 	# トリップと名前を結合する
-	$name .= " </b>◆$key <b>" if ($key ne '');
+	$name =~ s|#.+$| </b>◆$key <b>|;
+	
+	# fusiana変換 2ch互換
+	$name =~ s:fusianasan|山崎渉:</b>$host<b>:;
+	$name =~ s:fusianasan|山崎渉: </b>$host<b>:g;
 	
 	# キャップ名結合
 	if ($capName ne '') {
@@ -588,6 +624,7 @@ sub NormalizationNameMail
 	# 正規化した内容を再度設定
 	$Form->Set('FROM', $name);
 	$Form->Set('mail', $mail);
+	$Form->Set('subject', $subject);
 	
 	return 0;
 }
@@ -599,6 +636,9 @@ sub NormalizationNameMail
 #	@param	$this
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
+#
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationContents
@@ -614,6 +654,10 @@ sub NormalizationContents
 	$text		= $Form->Get('MESSAGE');
 	$host		= $Form->Get('HOST');
 	$capID		= $Sys->{'SYS'}->Get('CAPID');
+	
+	# 禁則文字変換
+	$Sys->{'CONV'}->ConvertCharacter2(\$text, 2);
+	
 	($ln, $cl)	= $Sys->{'CONV'}->GetTextInfo(\$text);
 	
 	# 本文が無い
@@ -644,14 +688,18 @@ sub NormalizationContents
 			return 106;
 		}
 	}
+	
+	$text = " $text ";
+	
 	# 本文ホスト表示
 	if (! $oSEC->IsAuthority($capID, 15, $bbs)) {
 		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->{'SYS'}->Equal('MODE', 1)) {
-			$text .= '<hr><font color=tomato face=Arial><b>';
-			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";
+			$text .= '<hr> <font color=tomato face=Arial><b>';
+			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br> ";
 		}
-		$Form->Set('MESSAGE', $text);
 	}
+	
+	$Form->Set('MESSAGE', $text);
 	
 	return 0;
 }

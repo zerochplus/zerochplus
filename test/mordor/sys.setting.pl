@@ -477,7 +477,7 @@ sub PrintPlusSetting
 	$Page->Print("<td><input type=text size=60 name=SAMBA value=\"$Samba\"></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
-	$Page->Print("<tr><td>新仕様トリップ(12桁,生キー)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
+	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
 	$Page->Print("<td><input type=checkbox name=TRIP12 $trip12 value=on></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");

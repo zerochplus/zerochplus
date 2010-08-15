@@ -11,6 +11,7 @@
 #	2010.08.12 新仕様トリップ対応
 #	2010.08.14 ID仕様変更 トリップ仕様変更
 #	           禁則処理2ch完全互換
+#	2010.08.15 プラグイン対応維持につき文字処理の分割
 #
 #============================================================================================================
 package	GALADRIEL;
@@ -350,7 +351,7 @@ sub GetTextInfo
 	my ($text) = @_;
 	my (@lines, $ln, $mx);
 	
-	@lines = split(/<br>/, $$text);
+	@lines = split(/ ?<br> ?/, $$text);
 	$ln = @lines;
 	$mx = 0;
 	
@@ -424,7 +425,7 @@ sub GetRemoteHost
 		$HOST2 = $ENV{'HTTP_FORWARDED'};
 	}
 	$HOST2 = gethostbyaddr(pack('c4', split(/\./, $HOST2)), 2);
-	$HOST .= "<$HOST2>" if ($HOST2);
+	$HOST .= "&lt;$HOST2&gt;" if ($HOST2);
 	
 	return $HOST;
 }
@@ -478,15 +479,16 @@ sub MakeID
 sub ConvertTrip
 {
 	my $this = shift;
-	my ($key, $column, $orz) = @_;
+	my ($key, $column, $shatrip) = @_;
 	my ($trip, $mark, $salt, $key2);
 	
 	# cryptのときの桁取得
 	$column = -1 * $column;
 	
-	if ( (length $$key >= 12) && ($orz eq 1) ) {
+	$trip = '';
 	
-		# 先頭文字列の取得
+	if (length $$key >= 12) {
+		# 先頭2文字の取得
 		$mark = substr($$key, 0, 1);
 		
 		if ($mark eq '#' || $mark eq '$') {
@@ -494,7 +496,8 @@ sub ConvertTrip
 				$key2 = pack('H*', $1);
 				$salt = substr($2 . '..', 0, 2);
 				
-				$key2 =~ s/\x80[\x00-\xff]*$//;	# 0x80問題再現
+				# 0x80問題再現
+				$key2 =~ s/\x80[\x00-\xff]*$//;
 				
 				$trip = substr(crypt($key2, $salt), $column);
 			}
@@ -503,20 +506,22 @@ sub ConvertTrip
 				$trip = '???';
 			}
 		}
-		else {
+		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
 			use Digest::SHA1 qw(sha1_base64);
 			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
-	else {
+	
+	if ($trip eq '') {
 		# 従来のトリップ生成方式
 		$salt = substr($$key . 'H.', 1, 2);
 		$salt =~ s/[^\.-z]/\./go;
 		$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
 		
-		$$key =~ s/\x80[\x00-\xff]*$//;	# 0x80問題再現
+		# 0x80問題再現
+		$$key =~ s/\x80[\x00-\xff]*$//;
 		
 		$trip = substr(crypt($$key, $salt), $column);
 	}
@@ -757,21 +762,56 @@ sub GetIDPart
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	禁則文字変換 - ConvertCharacter
+#	特殊文字変換 - ConvertCharacter1
 #	--------------------------------------
 #	引　数：$data : 変換元データの参照
-#			$f    : パターンフラグ
+#			$mode : 
 #	戻り値：なし
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
-sub ConvertCharacter
+sub ConvertCharacter1
 {
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
-	# name mail text
+	# all
 	$$data =~ s/</&lt;/g;
 	$$data =~ s/>/&gt;/g;
+	
+	# mail
+	if ($mode == 1) {
+		$$data =~ s/"/&quot;/g;
+	}
+	
+	# text
+	if ($mode == 2) {
+		$$data =~ s/\n/ <br> /g;
+	}
+	# not text
+	else {
+		$$data =~ s/\n//g;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	禁則文字変換 - ConvertCharacter2
+#	--------------------------------------
+#	引　数：$data : 変換元データの参照
+#			$mode : 
+#	戻り値：なし
+#
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
+#------------------------------------------------------------------------------------------------------------
+sub ConvertCharacter2
+{
+	my $this = shift;
+	my ($data, $mode) = @_;
 	
 	# name mail
 	if ($mode == 0 || $mode == 1) {
@@ -784,19 +824,7 @@ sub ConvertCharacter
 	if ($mode == 0) {
 		$$data =~ s/管理/”管理”/g;
 		$$data =~ s/管直/”管直”/g;
-	}
-	
-	# mail
-	if ($mode == 1) {
-		$$data =~ s/"/&quot;/g;
-	}
-	
-	# text
-	if ($mode == 2) {
-		$$data =~ s/\n/ <br> /g;
-	}
-	else {
-		$$data =~ s/\n//g;
+		$$data =~ s/復帰/”復帰”/g;
 	}
 }
 

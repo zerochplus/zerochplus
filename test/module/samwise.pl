@@ -67,13 +67,9 @@ sub DecodeForm
 		#jcode::convert(*val, $code);									# 漢字コードを統一
 		$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
 		$val =~ s/\0//g;												# ぬるぽ
-		#if ($mode) {
-		#	$val =~ s/"/&quot;/g;										# 特殊文字対策 "
-		#	$val =~ s/</&lt;/g;											# 特殊文字対策 <
-		#	$val =~ s/>/&gt;/g;											# 特殊文字対策 >
-		#	$val =~ s/\n/<br>/g;										# 改行
-		#}
 		$this->{'FORM'}->{$var} = $val;									# データセット
+		
+		$this->{'FORM'}->{"Raw_$var"} = $val;							# データセット
 	}
 }
 
