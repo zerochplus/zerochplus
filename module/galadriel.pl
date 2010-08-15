@@ -424,7 +424,7 @@ sub GetRemoteHost
 		$HOST2 = $ENV{'HTTP_FORWARDED'};
 	}
 	$HOST2 = gethostbyaddr(pack('c4', split(/\./, $HOST2)), 2);
-	$HOST .= "<$HOST2>" if ($HOST2);
+	$HOST .= "&lt;$HOST2&gt;" if ($HOST2);
 	
 	return $HOST;
 }
@@ -761,7 +761,7 @@ sub GetIDPart
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	‹Ö‘¥•¶š•ÏŠ· - ConvertCharacter
+#	•¶š•ÏŠ· - ConvertCharacter
 #	--------------------------------------
 #	ˆø@”F$data : •ÏŠ·Œ³ƒf[ƒ^‚ÌQÆ
 #			$f    : ƒpƒ^[ƒ“ƒtƒ‰ƒO
@@ -777,20 +777,6 @@ sub ConvertCharacter
 	$$data =~ s/</&lt;/g;
 	$$data =~ s/>/&gt;/g;
 	
-	# name mail
-	if ($mode == 0 || $mode == 1) {
-		$$data =~ s/š/™/g;
-		$$data =~ s/Ÿ//g;
-		$$data =~ s/íœ/híœh/g;
-	}
-	
-	# name
-	if ($mode == 0) {
-		$$data =~ s/ŠÇ—/hŠÇ—h/g;
-		$$data =~ s/ŠÇ’¼/hŠÇ’¼h/g;
-		$$data =~ s/•œ‹A/h•œ‹Ah/g;
-	}
-	
 	# mail
 	if ($mode == 1) {
 		$$data =~ s/"/&quot;/g;
@@ -803,6 +789,20 @@ sub ConvertCharacter
 	# not text
 	else {
 		$$data =~ s/\n//g;
+	}
+	
+	# name mail
+	if ($mode == 0 || $mode == 1) {
+		$$data =~ s/š/™/g;
+		$$data =~ s/Ÿ//g;
+		$$data =~ s/íœ/híœh/g;
+	}
+	
+	# name
+	if ($mode == 0) {
+		$$data =~ s/ŠÇ—/hŠÇ—h/g;
+		$$data =~ s/ŠÇ’¼/hŠÇ’¼h/g;
+		$$data =~ s/•œ‹A/h•œ‹Ah/g;
 	}
 }
 

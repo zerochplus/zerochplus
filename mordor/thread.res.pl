@@ -302,8 +302,12 @@ sub PrintResEdit
 	$pRes	= $Dat->Get($Form->Get('SELECT_RES'));
 	@elem	= split(/<>/,$$pRes);
 	
-	# <br>を改行に変換
-	$elem[3] =~ s/<br>/\n/g;
+	$elem[3] =~ s/ ?<br> ?/\n/g;
+	foreach (0 .. 3) {
+		$elem[$_] =~ s/&/&amp;/g;
+		$elem[$_] =~ s/</&lt;/g;
+		$elem[$_] =~ s/>/&gt;/g;
+	}
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
@@ -456,44 +460,45 @@ sub PrintResLumpDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionResEdit
 {
-	my		($Sys,$Form,$Dat,$pLog) = @_;
-	my		(@elem,$pRes,$data);
+	my		($Sys, $Form, $Dat, $pLog) = @_;
+	my		(@elem, $pRes, $data);
 	
 	# 権限チェック
 	{
 		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my	$chkID	= $Sys->Get('ADMIN')->{'USER'};
 		
-		if	(($SEC->IsAuthority($chkID,13,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 13, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	
 	# 書き込みモードで読み直す
-	$Dat->ReLoad($Sys,0);
+	$Dat->ReLoad($Sys, 0);
 	
-	$pRes		= $Dat->Get($Form->Get('SELECT_RES'));
-	@elem		= split(/<>/,$$pRes);
-	$elem[0]	= $Form->Get('FROM');
-	$elem[1]	= $Form->Get('mail');
-	$elem[2]	= $Form->Get('_DATE_');
-	$elem[3]	= $Form->Get('MESSAGE');
+	$pRes = $Dat->Get($Form->Get('SELECT_RES'));
+	@elem = split(/<>/, $$pRes);
+	$elem[0] = $Form->Get('FROM');
+	$elem[1] = $Form->Get('mail');
+	$elem[2] = $Form->Get('_DATE_');
+	$elem[3] = $Form->Get('MESSAGE');
 	
 	# 改行・禁則文字の変換
-	$elem[3]	=~ s/\r\n|\r|\n/<br>/g;
-	$elem[3]	=~ s/<>/&lt;&gt;/g;
+	$elem[3] =~ s/\r\n|\r|\n/ <br> /g;
+	$elem[3] =~ s/<>/&lt;&gt;/g;
+	$elem[3] = " $elem[3] ";
 	
 	# データの連結
-	$data		= join('<>',@elem);
+	$data = join('<>', @elem);
 	
 	# データの設定と保存
-	$Dat->Set($Form->Get('SELECT_RES'),$data);
+	$Dat->Set($Form->Get('SELECT_RES'), $data);
 	$Dat->Save($Sys);
 	
 	# ログの設定
-	push(@$pLog,'番号[' . $Form->Get('SELECT_RES') . ']のレスを以下のように変更しました。');
-	foreach	(@elem){
-		push(@$pLog,$_);
+	push @$pLog, '番号[' . $Form->Get('SELECT_RES') . ']のレスを以下のように変更しました。';
+	foreach (@elem) {
+		push @$pLog, $_;
 	}
 	
 	return 0;
