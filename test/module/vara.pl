@@ -8,6 +8,7 @@
 #	ぜろちゃんねるプラス
 #	2010.08.12 規制選択性導入のため仕様変更
 #	2010.08.13 ログ保存形式変更による仕様変更
+#	2010.08.15 0ch本家プラグインとの互換性復活
 #
 #============================================================================================================
 package	VARA;
@@ -100,6 +101,8 @@ sub Init
 #
 #	2010.08.13 windyakin ★
 #	 -> ログ保存形式変更による規制チェック位置の変更
+#	2010.08.15 色々
+#	 -> プラグイン1,2の実行順序変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub Write
@@ -118,8 +121,6 @@ sub Write
 	if (($err = NormalizationContents($this))) {
 		return $err;
 	}
-	
-	$this->ExecutePlugin($this->{'SYS'}->Get('MODE'));
 	
 	# データの書き込み
 	eval {
@@ -201,6 +202,9 @@ sub Write
 #	@param	$this
 #	@return	なし
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub ReadyBeforeCheck
 {
@@ -238,10 +242,13 @@ sub ReadyBeforeCheck
 	}
 	
 	# datパスの生成
-	my $datPath	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
+	my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
 	$Sys->Set('DATPATH', $datPath);
 	
-	$this->ExecutePlugin(32);
+	# 本文禁則文字変換
+	my $text = $Form->Get('MESSAGE');
+	$this->{'CONV'}->ConvertCharacter1(\$text, 2);
+	$Form->Set('MESSAGE', $text);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -278,8 +285,12 @@ sub ReadyBeforeWrite
 #	@param	$type
 #	@return	なし
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
-sub ExecutePlugin {
+sub ExecutePlugin
+{
 	my ($this, $type) = @_;
 	my ($Sys, $Form, $Plugin, $id, @pluginSet);
 	
@@ -504,6 +515,9 @@ sub IsRegulation
 #	 -> トリップ変換処理の順番を変更(禁則文字,fusianasan変換の前へ)
 #	 -> 文字列変換処理の順番を変更(文字数チェックの前へ)
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationNameMail
 {
@@ -527,9 +541,9 @@ sub NormalizationNameMail
 		$capName = $oSEC->Get($capID, 'NAME', 1);
 	}
 	
-	# トリップキーと名前をここで切り離す
-	if ($name =~ /^(.*?)#(.+)$/) {
-		($name, $key) = ($1, $2);
+	# トリップキーを切り離す
+	if ($name =~ /#(.+)$/) {
+		$key = $1;
 		
 		# トリップ変換
 		$key = $this->{'CONV'}->ConvertTrip(\$key, $oSET->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
@@ -538,20 +552,33 @@ sub NormalizationNameMail
 		$key = '';
 	}
 	
-	# 禁則文字変換
-	$this->{'CONV'}->ConvertCharacter(\$name, 0);
-	$this->{'CONV'}->ConvertCharacter(\$mail, 1);
-	$this->{'CONV'}->ConvertCharacter(\$subject, 3);
+	# 特殊文字変換
+	$this->{'CONV'}->ConvertCharacter1(\$name, 0);
+	$this->{'CONV'}->ConvertCharacter1(\$mail, 1);
+	$this->{'CONV'}->ConvertCharacter1(\$subject, 3);
+	
+	# プラグイン実行 フォーム情報再取得
+	$this->ExecutePlugin($Sys->Get('MODE'));
+	$name		= $Form->Get('FROM');
+	$mail		= $Form->Get('mail');
+	$subject	= $Form->Get('subject');
+	$bbs		= $Form->Get('bbs');
+	$host		= $Form->Get('HOST');
 	
 	# 2ch互換
 	$name = substr($name, 1) if (index($name, ' ') == 0);
 	
+	# 禁則文字変換
+	$this->{'CONV'}->ConvertCharacter2(\$name, 0);
+	$this->{'CONV'}->ConvertCharacter2(\$mail, 1);
+	$this->{'CONV'}->ConvertCharacter2(\$subject, 3);
+	
+	# トリップと名前を結合する
+	$name =~ s|#.+$| </b>◆$key <b>|;
+	
 	# fusiana変換 2ch互換
 	$name =~ s:fusianasan|山崎渉:</b>$host<b>:;
 	$name =~ s:fusianasan|山崎渉: </b>$host<b>:g;
-	
-	# トリップと名前を結合する
-	$name .= " </b>◆$key <b>" if ($key ne '');
 	
 	# キャップ名結合
 	if ($capName ne '') {
@@ -610,6 +637,9 @@ sub NormalizationNameMail
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
 #
+#	2010.08.15 色々
+#	 -> プラグイン互換性維持につき処理順序の変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationContents
 {
@@ -626,7 +656,7 @@ sub NormalizationContents
 	$capID		= $Sys->{'SYS'}->Get('CAPID');
 	
 	# 禁則文字変換
-	$Sys->{'CONV'}->ConvertCharacter(\$text, 2);
+	$Sys->{'CONV'}->ConvertCharacter2(\$text, 2);
 	
 	($ln, $cl)	= $Sys->{'CONV'}->GetTextInfo(\$text);
 	
@@ -658,11 +688,14 @@ sub NormalizationContents
 			return 106;
 		}
 	}
+	
+	$text = " $text ";
+	
 	# 本文ホスト表示
 	if (! $oSEC->IsAuthority($capID, 15, $bbs)) {
 		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->{'SYS'}->Equal('MODE', 1)) {
-			$text .= '<hr><font color=tomato face=Arial><b>';
-			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";
+			$text .= '<hr> <font color=tomato face=Arial><b>';
+			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br> ";
 		}
 	}
 	
