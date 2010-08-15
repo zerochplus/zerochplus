@@ -119,6 +119,8 @@ sub Write
 		return $err;
 	}
 	
+	$this->ExecutePlugin($this->{'SYS'}->Get('MODE'));
+	
 	# データの書き込み
 	eval {
 		my ($oSys, $oSet, $oForm, $oConv);
@@ -203,11 +205,10 @@ sub Write
 sub ReadyBeforeCheck
 {
 	my ($this) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet, $type);
+	my ($Sys, $Form, @pluginSet);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
-	$Plugin = $this->{'PLUGIN'};
 	
 	# cookie用にオリジナルを保存する
 	my ($from, $mail);
@@ -239,21 +240,6 @@ sub ReadyBeforeCheck
 	# datパスの生成
 	my $datPath	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
 	$Sys->Set('DATPATH', $datPath);
-	
-	# 有効な拡張機能一覧を取得
-	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
-	$type = $Sys->Get('MODE');
-	foreach $id (@pluginSet) {
-		# タイプが先呼び出しの場合はロードして実行
-		if ($Plugin->Get('TYPE', $id) & $type) {
-			my $file = $Plugin->Get('FILE', $id);
-			my $className = $Plugin->Get('CLASS', $id);
-			my $command;
-			require "./plugin/$file";
-			$command = new $className;
-			$command->execute($Sys, $Form, $type);
-		}
-	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -268,11 +254,10 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet);
+	my ($Sys, $Form, @pluginSet);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
-	$Plugin = $this->{'PLUGIN'};
 	
 	# pluginに渡す値を設定
 	$Sys->Set('_ERR', 0);
@@ -280,16 +265,37 @@ sub ReadyBeforeWrite
 	$Sys->Set('_THREAD_', $this->{'THREADS'});
 	$Sys->Set('_SET_', $this->{'SET'});
 	
+	$this->ExecutePlugin(16);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン処理
+#	-------------------------------------------------------------------------------------
+#	@param	$this
+#	@param	$type
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub ExecutePlugin {
+	my ($this, $type) = @_;
+	my ($Sys, $Form, $Plugin, $id, @pluginSet);
+	
+	$Sys = $this->{'SYS'};
+	$Form = $this->{'FORM'};
+	$Plugin = $this->{'PLUGIN'};
+	
 	# 有効な拡張機能一覧を取得
 	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
 	foreach $id (@pluginSet) {
-		if ($Plugin->Get('TYPE', $id) & 16) {
+		# タイプが先呼び出しの場合はロードして実行
+		if ($Plugin->Get('TYPE', $id) & $type) {
 			my $file = $Plugin->Get('FILE', $id);
 			my $className = $Plugin->Get('CLASS', $id);
 			my $command;
 			require "./plugin/$file";
 			$command = new $className;
-			$command->execute($Sys, $Form, 16);
+			$command->execute($Sys, $Form, $type);
 		}
 	}
 }
@@ -535,12 +541,12 @@ sub NormalizationNameMail
 	$this->{'CONV'}->ConvertCharacter(\$mail, 1);
 	$this->{'CONV'}->ConvertCharacter(\$subject, 3);
 	
-	# fusiana変換 2ch互換
-	$name =~ s|fusianasan|</b>$host<b>|;
-	$name =~ s|fusianasan| </b>$host<b>|g;
-	
 	# 2ch互換
 	$name = substr($name, 1) if (index($name, ' ') == 0);
+	
+	# fusiana変換 2ch互換
+	$name =~ s:fusianasan|山崎渉:</b>$host<b>:;
+	$name =~ s:fusianasan|山崎渉: </b>$host<b>:g;
 	
 	# トリップと名前を結合する
 	$name .= " </b>◆$key <b>" if ($key ne '');
