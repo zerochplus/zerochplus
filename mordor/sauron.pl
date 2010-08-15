@@ -216,7 +216,7 @@ sub PrintHead
 		$Page->Print("$common('thread.del','DISP','LIST');\">削除レス一覧</a> ");
 	}
 	$Page->Print("<a $common('login','','');\">ログオフ</a>");
-	$Page->Print("</div>\n<div class=\"MainHead\" align=right>0ch BBS System Manager</div>");
+	$Page->Print("</div>\n<div class=\"MainHead\" align=right>0ch+ BBS System Manager</div>");
 	$Page->Print("<table cellspacing=0 width=100%><tr style=\"height:400px\">");
 }
 
@@ -308,7 +308,7 @@ sub PrintFoot
 	
 	$Page->Print("</tr></table>");
 	$Page->Print("<div class=\"MainFoot\">");
-	$Page->Print("Copyright 2001 - 2005 0ch BBS : Loggin User - <b>$user</b><br>");
+	$Page->Print("Copyright 2001 - 2010 0ch BBS : Loggin User - <b>$user</b><br>");
 	$Page->Print("Build Version:<b>$ver</b>");
 	$Page->Print("</div></form></body></html>");
 }
