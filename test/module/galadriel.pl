@@ -350,7 +350,7 @@ sub GetTextInfo
 	my ($text) = @_;
 	my (@lines, $ln, $mx);
 	
-	@lines = split(/<br>/, $$text);
+	@lines = split(/ ?<br> ?/, $$text);
 	$ln = @lines;
 	$mx = 0;
 	
@@ -773,7 +773,7 @@ sub ConvertCharacter
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
-	# name mail text
+	# all
 	$$data =~ s/</&lt;/g;
 	$$data =~ s/>/&gt;/g;
 	
@@ -799,6 +799,7 @@ sub ConvertCharacter
 	if ($mode == 2) {
 		$$data =~ s/\n/ <br> /g;
 	}
+	# not text
 	else {
 		$$data =~ s/\n//g;
 	}
