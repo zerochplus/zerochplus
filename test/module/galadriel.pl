@@ -788,6 +788,7 @@ sub ConvertCharacter
 	if ($mode == 0) {
 		$$data =~ s/ŠÇ—/hŠÇ—h/g;
 		$$data =~ s/ŠÇ’¼/hŠÇ’¼h/g;
+		$$data =~ s/•œ‹A/h•œ‹Ah/g;
 	}
 	
 	# mail
