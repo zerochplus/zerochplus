@@ -181,11 +181,7 @@ sub Initialize
 		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
 			return 9000;
 		}
-		
-		#my $key = $Sys->{'FORM'}->Get('time');
-		#my $datpath = $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS') . '/dat/';
-		#$key++ while (-e "$datpath$key.dat");
-		$Sys->{'FORM'}->Set('key', $Sys->{'FORM'}->Get('time'));
+		$Sys->{'FORM'}->Set('key', time);
 		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	}
 	
