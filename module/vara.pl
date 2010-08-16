@@ -263,7 +263,7 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet);
+	my ($Sys, $Form, @pluginSet, $text);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
@@ -275,6 +275,10 @@ sub ReadyBeforeWrite
 	$Sys->Set('_SET_', $this->{'SET'});
 	
 	$this->ExecutePlugin(16);
+	
+	$text = $Form->Get('MESSAGE');
+	$text =~ s/<br>/ <br> /g;
+	$Form->Set('MESSAGE', " $text ");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -529,6 +533,7 @@ sub NormalizationNameMail
 	$Form		= $this->{'FORM'};
 	$oSEC		= $this->{'SECURITY'};
 	$oSET		= $this->{'SET'};
+	
 	$name		= $Form->Get('FROM');
 	$mail		= $Form->Get('mail');
 	$subject	= $Form->Get('subject');
@@ -552,10 +557,13 @@ sub NormalizationNameMail
 		$key = '';
 	}
 	
-	# 特殊文字変換
+	# 特殊文字変換 フォーム情報再設定
 	$this->{'CONV'}->ConvertCharacter1(\$name, 0);
 	$this->{'CONV'}->ConvertCharacter1(\$mail, 1);
 	$this->{'CONV'}->ConvertCharacter1(\$subject, 3);
+	$Form->Set('FROM', $name);
+	$Form->Set('mail', $mail);
+	$Form->Set('subject', $subject);
 	
 	# プラグイン実行 フォーム情報再取得
 	$this->ExecutePlugin($Sys->Get('MODE'));
@@ -689,13 +697,11 @@ sub NormalizationContents
 		}
 	}
 	
-	$text = " $text ";
-	
 	# 本文ホスト表示
 	if (! $oSEC->IsAuthority($capID, 15, $bbs)) {
 		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->{'SYS'}->Equal('MODE', 1)) {
-			$text .= '<hr> <font color=tomato face=Arial><b>';
-			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br> ";
+			$text .= ' <hr> <font color=tomato face=Arial><b>';
+			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";
 		}
 	}
 	

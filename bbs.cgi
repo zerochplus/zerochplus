@@ -182,7 +182,7 @@ sub Initialize
 			return 9000;
 		}
 		
-		my $key = time;
+		my $key = $Sys->{'FORM'}->Get('time');
 		my $datpath = $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS') . '/dat/';
 		$key++ while (-e "$datpath$key.dat");
 		$Sys->{'FORM'}->Set('key', $key);

@@ -788,7 +788,7 @@ sub ConvertCharacter1
 	
 	# text
 	if ($mode == 2) {
-		$$data =~ s/\n/ <br> /g;
+		$$data =~ s/\n/<br>/g;
 	}
 	# not text
 	else {
