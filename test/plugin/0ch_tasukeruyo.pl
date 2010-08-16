@@ -63,7 +63,7 @@ sub getExplanation
 sub getType
 {
 	my	$this = shift;
-	return (1 | 2 | 16);
+	return (16);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -80,11 +80,13 @@ sub execute
 	my	$this = shift;
 	my	($sys, $form, $type) = @_;
 	
-	if ( $type =~ /^[1|2]$/ ) {
-		my	($from, $host, $agent, $tasuke);
+	if ( $type & 16 ) {
+		my	($from, $host, $agent, $tasuke, $mes, $ua);
 		$from	= $form->Get('FROM');
 		$host	= $form->Get('HOST');
 		$agent	= $sys->Get('AGENT');
+		$mes	= $form->Get('MESSAGE');
+		$ua		= $ENV{'HTTP_USER_AGENT'};
 		
 		if ( $from =~ /tasukeruyo/ ) {
 			if ( $agent eq "O" || $agent eq "P" || $agent eq "i" ) {
@@ -93,19 +95,14 @@ sub execute
 			else {
 				$tasuke = "$host($ENV{'REMOTE_ADDR'})";
 			}
-			$from =~ s#([\x81-\x9f\xe0-\xfc].|[^\xa1-\xdf]|^)tasukeruyo#$1</b>$tasuke<b>#g;
-			$form->Set('FROM', "$from($agent)");
 			
-			$sys->Set('ZPL_tasukeruyo_DispUA', 1);
+			$from =~ s#([\x81-\x9f\xe0-\xfc][\x40-\x7e\x80-\xfc]|[^\xa1-\xdf]|^)tasukeruyo#$1</b>$tasuke<b>#g;
+			$form->Set('FROM', $from);
+			
+			$ua =~ s/</&lt;/g;
+			$ua =~ s/>/&gt;/g;
+			$form->Set('MESSAGE',"$mes<br> <hr> <font color=\"blue\">$ua</font>");
 		}
-	} elsif ( $sys->Get('ZPL_tasukeruyo_DispUA') ) {
-		my $mes	= $form->Get('MESSAGE');
-		my $ua	= $ENV{'HTTP_USER_AGENT'};
-		# $ua =~ s/&/&amp;/g;
-		$ua =~ s/</&lt;/g;
-		$ua =~ s/>/&gt;/g;
-		$form->Set('MESSAGE',"$mes <br> <hr><font color=\"blue\">$ua</font>");
-
 	}
 	
 	return 0;
