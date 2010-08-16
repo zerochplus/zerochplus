@@ -302,6 +302,8 @@ sub PrintResEdit
 	$pRes	= $Dat->Get($Form->Get('SELECT_RES'));
 	@elem	= split(/<>/,$$pRes);
 	
+	$elem[3] =~ s/^ //;
+	$elem[3] =~ s/ $//;
 	$elem[3] =~ s/ ?<br> ?/\n/g;
 	foreach (0 .. 3) {
 		$elem[$_] =~ s/&/&amp;/g;
