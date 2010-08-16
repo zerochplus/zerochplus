@@ -6,6 +6,7 @@
 #	-----------------------------------------------------
 #	2003.11.22 star
 #	2004.09.16 システム改変に伴う変更
+#	2009/06/19 HTML部分の大幅な書き直し
 #
 #============================================================================================================
 
@@ -22,10 +23,10 @@ exit(SearchCGI());
 #------------------------------------------------------------------------------------------------------------
 sub SearchCGI
 {
-	require('./module/melkor.pl');
-	require('./module/thorin.pl');
-	require('./module/samwise.pl');
-	require('./module/nazguls.pl');
+	require './module/melkor.pl';
+	require './module/thorin.pl';
+	require './module/samwise.pl';
+	require './module/nazguls.pl';
 	$Sys	= new MELKOR;
 	$Page	= new THORIN;
 	$Form	= new SAMWISE;
@@ -34,14 +35,14 @@ sub SearchCGI
 	$Form->DecodeForm(1);
 	$Sys->Init();
 	$BBS->Load($Sys);
-	PrintHead($Sys,$Page,$BBS,$Form);
+	PrintHead($Sys, $Page, $BBS, $Form);
 	
 	# 検索ワードがある場合は検索を実行する
-	if	(!$Form->Equal('WORD','')){
-		Search($Sys,$Form,$Page,$BBS);
+	if (!$Form->Equal('WORD', '')) {
+		Search($Sys, $Form, $Page, $BBS);
 	}
 	PrintFoot($Page);
-	$Page->Flush(0,0,'');
+	$Page->Flush(0, 0, '');
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -54,15 +55,15 @@ sub SearchCGI
 #------------------------------------------------------------------------------------------------------------
 sub PrintHead
 {
-	my		($Sys,$Page,$BBS,$Form) = @_;
-	my		($pBBS,$bbs,$name,$dir,$Banner);
-	my		($sMODE,$sBBS,$sKEY,$sWORD,@sTYPE,@cTYPE,$types);
+	my ($Sys, $Page, $BBS, $Form) = @_;
+	my ($pBBS, $bbs, $name, $dir, $Banner);
+	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types);
 	
 	$sMODE	= $Form->Get('MODE');
 	$sBBS	= $Form->Get('BBS');
 	$sKEY	= $Form->Get('KEY');
 	$sWORD	= $Form->Get('WORD');
-	@sTYPE	= $Form->GetAtArray('TYPE',0);
+	@sTYPE	= $Form->GetAtArray('TYPE', 0);
 	
 	$types = $sTYPE[0] | $sTYPE[1] | $sTYPE[2];
 	$cTYPE[0] = ($types & 1 ? 'checked' : '');
@@ -70,65 +71,128 @@ sub PrintHead
 	$cTYPE[2] = ($types & 4 ? 'checked' : '');
 	
 	# バナーの読み込み
-	require('./module/denethor.pl');
+	require './module/denethor.pl';
 	$Banner = new DENETHOR;
 	$Banner->Load($Sys);
-	
-	$Page->Print("Content-type: text/html\n\n<html><!--nobanner--><head>");
-	$Page->Print("<style type=\"text/css\">.res{background-color:yellow;font-");
-	$Page->Print("weight:bold;}</style><title>検索＠0ch</title><body ");
-	$Page->Print("bgcolor=#aaaaff background=\"./datas/default_bac.gif\">");
-	$Page->Print("<form action=\"./search.cgi\" method=\"POST\">");
-	$Page->Print("<table border=1 cellspacing=7 cellpadding=3 width=95% ");
-	$Page->Print("bgcolor=#ccffcc align=center><tr><td><font size=+1 face=");
-	$Page->Print("Arial><b>検索＠0chスクリプ㌧</b></font><center><br><table ");
-	$Page->Print("boder=0><tr><td>検索モード</td><td><select name=MODE>\n");
-	
-	if	($sMODE eq 'ALL'){
-		$Page->Print("<option value=ALL selected>鯖内全検索</option>\n");
-		$Page->Print("<option value=BBS>BBS指定全検索</option>\n");
-		$Page->Print("<option value=THREAD>スレッド指定全検索</option>\n");
+
+	$Page->Print("Content-type: text/html;charset=Shift_JIS\n\n");
+$Page->Print(<<HTML);
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+ <head>
+  <meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">
+  <style type="text/css">
+  <!--
+	body {
+		background-color: #FFFFFF;
+		background-image: url(./datas/default_bac.gif);
 	}
-	elsif	($sMODE eq 'BBS' || $sMODE eq ''){
-		$Page->Print("<option value=ALL>鯖内全検索</option>\n");
-		$Page->Print("<option value=BBS selected>BBS指定全検索</option>\n");
-		$Page->Print("<option value=THREAD>スレッド指定全検索</option>\n");
+	.res {
+		background-color: yellow;
+		font-weight	: bold;
 	}
-	elsif	($sMODE eq 'THREAD'){
-		$Page->Print("<option value=ALL>鯖内全検索</option>\n");
-		$Page->Print("<option value=BBS>BBS指定全検索</option>\n");
-		$Page->Print("<option value=THREAD selected>スレッド指定全検索</option>\n");
+  -->
+  </style>
+	<title>検索＠0chplus</title>
+ </head>
+ <!--nobanner-->
+ <body>
+  <form action="./search.cgi" method="POST">
+  <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#ccffcc" align="center">
+   <tr>
+    <td>
+     <font size="+1" face="Arial"><b>検索＠0chplus</b></font>
+     <div align="center">
+      <br>
+       <table border="0">
+	<tr>
+	 <td>検索モード</td>
+	 <td>
+	  <select name="MODE">
+HTML
+
+	if ($sMODE eq 'ALL') {
+$Page->Print(<<HTML);
+	   <option value="ALL" selected>鯖内全検索</option>
+	   <option value="BBS">BBS指定全検索</option>
+	   <option value="THREAD">スレッド指定全検索</option>
+HTML
 	}
-	$Page->Print("</select></td></tr>\n");
-	$Page->Print("<tr><td>指定BBS</td><td><select name=BBS>");
-	
+	elsif ($sMODE eq 'BBS' || $sMODE eq '') {
+$Page->Print(<<HTML);
+	   <option value="ALL">鯖内全検索</option>
+	   <option value="BBS" selected>BBS指定全検索</option>
+	   <option value="THREAD">スレッド指定全検索</option>
+HTML
+	}
+	elsif ($sMODE eq 'THREAD') {
+$Page->Print(<<HTML);
+	   <option value="ALL">鯖内全検索</option>
+	   <option value="BBS">BBS指定全検索</option>
+	   <option value="THREAD" selected>スレッド指定全検索</option>
+HTML
+	}
+$Page->Print(<<HTML);
+	  </select>
+	 </td>
+	</tr>
+	<tr>
+	 <td>指定BBS</td>
+	 <td>
+	  <select name="BBS">
+HTML
+
 	# BBSセットの取得
-	$BBS->GetKeySet('ALL','',\@bbsSet);
+	$BBS->GetKeySet('ALL', '', \@bbsSet);
 	
-	foreach	$id (@bbsSet){
-		$name = $BBS->Get('NAME',$id);
-		$dir = $BBS->Get('DIR',$id);
-		if	($sBBS eq $dir){
-			$Page->Print("<option value=\"$dir\" selected>$name</option>\n");
+	foreach $id (@bbsSet) {
+		$name = $BBS->Get('NAME', $id);
+		$dir = $BBS->Get('DIR', $id);
+		if ($sBBS eq $dir) {
+			$Page->Print("	   <option value=\"$dir\" selected>$name</option>\n");
 		}
-		else{
-			$Page->Print("<option value=\"$dir\">$name</option>\n");
+		else {
+			$Page->Print("	   <option value=\"$dir\">$name</option>\n");
 		}
 	}
-	
-	$Page->Print("</select></td></tr>\n");
-	$Page->Print("<tr><td>指定スレッドキー</td><td><input type=text size=20 ");
-	$Page->Print("name=KEY value=\"$sKEY\"></td></tr><tr><td>検索ワード</td>");
-	$Page->Print("<td><input type=text size=40 name=WORD value=\"$sWORD\">");
-	$Page->Print("</td></tr><tr><td>検索種別</td><td>");
-	$Page->Print("<input type=checkbox name=TYPE value=1 $cTYPE[0]>名前検索<br>");
-	$Page->Print("<input type=checkbox name=TYPE value=4 $cTYPE[2]>ID・日付検索<br>");
-	$Page->Print("<input type=checkbox name=TYPE value=2 $cTYPE[1]>本文検索<br>");
-	$Page->Print("</td></tr><tr><td colspan=2 align=right><hr>\n");
-	$Page->Print("<input type=submit value=\"　検索　\"></td></tr></table><br>");
-	$Page->Print("</td></tr></table><br>");
-	
-	$Banner->Print($Page,95,0,0);
+$Page->Print(<<HTML);
+	  </select>
+	 </td>
+	</tr>
+	<tr>
+	 <td>指定スレッドキー</td>
+	  <td>
+	   <input type="text" size="20" name="KEY" value="$sKEY">
+	  </td>
+	 </tr>
+	 <tr>
+	  <td>検索ワード</td>
+	  <td><input type="text" size="40" name="WORD" value="$sWORD"></td>
+	 </tr>
+	 <tr>
+	  <td>検索種別</td>
+	  <td>
+	   <input type="checkbox" name="TYPE" value="1" $cTYPE[0]>名前検索<br>
+	   <input type="checkbox" name="TYPE" value="4" $cTYPE[2]>ID・日付検索<br>
+	   <input type="checkbox" name="TYPE" value="2" $cTYPE[1]>本文検索<br>
+	  </td>
+	 </tr>
+	 <tr>
+	  <td colspan="2" align="right">
+	  <hr>
+	  <input type="submit" value="　検索　">
+	 </td>
+	</tr>
+       </table>
+      </div>
+      <br>
+     </td>
+    </tr>
+   </table>
+   <br>
+HTML
+
+	$Banner->Print($Page, 95, 0, 0);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -141,10 +205,15 @@ sub PrintHead
 #------------------------------------------------------------------------------------------------------------
 sub PrintFoot
 {
-	my		($Page) = @_;
+	my ($Page) = @_;
 	
-	$Page->Print("<br><div align=right><small><b>0ch BBS search.cgi");
-	$Page->Print("</b></small></div></body></html>\n");
+$Page->Print(<<HTML);
+   <br>
+   <div align="right"><small><b>0chplus search.cgi</b></small></div>
+  </form>
+ </body>
+</html>
+HTML
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -157,27 +226,27 @@ sub PrintFoot
 #------------------------------------------------------------------------------------------------------------
 sub Search
 {
-	my		($Sys,$Form,$Page,$BBS) = @_;;
-	my		($Search,$Mode,$Result,@elem,$n,$base,$word);
-	my		(@types,$Type);
+	my ($Sys, $Form, $Page, $BBS) = @_;;
+	my ($Search, $Mode, $Result, @elem, $n, $base, $word);
+	my (@types, $Type);
 	
-	require('./module/balrogs.pl');
+	require './module/balrogs.pl';
 	$Search = new BALROGS;
 	
-	$Mode = 0	if	($Form->Equal('MODE','ALL'));
-	$Mode = 1	if	($Form->Equal('MODE','BBS'));
-	$Mode = 2	if	($Form->Equal('MODE','THREAD'));
+	$Mode = 0 if ($Form->Equal('MODE', 'ALL'));
+	$Mode = 1 if ($Form->Equal('MODE', 'BBS'));
+	$Mode = 2 if ($Form->Equal('MODE', 'THREAD'));
 	
-	@types	= $Form->GetAtArray('TYPE',0);
-	$Type	= $types[0] | $types[1] | $types[2];
+	@types = $Form->GetAtArray('TYPE', 0);
+	$Type = $types[0] | $types[1] | $types[2];
 	
 	# 検索オブジェクトの設定と検索の実行
-	eval{
-		$Search->Create($Sys,$Mode,$Type,$Form->Get('BBS'),$Form->Get('KEY'));
+	eval {
+		$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS'), $Form->Get('KEY'));
 		$Search->Run($Form->Get('WORD'));
 	};
-	if	($@ ne ''){
-		PrintSystemError($Page,$@);
+	if ($@ ne '') {
+		PrintSystemError($Page, $@);
 		return;
 	}
 	
@@ -187,21 +256,21 @@ sub Search
 	$base	= $Sys->Get('BBSPATH');
 	$word	= $Form->Get('WORD');
 	
-	PrintResultHead($Page,$n);
+	PrintResultHead($Page, $n);
 	
 	# 検索ヒットが1件以上あり
-	if	($n > 0){
-		require('./module/galadriel.pl');
-		my	$Conv = new GALADRIEL;
+	if ($n > 0) {
+		require './module/galadriel.pl';
+		my $Conv = new GALADRIEL;
 		$n = 1;
-		foreach	(@$Result){
+		foreach (@$Result) {
 			@elem = split(/<>/);
-			PrintResult($Page,$BBS,$Conv,$n,$base,\@elem);
+			PrintResult($Page, $BBS, $Conv, $n, $base, \@elem);
 			$n++;
 		}
 	}
 	# 検索ヒット無し
-	else{
+	else {
 		PrintNoHit($Page);
 	}
 	
@@ -218,12 +287,18 @@ sub Search
 #------------------------------------------------------------------------------------------------------------
 sub PrintResultHead
 {
-	my		($Page,$n) = @_;
+	my ($Page, $n) = @_;
 	
-	$Page->Print("<br><table border=1 cellspacing=7 cellpadding=3 width=95%");
-	$Page->Print(" bgcolor=#efefef align=center><tr><td><dl><b><small>");
-	$Page->Print("【ヒット数：$n】</b></small><font size=+2 color=red>検索結果");
-	$Page->Print("</font><br>\n");
+$Page->Print(<<HTML);
+<br>
+<table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#efefef" align="center">
+ <tr>
+  <td>
+   <dl><small> <b>【ヒット数：$n】</b></small>
+   <font size="+2" color="red">検索結果
+  </font>
+  <br>
+HTML
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -236,26 +311,34 @@ sub PrintResultHead
 #------------------------------------------------------------------------------------------------------------
 sub PrintResult
 {
-	my		($Page,$BBS,$Conv,$n,$base,$pResult) = @_;
-	my		($name,@bbsSet);
+	my ($Page, $BBS, $Conv, $n, $base, $pResult) = @_;
+	my ($name, @bbsSet);
 	
-	$BBS->GetKeySet('DIR',$$pResult[0],\@bbsSet);
+	$BBS->GetKeySet('DIR', $$pResult[0], \@bbsSet);
 	
-	if	(@bbsSet > 0){
-		$name = $BBS->Get('NAME',$bbsSet[0]);
+	if (@bbsSet > 0) {
+		$name = $BBS->Get('NAME', $bbsSet[0]);
 		
 		$Page->Print("<dt>$n 名前：<b>");
-		if	($$pResult[4] eq ''){
-			$Page->Print("<font color=forestgreen>$$pResult[3]</font>");
+		if ($$pResult[4] eq '') {
+			$Page->Print("<font color=\"forestgreen\">$$pResult[3]</font>");
 		}
-		else{
+		else {
 			$Page->Print("<a href=\"mailto:$$pResult[4]\">$$pResult[3]</a>");
 		}
-		$Page->Print("</b>：$$pResult[5]</dt><dd>$$pResult[6]<br><hr>");
-		$Page->Print("<a target=_blank href=\"$base/$$pResult[0]/\">【$name】</a>");
-		$Page->Print("<a target=_blank href=\"./read.cgi/$$pResult[0]/$$pResult[1]/\">【スレッド】</a>");
-		$Page->Print("<a target=_blank href=\"./read.cgi/$$pResult[0]/$$pResult[1]/$$pResult[2]\">【レス】</a>");
-		$Page->Print("<br><br></dd>\n");
+$Page->Print(<<HTML);
+ </b>：$$pResult[5]
+</dt>
+<dd>$$pResult[6]
+ <br>
+ <hr>
+ <a target="_blank" href="$base/$$pResult[0]/">【$name】</a>
+ <a target="_blank" href="./read.cgi/$$pResult[0]/$$pResult[1]/">【スレッド】</a>
+ <a target="_blank" href="./read.cgi/$$pResult[0]/$$pResult[1]/$$pResult[2]">【レス】</a>
+ <br>
+ <br>
+</dd>
+HTML
 	}
 }
 
@@ -269,9 +352,9 @@ sub PrintResult
 #------------------------------------------------------------------------------------------------------------
 sub PrintResultFoot
 {
-	my		($Page) = @_;
+	my ($Page) = @_;
 	
-	$Page->Print("</dl></td></tr></table>\n");
+	$Page->Print("</dl>\n</td>\n</tr>\n</table>\n");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -284,11 +367,19 @@ sub PrintResultFoot
 #------------------------------------------------------------------------------------------------------------
 sub PrintNoHit
 {
-	my		($Page) = @_;
+	my ($Page) = @_;
 	
-	$Page->Print("<dt>0 名前：<font color=forestgreen><b>検索エンジソ\＠");
-	$Page->Print("ぜろちゃんねる</b></font>：No Hit</dt><dd><br><br>");
-	$Page->Print("＿|￣|○　一件もヒットしませんでした。。<br><br></dd>\n");
+$Page->Print(<<HTML);
+<dt>
+ 0 名前：<font color="forestgreen"><b>検索エンジソ＠ぜろちゃんねるプラス</b></font>：No Hit
+</dt>
+<dd>
+ <br>
+ <br>
+ ＿|￣|○　一件もヒットしませんでした。。<br>
+ <br>
+</dd>
+HTML
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -302,14 +393,25 @@ sub PrintNoHit
 #------------------------------------------------------------------------------------------------------------
 sub PrintSystemError
 {
-	my		($Page,$msg) = @_;
+	my ($Page, $msg) = @_;
 	
-	$Page->Print("<br><table border=1 cellspacing=7 cellpadding=3 width=95%");
-	$Page->Print(" bgcolor=#efefef align=center><tr><td><dl><b><small>");
-	$Page->Print("【ヒット数：0】</b></small><font size=+2 color=red>システムエラー");
-	$Page->Print("</font><br>\n");
-	$Page->Print("<dt>0 名前：<font color=forestgreen><b>検索エンジソ\＠");
-	$Page->Print("ぜろちゃんねる</b></font>：System Error</dt><dd><br><br>");
-	$Page->Print("$msg<br><br></dd>\n");
-	$Page->Print("</dl></td></tr></table>\n");
+$Page->Print(<<HTML);
+<br>
+<table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#efefef" align="center">
+ <tr>
+  <td>
+   <dl>
+    <small><b>【ヒット数：0】</b></small><font size="+2" color="red">システムエラー</font><br>
+    <dt>
+     0 名前：<font color="forestgreen"><b>検索エンジソ＠ぜろちゃんねるプラス</b></font>：System Error
+    </dt>
+    <dd>
+     <br><br>
+     $msg<br><br>
+    </dd>
+   </dl>
+  </td>
+ </tr>
+</table>
+HTML
 }

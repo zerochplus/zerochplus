@@ -28,8 +28,8 @@ package	FARAMIR;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(@USER,$TYPE,$METHOD,$obj);
+	my $this = shift;
+	my (@USER, $TYPE, $METHOD, $obj);
 	
 	undef(%USER);
 	
@@ -38,7 +38,7 @@ sub new
 		'METHOD'	=> $METHOD,
 		'USER'		=> \@USER
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -53,27 +53,27 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		(@datas,@head,$path,$dummy);
+	my $this = shift;
+	my ($Sys) = @_;
+	my (@datas, @head, $path, $dummy);
 	
-	undef(@{$this->{'USER'}});
-	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
+	undef @{$this->{'USER'}};
+	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	if	(-e $path){
-		open(USER,"<$path");
+	if (-e $path) {
+		open USER, "< $path";
 		@datas = <USER>;
-		close(USER);
+		close USER;
 		
-		($dummy,@datas) = @datas;
-		chomp($dummy);
-		@head = split(/<>/,$dummy);
+		($dummy, @datas) = @datas;
+		chomp $dummy;
+		@head = split(/<>/, $dummy);
 		$this->{'TYPE'} = $head[0];
 		$this->{'METHOD'} = $head[1];
 		
-		foreach	(@datas){
-			chomp($_);
-			push(@{$this->{'USER'}},$_)
+		foreach (@datas) {
+			chomp $_;
+			push @{$this->{'USER'}}, $_;
 		}
 		return 0;
 	}
@@ -90,24 +90,24 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path);
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	eval{
-		open(USER,">$path");
-		flock(USER,2);
-		binmode(USER);
+	eval {
+		open USER, "> $path";
+		flock USER, 2;
+		binmode USER;
 		print USER $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
-		foreach	(@{$this->{'USER'}}){
+		foreach (@{$this->{'USER'}}) {
 			print USER "$_\n";
 		}
-		close(USER);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close USER;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
-	if	($@ ne ''){
+	if ($@ ne '') {
 		return $@;
 	}
 	return 0;
@@ -123,10 +123,10 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($name) = @_;
+	my $this = shift;
+	my ($name) = @_;
 	
-	push(@{$this->{'USER'}},$name);
+	push @{$this->{'USER'}}, $name;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -139,8 +139,8 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return $this->{$key};
 }
@@ -155,9 +155,9 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Clear
 {
-	my		$this = shift;
+	my $this = shift;
 	
-	undef(@{$this->{'USER'}});
+	undef @{$this->{'USER'}};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -171,8 +171,8 @@ sub Clear
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($key,$data) = @_;
+	my $this = shift;
+	my ($key, $data) = @_;
 	
 	$this->{$key} = $data;
 }
@@ -187,30 +187,30 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Check
 {
-	my		$this = shift;
-	my		($host) = @_;
-	my		($flag);
+	my $this = shift;
+	my ($host) = @_;
+	my ($flag);
 	
 	$flag = 0;
-	foreach	(@{$this->{'USER'}}){
-		if	($host =~ /$_/){
+	foreach (@{$this->{'USER'}}) {
+		if ($host =~ /$_/) {
 			$flag = 1;
 			last;
 		}
 	}
-	if	($flag && $this->{'TYPE'} eq 'disable'){									# 規制ユーザ
-		if	($this->{'METHOD'} eq 'disable'){										# 処理：書き込み不可
+	if ($flag && $this->{'TYPE'} eq 'disable') {	# 規制ユーザ
+		if ($this->{'METHOD'} eq 'disable') {		# 処理：書き込み不可
 			return 4;
 		}
-		elsif	($this->{'METHOD'} eq 'host'){										# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {		# 処理：ホスト表示
 			return 2;
 		}
 	}
-	elsif	(!$flag && $this->{'TYPE'} eq 'enable'){									# 限定ユーザ以外
-		if	($this->{'METHOD'} eq 'disable'){										# 処理：書き込み不可
+	elsif (! $flag && $this->{'TYPE'} eq 'enable') {	# 限定ユーザ以外
+		if ($this->{'METHOD'} eq 'disable') {		# 処理：書き込み不可
 			return 4;
 		}
-		elsif	($this->{'METHOD'} eq 'host'){										# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {		# 処理：ホスト表示
 			return 2;
 		}
 	}

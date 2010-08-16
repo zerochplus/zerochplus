@@ -5,6 +5,8 @@
 #	---------------------------------------------
 #	2002.12.13 start
 #	2003.02.10 IsInput,IsInputAll追加
+#	2010.08.14 文字コード変換処理廃止
+#	           禁則処理移動
 #
 #============================================================================================================
 package	SAMWISE;
@@ -19,22 +21,23 @@ package	SAMWISE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(%FORM,@SRC,$form,$obj);
+	my $this = shift;
+	my (%FORM, @SRC, $form, $obj);
 	
-	if($ENV{'REQUEST_METHOD'} eq "POST"){											# POSTメソッド
-		read(STDIN,$form,$ENV{'CONTENT_LENGTH'});
-	}else{																			# GETメソッド
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {			# POSTメソッド
+		read STDIN, $form, $ENV{'CONTENT_LENGTH'};
+	}
+	else {											# GETメソッド
 		$form = $ENV{'QUERY_STRING'};
 	}
-	@SRC = split(/&/,$form);														# データ分離
+	@SRC = split(/&/, $form);						# データ分離
 	
 	$obj = {
 		'FORM'	=> \%FORM,
 		'SRC'	=> \@SRC
 	};
 	
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -49,28 +52,24 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DecodeForm
 {
-	my		$this = shift;
-	my		($mode) = @_;
-	my		($var,$val,$code);
+	my $this = shift;
+	my ($mode) = @_;
+	my ($var, $val, $code);
 	
-	require('./module/jcode.pl');													# jcode.pl要求
-	undef(%{$this->{'FORM'}});
+	#require './module/jcode.pl';										# jcode.pl要求
+	undef %{$this->{'FORM'}};
 	
-	foreach	(@{$this->{'SRC'}}){													# 各データごとに処理
-		($var,$val) = split(/=/,$_);												# name/valueで分離
-		$val	=~ tr/+/ /;
-		$val	=~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
-		$code	= jcode::getcode(*val);												# コード取得
-		jcode::convert(*val,$code);													# 漢字コードを統一
-		$val	=~ s/\r\n|\r|\n/\n/g;												# 改行を統一
-		$val	=~ s/\0//g;															# ぬるぽ
-		if	($mode){
-			$val =~ s/"/&quot;/g;													# 特殊文字対策 "
-			$val =~ s/</&lt;/g;														# 特殊文字対策 <
-			$val =~ s/>/&gt;/g;														# 特殊文字対策 >
-			$val =~ s/\n/<br>/g;													# 改行
-		}
-		$this->{'FORM'}->{$var} = $val;												# データセット
+	foreach (@{$this->{'SRC'}}) {										# 各データごとに処理
+		($var, $val) = split(/=/, $_);									# name/valueで分離
+		$val =~ tr/+/ /;
+		$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
+		#$code = jcode::getcode(*val);									# コード取得
+		#jcode::convert(*val, $code);									# 漢字コードを統一
+		$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
+		$val =~ s/\0//g;												# ぬるぽ
+		$this->{'FORM'}->{$var} = $val;									# データセット
+		
+		$this->{'FORM'}->{"Raw_$var"} = $val;							# データセット
 	}
 }
 
@@ -85,29 +84,29 @@ sub DecodeForm
 #------------------------------------------------------------------------------------------------------------
 sub GetAtArray
 {
-	my		$this = shift;
-	my		($key,$f) = @_;
-	my		($var,$val,$code,@ret);
+	my $this = shift;
+	my ($key, $f) = @_;
+	my ($var, $val, $code, @ret);
 	
-	require('./module/jcode.pl');													# jcode.pl要求
+	#require './module/jcode.pl';											# jcode.pl要求
 	undef @ret;
 	
-	foreach	(@{$this->{'SRC'}}){													# 各データごとに処理
-		($var,$val) = split(/=/,$_);												# name/valueで分離
-		if	($key eq $var){															# 指定キー
-			$val	=~ tr/+/ /;
-			$val	=~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
-			$code	= jcode::getcode(*val);											# コード取得
-			jcode::convert(*val,$code);												# 漢字コードを統一'
-			$val	=~ s/\r\n|\r|\n/\n/g;											# 改行を統一
-			$val	=~ s/\0//g;														# ぬるぽ
-			if	($f){
-				$val =~ s/"/&quot;/g;												# 特殊文字対策 "
-				$val =~ s/</&lt;/g;													# 特殊文字対策 <
-				$val =~ s/>/&gt;/g;													# 特殊文字対策 >
-				$val =~ s/\r\n|\r|\n/<br>/g;										# 改行
+	foreach (@{$this->{'SRC'}}) {											# 各データごとに処理
+		($var, $val) = split(/=/, $_);										# name/valueで分離
+		if ($key eq $var) {													# 指定キー
+			$val =~ tr/+/ /;
+			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
+			#$code = jcode::getcode(*val);									# コード取得
+			#jcode::convert(*val, $code);									# 漢字コードを統一'
+			$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
+			$val =~ s/\0//g;												# ぬるぽ
+			if ($f) {
+				$val =~ s/"/&quot;/g;										# 特殊文字対策 "
+				$val =~ s/</&lt;/g;											# 特殊文字対策 <
+				$val =~ s/>/&gt;/g;											# 特殊文字対策 >
+				$val =~ s/\r\n|\r|\n/<br>/g;								# 改行
 			}
-			push(@ret,$val);
+			push @ret, $val;
 		}
 	}
 	return @ret;
@@ -123,8 +122,8 @@ sub GetAtArray
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return $this->{'FORM'}->{$key};
 }
@@ -140,8 +139,8 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($key,$data) = @_;
+	my $this = shift;
+	my ($key, $data) = @_;
 	
 	$this->{'FORM'}->{$key} = $data;
 }
@@ -157,8 +156,8 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Equal
 {
-	my		$this = shift;
-	my		($key,$data) = @_;
+	my $this = shift;
+	my ($key, $data) = @_;
 	
 	return ($this->{'FORM'}->{$key} eq $data);
 }
@@ -173,11 +172,11 @@ sub Equal
 #------------------------------------------------------------------------------------------------------------
 sub IsInput
 {
-	my		$this = shift;
-	my		($pKeyList) = @_;
+	my $this = shift;
+	my ($pKeyList) = @_;
 	
-	foreach	(@$pKeyList){
-		if	($this->{'FORM'}->{$_} eq ''){
+	foreach (@$pKeyList) {
+		if ($this->{'FORM'}->{$_} eq '') {
 			return 0;
 		}
 	}
@@ -194,10 +193,10 @@ sub IsInput
 #------------------------------------------------------------------------------------------------------------
 sub IsInputAll
 {
-	my		$this = shift;
+	my $this = shift;
 	
-	foreach	(keys %{$this->{'FORM'}}){
-		if	($this->{'FORM'}->{$_} eq ''){
+	foreach (keys %{$this->{'FORM'}}) {
+		if ($this->{'FORM'}->{$_} eq '') {
 			return 0;
 		}
 	}
@@ -214,10 +213,10 @@ sub IsInputAll
 #------------------------------------------------------------------------------------------------------------
 sub IsExist
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
-	return(exists($this->{'FORM'}->{$key}));
+	return exists($this->{'FORM'}->{$key});
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -231,10 +230,10 @@ sub IsExist
 #------------------------------------------------------------------------------------------------------------
 sub Contain
 {
-	my		$this = shift;
-	my		($key,$string) = @_;
+	my $this = shift;
+	my ($key, $string) = @_;
 	
-	if	($this->{'FORM'}->{$key} =~ /$string/){
+	if ($this->{'FORM'}->{$key} =~ /$string/) {
 		return 1;
 	}
 	return 0;
@@ -251,11 +250,11 @@ sub Contain
 #------------------------------------------------------------------------------------------------------------
 sub GetListData
 {
-	my		$this = shift;
-	my		($pArray,@list) = @_;
+	my $this = shift;
+	my ($pArray, @list) = @_;
 	
-	foreach	(@list){
-		push(@$pArray,$this->{'FORM'}->{$_});
+	foreach (@list) {
+		push @$pArray, $this->{'FORM'}->{$_};
 	}
 }
 
@@ -269,11 +268,11 @@ sub GetListData
 #------------------------------------------------------------------------------------------------------------
 sub IsNumber
 {
-	my		$this = shift;
-	my		($pKeys) = @_;
+	my $this = shift;
+	my ($pKeys) = @_;
 	
-	foreach	(@$pKeys){
-		if	($this->{'FORM'}->{$_} =~ /\D/){
+	foreach (@$pKeys) {
+		if ($this->{'FORM'}->{$_} =~ /\D/) {
 			return 0;
 		}
 	}
@@ -290,11 +289,11 @@ sub IsNumber
 #------------------------------------------------------------------------------------------------------------
 sub IsAlphabet
 {
-	my		$this = shift;
-	my		($pKeys) = @_;
+	my $this = shift;
+	my ($pKeys) = @_;
 	
-	foreach	(@$pKeys){
-		if	($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/){
+	foreach (@$pKeys) {
+		if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/) {
 			return 0;
 		}
 	}

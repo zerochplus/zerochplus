@@ -29,8 +29,8 @@ package	WORMTONGUE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(@NGWORD,$METHOD,$SUBSTITUTE,$obj);
+	my $this = shift;
+	my (@NGWORD, $METHOD, $SUBSTITUTE, $obj);
 	
 	undef @NGWORD;
 	
@@ -40,7 +40,7 @@ sub new
 		'NGWORD'	=> \@NGWORD
 	};
 	
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -55,27 +55,27 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		(@datas,@head,$path,$dummy);
+	my $this = shift;
+	my ($Sys) = @_;
+	my (@datas, @head, $path, $dummy);
 	
 	undef @{$this->{'NGWORD'}};
-	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
+	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
 	
-	if	(-e "$path"){
-		open(NGWORD,"<$path");
+	if (-e $path) {
+		open NGWORD, "< $path";
 		@datas = <NGWORD>;
-		close(NGWORD);
+		close NGWORD;
 		
-		($dummy,@datas) = @datas;
-		chomp($dummy);
-		@head = split(/<>/,$dummy);
+		($dummy, @datas) = @datas;
+		chomp $dummy;
+		@head = split(/<>/, $dummy);
 		$this->{'METHOD'} = $head[0];
 		$this->{'SUBSTITUTE'} = $head[1];
 		
-		foreach	(@datas){
-			chomp($_);
-			push(@{$this->{'NGWORD'}},$_)
+		foreach (@datas) {
+			chomp $_;
+			push @{$this->{'NGWORD'}}, $_;
 		}
 		return 0;
 	}
@@ -92,24 +92,24 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		($path);
+	my $this = shift;
+	my ($Sys) = @_;
+	my ($path);
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
 	
-	eval{
-		open(NGWORD,">$path");
-		flock(NGWORD,2);
-		binmode(NGWORD);
+	eval {
+		open NGWORD, "> $path";
+		flock NGWORD, 2;
+		binmode NGWORD;
 		print NGWORD $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
-		foreach	(@{$this->{'NGWORD'}}){
+		foreach (@{$this->{'NGWORD'}}) {
 			print NGWORD "$_\n";
 		}
-		close(NGWORD);
-		chmod($Sys->Get('PM-ADM'),$path);
+		close NGWORD;
+		chmod $Sys->Get('PM-ADM'), $path;
 	};
-	if	($@ ne ''){
+	if ($@ ne '') {
 		return $@;
 	}
 	return 0;
@@ -125,10 +125,10 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
-	push(@{$this->{'NGWORD'}},$key);
+	push @{$this->{'NGWORD'}}, $key;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -141,8 +141,8 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($key) = @_;
+	my $this = shift;
+	my ($key) = @_;
 	
 	return $this->{$key}
 }
@@ -158,8 +158,8 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($key,$data) = @_;
+	my $this = shift;
+	my ($key, $data) = @_;
 	
 	$this->{$key} = $data;
 }
@@ -174,9 +174,9 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Clear
 {
-	my		$this = shift;
+	my $this = shift;
 	
-	undef(@{$this->{'NGWORD'}});
+	undef @{$this->{'NGWORD'}};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -189,16 +189,16 @@ sub Clear
 #------------------------------------------------------------------------------------------------------------
 sub Check
 {
-	my		$this = shift;
-	my		($Form,$pList) = @_;
-	my		($word,$key,$work);
+	my $this = shift;
+	my ($Form, $pList) = @_;
+	my ($word, $key, $work);
 	
-	foreach	$word (@{$this->{'NGWORD'}}){
-		foreach	$key (@$pList){
+	foreach $word (@{$this->{'NGWORD'}}) {
+		foreach $key (@$pList) {
 			$work = $Form->Get($key);
-			if	($work =~ /$word/){
-				return 2	if($this->{'METHOD'} eq 'host');
-				return 3	if($this->{'METHOD'} eq 'disable');
+			if ($work =~ /$word/) {
+				return 2 if ($this->{'METHOD'} eq 'host');
+				return 3 if ($this->{'METHOD'} eq 'disable');
 				return 1;
 			}
 		}
@@ -216,31 +216,31 @@ sub Check
 #------------------------------------------------------------------------------------------------------------
 sub Method
 {
-	my		$this = shift;
-	my		($Form,$pList) = @_;
-	my		($word,$work,$substitute,$key);
+	my $this = shift;
+	my ($Form, $pList) = @_;
+	my ($word, $work, $substitute, $key);
 	
 	# èàóùéÌï Ç™ë„ë÷Ç©çÌèúÇÃèÍçáÇÃÇ›èàóù
-	if	($this->{'METHOD'} ne 'delete' && $this->{'METHOD'} ne 'substitute'){
+	if ($this->{'METHOD'} ne 'delete' && $this->{'METHOD'} ne 'substitute') {
 		return;
 	}
-	else{
+	else {
 		# ë„ë÷ópï∂éöóÒÇê›íË
-		if	($this->{'METHOD'} eq 'delete'){
+		if ($this->{'METHOD'} eq 'delete') {
 #			$substitute = '<b><font color=red>çÌèú</font></b>';
 			$substitute = '';
 		}
-		else{
+		else {
 			$substitute = $this->{'SUBSTITUTE'};
 		}
 	}
 	
-	foreach	$word (@{$this->{'NGWORD'}}){
-		foreach	$key (@$pList){
+	foreach $word (@{$this->{'NGWORD'}}) {
+		foreach $key (@$pList) {
 			$work = $Form->Get($key);
-			if	($work =~ /$word/){
+			if ($work =~ /$word/) {
 				$work =~ s/$word/$substitute/g;
-				$Form->Set($key,$work);
+				$Form->Set($key, $work);
 			}
 		}
 	}

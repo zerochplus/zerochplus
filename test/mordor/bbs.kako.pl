@@ -323,7 +323,7 @@ sub FunctionUpdateIndex
 sub FunctionLogDelete
 {
 	my		($Sys,$Form,$pLog) = @_;
-	my		($Logs,@logSet,$id,$base,$removePath,@pathList);
+	my		($Logs,@logSet,$id,$base,$removePath,@pathList,$logPath,$logPath2,$removePath2,%Dirs,@dirList);
 	
 	# 権限チェック
 	{
@@ -361,6 +361,26 @@ sub FunctionLogDelete
 				$Logs->Delete($pathList[0]);
 			}
 		}
+		
+		$logPath2 = $logPath;
+		while ($logPath2 =~ m|^(/.+)/.+?$|) {
+			$logPath2 = $1;
+			$removePath2 = $base . $logPath2;
+			
+			%Dirs = ();
+			@DirList = ();
+			EARENDIL::GetFolderHierarchy($removePath2, \%Dirs);
+			EARENDIL::GetFolderList(\%Dirs, \@dirList, '');
+			
+			if ($#dirList == -1) {
+				EARENDIL::DeleteDirectory($removePath2);
+				$Logs->Delete((grep { $Logs->{'PATH'}->{$_} eq $logPath2 } keys %{$Logs->{'PATH'}})[0]);
+			}
+			else {
+				last;
+			}
+		}
+		
 	}
 	$Logs->Save($Sys);
 	

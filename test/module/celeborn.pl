@@ -20,8 +20,8 @@ package	CELEBORN;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		(%KAKO,$PATH,$obj);
+	my $this = shift;
+	my (%KAKO, $PATH, $obj);
 	
 	$obj = {
 		'KEY'		=> undef,
@@ -29,7 +29,7 @@ sub new
 		'DATE'		=> undef,
 		'PATH'		=> undef
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -44,28 +44,28 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		(@elem,$path);
+	my $this = shift;
+	my ($SYS) = @_;
+	my (@elem, $path);
 	
-	undef($this->{'KEY'});
-	undef($this->{'SUBJECT'});
-	undef($this->{'DATE'});
-	undef($this->{'PATH'});
+	undef $this->{'KEY'};
+	undef $this->{'SUBJECT'};
+	undef $this->{'DATE'};
+	undef $this->{'PATH'};
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	if	(-e $path){
-		open(KAKO,"<$path");
-		while	(<KAKO>){
-			chomp($_);
-			@elem = split(/<>/,$_);
+	if (-e $path) {
+		open KAKO, "< $path";
+		while (<KAKO>) {
+			chomp $_;
+			@elem = split(/<>/, $_);
 			$this->{'KEY'}->{$elem[0]}		= $elem[1];
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[2];
 			$this->{'DATE'}->{$elem[0]}		= $elem[3];
 			$this->{'PATH'}->{$elem[0]}		= $elem[4];
 		}
-		close(KAKO);
+		close KAKO;
 		return 0;
 	}
 	return -1;
@@ -81,28 +81,31 @@ sub Load
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
-	my		$this = shift;
-	my		($SYS) = @_;
-	my		($path,$data);
+	my $this = shift;
+	my ($SYS) = @_;
+	my ($path, $data);
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	eval{
-		open(KAKO,"+>$path");
-		flock(KAKO,2);
-		binmode(KAKO);
-		truncate(KAKO,0);
-		seek(KAKO,0,0);
-		foreach	(keys %{$this->{'SUBJECT'}}){
-			$data = $_ . '<>' . $this->{KEY}->{$_};
-			$data = $data . '<>' . $this->{SUBJECT}->{$_};
-			$data = $data . '<>' . $this->{DATE}->{$_};
-			$data = $data . '<>' . $this->{PATH}->{$_};
+	eval {
+		open KAKO, "+> $path";
+		flock KAKO, 2;
+		binmode KAKO;
+		truncate KAKO, 0;
+		seek KAKO, 0, 0;
+		foreach (keys %{$this->{'SUBJECT'}}) {
+			$data = join('<>',
+				$_,
+				$this->{KEY}->{$_},
+				$this->{SUBJECT}->{$_},
+				$this->{DATE}->{$_},
+				$this->{PATH}->{$_}
+			);
 			
 			print KAKO "$data\n";
 		}
-		close(KAKO);
-		chmod($SYS->Get('PM-DAT'),$path);
+		close KAKO;
+		chmod $SYS->Get('PM-DAT'), $path;
 	};
 }
 
@@ -118,24 +121,24 @@ sub Save
 #------------------------------------------------------------------------------------------------------------
 sub GetKeySet
 {
-	my		$this = shift;
-	my		($kind,$name,$pBuf) = @_;
-	my		($key,$n);
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	my ($key, $n);
 	
 	$n = 0;
 	
-	if	($kind eq 'ALL'){
-		foreach	$key (keys %{$this->{'KEY'}}){
-			if	($this->{'KEY'}->{$key} ne '0'){
-				push(@$pBuf,$key);
+	if ($kind eq 'ALL') {
+		foreach $key (keys %{$this->{'KEY'}}) {
+			if ($this->{'KEY'}->{$key} ne '0') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
 	}
-	else{
-		foreach	$key (keys %{$this->{$kind}}){
-			if	(($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')){
-				push(@$pBuf,$key);
+	else {
+		foreach $key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
+				push @$pBuf, $key;
 				$n++;
 			}
 		}
@@ -155,8 +158,8 @@ sub GetKeySet
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
-	my		$this = shift;
-	my		($kind,$key) = @_;
+	my $this = shift;
+	my ($kind, $key) = @_;
 	
 	return $this->{$kind}->{$key};
 }
@@ -173,13 +176,13 @@ sub Get
 #------------------------------------------------------------------------------------------------------------
 sub Add
 {
-	my		$this = shift;
-	my		($key,$subject,$date,$path) = @_;
-	my		($id);
+	my $this = shift;
+	my ($key, $subject, $date, $path) = @_;
+	my ($id);
 	
-	$id = time();
-	while	(exists($this->{'KEY'}->{$id})){
-		$id ++;
+	$id = time;
+	while (exists $this->{'KEY'}->{$id}) {
+		$id++;
 	}
 	$this->{'KEY'}->{$id}		= $key;
 	$this->{'SUBJECT'}->{$id}	= $subject;
@@ -201,10 +204,10 @@ sub Add
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
-	my		$this = shift;
-	my		($id,$kind,$val) = @_;
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
 	
-	if	(exists($this->{$kind}->{$id})){
+	if (exists $this->{$kind}->{$id}) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -219,13 +222,13 @@ sub Set
 #------------------------------------------------------------------------------------------------------------
 sub Delete
 {
-	my		$this = shift;
-	my		($id) = @_;
+	my $this = shift;
+	my ($id) = @_;
 	
-	delete($this->{'KEY'}->{$id});
-	delete($this->{'SUBJECT'}->{$id});
-	delete($this->{'DATE'}->{$id});
-	delete($this->{'PATH'}->{$id});
+	delete $this->{'KEY'}->{$id};
+	delete $this->{'SUBJECT'}->{$id};
+	delete $this->{'DATE'}->{$id};
+	delete $this->{'PATH'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -238,35 +241,35 @@ sub Delete
 #------------------------------------------------------------------------------------------------------------
 sub UpdateInfo
 {
-	my		$this = shift;
-	my		($Sys) = @_;
-	my		(%Dirs,@dirList,@fileList,@elem);
-	my		($dir,$filr,$path,$subj);
+	my $this = shift;
+	my ($Sys) = @_;
+	my (%Dirs, @dirList, @fileList, @elem);
+	my ($dir, $file, $path, $subj);
 	
-	require('./module/earendil.pl');
+	require './module/earendil.pl';
 	
-	undef($this->{'KEY'});
-	undef($this->{'SUBJECT'});
-	undef($this->{'DATE'});
-	undef($this->{'PATH'});
+	undef $this->{'KEY'};
+	undef $this->{'SUBJECT'};
+	undef $this->{'DATE'};
+	undef $this->{'PATH'};
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/kako';
 	
 	# ディレクトリ情報を取得
-	EARENDIL::GetFolderHierarchy($path,\%Dirs);
-	EARENDIL::GetFolderList(\%Dirs,\@dirList,'');
+	EARENDIL::GetFolderHierarchy($path, \%Dirs);
+	EARENDIL::GetFolderList(\%Dirs, \@dirList, '');
 	
-	foreach	$dir (@dirList){
-		EARENDIL::GetFileList("$path/$dir",\@fileList,'(\d+)\.html');
-		Add($this,0,0,0,$dir);
-		foreach	$file (@fileList){
-			@elem = split(/\./,$file);
+	foreach $dir (@dirList) {
+		EARENDIL::GetFileList("$path/$dir", \@fileList, '(\d+)\.html');
+		Add($this, 0, 0, 0, $dir);
+		foreach $file (@fileList) {
+			@elem = split(/\./, $file);
 			$subj = GetThreadSubject("$path/$dir/$file");
-			if	($subj ne ''){
-				Add($this,$elem[0],$subj,time(),$dir);
+			if ($subj ne '') {
+				Add($this, $elem[0], $subj, time, $dir);
 			}
 		}
-		undef(@fileList);
+		undef @fileList;
 	}
 }
 
@@ -280,51 +283,51 @@ sub UpdateInfo
 #------------------------------------------------------------------------------------------------------------
 sub UpdateIndex
 {
-	my		$this = shift;
-	my		($Sys,$Page) = @_;
-	my		($Banner,%PATHES,@subDirs,@info,@dirs);
-	my		($basePath,$path,$id,$dir,$key,$subj,$date);
+	my $this = shift;
+	my ($Sys, $Page) = @_;
+	my ($Banner, %PATHES, @subDirs, @info, @dirs);
+	my ($basePath, $path, $id, $dir, $key, $subj, $date);
 	
 	# 告知情報読み込み
-	require('./module/denethor.pl');
+	require './module/denethor.pl';
 	$Banner = new DENETHOR;
 	$Banner->Load($Sys);
 	
 	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	
 	# パスをキーにしてハッシュを作成
-	foreach	$id (keys(%{$this->{'KEY'}})){
+	foreach $id (keys(%{$this->{'KEY'}})) {
 		$path = $this->{'PATH'}->{$id};
 		$PATHES{$path} = $id;
 	}
-	@dirs = keys(%PATHES);
-	unshift(@dirs,'');
+	@dirs = keys %PATHES;
+	unshift @dirs, '';
 	
-	eval{
+	eval {
 		# パスごとにindexを生成する
-		foreach	$path (@dirs){
+		foreach $path (@dirs) {
 			# 1階層下のサブフォルダを取得する
-			GetSubFolders($path,\@dirs,\@subDirs);
-			foreach	$dir (sort(@subDirs)){
-				push(@info,"0<>0<>0<>$dir");
+			GetSubFolders($path, \@dirs, \@subDirs);
+			foreach $dir (sort @subDirs) {
+				push @info, "0<>0<>0<>$dir";
 			}
 			
 			# ログデータがあれば情報配列に追加する
-			foreach	$id (keys(%{$this->{'KEY'}})){
-				if	($path eq $this->{'PATH'}->{$id} && $this->{'KEY'}->{$id} ne '0'){
+			foreach $id (keys(%{$this->{'KEY'}})) {
+				if ($path eq $this->{'PATH'}->{$id} && $this->{'KEY'}->{$id} ne '0') {
 					$key = $this->{'KEY'}->{$id};
 					$subj = $this->{'SUBJECT'}->{$id};
 					$date = $this->{'DATE'}->{$id};
-					push(@info,"$key<>$subj<>$date<>$path");
+					push @info, "$key<>$subj<>$date<>$path";
 				}
 			}
 			
 			# indexファイルを出力する
 			$Page->Clear();
-			OutputIndex($Sys,$Page,$Banner,\@info,$basePath,$path);
+			OutputIndex($Sys, $Page, $Banner, \@info, $basePath, $path);
 			
-			undef(@info);
-			undef(@subDirs);
+			undef @info;
+			undef @subDirs;
 		}
 	};
 }
@@ -341,17 +344,15 @@ sub UpdateIndex
 #------------------------------------------------------------------------------------------------------------
 sub GetSubFolders
 {
-	my	($base,$pDirs,$pList) = @_;
-	my	($dir,$old);
+	my ($base, $pDirs, $pList) = @_;
+	my ($dir, $old);
 	
 	$base .= '/';
-	foreach	$dir (@$pDirs){
+	foreach $dir (@$pDirs) {
 		$old = $dir;
 		$old =~ s/^$base//;
-		if	($old ne $dir){
-			if	(!($old =~ /\//)){
-				push(@$pList,$old);
-			}
+		if ($old ne $dir && $old !~ /\//) {
+			push @$pList, $old;
 		}
 	}
 }
@@ -366,19 +367,19 @@ sub GetSubFolders
 #------------------------------------------------------------------------------------------------------------
 sub GetThreadSubject
 {
-	my		($path) = @_;
-	my		($text);
+	my ($path) = @_;
+	my ($text);
 	
-	if	(-e $path){
-		open(FILE,"<$path");
-		foreach	$text (<FILE>){
-			if	($text =~ /<title>(.*)<\/title>/){
-				close(FILE);
+	if (-e $path) {
+		open FILE, "< $path";
+		foreach $text (<FILE>) {
+			if ($text =~ /<title>(.*)<\/title>/) {
+				close FILE;
 				return $1;
 			}
 		}
 	}
-	close(FILE);
+	close FILE;
 	return '';
 }
 
@@ -397,19 +398,19 @@ sub GetThreadSubject
 #------------------------------------------------------------------------------------------------------------
 sub OutputIndex
 {
-	my		($Sys,$Page,$Banner,$pInfo,$base,$path,$Set) = @_;
-	my		(@elem,$info,$version);
-	my		($Caption);
+	my ($Sys, $Page, $Banner, $pInfo, $base, $path, $Set) = @_;
+	my (@elem, $info, $version);
+	my ($Caption);
 	
-	require('./module/legolas.pl');
+	require './module/legolas.pl';
 	$Caption = new LEGOLAS;
-	$Caption->Load($Sys,'META');
+	$Caption->Load($Sys, 'META');
 	
 	$version = $Sys->Get('VERSION');
 	$bbsRoot = $Sys->Get('SERVER') . '/' . $Sys->Get('BBS');
 	$board = $Sys->Get('BBS');
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -418,9 +419,9 @@ $Page->Print(<<HTML);
 
 HTML
 	
-	$Caption->Print($Page,undef);
+	$Caption->Print($Page, undef);
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
  <title>過去ログ倉庫 - $board$path</title>
 
 </head>
@@ -429,9 +430,9 @@ $Page->Print(<<HTML);
 HTML
 	
 	# 告知欄出力
-	$Banner->Print($Page,100,2,0);
+	$Banner->Print($Page, 100, 2, 0);
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 
 <h1 align="center" style="margin-bottom:0.2em;">過去ログ倉庫</h1>
 <h2 align="center" style="margin-top:0.2em;">$board</h2>
@@ -444,22 +445,22 @@ $Page->Print(<<HTML);
  </tr>
 HTML
 	
-	foreach	$info (@$pInfo){
-		@elem = split(/<>/,$info);
+	foreach $info (@$pInfo) {
+		@elem = split(/<>/, $info);
 		
 		# サブフォルダ情報
-		if	($elem[0] eq '0'){
+		if ($elem[0] eq '0') {
 			$Page->Print(" <tr>\n  <td>Directory</td>\n  <td><a href=\"$elem[3]/index.html\">");
 			$Page->Print("$elem[3]</a></td>\n  <td>-</td>\n </tr>\n");
 		}
 		# 過去ログ情報
-		else{
+		else {
 			$Page->Print(" <tr>\n  <td>$elem[0]</td>\n  <td><a href=\"$elem[0].html\">");
 			$Page->Print("$elem[1]</a></td>\n  <td>$elem[2]</td>\n </tr>\n");
 		}
 	}
 	$Page->Print("</table>\n\n<hr>\n");
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 
 <a href="$bbsRoot/">■掲示板に戻る■</a> | <a href="$bbsRoot/kako/">■過去ログトップに戻る■</a> | <a href="../">■1つ上に戻る■</a>
 
@@ -474,7 +475,7 @@ $version
 HTML
 	
 	# index.htmlを出力する
-	$Page->Flush(1,0666,"$base/kako$path/index.html");
+	$Page->Flush(1, 0666, "$base/kako$path/index.html");
 }
 
 #============================================================================================================

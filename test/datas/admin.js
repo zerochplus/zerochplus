@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------------------
 //	submit処理
 //----------------------------------------------------------------------------------------
-function DoSubmit(modName,mode,subMode)
+function DoSubmit(modName, mode, subMode)
 {
 	// 付加情報設定
 	document.ADMIN.MODULE.value		= modName;				// モジュール名
@@ -15,7 +15,7 @@ function DoSubmit(modName,mode,subMode)
 //----------------------------------------------------------------------------------------
 //	オプション設定
 //----------------------------------------------------------------------------------------
-function SetOption(key,val)
+function SetOption(key, val)
 {
 	document.ADMIN.elements[key].value = val;
 }
