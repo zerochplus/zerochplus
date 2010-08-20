@@ -5,6 +5,9 @@
 #	-------------------------------------------------------------------------------------
 #	2005.02.19 start
 #
+#	ぜろちゃんねるプラス
+#	2010.08.20 プラグイン個別設定
+#
 #============================================================================================================
 package	ATHELAS;
 
@@ -19,15 +22,17 @@ package	ATHELAS;
 sub new
 {
 	my $this = shift;
-	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS);
+	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS, %CONFIGS, %CONFTYPES);
 	
 	$obj = {
-		'FILE'	=> \%FILES,
-		'CLASS'	=> \%CLASSES,
-		'NAME'	=> \%NAMES,
-		'EXPL'	=> \%EXPS,
-		'TYPE'	=> \%TYPES,
-		'VALID'	=> \%VALIDS
+		'FILE'		=> \%FILES,
+		'CLASS'		=> \%CLASSES,
+		'NAME'		=> \%NAMES,
+		'EXPL'		=> \%EXPS,
+		'TYPE'		=> \%TYPES,
+		'VALID'		=> \%VALIDS,
+		'CONFIG'	=> \%CONFIGS,
+		'CONFTYPE'	=> \%CONFTYPES
 	};
 	bless $obj, $this;
 	return $obj;
@@ -39,6 +44,9 @@ sub new
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	MELKOR
 #	@return	なし
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
 #
 #------------------------------------------------------------------------------------------------------------
 sub Load
@@ -54,6 +62,8 @@ sub Load
 	undef $this->{'EXPL'};
 	undef $this->{'TYPE'};
 	undef $this->{'VALID'};
+	undef $this->{'CONFIG'};
+	undef $this->{'CONFTYPE'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
@@ -62,16 +72,138 @@ sub Load
 		while (<PLUGINS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
-			if (@elem >= 7) {
+			if (@elem >= 6) {
 				$this->{'FILE'}->{$elem[0]}		= $elem[1];
 				$this->{'CLASS'}->{$elem[0]}	= $elem[2];
 				$this->{'NAME'}->{$elem[0]}		= $elem[3];
 				$this->{'EXPL'}->{$elem[0]}		= $elem[4];
 				$this->{'TYPE'}->{$elem[0]}		= $elem[5];
 				$this->{'VALID'}->{$elem[0]}	= $elem[6];
+				$this->{'CONFIG'}->{$elem[0]}	= {};
+				$this->{'CONFTYPE'}->{$elem[0]}	= {};
+				$this->LoadConfig($elem[0]);
 			}
 		}
 		close PLUGINS;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン個別設定読み込み (0ch+ Only)
+#	-------------------------------------------------------------------------------------
+#	@param	$id	
+#	@return	なし
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
+#
+#------------------------------------------------------------------------------------------------------------
+sub LoadConfig
+{
+	my $this = shift;
+	my ($id) = @_;
+	my ($file, $path, $CONFIG, $CONFTYPE);
+	
+	$file = $this->{'FILE'}->{$id};
+	$CONFIG = $this->{'CONFIG'}->{$id};
+	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	
+	$file =~ /^(0ch_.*)\.pl$/;
+	$path = "./plugin_conf/$1.cgi";
+	if (-f $path) {
+		open CONF, $path;
+		while (<CONF>) {
+			chomp $_;
+			my ($type, $key, $val) = split(/<>/, $_, 3);
+			$CONFIG->{$key} = $val;
+			$CONFTYPE->{$key} = $type;
+		}
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン個別設定保存 (0ch+ Only)
+#	-------------------------------------------------------------------------------------
+#	@param	$id	
+#	@return	なし
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
+#
+#------------------------------------------------------------------------------------------------------------
+sub SaveConfig
+{
+	my $this = shift;
+	my ($id) = @_;
+	my ($file, $path, $CONFIG, $CONFTYPE);
+	
+	$file = $this->{'FILE'}->{$id};
+	$CONFIG = $this->{'CONFIG'}->{$id};
+	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	
+	mkdir './plugin_conf' if (! -e './plugin_conf');
+	
+	$file =~ /^(0ch_.*)\.pl$/;
+	$path = "./plugin_conf/$1.cgi";
+	if (open CONF, "> $path") {
+		my ($key, $val, $type);
+		foreach $key (sort keys %$CONFIG) {
+			next unless (defined $CONFIG->{$key});
+			$val = $CONFIG->{$key};
+			$type = $CONFTYPE->{$key};
+			if ($type == 1) {
+				$val -= 0;
+			}
+			elsif ($type == 2) {
+				$val =~ s/\r\n|[\r\n]/<br>/g;
+				$val =~ s/<>/&lt;&gt;/g;
+			}
+			elsif ($type == 3) {
+				$val = ($val ? 1 : 0);
+			}
+			print CONF "$type<>$key<>$val\n";
+		}
+		close CONF;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン個別設定初期値設定 (0ch+ Only)
+#	-------------------------------------------------------------------------------------
+#	@param	$id	
+#	@return	なし
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
+#
+#------------------------------------------------------------------------------------------------------------
+sub SetDefaultConfig
+{
+	my $this = shift;
+	my ($id) = @_;
+	my ($file, $path, $CONFIG, $CONFTYPE, $className);
+	
+	$file = $this->{'FILE'}->{$id};
+	$CONFIG = $this->{'CONFIG'}->{$id};
+	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	
+	%$CONFIG = ();
+	%$CONFTYPE = ();
+	
+	$file =~ /^0ch_(.*)\.pl$/;
+	my $className = "ZPL_$1";
+	
+	require "./plugin/$file";
+	my $plugin = new $className;
+	if ($className->can('getConfig')) {
+		my $conf = $plugin->getConfig();
+		foreach my $key (keys %$conf) {
+			$CONFIG->{$key} = $conf->{$key}->{'default'};
+			$CONFTYPE->{$key} = $conf->{$key}->{'valuetype'};
+		}
 	}
 }
 
@@ -87,7 +219,7 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data);
+	my ($path, $data, $id);
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
@@ -97,15 +229,16 @@ sub Save
 		binmode PLUGINS;
 		truncate PLUGINS, 0;
 		seek PLUGINS, 0, 0;
-		foreach (keys %{$this->{'FILE'}}) {
+		foreach my $id (keys %{$this->{'FILE'}}) {
 			$data = join('<>',
-				$_,
-				$this->{'FILE'}->{$_},
-				$this->{'CLASS'}->{$_},
-				$this->{'NAME'}->{$_},
-				$this->{'EXPL'}->{$_},
-				$this->{'TYPE'}->{$_},
-				$this->{'VALID'}->{$_}
+				$id,
+				$this->{'FILE'}->{$id},
+				$this->{'CLASS'}->{$id},
+				$this->{'NAME'}->{$id},
+				$this->{'EXPL'}->{$id},
+				$this->{'TYPE'}->{$id},
+				$this->{'VALID'}->{$id},
+				join ('&', @conf)
 			);
 			
 			print PLUGINS "$data\n";
@@ -183,7 +316,7 @@ sub Set
 	my $this = shift;
 	my ($id, $kind, $val) = @_;
 	
-	if (exists($this->{$kind}->{$id})) {
+	if (exists $this->{$kind}->{$id}) {
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -206,7 +339,7 @@ sub Add
 	$ret = undef;
 	$id = time;
 	while (exists $this->{'FILE'}->{$id}) {
-		$id ++;
+		$id++;
 	}
 	if (-e "./plugin/$file") {
 		if ($file =~ /0ch_(.*)\.pl/) {
@@ -214,12 +347,15 @@ sub Add
 			eval {
 				require("./plugin/$file");
 				my $plugin = new $className;
-				$this->{'FILE'}->{$id}	= $file;
-				$this->{'CLASS'}->{$id}	= $className;
-				$this->{'NAME'}->{$id}	= $plugin->getName();
-				$this->{'EXPL'}->{$id}	= $plugin->getExplanation();
-				$this->{'TYPE'}->{$id}	= $plugin->getType();
-				$this->{'VALID'}->{$id}	= $valid;
+				$this->{'FILE'}->{$id}		= $file;
+				$this->{'CLASS'}->{$id}		= $className;
+				$this->{'NAME'}->{$id}		= $plugin->getName();
+				$this->{'EXPL'}->{$id}		= $plugin->getExplanation();
+				$this->{'TYPE'}->{$id}		= $plugin->getType();
+				$this->{'VALID'}->{$id}		= $valid;
+				$this->{'CONFIG'}->{$id}	= {};
+				$this->{'CONFTYPE'}->{$id}	= {};
+				$this->LoadConfig($id);
 				$ret = $id;
 			};
 		}
@@ -246,6 +382,8 @@ sub Delete
 	delete $this->{'EXPL'}->{$id};
 	delete $this->{'TYPE'}->{$id};
 	delete $this->{'VALID'}->{$id};
+	delete $this->{'CONFIG'}->{$id};
+	delete $this->{'CONFTYPE'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -275,6 +413,9 @@ sub Update
 					$this->{'NAME'}->{$buff[0]} = $plugin->getName();
 					$this->{'EXPL'}->{$buff[0]} = $plugin->getExplanation();
 					$this->{'TYPE'}->{$buff[0]} = $plugin->getType();
+					$this->SetDefaultConfig($buff[0]);
+					$this->LoadConfig($buff[0]);
+					$this->SaveConfig($buff[0]);
 					$plugin = undef;
 				}
 				else {
@@ -307,7 +448,126 @@ sub Update
 		undef $this->{'EXPL'};
 		undef $this->{'TYPE'};
 		undef $this->{'VALID'};
+		undef $this->{'CONFIG'};
+		undef $this->{'CONFTYPE'};
 	}
+}
+
+
+#============================================================================================================
+#
+#	プラグイン個別設定管理モジュール (0ch+ Only)
+#
+#	-------------------------------------------------------------------------------------
+#	2010.08.20 start 色々
+#
+#============================================================================================================
+
+package	PLUGINCONF;
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	コンストラクタ
+#	-------------------------------------------------------------------------------------
+#	@param	$Plugin	ATHELAS
+#	@param	$id		
+#	@return	モジュールオブジェクト
+#
+#------------------------------------------------------------------------------------------------------------
+sub new
+{
+	my $this = shift;
+	my ($Plugin, $id) = @_;
+	my ($obj);
+	
+	$obj = {
+		'PLUGIN'	=> $Plugin,
+		'id'		=> $id
+	};
+	
+	bless $obj, $this;
+	return $obj;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン個別設定設定 (0ch+ Only)
+#	-------------------------------------------------------------------------------------
+#	@param	$key	
+#	@param	$val	
+#	@return	なし
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
+#
+#------------------------------------------------------------------------------------------------------------
+sub SetConfig
+{
+	my $this = shift;
+	my ($key, $val) = @_;
+	my ($CONFIG, $CONFTYPE, $id, $type);
+	
+	$id = $this->{'id'};
+	$CONFIG = $this->{'PLUGIN'}->{'CONFIG'}->{$id};
+	$CONFTYPE = $this->{'PLUGIN'}->{'CONFTYPE'}->{$id};
+	
+	if (! defined $CONFTYPE->{$key}) {
+		if (ref(\$val) eq 'SCALAR') {
+	#		if (($val ^ $val) eq '0') {
+	#			$type = 1;
+	#		}
+	#		else {
+	#			$type = 2;
+	#		}
+			$type = 2;
+		}
+		else {
+			$type = 0;
+			return;
+		}
+		$CONFTYPE->{$key} = $type;
+	}
+	else {
+		$type = $CONFTYPE->{$key};
+	}
+	
+	if ($type == 1) {
+		$val -= 0;
+	}
+	elsif ($type == 2) {
+		$val =~ s/\r\n|[\r\n]/<br>/g;
+		$val =~ s/<>/&lt;&gt;/g;
+	}
+	elsif ($type == 3) {
+		$val = ($val ? 1 : 0);
+	}
+	
+	$CONFIG->{$key} = $val;
+	
+	$this->{'PLUGIN'}->SaveConfig($id);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	プラグイン個別設定取得 (0ch+ Only)
+#	-------------------------------------------------------------------------------------
+#	@param	$key	
+#	@return	プラグイン個別設定
+#
+#	2010.08.16 色々
+#	-> プラグインの個別設定
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetConfig
+{
+	my $this = shift;
+	my ($key) = @_;
+	my ($CONFIG, $id);
+	
+	$id = $this->{'id'};
+	$CONFIG = $this->{'PLUGIN'}->{'CONFIG'}->{$id};
+	
+	return $CONFIG->{$key};
 }
 
 #============================================================================================================
