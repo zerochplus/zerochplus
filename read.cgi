@@ -9,6 +9,7 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.12 システム改変に伴う変更
+#	2010.08.20 プラグイン個別設定による変更
 #
 #============================================================================================================
 
@@ -327,7 +328,8 @@ sub PrintReadContents
 			my $className = $Plugin->Get('CLASS', $id);
 			if (-e "./plugin/$file") {
 				require "./plugin/$file";
-				$commands[$count] = new $className;
+				my $Config = new PLUGINCONF($Plugin, $id);
+				$commands[$count] = $className->new($Config);
 				$count++;
 			}
 		}

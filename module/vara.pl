@@ -9,6 +9,7 @@
 #	2010.08.12 規制選択性導入のため仕様変更
 #	2010.08.13 ログ保存形式変更による仕様変更
 #	2010.08.15 0ch本家プラグインとの互換性復活
+#	2010.08.20 プラグイン個別設定による変更
 #
 #============================================================================================================
 package	VARA;
@@ -307,11 +308,12 @@ sub ExecutePlugin
 	foreach $id (@pluginSet) {
 		# タイプが先呼び出しの場合はロードして実行
 		if ($Plugin->Get('TYPE', $id) & $type) {
-			my $file = $Plugin->Get('FILE', $id);
-			my $className = $Plugin->Get('CLASS', $id);
-			my $command;
+			my ($file, $className, $command, $config);
+			$file = $Plugin->Get('FILE', $id);
+			$className = $Plugin->Get('CLASS', $id);
 			require "./plugin/$file";
-			$command = new $className;
+			$Config = PLUGINCONF->new($Plugin, $id);
+			$command = $className->new($Config);
 			$command->execute($Sys, $Form, $type);
 		}
 	}
