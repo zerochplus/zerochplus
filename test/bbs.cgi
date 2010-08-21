@@ -31,8 +31,7 @@ sub BBSCGI
 	$Page = new THORIN;
 	
 	# 初期化に成功したら書き込み処理を開始
-	if (($err = Initialize(\%SYS)) == 0) {
-		
+	if (($err = Initialize(\%SYS, $Page)) == 0) {
 		require './module/vara.pl';
 		my $WriteAid = new VARA;
 		$WriteAid->Init($SYS{'SYS'}, $SYS{'FORM'}, $SYS{'SET'}, undef, $SYS{'CONV'});
@@ -99,7 +98,7 @@ sub BBSCGI
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
-	my ($Sys) = @_;
+	my ($Sys, $Page) = @_;
 	
 	# 使用モジュールの初期化
 	require './module/melkor.pl';
@@ -113,7 +112,8 @@ sub Initialize
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
 		'CONV'		=> new GALADRIEL,
-		'FORM'		=> new SAMWISE
+		'FORM'		=> new SAMWISE,
+		'PAGE'		=> $Page,
 	);
 	
 	# form情報設定
@@ -123,6 +123,10 @@ sub Initialize
 	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
+	
+	# 夢が広がりんぐ
+	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
+	
 	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
 	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs'));
 	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
@@ -181,7 +185,11 @@ sub Initialize
 		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
 			return 9000;
 		}
-		$Sys->{'FORM'}->Set('key', time);
+		
+		#my $key = $Sys->{'FORM'}->Get('time');
+		#my $datpath = $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS') . '/dat/';
+		#$key++ while (-e "$datpath$key.dat");
+		$Sys->{'FORM'}->Set('key', $Sys->{'FORM'}->Get('time'));
 		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	}
 	
