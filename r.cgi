@@ -89,11 +89,15 @@ sub Initialize
 		'SET'	=> $oSET,
 		'CONV'	=> $oCONV,
 		'DAT'	=> $oDAT,
+		'PAGE'	=> $Page,
 		'CODE'	=> 'sjis'
 	);
 	
 	# システム初期化
 	$pSYS->{'SYS'}->Init();
+	
+	# 夢が広がりんぐ
+	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
 	
 	# 起動パラメータの解析
 	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
