@@ -674,11 +674,11 @@ sub FunctionBBSCreate
 			for (my $i = 0 ; $i <= $#pathparse ; $i++) {
 				if ($pathparse[$i] eq '.') {
 					splice @pathparse, $i, 1;
-					redo;
+					redo if ($i <= $#pathparse);
 				}
 				if ($pathparse[$i] eq '..' && $i > 0 && $pathparse[$i - 1] ne '..') {
 					splice @pathparse, $i - 1, 2;
-					redo;
+					redo if ($i <= $#pathparse);
 				}
 			}
 			$createPath2 = join '/', @pathparse;
