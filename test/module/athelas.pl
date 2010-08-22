@@ -354,7 +354,9 @@ sub Add
 				$this->{'VALID'}->{$id}		= $valid;
 				$this->{'CONFIG'}->{$id}	= {};
 				$this->{'CONFTYPE'}->{$id}	= {};
+				$this->SetDefaultConfig($id);
 				$this->LoadConfig($id);
+				$this->SaveConfig($id);
 				$ret = $id;
 			};
 		}
