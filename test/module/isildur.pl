@@ -9,6 +9,9 @@
 #============================================================================================================
 package	ISILDUR;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -91,7 +94,7 @@ sub Save
 			print SETTING "$key=$val\n";
 		}
 		close SETTING;
-		chmod $M->Get('PM-TXT'), $path;
+		chmod $Sys->Get('PM-TXT'), $path;
 	};
 }
 
@@ -151,7 +154,7 @@ sub SaveAs
 			print SETTING "$key=$val\n";
 		}
 		close SETTING;
-		chmod $M->Get('PM-TXT'), $path;
+		#chmod $Sys->Get('PM-TXT'), $path;
 	};
 }
 
@@ -187,7 +190,7 @@ sub Equal
 	my $this = shift;
 	my ($key, $val) = @_;
 	
-	return($this->{'SETTING'}->{$key} eq $val);
+	return(defined $this->{'SETTING'}->{$key} && $this->{'SETTING'}->{$key} eq $val);
 }
 
 #------------------------------------------------------------------------------------------------------------

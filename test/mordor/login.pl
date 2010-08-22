@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj);
+	my $this = shift;
+	my ($obj);
 	
 	$obj = {
 	};
 	
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,18 +44,18 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($BASE,$Page);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($BASE, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	
-	$Page = $BASE->Create($Sys,$Form);
+	$Page = $BASE->Create($Sys, $Form);
 	
-	PrintLogin($Page,$Form);
+	PrintLogin($Page, $Form);
 	
-	$BASE->PrintNoList("LOGIN");
+	$BASE->PrintNoList('LOGIN', 0);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -67,28 +70,28 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($host);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($host, $Security, $Mod);
 	
 	$Security = $pSys->{'SECINFO'};
-	require('./module/galadriel.pl');
+	require './module/galadriel.pl';
 	$host = GALADRIEL::GetRemoteHost();
 	
 	# ログイン情報を確認
-	if	($Security->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'))){
-		require('./mordor/sys.top.pl');
-		$Mod = new MODULE;
-		$Form->Set('MODE_SUB','NOTICE');
+	if ($Security->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'))) {
+		require './mordor/sys.top.pl';
+		$Mod = MODULE->new;
+		$Form->Set('MODE_SUB', 'NOTICE');
 		
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName') . "[$host]",'Login','TRUE');
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName') . "[$host]", 'Login', 'TRUE');
 		
-		$Mod->DoPrint($Sys,$Form,$pSys);
+		$Mod->DoPrint($Sys, $Form, $pSys);
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName') . "[$host]",'Login','FALSE');
-		$Form->Set('FALSE',1);
-		$this->DoPrint($Sys,$Form,$pSys);
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName') . "[$host]", 'Login', 'FALSE');
+		$Form->Set('FALSE', 1);
+		$this->DoPrint($Sys, $Form, $pSys);
 	}
 }
 
@@ -102,11 +105,11 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub PrintLogin
 {
-	my		($Page,$Form) = @_;
+	my ($Page, $Form) = @_;
 	
 	$Page->Print("<center><br><br><br><br>");
 	
-	if	($Form->Get('FALSE') == 1){
+	if ($Form->Get('FALSE') == 1) {
 		$Page->Print("<font color=red><b>※ユーザ名もしくはパスワードが間違っています。</b></font>");
 	}
 	$Page->Print("<br><br><table>\n");
@@ -118,8 +121,8 @@ sub PrintLogin
 	$Page->Print("<font face=Arial>Powered by 0ch script and 0ch modules 2002-2004</font><br>");
 	$Page->Print("</b></center>\n");
 	
-	$Page->HTMLInput('hidden','MODE','FUNC');
-	$Page->HTMLInput('hidden','MODE_SUB','');
+	$Page->HTMLInput('hidden', 'MODE', 'FUNC');
+	$Page->HTMLInput('hidden', 'MODE_SUB', '');
 }
 
 #============================================================================================================

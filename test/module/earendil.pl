@@ -14,6 +14,9 @@
 #============================================================================================================
 package	EARENDIL;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	ファイルコピー
@@ -274,7 +277,7 @@ sub GetFolderList
 	
 	foreach $key (keys %$pHash) {
 		push @$pList, "$base/$key";
-		if ($pHash->{$key} ne undef) {
+		if (defined  $pHash->{$key}) {
 			GetFolderList($pHash->{$key}, $pList, "$base/$key");
 		}
 	}

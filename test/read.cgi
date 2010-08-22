@@ -9,9 +9,11 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.12 システム改変に伴う変更
-#	2010.08.20 プラグイン個別設定による変更
 #
 #============================================================================================================
+
+use strict;
+use warnings;
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
@@ -94,11 +96,15 @@ sub Initialize
 		'SET'	=> $oSET,
 		'CONV'	=> $oCONV,
 		'DAT'	=> $oDAT,
+		'PAGE'	=> $Page,
 		'CODE'	=> 'Shift_JIS'
 	);
 	
 	# システム初期化
 	$pSYS->{'SYS'}->Init();
+	
+	# 夢が広がりんぐ
+	$pSYS->{'SYS'}->{'MainCGI'} = $pSYS;
 	
 	# 起動パラメータの解析
 	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
@@ -223,8 +229,8 @@ sub PrintReadMenu
 	$baseBBS	= $oSYS->Get('SERVER') . "/$bbs";
 	$baseCGI	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 	$account	= $oSYS->Get('COUNTER');
-	$Prtext		= $oSYS->Get('PRTEXT');
-	$Prlink		= $oSYS->Get('PRLINK');
+	$PRtext		= $oSYS->Get('PRTEXT');
+	$PRlink		= $oSYS->Get('PRLINK');
 	$pathBBS	= $baseBBS;
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 0, $bbs, $key, '');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 0, $bbs, $key, 'l50');
@@ -264,7 +270,7 @@ HTML
 	$Page->Print(" <a href=\"$pathLast\">最新50</a>\n");
 	$Page->Print(" </span>\n");
 	$Page->Print(" <span style=\"float:right;\">\n [PR]");
-	$Page->Print("<a href=\"$Prlink\" target=\"_blank\">$Prtext</a>");
+	$Page->Print("<a href=\"$PRlink\" target=\"_blank\">$PRtext</a>");
 	$Page->Print("[PR]\n </span>&nbsp;\n");
 	$Page->Print("</div>\n\n");
 	
@@ -359,7 +365,7 @@ sub PrintReadContents
 sub PrintReadFoot
 {
 	my ($Sys, $Page) = @_;
-	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $datPath, $datSize);
+	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $datPath, $datSize, $Cookie, $server);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -370,9 +376,10 @@ sub PrintReadFoot
 	$rmax		= $oSYS->Get('RESMAX');
 	$datPath	= $oSYS->Get('BBSPATH') . "/$bbs/dat/$key.dat";
 	$datSize	= int((stat $datPath)[7] / 1024);
+	$server		= $oSYS->Get('SERVER');
 	
 	# datファイルのサイズ表示
-	$Page->Print("</dl>\n\n<font color=\"red\" face=\"Arial\"><b>$datSizeKB</b></font>\n\n");
+	$Page->Print("</dl>\n\n<font color=\"red\" face=\"Arial\"><b>${datSize}KB</b></font>\n\n");
 	
 	# 時間制限がある場合は説明表示
 	if ($oSYS->Get('LIMTIME')) {
@@ -431,7 +438,9 @@ sub PrintReadFoot
 		}
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
-		$server		= $oSYS->Get('SERVER');
+		
+		$cookName = '' if (! defined $cookName);
+		$cookMail = '' if (! defined $cookMail);
 		
 		$Page->Print(<<HTML);
 <form method="POST" action="$cgiPath/bbs.cgi">
@@ -513,13 +522,14 @@ sub PrintReadSearch
 	my ($Sys, $Page) = @_;
 	if (PrintDiscovery($Sys, $Page)) { return; }
 	my ($oSys, $oDat, $size, $i, $nameCol);
-	my (@elem, $pDat, $var, $bbs);
+	my (@elem, $pDat, $var, $bbs, $server);
 	
 	$oSys		= $Sys->{'SYS'};
 	$oDat		= $Sys->{'DAT'};
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
 	$var		= $Sys->{'SYS'}->Get('VERSION');
 	$bbs		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS') . '/';
+	$server		= $oSys->Get('SERVER');
 	
 	# エラー用datの読み込み
 	$oDat->Load($oSys, '.' . $oSys->Get('DATA') . '/2000000000.dat', 1);
@@ -604,13 +614,14 @@ sub PrintReadError
 sub PrintDiscovery
 {
 	my ($Sys, $Page) = @_;
-	my ($spath, $lpath, $key, $kh, $pathBBS);
+	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server);
 	
 	$spath		= $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS');
 	$lpath		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS');
 	$key		= $Sys->{'SYS'}->Get('KEY');
 	$kh			= substr($key, 0, 4) . '/' . substr($key, 0, 5);
-	$var		= $Sys->{'SYS'}->Get('VERSION');
+	$ver		= $Sys->{'SYS'}->Get('VERSION');
+	$server		= $Sys->{'SYS'}->Get('SERVER');
 	
 	if (-e "$spath/kako/$kh/$key.html") {
 		

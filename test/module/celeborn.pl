@@ -10,6 +10,9 @@
 #============================================================================================================
 package	CELEBORN;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -160,8 +163,12 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	$val = '' if (! defined $val);
+	
+	return $val;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -290,7 +297,7 @@ sub UpdateIndex
 	
 	# 告知情報読み込み
 	require './module/denethor.pl';
-	$Banner = new DENETHOR;
+	$Banner = DENETHOR->new;
 	$Banner->Load($Sys);
 	
 	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
@@ -400,10 +407,10 @@ sub OutputIndex
 {
 	my ($Sys, $Page, $Banner, $pInfo, $base, $path, $Set) = @_;
 	my (@elem, $info, $version);
-	my ($Caption);
+	my ($Caption, $bbsRoot, $board);
 	
 	require './module/legolas.pl';
-	$Caption = new LEGOLAS;
+	$Caption = LEGOLAS->new;
 	$Caption->Load($Sys, 'META');
 	
 	$version = $Sys->Get('VERSION');

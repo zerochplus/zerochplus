@@ -24,6 +24,9 @@
 #============================================================================================================
 package	GLORFINDEL;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -111,9 +114,14 @@ sub Save
 		truncate USERS, 0;
 		seek USERS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
-			$data = "$_<>" . $this->{NAME}->{$_} . '<>' . $this->{PASS}->{$_};
-			$data .= '<>' . $this->{FULL}->{$_} . '<>' . $this->{EXPL}->{$_};
-			$data .= '<>' . $this->{SYSAD}->{$_};
+			$data = join('<>',
+				$_,
+				$this->{NAME}->{$_},
+				$this->{PASS}->{$_},
+				$this->{FULL}->{$_},
+				$this->{EXPL}->{$_},
+				$this->{SYSAD}->{$_}
+			);
 			
 			print USERS "$data\n";
 		}
@@ -272,6 +280,9 @@ sub GetStrictPass
 #
 #============================================================================================================
 package	GILDOR;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -540,6 +551,9 @@ sub GetBelong
 #============================================================================================================
 package ARWEN;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -580,7 +594,7 @@ sub Init
 	$this->{'SYS'} = $Sys;
 	
 	# 2重ロード防止
-	if ($this->{'USER'} eq undef) {
+	if (! defined $this->{'USER'}) {
 		$this->{'USER'} = new GLORFINDEL;
 		$this->{'GROUP'} = new GILDOR;
 		$this->{'USER'}->Load($Sys);
@@ -720,7 +734,7 @@ sub GetBelongBBSList
 		}
 		
 		# 後処理
-		if ($origBBS ne undef) {
+		if (defined $origBBS) {
 			SetGroupInfo($this, $origBBS);
 		}
 	}

@@ -23,6 +23,9 @@
 #============================================================================================================
 package	NAZGUL;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -315,10 +318,10 @@ sub CreateContents
 {
 	my $this = shift;
 	my ($Sys, $Page) = @_;
-	my ($Category, @catSet, $bbsSet, $bbsroot, $name, $dir, $ver);
+	my ($Category, @catSet, $bbsSet, $bbsroot, $name, $dir, $ver, $id, @bbsSet);
 	
 	# カテゴリ情報を読み込み
-	$Category = new ANGMAR;
+	$Category = ANGMAR->new;
 	$Category->Load($Sys);
 	$Category->GetKeySet(\@catSet);
 	
@@ -332,6 +335,7 @@ sub CreateContents
 	$Page->Print("Contents</b><br><br><hr></center><br>\n");
 	
 	foreach $id (@catSet) {
+		undef @bbsSet;
 		$name = $Category->Get('NAME', $id);
 		$Page->Print("<b>$name</b><br>\n");									# カテゴリ出力
 		$this->GetKeySet('CATEGORY', $id, \@bbsSet);
@@ -359,6 +363,9 @@ sub CreateContents
 #
 #============================================================================================================
 package	ANGMAR;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #

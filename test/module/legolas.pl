@@ -11,6 +11,9 @@
 #============================================================================================================
 package	LEGOLAS;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -54,7 +57,7 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys, $kind) = @_;
-	my (@head, $path, $file);
+	my ($head, $path, $file);
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	if ($kind eq 'HEAD') { $file = 'head.txt'; }
@@ -66,12 +69,15 @@ sub Load
 	$this->{'PATH'} = $path;
 	$this->{'FILE'} = $file;
 	
+	$head = $this->{'HEAD'};
+	
 	if (-e "$path/$file") {
 		open(HEAD, "< $path/$file");
-		@{$this->{'HEAD'}} = <HEAD>;
+		@$head = <HEAD>;
 		close HEAD;
 		return 0;
 	}
+	
 	return -1;
 }
 
@@ -95,7 +101,7 @@ sub Save
 	if ($path) {
 		eval {
 			chmod 0666, "$path/$file";
-			open HEAD, ">$path/$file";
+			open HEAD, "> $path/$file";
 			flock HEAD, 2;
 			print HEAD @{$this->{'HEAD'}};
 			close HEAD;
