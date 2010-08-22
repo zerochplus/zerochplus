@@ -8,6 +8,9 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
+
 # CGIの実行結果を終了コードとする
 exit(PCGI());
 
@@ -21,7 +24,7 @@ exit(PCGI());
 #------------------------------------------------------------------------------------------------------------
 sub PCGI
 {
-	my ($Sys, $Thread, $Set, $Page, $Form, $Conv);
+	my ($Sys, $Threads, $Set, $Page, $Form, $Conv);
 	my (%pPath, @tList);
 	my ($base, $max);
 	
@@ -190,7 +193,7 @@ sub GetPathData
 		use CGI;
 		@plist = split(/\//, CGI::escapeHTML($ENV{'PATH_INFO'}));
 		$pHash->{'bbs'} = $plist[1];
-		$pHash->{'st'} = $plist[2];
+		$pHash->{'st'} = int($plist[2] || 0);
 	}
 	else {
 		@plist = split(/&/, $ENV{'QUERY_STRING'});
@@ -217,7 +220,7 @@ sub CreateThreadList
 {
 	my ($Threads, $Set, $pList, $pHash, $keyWord) = @_;
 	my (@threadSet, $threadNum, $max, $start);
-	my ($key, $subject, $res, $i);
+	my ($key, $subject, $res, $i, $data);
 	
 	# スレッド一覧の取得
 	$Threads->GetKeySet('ALL', '', \@threadSet);
@@ -230,7 +233,7 @@ sub CreateThreadList
 		$max	= $start + $Set->Get('BBS_MAX_MENU_THREAD');
 		$max	= $max < $threadNum ? $max : $threadNum + 1;
 		$max	= $max == $start ? $max + 1 : $max;
-		for ($i = $start;$i < $max;$i++) {
+		for ($i = $start ; $i < $max ; $i++) {
 			$key		= $threadSet[$i - 1];
 			$subject	= $Threads->Get('SUBJECT', $key);
 			$res		= $Threads->Get('RES', $key);

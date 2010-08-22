@@ -128,9 +128,9 @@ sub Save
 	$path	= $this->{'PATH'};
 	$file	= $this->{'FILE'};
 	
-	if ($this->{'KIND'}) {
+	if ($this->{'KIND'} && -e "$path/$file") {
 		eval { chmod 0666, "$path/$file"; };				# パーミッション設定
-		open LOG, ">$path/$file";
+		open LOG, "> $path/$file";
 		eval { flock LOG, 2; };
 		print LOG @{$this->{'LOG'}};
 		close LOG;
