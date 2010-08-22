@@ -31,14 +31,14 @@ sub AdminCGI
 	SystemSetting(\%SYS);
 	
 	# 0chシステム情報を取得
-	require "$SYS{'MAINCGI'}/module/melkor.pl";
+	require "./module/melkor.pl";
 	$Sys = new MELKOR;
 	$Sys->Init();
 	$Sys->Set('ADMIN', \%SYS);
 	$SYS{'SECINFO'}->Init($Sys);
 	
 	# フォーム情報を取得
-	require "$SYS{'MAINCGI'}/module/samwise.pl";
+	require "./module/samwise.pl";
 	$Form = new SAMWISE;
 	$Form->DecodeForm(0);
 	$Form->Set('FALSE', 0);
@@ -90,7 +90,6 @@ sub SystemSetting
 	my ($pSYS) = @_;
 	
 	%$pSYS = (
-		'MAINCGI'	=> '../test',	# cgi設置パス(未対応)
 		'SECINFO'	=> undef,		# セキュリティ情報
 		'LOGGER'	=> undef,		# ログオブジェクト
 		'AD_BBS'	=> undef,		# BBS情報オブジェクト

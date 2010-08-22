@@ -426,7 +426,7 @@ sub IsRegulation
 		}
 	}
 	# 読取専用
-	if (!$oSET->Equal('BBS_READONLY', 'none')) {
+	if (! $oSET->Equal('BBS_READONLY', 'none')) {
 		if (! $oSEC->IsAuthority($capID, 13, $bbs)) {
 			return 203;
 		}
@@ -450,7 +450,7 @@ sub IsRegulation
 		$datPath = "$tPath$key.dat";
 		
 		# スレッド作成(携帯から)
-		if ($oSYS->Get('AGENT') eq "O") {
+		if ($oSYS->Equal('AGENT', 'O')) {
 			if (! $oSEC->IsAuthority($capID, 16, $bbs)) {
 				return 204;
 			}

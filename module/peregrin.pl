@@ -128,12 +128,13 @@ sub Save
 	$path	= $this->{'PATH'};
 	$file	= $this->{'FILE'};
 	
-	if ($this->{'KIND'} && -e "$path/$file") {
+	if ($this->{'KIND'}) {
 		eval { chmod 0666, "$path/$file"; };				# パーミッション設定
-		open LOG, "> $path/$file";
-		eval { flock LOG, 2; };
-		print LOG @{$this->{'LOG'}};
-		close LOG;
+		if (open LOG, "> $path/$file") {
+			flock LOG, 2;
+			print LOG @{$this->{'LOG'}};
+			close LOG;
+		}
 		eval { chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
 	}
 }
@@ -267,7 +268,7 @@ sub Search
 		for ($i = $num - 1 ; $i >= 0 ; $i--) {
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
-			($key, $dat) = (split(/<>/, $dmy))[($kind == 3 ? (7, 5) : (1, 3))];
+			($key, $dat) = (split(/<>/, $dmy))[($kind == 3 ? (5, 7) : (1, 3))];
 			if ($data eq $key) {
 				return $dat;
 			}
