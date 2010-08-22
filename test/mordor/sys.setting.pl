@@ -435,8 +435,8 @@ sub PrintOtherSetting
 sub PrintPlusSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $Kakiko, $Counter, $Samba, $Prtext, $Prlink, $Trip12);
-	my ($banner, $kakiko, $trip12);
+	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Prtext, $Prlink, $Trip12);
+	my ($banner, $kakiko, $trip12, $issamba);
 	my ($common);
 	
 	$SYS->Set('_TITLE', 'System ZerochPlus Original Setting');
@@ -444,7 +444,8 @@ sub PrintPlusSetting
 	$Banner		= $SYS->Get('BANNER');
 	$Kakiko		= $SYS->Get('KAKIKO');
 	$Counter	= $SYS->Get('COUNTER');
-	$Samba		= $SYS->Get('SAMBA');
+	$Samba		= $SYS->Get('SAMBATM');
+	$isSamba	= $SYS->Get('ISSAMBA');
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
 	$Trip12		= $SYS->Get('TRIP12');
@@ -452,6 +453,7 @@ sub PrintPlusSetting
 	$banner		= ($Banner == 1 ? 'checked' : '');
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
 	$trip12		= ($Trip12 == 1 ? 'checked' : '');
+	$issamba	= ($isSamba == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
 	
@@ -475,9 +477,11 @@ sub PrintPlusSetting
 	$Page->Print("<tr><td>同じIPからの書き込みの文字数が変化しない場合規制する</td>");
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制</td></tr>\n");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制 / SAMBA規制</td></tr>\n");
 	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
-	$Page->Print("<td><input type=text size=60 name=SAMBA value=\"$Samba\"></td></tr>\n");
+	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
+	$Page->Print("<tr><td>SAMBA規制にする</td>");
+	$Page->Print("<td><input type=checkbox name=ISSAMBA $issamba value=on></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
@@ -798,7 +802,8 @@ sub FunctionPlusSetting
 	$SYSTEM->Set('PRLINK', $Form->Get('PRLINK'));
 	$SYSTEM->Set('BANNER', ($Form->Equal('BANNER', 'on') ? 1 : 0));
 	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
-	$SYSTEM->Set('SAMBA', $Form->Get('SAMBA'));
+	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
+	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
@@ -810,7 +815,8 @@ sub FunctionPlusSetting
 		push @$pLog, '　　　 PR欄リンクURL：' . $SYSTEM->Get('PRLINK');
 		push @$pLog, '　　　 バナー表\示：' . $SYSTEM->Get('BANNER');
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
-		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBA');
+		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
+		push @$pLog, '　　　 SAMBA規制：' . $SYSTEM->Get('ISSAMBA');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
 	}
 	return 0;

@@ -389,7 +389,7 @@ sub IsRegulation
 	$from		= $this->{'FORM'}->Get('FROM');
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
-	$Samba		= $oSYS->Get('SAMBA');
+	$Samba		= $oSYS->Get('SAMBATM');
 	$mode		= $oSYS->Get('AGENT');
 	
 	# ƒŒƒX‘‚«ž‚Ýƒ‚[ƒhŽž‚Ì‚Ý
@@ -475,21 +475,34 @@ sub IsRegulation
 	}
 	# ƒŒƒX‘‚«ž‚Ýƒ‚[ƒh
 	else {
+		my ($n, $tm, $LOGs);
 		require './module/peregrin.pl';
-		my $LOGs = PEREGRIN->new;
+		
+		$LOGs = PEREGRIN->new;
 		$LOGs->Load($oSYS, 'SMB');
-		$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
-		$LOGs->Save($oSYS);
 		
 		# SAMBA
-		if (! $oSEC->IsAuthority($capID, 12, $bbs)) {
-			my ($n, $tm) = $LOGs->IsSamba($Samba, $host);
+		if ($oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
+			($n, $tm) = $LOGs->IsSamba($Samba, $host);
+			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+			$LOGs->Save($oSYS);
+			
 			if ($tm > 0) {
 				$oSYS->Set('WAIT', $tm);
 				$oSYS->Set('SAMBA', $n);
-				$oSYS->Set('SAMBATM', $Samba);
 				return 505;
 			}
+		}
+		# ’ZŽžŠÔ“Še
+		if (! $oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+			$tm = $LOGs->IsTime($Samba, $host);
+			if ($tm > 0) {
+				$oSYS->Set('WAIT', $tm);
+				return 503;
+			}
+			
+			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+			$LOGs->Save($oSYS);
 		}
 		
 		my $LOG = PEREGRIN->new;
@@ -510,16 +523,6 @@ sub IsRegulation
 			}
 		}
 		
-=for
-		# ’ZŽžŠÔ“Še
-		if (!$oSEC->IsAuthority($capID, 12, $bbs)) {
-			my $tm = $LOG->IsTime($Samba, $host);
-			if ($tm > 0) {
-				$oSYS->Set('WAIT', $tm);
-				return 503;
-			}
-		}
-=cut
 		$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
 		$LOG->Save($oSYS);
 	}

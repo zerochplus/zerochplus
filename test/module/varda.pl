@@ -567,7 +567,7 @@ sub PrintIndexFoot
 	$cgiPath	= $SYS->Get('SERVER') . $SYS->Get('CGIPATH');
 	$bbs		= $SYS->Get('BBS');
 	$ver		= $SYS->Get('VERSION');
-	$samba		= $SYS->Get('SAMBA');
+	$samba		= $SYS->Get('SAMBATM');
 	$tm			= time;
 	
 	# スレッド作成画面を別画面で表示
