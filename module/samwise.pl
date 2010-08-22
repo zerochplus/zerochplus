@@ -11,6 +11,9 @@
 #============================================================================================================
 package	SAMWISE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -95,7 +98,7 @@ sub GetAtArray
 		($var, $val) = split(/=/, $_);										# name/valueで分離
 		if ($key eq $var) {													# 指定キー
 			$val =~ tr/+/ /;
-			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("C", hex($1))/eg;
+			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
 			#$code = jcode::getcode(*val);									# コード取得
 			#jcode::convert(*val, $code);									# 漢字コードを統一'
 			$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
@@ -124,8 +127,12 @@ sub Get
 {
 	my $this = shift;
 	my ($key) = @_;
+	my ($val);
 	
-	return $this->{'FORM'}->{$key};
+	$val = $this->{'FORM'}->{$key};
+	$val = '' if (! defined $val);
+	
+	return $val;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -158,8 +165,12 @@ sub Equal
 {
 	my $this = shift;
 	my ($key, $data) = @_;
+	my ($val);
 	
-	return ($this->{'FORM'}->{$key} eq $data);
+	$val = $this->{'FORM'}->{$key};
+	$val = '' if (! defined $val);
+	
+	return ($val eq $data);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -216,7 +227,7 @@ sub IsExist
 	my $this = shift;
 	my ($key) = @_;
 	
-	return exists($this->{'FORM'}->{$key});
+	return exists $this->{'FORM'}->{$key};
 }
 
 #------------------------------------------------------------------------------------------------------------

@@ -10,6 +10,8 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
 use CGI::Carp qw(fatalsToBrowser);
 
 # CGIの実行結果を終了コードとする
@@ -133,13 +135,13 @@ sub Initialize
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
 	# ホスト情報設定.携帯の場合は機種情報を設定
-	if (!$Sys->{'SYS'}->Equal('AGENT', "O") && !$Sys->{'SYS'}->Equal('AGENT', "P")) {
+	if (! $Sys->{'SYS'}->Equal('AGENT', 'O') && ! $Sys->{'SYS'}->Equal('AGENT', 'P')) {
 		$Sys->{'FORM'}->Set('HOST', $Sys->{'CONV'}->GetRemoteHost());
 	}
 	else {
 		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
 		
-		if ($product eq undef) {
+		if (! defined  $product) {
 			return 950;
 		}
 		else {
@@ -153,7 +155,7 @@ sub Initialize
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
-	if ($Sys->{'SYS'}->Equal('AGENT', "O") && $Sys->{'FORM'}->IsExist('mobile')) {
+	if ($Sys->{'SYS'}->Equal('AGENT', 'O') && $Sys->{'FORM'}->IsExist('mobile')) {
 		return 9003;
 	}
 	
@@ -162,7 +164,7 @@ sub Initialize
 	else								{ $Sys->{'SYS'}->Set('MODE', 1); }
 	
 	# cookieの存在チェック(PCのみ)
-	if (!$Sys->{'SYS'}->Equal('AGENT', "O")) {
+	if (!$Sys->{'SYS'}->Equal('AGENT', 'O')) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
 			return 9001	if (!$Sys->{'COOKIE'}->Init());
@@ -185,11 +187,7 @@ sub Initialize
 		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
 			return 9000;
 		}
-		
-		#my $key = $Sys->{'FORM'}->Get('time');
-		#my $datpath = $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS') . '/dat/';
-		#$key++ while (-e "$datpath$key.dat");
-		$Sys->{'FORM'}->Set('key', $Sys->{'FORM'}->Get('time'));
+		$Sys->{'FORM'}->Set('key', time);
 		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	}
 	
@@ -207,7 +205,7 @@ sub Initialize
 sub PrintBBSThreadCreate
 {
 	my ($Sys, $Page) = @_;
-	my ($Caption, $title, $link, $image, $code);
+	my ($SET, $Caption, $title, $link, $image, $code, $server);
 	
 	require './module/legolas.pl';
 	$Caption = new LEGOLAS;
@@ -273,6 +271,9 @@ sub PrintBBSThreadCreate
 		$ver		= $Sys->{'SYS'}->Get('VERSION');
 		$server		= $Sys->{'SYS'}->Get('SERVER');
 		
+		$name = '' if (! defined $name);
+		$mail = '' if (! defined $mail);
+		
 		$Page->Print(<<HTML);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
  <tr>
@@ -319,7 +320,7 @@ HTML
 sub PrintBBSMobileThreadCreate
 {
 	my ($Sys, $Page, $Set) = @_;
-	my ($title, $bbs, $tm);
+	my ($title, $bbs, $tm, $Banner);
 	
 	require './module/denethor.pl';
 	$Banner = new DENETHOR;
@@ -357,7 +358,7 @@ sub PrintBBSMobileThreadCreate
 sub PrintBBSCookieConfirm
 {
 	my ($Sys, $Page) = @_;
-	my ($code, $name, $mail, $msg, $bbs, $tm, $subject, $COOKIE, $oSET);
+	my ($code, $name, $mail, $msg, $bbs, $tm, $subject, $COOKIE, $oSET, $Form);
 	
 	$Form		= $Sys->{'FORM'};
 	$oSET		= $Sys->{'SET'};
@@ -627,6 +628,7 @@ HTML
 sub PrintBBSError
 {
 	my ($Sys, $Page, $err) = @_;
+	my ($ERROR);
 	
 	require './module/orald.pl';
 	$ERROR = new ORALD;

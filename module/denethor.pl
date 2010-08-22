@@ -8,6 +8,9 @@
 #============================================================================================================
 package	DENETHOR;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -252,7 +255,7 @@ sub PrintSub
 	my ($Page) = @_;
 	
 	# サブバナーが存在したら表示する
-	if ($$this{'TEXTSB'} ne '') {
+	if (defined $$this{'TEXTSB'} && $$this{'TEXTSB'} ne '') {
 		$Page->Print("<div style=\"margin-bottom:1.2em;\">\n");
 		$Page->Print("$$this{'TEXTSB'}\n");
 		$Page->Print("</div>\n");

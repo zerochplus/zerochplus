@@ -8,10 +8,12 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.12 システム改変に伴う変更
-#	2010.08.20 プラグイン個別設定による変更
 #
 #============================================================================================================
 package	VARDA;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -59,14 +61,14 @@ sub Init
 	
 	# 使用モジュールを設定
 	$this->{'SYS'}		= $Sys;
-	$this->{'THREADS'}	= new BILBO;
-	$this->{'CONV'}		= new GALADRIEL;
-	$this->{'BANNER'}	= new DENETHOR;
+	$this->{'THREADS'}	= BILBO->new;
+	$this->{'CONV'}		= GALADRIEL->new;
+	$this->{'BANNER'}	= DENETHOR->new;
 	$this->{'CODE'}		= 'sjis';
 	
-	if ($Setting eq undef) {
+	if (! defined $Setting) {
 		require './module/isildur.pl';
-		$this->{'SET'} = new ISILDUR;
+		$this->{'SET'} = ISILDUR->new;
 		$this->{'SET'}->Load($Sys);
 	}
 	else {
@@ -89,7 +91,7 @@ sub Init
 sub CreateIndex
 {
 	my $this = shift;
-	my ($Sys, $Thread, $bbsSetting, $Index, $Caption);
+	my ($Sys, $Threads, $bbsSetting, $Index, $Caption);
 	my ($path, $i);
 	
 	$Sys		= $this->{'SYS'};
@@ -102,8 +104,8 @@ sub CreateIndex
 		
 		require './module/thorin.pl';
 		require './module/legolas.pl';
-		$Index = new THORIN;
-		$Caption = new LEGOLAS;
+		$Index = THORIN->new;
+		$Caption = LEGOLAS->new;
 		
 		PrintIndexHead($this, $Index, $Caption);
 		PrintIndexMenu($this, $Index);
@@ -129,12 +131,12 @@ sub CreateIndex
 sub CreateIIndex
 {
 	my $this = shift;
-	my ($Sys, $Thread, $bbsSetting, $oConv, $Page);
-	my ($path, $i, $name, $key, $res, $cgiPath, $title, $menuNum, $code);
+	my ($Sys, $Threads, $bbsSetting, $oConv, $Page);
+	my ($path, $i, $name, $key, $res, $cgiPath, $title, $menuNum, $code, $bbs);
 	my (@threadSet);
 	
 	require './module/thorin.pl';
-	$Page = new THORIN;
+	$Page = THORIN->new;
 	
 	# 前準備
 	$Sys		= $this->{'SYS'};
@@ -198,12 +200,12 @@ sub CreateIIndex
 sub CreateSubback
 {
 	my $this = shift;
-	my ($Sys, $Thread, $bbsSetting, $oConv, $Page);
-	my ($path, $i, $name, $key, $res, $cgiPath, $title, $code);
+	my ($Sys, $Threads, $bbsSetting, $oConv, $Page);
+	my ($path, $i, $name, $key, $res, $cgiPath, $title, $code, $bbs);
 	my (@threadSet, $max, $Caption, $version);
 	
 	require './module/thorin.pl';
-	$Page = new THORIN;
+	$Page = THORIN->new;
 	
 	$Sys		= $this->{'SYS'};
 	$Threads 	= $this->{'THREADS'};
@@ -222,7 +224,7 @@ sub CreateSubback
 	$Threads->GetKeySet('ALL', '', \@threadSet);
 	
 	require './module/legolas.pl';
-	$Caption	= new LEGOLAS;
+	$Caption = LEGOLAS->new;
 	$Caption->Load($Sys, 'META');
 	
 	# HTMLヘッダの出力
@@ -445,7 +447,7 @@ sub PrintIndexPreview
 	
 	# 拡張機能ロード
 	require './module/athelas.pl';
-	$Plugin = new ATHELAS;
+	$Plugin = ATHELAS->new;
 	$Plugin->Load($this->{'SYS'});
 	
 	# 有効な拡張機能一覧を取得
@@ -467,7 +469,7 @@ sub PrintIndexPreview
 	}
 	
 	require './module/gondor.pl';
-	$oDat = new ARAGORN;
+	$oDat = ARAGORN->new;
 	
 	$this->{'THREADS'}->GetKeySet('ALL', '', \@threadSet);
 	
@@ -696,6 +698,7 @@ sub PrintResponse
 	
 	$oConv		= $this->{'CONV'};
 	$pDat		= $oDat->Get($n - 1);
+	return if (! defined $pDat);
 	@elem		= split(/<>/, $$pDat);
 	$contLen	= length $elem[3];
 	$contLine	= $oConv->GetTextLine(\$elem[3]);
