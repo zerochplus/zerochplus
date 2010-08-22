@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		LOG	=> \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,54 +44,54 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($BASE,$Page,$subMode);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($BASE, $Page, $subMode);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	
 	# 管理情報を登録
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('ADMIN', $pSys);
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys);
+	SetMenuList($BASE, $pSys);
 	
-	if		($subMode eq 'LIST'){													# 掲示板一覧画面
-		PrintBBSList($Page,$Sys,$Form);
+	if ($subMode eq 'LIST') {														# 掲示板一覧画面
+		PrintBBSList($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CREATE'){													# 掲示板作成画面
-		PrintBBSCreate($Page,$Sys,$Form);
+	elsif ($subMode eq 'CREATE') {													# 掲示板作成画面
+		PrintBBSCreate($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'DELETE'){													# 掲示板削除確認画面
-		PrintBBSDelete($Page,$Sys,$Form);
+	elsif ($subMode eq 'DELETE') {													# 掲示板削除確認画面
+		PrintBBSDelete($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CATCHANGE'){												# 掲示板カテゴリ変更画面
-		PrintBBScategoryChange($Page,$Sys,$Form);
+	elsif ($subMode eq 'CATCHANGE') {												# 掲示板カテゴリ変更画面
+		PrintBBScategoryChange($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CATEGORY'){												# カテゴリ一覧画面
-		PrintCategoryList($Page,$Sys,$Form);
+	elsif ($subMode eq 'CATEGORY') {												# カテゴリ一覧画面
+		PrintCategoryList($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CATEGORYADD'){											# カテゴリ追加画面
-		PrintCategoryAdd($Page,$Sys,$Form);
+	elsif ($subMode eq 'CATEGORYADD') {												# カテゴリ追加画面
+		PrintCategoryAdd($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CATEGORYDEL'){											# カテゴリ削除画面
-		PrintCategoryDelete($Page,$Sys,$Form);
+	elsif ($subMode eq 'CATEGORYDEL') {												# カテゴリ削除画面
+		PrintCategoryDelete($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# 処理完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('掲示板処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# 処理完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('掲示板処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# 処理失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# 処理失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
-	$BASE->Print($Sys->Get('_TITLE'),1);
+	$BASE->Print($Sys->Get('_TITLE'), 1);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -103,49 +106,49 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err);
 	
 	# 管理情報を登録
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('ADMIN', $pSys);
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 0;
 	
-	if	($subMode eq 'CREATE'){														# 掲示板作成
-		$err = FunctionBBSCreate($Sys,$Form,$this->{'LOG'});
+	if ($subMode eq 'CREATE') {														# 掲示板作成
+		$err = FunctionBBSCreate($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'DELETE'){													# 掲示板削除
-		$err = FunctionBBSDelete($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'DELETE') {													# 掲示板削除
+		$err = FunctionBBSDelete($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'CATCHANGE'){												# カテゴリ変更
-		$err = FunctionCategoryChange($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'CATCHANGE') {												# カテゴリ変更
+		$err = FunctionCategoryChange($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'CATADD'){													# カテゴリ追加
-		$err = FunctionCategoryAdd($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'CATADD') {													# カテゴリ追加
+		$err = FunctionCategoryAdd($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'CATDEL'){													# カテゴリ削除
-		$err = FunctionCategoryDelete($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'CATDEL') {													# カテゴリ削除
+		$err = FunctionCategoryDelete($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'UPDATE'){													# 掲示板情報更新
-		$err = FunctionBBSInfoUpdate($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'UPDATE') {													# 掲示板情報更新
+		$err = FunctionBBSInfoUpdate($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'UPDATEBBS'){												# 掲示板更新
-		$err = FunctionBBSUpdate($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'UPDATEBBS') {												# 掲示板更新
+		$err = FunctionBBSUpdate($Sys, $Form, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"BBS($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "BBS($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"BBS($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "BBS($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -158,15 +161,15 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys) = @_;
+	my ($Base, $pSys) = @_;
 	
-	$Base->SetMenu("掲示板一覧","'sys.bbs','DISP','LIST'");
+	$Base->SetMenu('掲示板一覧', "'sys.bbs','DISP','LIST'");
 	
 	# システム管理権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},0,'*')){
-		$Base->SetMenu("掲示板作成","'sys.bbs','DISP','CREATE'");
-		$Base->SetMenu("<hr>","");
-		$Base->SetMenu("掲示板カテゴリ一覧","'sys.bbs','DISP','CATEGORY'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+		$Base->SetMenu('掲示板作成', "'sys.bbs','DISP','CREATE'");
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('掲示板カテゴリ一覧', "'sys.bbs','DISP','CATEGORY'");
 	}
 }
 
@@ -182,32 +185,32 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSList
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($BBS,$Category,@bbsSet,@catSet,$id,$name,$category,$subject);
-	my		($common1,$common2,$sCat,@belongBBS,$belongID,$isSysad);
+	my ($Page, $SYS, $Form) = @_;
+	my ($BBS, $Category, @bbsSet, @catSet, $id, $name, $category, $subject);
+	my ($common1, $common2, $sCat, @belongBBS, $belongID, $isSysad);
 	
-	$SYS->Set('_TITLE','BBS List');
+	$SYS->Set('_TITLE', 'BBS List');
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$Category = ANGMAR->new;
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
 	
 	$sCat = $Form->Get('BBS_CATEGORY');
 	
 	# ユーザ所属のBBS一覧を取得
-	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'},$BBS,\@belongBBS);
+	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@belongBBS);
 	
 	# システム管理権限を取得
-	$isSysad = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},0,'*');
+	$isSysad = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 0, '*');
 	
 	# 掲示板情報を取得
-	if	($sCat eq '' || $sCat eq 'ALL'){
-		$BBS->GetKeySet('ALL','',\@bbsSet);
+	if ($sCat eq '' || $sCat eq 'ALL') {
+		$BBS->GetKeySet('ALL', '', \@bbsSet);
 	}
-	else{
-		$BBS->GetKeySet('CATEGORY',$sCat,\@bbsSet);
+	else {
+		$BBS->GetKeySet('CATEGORY', $sCat, \@bbsSet);
 	}
 	$Category->GetKeySet(\@catSet);
 	
@@ -217,12 +220,12 @@ sub PrintBBSList
 	$Page->Print("<option value=ALL>すべて</option>\n");
 	
 	# カテゴリリストを出力
-	foreach	$id (@catSet){
-		$name = $Category->Get('NAME',$id);
-		if	($id eq $sCat){
+	foreach $id (@catSet) {
+		$name = $Category->Get('NAME', $id);
+		if ($id eq $sCat) {
 			$Page->Print("<option value=\"$id\" selected>$name</option>\n");
 		}
-		else{
+		else {
 			$Page->Print("<option value=\"$id\">$name</option>\n");
 		}
 	}
@@ -235,17 +238,17 @@ sub PrintBBSList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Category</th>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">SubScription</th></tr>\n");
 	
-	foreach	$id (@bbsSet){
+	foreach $id (@bbsSet) {
 		# 所属掲示板のみ表示
-		foreach	$belongID (@belongBBS){
-			if	($id eq $belongID){
-				$name		= $BBS->Get('NAME',$id);
-				$subject	= $BBS->Get('SUBJECT',$id);
-				$category	= $BBS->Get('CATEGORY',$id);
-				$category	= $Category->Get('NAME',$category);
+		foreach $belongID (@belongBBS) {
+			if ($id eq $belongID) {
+				$name		= $BBS->Get('NAME', $id);
+				$subject	= $BBS->Get('SUBJECT', $id);
+				$category	= $BBS->Get('CATEGORY', $id);
+				$category	= $Category->Get('NAME', $category);
 				
 				$common1 = "\"javascript:SetOption('TARGET_BBS','$id');";
-				$common1 = $common1 . "DoSubmit('bbs.thread','DISP','LIST');\"";
+				$common1 .= "DoSubmit('bbs.thread','DISP','LIST');\"";
 				
 				$Page->Print("<tr><td><input type=checkbox name=BBSS value=$id></td>");
 				$Page->Print("<td><a href=$common1>$name</a></td><td>$category</td>");
@@ -256,12 +259,12 @@ sub PrintBBSList
 	$common1 = "onclick=\"DoSubmit('sys.bbs','FUNC'";
 	$common2 = "onclick=\"DoSubmit('sys.bbs','DISP'";
 	
-	$Page->HTMLInput('hidden','TARGET_BBS','');
+	$Page->HTMLInput('hidden', 'TARGET_BBS', '');
 	$Page->Print("<tr><td colspan=4 align=right><hr>");
-	$Page->Print("<input type=button value=\"カテゴリ変更\" $common2,'CATCHANGE')\"> ")	if	(1);
-	$Page->Print("<input type=button value=\"情報更新\" $common1,'UPDATE')\"> ")		if	($isSysad);
-	$Page->Print("<input type=button value=\"index更新\" $common1,'UPDATEBBS')\"> ")	if	(1);
-	$Page->Print("<input type=button value=\"　削除　\" $common2,'DELETE')\">")			if	($isSysad);
+	$Page->Print("<input type=button value=\"カテゴリ変更\" $common2,'CATCHANGE')\"> ")	if (1);
+	$Page->Print("<input type=button value=\"情報更新\" $common1,'UPDATE')\"> ")		if ($isSysad);
+	$Page->Print("<input type=button value=\"index更新\" $common1,'UPDATEBBS')\"> ")	if (1);
+	$Page->Print("<input type=button value=\"　削除　\" $common2,'DELETE')\">")			if ($isSysad);
 	$Page->Print("</td></tr></table>\n");
 }
 
@@ -277,19 +280,19 @@ sub PrintBBSList
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSCreate
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($BBS,$Category,@bbsSet,@catSet,$id,$name);
+	my ($Page, $SYS, $Form) = @_;
+	my ($BBS, $Category, @bbsSet, @catSet, $id, $name);
 	
-	$SYS->Set('_TITLE','BBS Create');
+	$SYS->Set('_TITLE', 'BBS Create');
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$Category = ANGMAR->new;
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
 	
 	# 掲示板情報を取得
-	$BBS->GetKeySet('ALL','',\@bbsSet);
+	$BBS->GetKeySet('ALL', '', \@bbsSet);
 	$Category->GetKeySet(\@catSet);
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
@@ -299,8 +302,8 @@ sub PrintBBSCreate
 	$Page->Print("<td><select name=BBS_CATEGORY>");
 	
 	# カテゴリリストを出力
-	foreach	$id (@catSet){
-		$name	= $Category->Get('NAME',$id);
+	foreach $id (@catSet) {
+		$name	= $Category->Get('NAME', $id);
 		$Page->Print("<option value=\"$id\">$name</option>\n");
 	}
 	$Page->Print("</select></td></tr>\n");
@@ -315,8 +318,8 @@ sub PrintBBSCreate
 	$Page->Print("<option value=\"\">しない</option>\n");
 	
 	# 掲示板リストを出力
-	foreach	$id (@bbsSet){
-		$name = $BBS->Get('NAME',$id);
+	foreach $id (@bbsSet) {
+		$name = $BBS->Get('NAME', $id);
 		$Page->Print("<option value=$id>$name</option>\n");
 	}
 	$Page->Print("</select></td></tr>\n");
@@ -338,14 +341,14 @@ sub PrintBBSCreate
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSDelete
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($BBS,$Category,@bbsSet,$id,$name,$subject,$category);
+	my ($Page, $SYS, $Form) = @_;
+	my ($BBS, $Category, @bbsSet, $id, $name, $subject, $category);
 	
-	$SYS->Set('_TITLE','BBS Delete Confirm');
+	$SYS->Set('_TITLE', 'BBS Delete Confirm');
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$Category = ANGMAR->new;
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
 	
@@ -360,16 +363,16 @@ sub PrintBBSDelete
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">SubScription</th></tr>\n");
 	
 	# 掲示板リストを出力
-	foreach	$id (@bbsSet){
-		$name		= $BBS->Get('NAME',$id);
-		$subject	= $BBS->Get('SUBJECT',$id);
-		$category	= $BBS->Get('CATEGORY',$id);
-		$category	= $Category->Get('NAME',$category);
+	foreach $id (@bbsSet) {
+		$name		= $BBS->Get('NAME', $id);
+		$subject	= $BBS->Get('SUBJECT', $id);
+		$category	= $BBS->Get('CATEGORY', $id);
+		$category	= $Category->Get('NAME', $category);
 		
 		$Page->Print("<tr><td>$name</a></td>");
 		$Page->Print("<td>$category</td>");
 		$Page->Print("<td>$subject</td></tr>\n");
-		$Page->HTMLInput('hidden','BBSS',$id);
+		$Page->HTMLInput('hidden', 'BBSS', $id);
 	}
 	
 	$Page->Print("<tr><td colspan=3><hr></td></tr>");
@@ -393,14 +396,14 @@ sub PrintBBSDelete
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBScategoryChange
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($BBS,$Category,@bbsSet,@catSet,$id,$name,$subject,$category);
+	my ($Page, $SYS, $Form) = @_;
+	my ($BBS, $Category, @bbsSet, @catSet, $id, $name, $subject, $category);
 	
-	$SYS->Set('_TITLE','Category Change');
+	$SYS->Set('_TITLE', 'Category Change');
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$Category = ANGMAR->new;
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
 	
@@ -416,23 +419,23 @@ sub PrintBBScategoryChange
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">SubScription</th></tr>\n");
 	
 	# 掲示板リストを出力
-	foreach	$id (@bbsSet){
-		$name		= $BBS->Get('NAME',$id);
-		$subject	= $BBS->Get('SUBJECT',$id);
-		$category	= $BBS->Get('CATEGORY',$id);
-		$category	= $Category->Get('NAME',$category);
+	foreach $id (@bbsSet) {
+		$name		= $BBS->Get('NAME', $id);
+		$subject	= $BBS->Get('SUBJECT', $id);
+		$category	= $BBS->Get('CATEGORY', $id);
+		$category	= $Category->Get('NAME', $category);
 		
 		$Page->Print("<tr><td>$name</a></td>");
 		$Page->Print("<td>$category</td>");
 		$Page->Print("<td>$subject</td></tr>\n");
-		$Page->HTMLInput('hidden','BBSS',$id);
+		$Page->HTMLInput('hidden', 'BBSS', $id);
 	}
 	$Page->Print("<tr><td colspan=3><hr></td></tr>");
 	$Page->Print("<tr><td colspan=3 align=right>変更後カテゴリ：<select name=SEL_CATEGORY>");
 	
 	# カテゴリリストを出力
-	foreach	$id (@catSet){
-		$name = $Category->Get('NAME',$id);
+	foreach $id (@catSet) {
+		$name = $Category->Get('NAME', $id);
 		$Page->Print("<option value=\"$id\">$name</option>\n");
 	}
 	$Page->Print("</select><input type=button value=\"　変更　\" ");
@@ -452,15 +455,15 @@ sub PrintBBScategoryChange
 #------------------------------------------------------------------------------------------------------------
 sub PrintCategoryList
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Category,$BBS,$id,$name,$subj,$common);
-	my		(@catsSet,@bbsSet,$bbsNum);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Category, $BBS, $id, $name, $subj, $common);
+	my (@catsSet, @bbsSet, $bbsNum);
 	
-	$SYS->Set('_TITLE','Category List');
+	$SYS->Set('_TITLE', 'Category List');
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$Category = ANGMAR->new;
 	
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
@@ -473,17 +476,17 @@ sub PrintCategoryList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:50\">Belonging</th></tr>\n");
 	
 	# カテゴリ一覧の出力
-	foreach	$id (@catsSet){
-		$BBS->GetKeySet('CATEGORY',$id,\@bbsSet);
+	foreach $id (@catsSet) {
+		$BBS->GetKeySet('CATEGORY', $id, \@bbsSet);
 		
-		$name	= $Category->Get('NAME',$id);
-		$subj	= $Category->Get('SUBJECT',$id);
+		$name	= $Category->Get('NAME', $id);
+		$subj	= $Category->Get('SUBJECT', $id);
 		$bbsNum	= @bbsSet;
 		
 		$Page->Print("<tr><td><input type=checkbox name=CATS value=$id>");
 		$Page->Print("</td><td>$name</td><td>$subj</td>");
 		$Page->Print("<td align=center>$bbsNum</td></tr>\n");
-		undef(@bbsSet);
+		undef @bbsSet;
 	}
 	$common = "onclick=\"DoSubmit('sys.bbs','DISP'";
 	
@@ -506,10 +509,10 @@ sub PrintCategoryList
 #------------------------------------------------------------------------------------------------------------
 sub PrintCategoryAdd
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($common);
 	
-	$SYS->Set('_TITLE','Category Add');
+	$SYS->Set('_TITLE', 'Category Add');
 	$common = "onclick=\"DoSubmit('sys.bbs','FUNC','CATADD');\"";
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
@@ -535,13 +538,13 @@ sub PrintCategoryAdd
 #------------------------------------------------------------------------------------------------------------
 sub PrintCategoryDelete
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Category,$name,$subj,@catSet,$id);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Category, $name, $subj, @catSet, $id);
 	
-	$SYS->Set('_TITLE','Category Delete Confirm');
+	$SYS->Set('_TITLE', 'Category Delete Confirm');
 	
-	require('./module/nazguls.pl');
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$Category = ANGMAR->new;
 	$Category->Load($SYS);
 	
 	@catSet = $Form->GetAtArray('CATS');
@@ -554,13 +557,13 @@ sub PrintCategoryDelete
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:150\">SubScription</th></tr>\n");
 	
 	# ユーザリストを出力
-	foreach	$id (@catSet){
-		$name = $Category->Get('NAME',$id);
-		$subj = $Category->Get('SUBJECT',$id);
+	foreach $id (@catSet) {
+		$name = $Category->Get('NAME', $id);
+		$subj = $Category->Get('SUBJECT', $id);
 		
 		$Page->Print("<tr><td>$name</a></td>");
 		$Page->Print("<td>$subj</td></tr>\n");
-		$Page->HTMLInput('hidden','CATS',$id);
+		$Page->HTMLInput('hidden', 'CATS', $id);
 	}
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
@@ -585,27 +588,27 @@ sub PrintCategoryDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBBSCreate
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($bbsCategory,$bbsDir,$bbsName,$bbsExplanation,$bbsInherit);
-	my		($createPath,$dataPath);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($bbsCategory, $bbsDir, $bbsName, $bbsExplanation, $bbsInherit);
+	my ($createPath, $dataPath);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_DIR','BBS_NAME','BBS_CATEGORY');
-		if	(!$Form->IsInput(@inList)){
+		my @inList = ('BBS_DIR', 'BBS_NAME', 'BBS_CATEGORY');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
 	}
-	require('./module/earendil.pl');
+	require './module/earendil.pl';
 	
 	# POSTデータの取得
 	$bbsCategory	= $Form->Get('BBS_CATEGORY');
@@ -619,49 +622,50 @@ sub FunctionBBSCreate
 	$dataPath		= '.' . $Sys->Get('DATA');
 	
 	# 掲示板ディレクトリの作成に成功したら、その下のディレクトリを作成する
-	if	(!(EARENDIL::CreateDirectory($createPath,$Sys->Get('PM-BDIR')))){
+	if (! (EARENDIL::CreateDirectory($createPath, $Sys->Get('PM-BDIR')))) {
 		return 2000;
 	}
-	eval{
+	eval {
 		# サブディレクトリ生成
-		EARENDIL::CreateDirectory("$createPath/i",$Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/dat",$Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/log",$Sys->Get('PM-LDIR'));
-		EARENDIL::CreateDirectory("$createPath/kako",$Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/pool",$Sys->Get('PM-ADIR'));
-		EARENDIL::CreateDirectory("$createPath/info",$Sys->Get('PM-ADIR'));
+		EARENDIL::CreateDirectory("$createPath/i", $Sys->Get('PM-BDIR'));
+		EARENDIL::CreateDirectory("$createPath/dat", $Sys->Get('PM-BDIR'));
+		EARENDIL::CreateDirectory("$createPath/log", $Sys->Get('PM-LDIR'));
+		EARENDIL::CreateDirectory("$createPath/kako", $Sys->Get('PM-BDIR'));
+		EARENDIL::CreateDirectory("$createPath/pool", $Sys->Get('PM-ADIR'));
+		EARENDIL::CreateDirectory("$createPath/info", $Sys->Get('PM-ADIR'));
 		
 		# デフォルトデータのコピー
-		EARENDIL::Copy("$dataPath/default_img.gif","$createPath/kanban.gif");
-		EARENDIL::Copy("$dataPath/default_bac.gif","$createPath/ba.gif");
-		EARENDIL::Copy("$dataPath/default_hed.txt","$createPath/head.txt");
-		EARENDIL::Copy("$dataPath/default_fot.txt","$createPath/foot.txt");
+		EARENDIL::Copy("$dataPath/default_img.gif", "$createPath/kanban.gif");
+		EARENDIL::Copy("$dataPath/default_bac.gif", "$createPath/ba.gif");
+		EARENDIL::Copy("$dataPath/default_hed.txt", "$createPath/head.txt");
+		EARENDIL::Copy("$dataPath/default_fot.txt", "$createPath/foot.txt");
 	};
-	return 1002 if($@ ne '');
-	push(@$pLog,"■掲示板ディレクトリ生成完了...[$createPath]");
+	return 1002 if ($@ ne '');
+	push @$pLog, "■掲示板ディレクトリ生成完了...[$createPath]";
 	
 	# 設定継承情報のコピー
-	if	($bbsInherit ne ''){
-		require('./module/nazguls.pl');
-		my	$BBS = new NAZGUL;
+	if ($bbsInherit ne '') {
+		my ($BBS, $inheritPath);
+		require './module/nazguls.pl';
+		$BBS = NAZGUL->new;
 		$BBS->Load($Sys);
-		eval{
-			$inheritPath = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR',$bbsInherit);
-			EARENDIL::Copy("$inheritPath/SETTING.TXT","$createPath/SETTING.TXT");
-			EARENDIL::Copy("$inheritPath/info/groups.cgi","$createPath/info/groups.cgi");
-			EARENDIL::Copy("$inheritPath/info/capgroups.cgi","$createPath/info/capgroups.cgi");
+		eval {
+			$inheritPath = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $bbsInherit);
+			EARENDIL::Copy("$inheritPath/SETTING.TXT", "$createPath/SETTING.TXT");
+			EARENDIL::Copy("$inheritPath/info/groups.cgi", "$createPath/info/groups.cgi");
+			EARENDIL::Copy("$inheritPath/info/capgroups.cgi", "$createPath/info/capgroups.cgi");
 		};
-		push(@$pLog,"■設定継承完了...[$inheritPath]");
+		push @$pLog, "■設定継承完了...[$inheritPath]";
 	}
 	
-	my		($bbsSetting);
+	my ($bbsSetting);
 	
 	# 掲示板設定情報生成
-	eval{
-		require('./module/isildur.pl');
-		$bbsSetting = new ISILDUR;
+	eval {
+		require './module/isildur.pl';
+		$bbsSetting = ISILDUR->new;
 		
-		$Sys->Set('BBS',$bbsDir);
+		$Sys->Set('BBS', $bbsDir);
 		$bbsSetting->Load($Sys);
 		
 		my $createPath2 = $Sys->Get('CGIPATH') . "/$createPath";
@@ -670,72 +674,73 @@ sub FunctionBBSCreate
 			for (my $i = 0 ; $i <= $#pathparse ; $i++) {
 				if ($pathparse[$i] eq '.') {
 					splice @pathparse, $i, 1;
-					redo;
+					redo if ($i <= $#pathparse);
 				}
 				if ($pathparse[$i] eq '..' && $i > 0 && $pathparse[$i - 1] ne '..') {
 					splice @pathparse, $i - 1, 2;
-					redo;
+					redo if ($i <= $#pathparse);
 				}
 			}
 			$createPath2 = join '/', @pathparse;
 		}
-		$bbsSetting->Set('BBS_TITLE',$bbsName);
-		$bbsSetting->Set('BBS_SUBTITLE',$bbsExplanation);
-		$bbsSetting->Set('BBS_BG_PICTURE',"$createPath2/ba.gif");
-		$bbsSetting->Set('BBS_TITLE_PICTURE',"$createPath2/kanban.gif");
+		$bbsSetting->Set('BBS_TITLE', $bbsName);
+		$bbsSetting->Set('BBS_SUBTITLE', $bbsExplanation);
+		$bbsSetting->Set('BBS_BG_PICTURE', "$createPath2/ba.gif");
+		$bbsSetting->Set('BBS_TITLE_PICTURE', "$createPath2/kanban.gif");
 		
 		$bbsSetting->Save($Sys);
 	};
-	return 2001 if($@ ne '');
-	push(@$pLog,"■掲示板設定完了...");
+	return 2001 if ($@ ne '');
+	push @$pLog, '■掲示板設定完了...';
 	
 	# 掲示板構成要素生成
-	eval{
-		require('./module/varda.pl');
-		$BBSAid = new VARDA;
+	eval {
+		my ($BBSAid);
+		require './module/varda.pl';
+		$BBSAid = VARDA->new;
 		
-		$Sys->Set('MODE','CREATE');
-		$BBSAid->Init($Sys,$bbsSetting);
+		$Sys->Set('MODE', 'CREATE');
+		$BBSAid->Init($Sys, $bbsSetting);
 		$BBSAid->CreateIndex();
 		$BBSAid->CreateIIndex();
 		$BBSAid->CreateSubback();
 	};
-	if($@ ne ''){
-		push(@$pLog,"$@");
+	if ($@ ne '') {
+		push @$pLog, "$@";
 		return 2002;
 	}
-	push(@$pLog,"■掲示板構\成要素生成完了...");
+	push @$pLog, '■掲示板構\成要素生成完了...';
 	
 	# 過去ログインデクス生成
-	eval{
-		require('./module/thorin.pl');
-		require('./module/celeborn.pl');
-		my	$PastLog = new CELEBORN;
-		my	$Page = new THORIN;
+	eval {
+		require './module/thorin.pl';
+		require './module/celeborn.pl';
+		my $PastLog = CELEBORN->new;
+		my $Page = THORIN->new;
 		$PastLog->Load($Sys);
 		$PastLog->UpdateInfo($Sys);
-		$PastLog->UpdateIndex($Sys,$Page);
+		$PastLog->UpdateIndex($Sys, $Page);
 		$PastLog->Save($Sys);
 	};
-	return 2003 if($@ ne '');
-	push(@$pLog,"■過去ログインデクス生成完了...");
+	return 2003 if ($@ ne '');
+	push @$pLog, '■過去ログインデクス生成完了...';
 	
 	# 掲示板情報に追加
-	eval{
-		require('./module/nazguls.pl');
-		my	$BBS = new NAZGUL;
+	eval {
+		require './module/nazguls.pl';
+		my $BBS = NAZGUL->new;
 		$BBS->Load($Sys);
-		$BBS->Add($bbsName,$bbsDir,$bbsExplanation,$bbsCategory);
+		$BBS->Add($bbsName, $bbsDir, $bbsExplanation, $bbsCategory);
 		$BBS->Save($Sys);
 	};
-	return 2004 if($@ ne '');
+	return 2004 if ($@ ne '');
 	
-	push(@$pLog,"■掲示板情報追加完了");
-	push(@$pLog,"　　　　名前：$bbsName");
-	push(@$pLog,"　　　　サブジェクト：$bbsExplanation");
-	push(@$pLog,"　　　　カテゴリ：$bbsCategory");
-	push(@$pLog,"<hr>以下のURLに掲示板を作成しました。");
-	push(@$pLog,"<a href=\"$createPath/index.html\" target=_blank>$createPath/index.html</a>");
+	push @$pLog, '■掲示板情報追加完了';
+	push @$pLog, "　　　　名前：$bbsName";
+	push @$pLog, "　　　　サブジェクト：$bbsExplanation";
+	push @$pLog, "　　　　カテゴリ：$bbsCategory";
+	push @$pLog, '<hr>以下のURLに掲示板を作成しました。';
+	push @$pLog, "<a href=\"$createPath/index.html\" target=_blank>$createPath/index.html</a>";
 	
 	return 0;
 }
@@ -752,33 +757,33 @@ sub FunctionBBSCreate
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBBSUpdate
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($BBSAid,$BBS,@bbsSet,$id,$bbs,$name);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($BBSAid, $BBS, @bbsSet, $id, $bbs, $name);
 	
-	require('./module/nazguls.pl');
-	require('./module/varda.pl');
-	$BBS = new NAZGUL;
-	$BBSAid = new VARDA;
+	require './module/nazguls.pl';
+	require './module/varda.pl';
+	$BBS = NAZGUL->new;
+	$BBSAid = VARDA->new;
 	
 	$BBS->Load($Sys);
 	@bbsSet = $Form->GetAtArray('BBSS');
 	
-	foreach	$id (@bbsSet){
-		$bbs = $BBS->Get('DIR',$id);
-		$name = $BBS->Get('NAME',$id);
-		$Sys->Set('BBS',$bbs);
-		eval{
-			$Sys->Set('MODE','CREATE');
-			$BBSAid->Init($Sys,undef);
+	foreach $id (@bbsSet) {
+		$bbs = $BBS->Get('DIR', $id);
+		$name = $BBS->Get('NAME', $id);
+		$Sys->Set('BBS', $bbs);
+		eval {
+			$Sys->Set('MODE', 'CREATE');
+			$BBSAid->Init($Sys, undef);
 			$BBSAid->CreateIndex();
 			$BBSAid->CreateIIndex();
 			$BBSAid->CreateSubback();
 		};
-		if($@ ne ''){
-			push(@$pLog,"$@");
+		if ($@ ne '') {
+			push @$pLog, "$@";
 			return 2002;
 		}
-		push(@$pLog,"■掲示板「$name」を更新しました。");
+		push @$pLog, "■掲示板「$name」を更新しました。";
 	}
 	return 0;
 }
@@ -795,27 +800,27 @@ sub FunctionBBSUpdate
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBBSInfoUpdate
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($BBS);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($BBS);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
 	
 	$BBS->Load($Sys);
-	$BBS->Update($Sys,'');
+	$BBS->Update($Sys, '');
 	$BBS->Save($Sys);
 	
-	push(@$pLog,"■掲示板情報の更新が正常に終了しました。");
-	push(@$pLog,"※カテゴリは全て「一般」に設定されたので、再設定してください。");
+	push @$pLog, '■掲示板情報の更新が正常に終了しました。';
+	push @$pLog, '※カテゴリは全て「一般」に設定されたので、再設定してください。';
 	
 	return 0;
 }
@@ -832,35 +837,37 @@ sub FunctionBBSInfoUpdate
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBBSDelete
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($BBS,@bbsSet,$id,$dir,$name,$path);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($BBS, @bbsSet, $id, $dir, $name, $path);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/nazguls.pl');
-	require('./module/earendil.pl');
-	$BBS = new NAZGUL;
+	require './module/nazguls.pl';
+	require './module/earendil.pl';
+	$BBS = NAZGUL->new;
 	$BBS->Load($Sys);
 	
 	@bbsSet = $Form->GetAtArray('BBSS');
 	
-	foreach	$id (@bbsSet){
-		$dir	= $BBS->Get('DIR',$id);
-		$name	= $BBS->Get('NAME',$id);
-		$path	= $Sys->Get('BBSPATH') . '/' . $dir;
+	foreach $id (@bbsSet) {
+		$dir	= $BBS->Get('DIR', $id);
+		$name	= $BBS->Get('NAME', $id);
+		$path	= $Sys->Get('BBSPATH') . "/$dir";
+		
+		next if (! defined $dir);
 		
 		# 掲示板ディレクトリと掲示板情報の削除
 		EARENDIL::DeleteDirectory($path);
 		$BBS->Delete($id);
 		
-		push(@$pLog,"■掲示板「$name($dir)」を削除しました。<br>");
+		push @$pLog, "■掲示板「$name($dir)」を削除しました。<br>";
 	}
 	$BBS->Save($Sys);
 	
@@ -879,34 +886,34 @@ sub FunctionBBSDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionCategoryAdd
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Category,$name,$subj);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Category, $name, $subj);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/nazguls.pl');
-	$Category = new ANGMAR;
+	require './module/nazguls.pl';
+	$Category = ANGMAR->new;
 	
 	$Category->Load($Sys);
 	
 	$name = $Form->Get('NAME');
 	$subj = $Form->Get('SUBJ');
 	
-	$Category->Add($name,$subj);
+	$Category->Add($name, $subj);
 	$Category->Save($Sys);
 	
 	# ログの設定
 	{
-		push(@$pLog,"<b>■ カテゴリ追加</b>");
-		push(@$pLog,"カテゴリ名称：$name");
-		push(@$pLog,"カテゴリ説明：$subj");
+		push @$pLog, '<b>■ カテゴリ追加</b>';
+		push @$pLog, "カテゴリ名称：$name";
+		push @$pLog, "カテゴリ説明：$subj";
 	}
 	
 	return 0;
@@ -924,38 +931,38 @@ sub FunctionCategoryAdd
 #------------------------------------------------------------------------------------------------------------
 sub FunctionCategoryDelete
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Category,$BBS,$name,$id,$bbsID);
-	my		($categorySet,@bbsSet);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Category, $BBS, $name, $id, $bbsID);
+	my (@categorySet, @bbsSet);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/nazguls.pl');
-	$BBS		= new NAZGUL;
-	$Category	= new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS		= NAZGUL->new;
+	$Category	= ANGMAR->new;
 	
 	$BBS->Load($Sys);
 	$Category->Load($Sys);
 	
 	@categorySet = $Form->GetAtArray('CATS');
 	
-	foreach	$id (@categorySet){
-		if	($id ne '0000000001'){
-			$name = $Category->Get('NAME',$id);
-			$BBS->GetKeySet('CATEGORY',$id,\@bbsSet);
-			foreach	$bbsID (@bbsSet){
-				$BBS->Set($bbsID,'CATEGORY','0000000001');
+	foreach $id (@categorySet) {
+		if ($id ne '0000000001') {
+			$name = $Category->Get('NAME', $id);
+			$BBS->GetKeySet('CATEGORY', $id, \@bbsSet);
+			foreach $bbsID (@bbsSet) {
+				$BBS->Set($bbsID, 'CATEGORY', '0000000001');
 			}
-			undef(@bbsSet);
+			undef @bbsSet;
 			$Category->Delete($id);
-			push(@$pLog,"カテゴリ「$name」を削除");
+			push @$pLog, "カテゴリ「$name」を削除";
 		}
 	}
 	$BBS->Save($Sys);
@@ -976,33 +983,33 @@ sub FunctionCategoryDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionCategoryChange
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($BBS,$Category,@bbsSet,$idCat,$nmCat,$nmBBS);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($BBS, $Category, @bbsSet, $idCat, $nmCat, $nmBBS, $id);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/nazguls.pl');
-	$BBS		= new NAZGUL;
-	$Category	= new ANGMAR;
+	require './module/nazguls.pl';
+	$BBS		= NAZGUL->new;
+	$Category	= ANGMAR->new;
 	
 	$BBS->Load($Sys);
 	$Category->Load($Sys);
 	
 	@bbsSet	= $Form->GetAtArray('BBSS');
 	$idCat	= $Form->Get('SEL_CATEGORY');
-	$nmCat	= $Category->Get('NAME',$idCat);
+	$nmCat	= $Category->Get('NAME', $idCat);
 	
-	foreach	$id (@bbsSet){
-		$BBS->Set($id,'CATEGORY',$idCat);
-		$nmBBS = $BBS->Get('NAME',$id);
-		push(@$pLog,"「$nmBBS」のカテゴリを「$nmCat」に変更");
+	foreach $id (@bbsSet) {
+		$BBS->Set($id, 'CATEGORY', $idCat);
+		$nmBBS = $BBS->Get('NAME', $id);
+		push @$pLog, "「$nmBBS」のカテゴリを「$nmCat」に変更";
 	}
 	
 	$BBS->Save($Sys);

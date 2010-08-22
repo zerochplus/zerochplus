@@ -13,6 +13,10 @@
 #============================================================================================================
 package	MELKOR;
 
+use strict;
+use warnings;
+no warnings 'redefine';
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -61,7 +65,7 @@ sub Init
 sub Load
 {
 	my $this = shift;
-	my ($var, $val, @dlist, $pSYS);
+	my ($var, $val, @dlist, $pSYS, $sysFile);
 	
 	eval {
 		# システム情報ハッシュの初期化
@@ -238,7 +242,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 1,										# デバグモード(*)
-		'VERSION'	=> '0ch BBS Plus 0.3.0a 2010/08/20',		# CGIバージョン
+		'VERSION'	=> '0ch BBS Plus 0.3.2a 2010/08/22',		# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
@@ -262,7 +266,8 @@ sub InitSystemValue
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
-		'SAMBA'		=> 10,										# 連続書き込み規制時間
+		'SAMBATM'	=> 10,										# 連続書き込み規制時間
+		'ISSAMBA'	=> 0,										# SAMBA規制
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
@@ -277,7 +282,7 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBA',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
+		'SAMBATM',	'ISSAMBA',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
 	);
 }
 

@@ -15,12 +15,14 @@
 #============================================================================================================
 package	PEREGRIN;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
 #	-------------------------------------------
-#	引　数：$bbspath : 対象BBSパス
-#			$kind    : ログ種類
+#	引　数：
 #	戻り値：モジュールオブジェクト
 #
 #------------------------------------------------------------------------------------------------------------
@@ -74,8 +76,8 @@ sub Load
 	my ($path, $file, $kind);
 	
 	undef @{$this->{'LOG'}};
-	$this->{'PATH'}	= "";
-	$this->{'FILE'}	= "";
+	$this->{'PATH'}	= '';
+	$this->{'FILE'}	= '';
 	$this->{'KIND'}	= 0;
 	$this->{'MAX'}	= $M->Get('ERRMAX');
 	$this->{'MAXA'}	= $M->Get('ADMMAX');
@@ -128,10 +130,11 @@ sub Save
 	
 	if ($this->{'KIND'}) {
 		eval { chmod 0666, "$path/$file"; };				# パーミッション設定
-		open LOG, ">$path/$file";
-		eval { flock LOG, 2; };
-		print LOG @{$this->{'LOG'}};
-		close LOG;
+		if (open LOG, "> $path/$file") {
+			flock LOG, 2;
+			print LOG @{$this->{'LOG'}};
+			close LOG;
+		}
 		eval { chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
 	}
 }
@@ -165,9 +168,10 @@ sub Set
 	$nm		= $this->{'NUM'};														# ログ数取得
 	$kind	= $this->{'KIND'};
 	$tsw	= $ENV{'REMOTE_HOST'};
+	$mode	= '0' if (! defined $mode);
 	
-	if ($mode ne "0") {
-		if ($mode eq "P") {
+	if ($mode ne '0') {
+		if ($mode eq 'P') {
 			$host = "$tsw($host)$ENV{'REMOTE_ADDR'}";
 		}
 		else {
@@ -184,7 +188,7 @@ sub Set
 		
 		if ($kind eq 3) {
 			
-			@logdat = split(/<>/, $data);
+			@logdat = split(/<>/, $data, 5);
 			
 			$work = join('<>',
 				$logdat[0],
@@ -223,20 +227,20 @@ sub Set
 #	ログ取得 - Get
 #	-------------------------------------------
 #	引　数：$ln : ログ番号
-#	戻り値：($tm,$data1,$data2,$host)
+#	戻り値：@data
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
 	my ($ln) = @_;
-	my ($tm, $data1, $data2, $host, $work);
+	my (@data, $work);
 	
 	$work = $this->{'LOG'}->[$ln];
 	chomp $work;
-	($tm, $data1, $data2, $host) = split(/<>/, $work);
+	@data = split(/<>/, $work);
 	
-	return ($tm, $data1, $data2, $host);
+	return @data;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -255,14 +259,16 @@ sub Search
 {
 	my $this = shift;
 	my ($data, $f) = @_;
-	my ($key, $dmy, $num, $i, $dat);
+	my ($key, $dmy, $num, $i, $dat, $kind);
+	
+	$kind = $this->{'KIND'};
 	
 	if ($f == 1) {												# data1で検索
 		$num = @{$this->{'LOG'}};
 		for ($i = $num - 1 ; $i >= 0 ; $i--) {
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
-			($key, $dat) = (split(/<>/, $dmy))[5, 7];
+			($key, $dat) = (split(/<>/, $dmy))[($kind == 3 ? (5, 7) : (1, 3))];
 			if ($data eq $key) {
 				return $dat;
 			}
@@ -274,7 +280,7 @@ sub Search
 		for ($i = $dat - 1;$i >= 0;$i--) {
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
-			(undef, undef, undef, $key) = split(/<>/, $dmy);
+			$key = (split(/<>/, $dmy))[($kind == 3 ? 5 : 3)];
 			if ($data eq $key) {
 				$num++;
 			}
@@ -297,20 +303,19 @@ sub IsTime
 {
 	my $this = shift;
 	my ($tmn, $host) = @_;
-	my ($i, $n, $work, $tm, $nw, $hst);
+	my ($i, $n, $work, $tm, $nw, $hst, $kind);
 	
 	$nw = time;
 	$n = @{$this->{'LOG'}};
+	$kind = $this->{'KIND'};
+	
+	return 0 if ($kind == 3);
 	
 	for ($i = $n - 1 ; $i >= 0 ; $i--) {
 		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
 		chomp $hst;
-		if ($host eq $hst) {
-			if ($nw - $tm > $tmn) { return 0; }
-			else {
-				return ($tmn - ($nw - $tm));	# 残り秒数を返す
-			}
-		}
+		next if ($host ne $hst);
+		return (($_ = $tmn - ($nw - $tm)) > 0 ? $_ : 0);	# 残り秒数を返す
 	}
 	return 0;
 }
@@ -329,16 +334,24 @@ sub IsSamba
 {
 	my $this = shift;
 	my ($sb, $host) = @_;
-	my (@iplist, $i, $n, $tm, $nw, $hst);
+	my (@iplist, $i, $j, $n, $tm, $nw, $hst, $kind);
 	
 	$nw = time;
 	$n = @{$this->{'LOG'}};
+	$kind = $this->{'KIND'};
 	
-	for ($i = 0 ; $i < $n ; $i++) {
+	return (0, 0) if ($kind != 6);
+	
+	for ($i = $n - 1, $j = $nw ; $i >= 0 ; $i--) {
 		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
 		chomp $hst;
-		if (($host eq $hst) && ($sb >= $nw - $tm)) {
-			push(@iplist, $tm);
+		next if ($host ne $hst);
+		if ($sb > $j - $tm) {
+			push @iplist, $tm;
+			$j = $tm;
+		}
+		else {
+			last;
 		}
 	}
 	$n = @iplist;

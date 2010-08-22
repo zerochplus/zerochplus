@@ -11,6 +11,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -21,13 +24,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		'LOG' => \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -44,54 +47,54 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$BASE,$Page);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $BASE, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	
 	# 管理情報を登録
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('ADMIN', $pSys);
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys);
+	SetMenuList($BASE, $pSys);
 	
-	if		($subMode eq 'INFO'){													# システム情報画面
-		PrintSystemInfo($Page,$Sys,$Form);
+	if ($subMode eq 'INFO') {														# システム情報画面
+		PrintSystemInfo($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'BASIC'){													# 基本設定画面
-		PrintBasicSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'BASIC') {													# 基本設定画面
+		PrintBasicSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'PERMISSION'){												# パーミッション設定画面
-		PrintPermissionSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'PERMISSION') {												# パーミッション設定画面
+		PrintPermissionSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'LIMITTER'){												# リミッタ設定画面
-		PrintLimitterSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'LIMITTER') {												# リミッタ設定画面
+		PrintLimitterSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'OTHER'){													# その他設定画面
-		PrintOtherSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'OTHER') {													# その他設定画面
+		PrintOtherSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'PLUS'){													# ぜろプラスオリジナル
-		PrintPlusSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'PLUS') {													# ぜろプラスオリジナル
+		PrintPlusSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'PLUGIN'){													# 拡張機能設定画面
-		PrintPluginSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'PLUGIN') {													# 拡張機能設定画面
+		PrintPluginSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# システム設定完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('システム設定処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# システム設定完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('システム設定処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# システム設定失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# システム設定失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
-	$BASE->Print($Sys->Get('_TITLE'),1);
+	$BASE->Print($Sys->Get('_TITLE'), 1);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -106,49 +109,49 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err);
 	
 	# 管理情報を登録
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('ADMIN', $pSys);
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 0;
 	
-	if	($subMode eq 'BASIC'){														# 基本設定
-		$err = FunctionBasicSetting($Sys,$Form,$this->{'LOG'});
+	if ($subMode eq 'BASIC') {														# 基本設定
+		$err = FunctionBasicSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'PERMISSION'){												# パーミッション設定
-		$err = FunctionPermissionSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'PERMISSION') {												# パーミッション設定
+		$err = FunctionPermissionSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'LIMITTER'){												# 制限設定
-		$err = FunctionLimitterSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'LIMITTER') {												# 制限設定
+		$err = FunctionLimitterSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'OTHER'){													# その他設定
-		$err = FunctionOtherSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'OTHER') {													# その他設定
+		$err = FunctionOtherSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'PLUS'){													# ぜろプラスオリジナル
-		$err = FunctionPlusSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'PLUS') {													# ぜろプラスオリジナル
+		$err = FunctionPlusSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SET_PLUGIN'){												# 拡張機能情報設定
-		$err = FunctionPluginSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'SET_PLUGIN') {												# 拡張機能情報設定
+		$err = FunctionPluginSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'UPDATE_PLUGIN'){											# 拡張機能情報更新
-		$err = FunctionPluginUpdate($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'UPDATE_PLUGIN') {											# 拡張機能情報更新
+		$err = FunctionPluginUpdate($Sys, $Form, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"SYSTEM_SETTING($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"SYSTEM_SETTING($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"SYSTEM_SETTING($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"SYSTEM_SETTING($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -161,20 +164,20 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys) = @_;
+	my ($Base, $pSys) = @_;
 	
-	$Base->SetMenu("情報","'sys.setting','DISP','INFO'");
+	$Base->SetMenu('情報', "'sys.setting','DISP','INFO'");
 	
 	# システム管理権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},0,'*')){
-		$Base->SetMenu("<hr>",'');
-		$Base->SetMenu("基本設定","'sys.setting','DISP','BASIC'");
-		$Base->SetMenu("パーミッション設定","'sys.setting','DISP','PERMISSION'");
-		$Base->SetMenu("リミッタ設定","'sys.setting','DISP','LIMITTER'");
-		$Base->SetMenu("その他設定","'sys.setting','DISP','OTHER'");
-		$Base->SetMenu("ぜろプラオリジナル設定","'sys.setting','DISP','PLUS'");
-		$Base->SetMenu("<hr>",'');
-		$Base->SetMenu("拡張機能\設定","'sys.setting','DISP','PLUGIN'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('基本設定', "'sys.setting','DISP','BASIC'");
+		$Base->SetMenu('パーミッション設定', "'sys.setting','DISP','PERMISSION'");
+		$Base->SetMenu('リミッタ設定', "'sys.setting','DISP','LIMITTER'");
+		$Base->SetMenu('その他設定', "'sys.setting','DISP','OTHER'");
+		$Base->SetMenu('ぜろプラオリジナル設定', "'sys.setting','DISP','PLUS'");
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('拡張機能\設定', "'sys.setting','DISP','PLUGIN'");
 	}
 }
 
@@ -190,9 +193,9 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintSystemInfo
 {
-	my		($Page,$SYS,$Form) = @_;
+	my ($Page, $SYS, $Form) = @_;
 	
-	$SYS->Set('_TITLE','0ch Administrator Information');
+	$SYS->Set('_TITLE', '0ch Administrator Information');
 	
 	$Page->Print("<br><b>0ch BBS - Administrator Script</b>");
 }
@@ -209,10 +212,10 @@ sub PrintSystemInfo
 #------------------------------------------------------------------------------------------------------------
 sub PrintBasicSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($server,$cgi,$bbs,$info,$data,$common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($server, $cgi, $bbs, $info, $data, $common);
 	
-	$SYS->Set('_TITLE','System Base Setting');
+	$SYS->Set('_TITLE', 'System Base Setting');
 	
 	$server	= $SYS->Get('SERVER');
 	$cgi	= $SYS->Get('CGIPATH');
@@ -221,7 +224,7 @@ sub PrintBasicSetting
 	$data	= $SYS->Get('DATA');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','BASIC');\"";
-	$server = 'http://' . $ENV{'SERVER_NAME'}	if	($server eq '');
+	$server = 'http://' . $ENV{'SERVER_NAME'}	if ($server eq '');
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2>各項目を設定して[設定]ボタンを押してください。</td></tr>\n");
@@ -254,20 +257,20 @@ sub PrintBasicSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintPermissionSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($datP,$txtP,$logP,$admP,$admDP,$bbsDP,$logDP);
-	my		($common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($datP, $txtP, $logP, $admP, $stopP, $admDP, $bbsDP, $logDP);
+	my ($common);
 	
-	$SYS->Set('_TITLE','System Permission Setting');
+	$SYS->Set('_TITLE', 'System Permission Setting');
 	
-	$datP	= sprintf("%o",$SYS->Get('PM-DAT'));
-	$txtP	= sprintf("%o",$SYS->Get('PM-TXT'));
-	$logP	= sprintf("%o",$SYS->Get('PM-LOG'));
-	$admP	= sprintf("%o",$SYS->Get('PM-ADM'));
-	$stopP	= sprintf("%o",$SYS->Get('PM-STOP'));
-	$admDP	= sprintf("%o",$SYS->Get('PM-ADIR'));
-	$bbsDP	= sprintf("%o",$SYS->Get('PM-BDIR'));
-	$logDP	= sprintf("%o",$SYS->Get('PM-LDIR'));
+	$datP	= sprintf("%o", $SYS->Get('PM-DAT'));
+	$txtP	= sprintf("%o", $SYS->Get('PM-TXT'));
+	$logP	= sprintf("%o", $SYS->Get('PM-LOG'));
+	$admP	= sprintf("%o", $SYS->Get('PM-ADM'));
+	$stopP	= sprintf("%o", $SYS->Get('PM-STOP'));
+	$admDP	= sprintf("%o", $SYS->Get('PM-ADIR'));
+	$bbsDP	= sprintf("%o", $SYS->Get('PM-BDIR'));
+	$logDP	= sprintf("%o", $SYS->Get('PM-LDIR'));
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PERMISSION');\"";
 	
@@ -314,10 +317,10 @@ sub PrintPermissionSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintLimitterSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		(@vSYS);
+	my ($Page, $SYS, $Form) = @_;
+	my (@vSYS, $common);
 	
-	$SYS->Set('_TITLE','System Limitter Setting');
+	$SYS->Set('_TITLE', 'System Limitter Setting');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','LIMITTER');\"";
 	$vSYS[0] = $SYS->Get('RESMAX');
@@ -362,12 +365,12 @@ sub PrintLimitterSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintOtherSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($urlLink,$linkSt,$linkEd,$pathKind,$headText,$headUrl,$FastMode);
-	my		($linkChk,$pathInfo,$pathQuery,$fastMode);
-	my		($common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($urlLink, $linkSt, $linkEd, $pathKind, $headText, $headUrl, $FastMode);
+	my ($linkChk, $pathInfo, $pathQuery, $fastMode);
+	my ($common);
 	
-	$SYS->Set('_TITLE','System Other Setting');
+	$SYS->Set('_TITLE', 'System Other Setting');
 	
 	$urlLink	= $SYS->Get('URLLINK');
 	$linkSt		= $SYS->Get('LINKST');
@@ -431,17 +434,18 @@ sub PrintOtherSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintPlusSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Banner,$Kakiko,$Counter,$Samba,$Prtext,$Prlink,$Trip12);
-	my		($banner,$kakiko,$trip12);
-	my		($common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Prtext, $Prlink, $Trip12);
+	my ($banner, $kakiko, $trip12, $issamba);
+	my ($common);
 	
-	$SYS->Set('_TITLE','System ZerochPlus Original Setting');
+	$SYS->Set('_TITLE', 'System ZerochPlus Original Setting');
 	
 	$Banner		= $SYS->Get('BANNER');
 	$Kakiko		= $SYS->Get('KAKIKO');
 	$Counter	= $SYS->Get('COUNTER');
-	$Samba		= $SYS->Get('SAMBA');
+	$Samba		= $SYS->Get('SAMBATM');
+	$isSamba	= $SYS->Get('ISSAMBA');
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
 	$Trip12		= $SYS->Get('TRIP12');
@@ -449,6 +453,7 @@ sub PrintPlusSetting
 	$banner		= ($Banner == 1 ? 'checked' : '');
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
 	$trip12		= ($Trip12 == 1 ? 'checked' : '');
+	$issamba	= ($isSamba == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
 	
@@ -472,9 +477,11 @@ sub PrintPlusSetting
 	$Page->Print("<tr><td>同じIPからの書き込みの文字数が変化しない場合規制する</td>");
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制</td></tr>\n");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制 / Samba規制</td></tr>\n");
 	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
-	$Page->Print("<td><input type=text size=60 name=SAMBA value=\"$Samba\"></td></tr>\n");
+	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
+	$Page->Print("<tr><td>Samba規制にする</td>");
+	$Page->Print("<td><input type=checkbox name=ISSAMBA $issamba value=on></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
@@ -499,20 +506,20 @@ sub PrintPlusSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintPluginSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		(@pluginSet,$num,$common);
+	my ($Page, $SYS, $Form) = @_;
+	my (@pluginSet, $num, $common, $Plugin);
 	
-	$SYS->Set('_TITLE','System Plugin Setting');
+	$SYS->Set('_TITLE', 'System Plugin Setting');
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC'";
 	
-	require('./module/athelas.pl');
-	$Plugin = new ATHELAS;
+	require './module/athelas.pl';
+	$Plugin = ATHELAS->new;
 	$Plugin->Load($SYS);
-	$num = $Plugin->GetKeySet('ALL','',\@pluginSet);
+	$num = $Plugin->GetKeySet('ALL', '', \@pluginSet);
 	
 	# 拡張機能が存在する場合は有効・無効設定画面を表示
-	if($num > 0){
-		my	($id,$file,$name,$expl,$valid);
+	if ($num > 0) {
+		my ($id, $file, $class, $name, $expl, $valid);
 		
 		$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 		$Page->Print("<tr><td colspan=4>有効にする機能\にチェックを入れてください。</td></tr>\n");
@@ -523,12 +530,12 @@ sub PrintPluginSetting
 		$Page->Print("<td class=\"DetailTitle\">File</td>");
 		$Page->Print("<td class=\"DetailTitle\">Class Name</td></tr>\n");
 		
-		foreach $id (@pluginSet){
-			$file = $Plugin->Get('FILE',$id);
-			$class = $Plugin->Get('CLASS',$id);
-			$name = $Plugin->Get('NAME',$id);
-			$expl = $Plugin->Get('EXPL',$id);
-			$valid = $Plugin->Get('VALID',$id) == 1 ? 'checked' : '';
+		foreach $id (@pluginSet) {
+			$file = $Plugin->Get('FILE', $id);
+			$class = $Plugin->Get('CLASS', $id);
+			$name = $Plugin->Get('NAME', $id);
+			$expl = $Plugin->Get('EXPL', $id);
+			$valid = $Plugin->Get('VALID', $id) == 1 ? 'checked' : '';
 			$Page->Print("<tr><td><input type=checkbox name=PLUGIN_VALID value=$id $valid>");
 			$Page->Print(" $name</td><td>$expl</td><td>$file</td><td>$class</td></tr>\n");
 		}
@@ -536,7 +543,7 @@ sub PrintPluginSetting
 		$Page->Print("<tr><td colspan=4 align=right>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'SET_PLUGIN');\"> ");
 	}
-	else{
+	else {
 		$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 		$Page->Print("<tr><td><hr></td></tr>\n");
 		$Page->Print("<tr><td><b>プラグインは存在しません。</b></td></tr>\n");
@@ -560,45 +567,45 @@ sub PrintPluginSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBasicSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($SYSTEM);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('SERVER','CGIPATH','BBSPATH','INFO','DATA');
-		if	(!$Form->IsInput(@inList)){
+		my @inList = ('SERVER', 'CGIPATH', 'BBSPATH', 'INFO', 'DATA');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
 	}
-	require('./module/melkor.pl');
-	$SYSTEM = new MELKOR;
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
 	$SYSTEM->Init();
 	
-	$SYSTEM->Set('SERVER',$Form->Get('SERVER'));
-	$SYSTEM->Set('CGIPATH',$Form->Get('CGIPATH'));
-	$SYSTEM->Set('BBSPATH',$Form->Get('BBSPATH'));
-	$SYSTEM->Set('INFO',$Form->Get('INFO'));
-	$SYSTEM->Set('DATA',$Form->Get('DATA'));
+	$SYSTEM->Set('SERVER', $Form->Get('SERVER'));
+	$SYSTEM->Set('CGIPATH', $Form->Get('CGIPATH'));
+	$SYSTEM->Set('BBSPATH', $Form->Get('BBSPATH'));
+	$SYSTEM->Set('INFO', $Form->Get('INFO'));
+	$SYSTEM->Set('DATA', $Form->Get('DATA'));
 	
 	$SYSTEM->Save();
 	
 	# ログの設定
 	{
-		push(@$pLog,"■ 基本設定");
-		push(@$pLog,"　　　 サーバ：" . $Form->Get('SERVER'));
-		push(@$pLog,"　　　 CGIパス：" . $Form->Get('CGIPATH'));
-		push(@$pLog,"　　　 掲示板パス：" . $Form->Get('BBSPATH'));
-		push(@$pLog,"　　　 管理データフォルダ：" . $Form->Get('INFO'));
-		push(@$pLog,"　　　 基本データフォルダ：" . $Form->Get('DATA'));
+		push @$pLog, '■ 基本設定';
+		push @$pLog, '　　　 サーバ：' . $Form->Get('SERVER');
+		push @$pLog, '　　　 CGIパス：' . $Form->Get('CGIPATH');
+		push @$pLog, '　　　 掲示板パス：' . $Form->Get('BBSPATH');
+		push @$pLog, '　　　 管理データフォルダ：' . $Form->Get('INFO');
+		push @$pLog, '　　　 基本データフォルダ：' . $Form->Get('DATA');
 	}
 	return 0;
 }
@@ -615,44 +622,44 @@ sub FunctionBasicSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionPermissionSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($SYSTEM);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/melkor.pl');
-	$SYSTEM = new MELKOR;
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
 	$SYSTEM->Init();
 	
-	$SYSTEM->Set('PM-DAT',oct($Form->Get('PERM_DAT')));
-	$SYSTEM->Set('PM-TXT',oct($Form->Get('PERM_TXT')));
-	$SYSTEM->Set('PM-LOG',oct($Form->Get('PERM_LOG')));
-	$SYSTEM->Set('PM-ADM',oct($Form->Get('PERM_ADMIN')));
-	$SYSTEM->Set('PM-STOP',oct($Form->Get('PERM_STOP')));
-	$SYSTEM->Set('PM-ADIR',oct($Form->Get('PERM_ADMIN_DIR')));
-	$SYSTEM->Set('PM-BDIR',oct($Form->Get('PERM_BBS_DIR')));
-	$SYSTEM->Set('PM-LDIR',oct($Form->Get('PERM_LOG_DIR')));
+	$SYSTEM->Set('PM-DAT', oct($Form->Get('PERM_DAT')));
+	$SYSTEM->Set('PM-TXT', oct($Form->Get('PERM_TXT')));
+	$SYSTEM->Set('PM-LOG', oct($Form->Get('PERM_LOG')));
+	$SYSTEM->Set('PM-ADM', oct($Form->Get('PERM_ADMIN')));
+	$SYSTEM->Set('PM-STOP', oct($Form->Get('PERM_STOP')));
+	$SYSTEM->Set('PM-ADIR', oct($Form->Get('PERM_ADMIN_DIR')));
+	$SYSTEM->Set('PM-BDIR', oct($Form->Get('PERM_BBS_DIR')));
+	$SYSTEM->Set('PM-LDIR', oct($Form->Get('PERM_LOG_DIR')));
 	
 	$SYSTEM->Save();
 	
 	# ログの設定
 	{
-		push(@$pLog,"■ 基本設定");
-		push(@$pLog,"　　　 datパーミッション：" . $Form->Get('PERM_DAT'));
-		push(@$pLog,"　　　 txtパーミッション：" . $Form->Get('PERM_TXT'));
-		push(@$pLog,"　　　 logパーミッション：" . $Form->Get('PERM_LOG'));
-		push(@$pLog,"　　　 管理ファイルパーミッション：" . $Form->Get('PERM_ADMIN'));
-		push(@$pLog,"　　　 停止スレッドパーミッション：" . $Form->Get('PERM_STOP'));
-		push(@$pLog,"　　　 管理DIRパーミッション：" . $Form->Get('PERM_ADMIN_DIR'));
-		push(@$pLog,"　　　 掲示板DIRパーミッション：" . $Form->Get('PERM_BBS_DIR'));
-		push(@$pLog,"　　　 ログDIRパーミッション：" . $Form->Get('PERM_LOG_DIR'));
+		push @$pLog, '■ 基本設定';
+		push @$pLog, '　　　 datパーミッション：' . $Form->Get('PERM_DAT');
+		push @$pLog, '　　　 txtパーミッション：' . $Form->Get('PERM_TXT');
+		push @$pLog, '　　　 logパーミッション：' . $Form->Get('PERM_LOG');
+		push @$pLog, '　　　 管理ファイルパーミッション：' . $Form->Get('PERM_ADMIN');
+		push @$pLog, '　　　 停止スレッドパーミッション：' . $Form->Get('PERM_STOP');
+		push @$pLog, '　　　 管理DIRパーミッション：' . $Form->Get('PERM_ADMIN_DIR');
+		push @$pLog, '　　　 掲示板DIRパーミッション：' . $Form->Get('PERM_BBS_DIR');
+		push @$pLog, '　　　 ログDIRパーミッション：' . $Form->Get('PERM_LOG_DIR');
 	}
 	return 0;
 }
@@ -669,40 +676,40 @@ sub FunctionPermissionSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionLimitterSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($SYSTEM);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/melkor.pl');
-	$SYSTEM = new MELKOR;
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
 	$SYSTEM->Init();
 	
-	$SYSTEM->Set('RESMAX',$Form->Get('RESMAX'));
-	$SYSTEM->Set('SUBMAX',$Form->Get('SUBMAX'));
-	$SYSTEM->Set('ANKERS',$Form->Get('ANKERS'));
-	$SYSTEM->Set('ERRMAX',$Form->Get('ERRMAX'));
-	$SYSTEM->Set('HISMAX',$Form->Get('HISMAX'));
-	$SYSTEM->Set('ADMMAX',$Form->Get('ADMMAX'));
+	$SYSTEM->Set('RESMAX', $Form->Get('RESMAX'));
+	$SYSTEM->Set('SUBMAX', $Form->Get('SUBMAX'));
+	$SYSTEM->Set('ANKERS', $Form->Get('ANKERS'));
+	$SYSTEM->Set('ERRMAX', $Form->Get('ERRMAX'));
+	$SYSTEM->Set('HISMAX', $Form->Get('HISMAX'));
+	$SYSTEM->Set('ADMMAX', $Form->Get('ADMMAX'));
 	
 	$SYSTEM->Save();
 	
 	# ログの設定
 	{
-		push(@$pLog,"■ 基本設定");
-		push(@$pLog,"　　　 subject最大数：" . $Form->Get('SUBMAX'));
-		push(@$pLog,"　　　 レス最大数：" . $Form->Get('RESMAX'));
-		push(@$pLog,"　　　 アンカー最大数：" . $Form->Get('ANKERS'));
-		push(@$pLog,"　　　 エラーログ最大数：" . $Form->Get('ERRMAX'));
-		push(@$pLog,"　　　 書き込み履歴最大数：" . $Form->Get('HISMAX'));
-		push(@$pLog,"　　　 管理操作ログ最大数：" . $Form->Get('ADMMAX'));
+		push @$pLog, '■ 基本設定';
+		push @$pLog, '　　　 subject最大数：' . $Form->Get('SUBMAX');
+		push @$pLog, '　　　 レス最大数：' . $Form->Get('RESMAX');
+		push @$pLog, '　　　 アンカー最大数：' . $Form->Get('ANKERS');
+		push @$pLog, '　　　 エラーログ最大数：' . $Form->Get('ERRMAX');
+		push @$pLog, '　　　 書き込み履歴最大数：' . $Form->Get('HISMAX');
+		push @$pLog, '　　　 管理操作ログ最大数：' . $Form->Get('ADMMAX');
 	}
 	return 0;
 }
@@ -719,42 +726,42 @@ sub FunctionLimitterSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionOtherSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($SYSTEM);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/melkor.pl');
-	$SYSTEM = new MELKOR;
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
 	$SYSTEM->Init();
 	
-	$SYSTEM->Set('HEADTEXT',$Form->Get('HEADTEXT'));
-	$SYSTEM->Set('HEADURL',$Form->Get('HEADURL'));
-	$SYSTEM->Set('URLLINK',($Form->Equal('URLLINK','on') ? 'TRUE' : 'FALSE'));
-	$SYSTEM->Set('LINKST',$Form->Get('LINKST'));
-	$SYSTEM->Set('LINKED',$Form->Get('LINKED'));
-	$SYSTEM->Set('PATHKIND',$Form->Get('PATHKIND'));
-	$SYSTEM->Set('FASTMODE',($Form->Equal('FASTMODE','on') ? 1 : 0));
+	$SYSTEM->Set('HEADTEXT', $Form->Get('HEADTEXT'));
+	$SYSTEM->Set('HEADURL', $Form->Get('HEADURL'));
+	$SYSTEM->Set('URLLINK', ($Form->Equal('URLLINK', 'on') ? 'TRUE' : 'FALSE'));
+	$SYSTEM->Set('LINKST', $Form->Get('LINKST'));
+	$SYSTEM->Set('LINKED', $Form->Get('LINKED'));
+	$SYSTEM->Set('PATHKIND', $Form->Get('PATHKIND'));
+	$SYSTEM->Set('FASTMODE', ($Form->Equal('FASTMODE', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
 	# ログの設定
 	{
-		push(@$pLog,"■ その他設定");
-		push(@$pLog,"　　　 ヘッダテキスト：" . $SYSTEM->Get('HEADTEXT'));
-		push(@$pLog,"　　　 ヘッダURL：" . $SYSTEM->Get('HEADURL'));
-		push(@$pLog,"　　　 URL自動リンク：" . $SYSTEM->Get('URLLINK'));
-		push(@$pLog,"　　　 　開始時間：" . $SYSTEM->Get('LINKST'));
-		push(@$pLog,"　　　 　終了時間：" . $SYSTEM->Get('LINKED'));
-		push(@$pLog,"　　　 PATH種別：" . $SYSTEM->Get('PATHKIND'));
-		push(@$pLog,"　　　 高速モード：" . $SYSTEM->Get('FASTMODE'));
+		push @$pLog, '■ その他設定';
+		push @$pLog, '　　　 ヘッダテキスト：' . $SYSTEM->Get('HEADTEXT');
+		push @$pLog, '　　　 ヘッダURL：' . $SYSTEM->Get('HEADURL');
+		push @$pLog, '　　　 URL自動リンク：' . $SYSTEM->Get('URLLINK');
+		push @$pLog, '　　　 　開始時間：' . $SYSTEM->Get('LINKST');
+		push @$pLog, '　　　 　終了時間：' . $SYSTEM->Get('LINKED');
+		push @$pLog, '　　　 PATH種別：' . $SYSTEM->Get('PATHKIND');
+		push @$pLog, '　　　 高速モード：' . $SYSTEM->Get('FASTMODE');
 	}
 	return 0;
 }
@@ -774,41 +781,43 @@ sub FunctionOtherSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionPlusSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($SYSTEM);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/melkor.pl');
-	$SYSTEM = new MELKOR;
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
 	$SYSTEM->Init();
 	
-	$SYSTEM->Set('COUNTER',$Form->Get('COUNTER'));
-	$SYSTEM->Set('PRTEXT',$Form->Get('PRTEXT'));
-	$SYSTEM->Set('PRLINK',$Form->Get('PRLINK'));
-	$SYSTEM->Set('BANNER',($Form->Equal('BANNER','on') ? 1 : 0));
-	$SYSTEM->Set('KAKIKO',($Form->Equal('KAKIKO','on') ? 1 : 0));
-	$SYSTEM->Set('SAMBA',$Form->Get('SAMBA'));
-	$SYSTEM->Set('TRIP12',($Form->Equal('TRIP12','on') ? 1 : 0));
+	$SYSTEM->Set('COUNTER', $Form->Get('COUNTER'));
+	$SYSTEM->Set('PRTEXT', $Form->Get('PRTEXT'));
+	$SYSTEM->Set('PRLINK', $Form->Get('PRLINK'));
+	$SYSTEM->Set('BANNER', ($Form->Equal('BANNER', 'on') ? 1 : 0));
+	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
+	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
+	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
+	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
 	# ログの設定
 	{
-		push(@$pLog,"　　　 カウンターアカウント：" . $SYSTEM->Get('COUNTER'));
-		push(@$pLog,"　　　 PR欄表\示文字列：" . $SYSTEM->Get('PRTEXT'));
-		push(@$pLog,"　　　 PR欄リンクURL：" . $SYSTEM->Get('PRLINK'));
-		push(@$pLog,"　　　 バナー表\示：" . $SYSTEM->Get('BANNER'));
-		push(@$pLog,"　　　 2重カキコ規制：" . $SYSTEM->Get('KAKIKO'));
-		push(@$pLog,"　　　 連続投稿規制秒数：" . $SYSTEM->Get('SAMBA'));
-		push(@$pLog,"　　　 12桁トリップ：" . $SYSTEM->Get('TRIP12'));
+		push @$pLog, '　　　 カウンターアカウント：' . $SYSTEM->Get('COUNTER');
+		push @$pLog, '　　　 PR欄表\示文字列：' . $SYSTEM->Get('PRTEXT');
+		push @$pLog, '　　　 PR欄リンクURL：' . $SYSTEM->Get('PRLINK');
+		push @$pLog, '　　　 バナー表\示：' . $SYSTEM->Get('BANNER');
+		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
+		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
+		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
+		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
 	}
 	return 0;
 }
@@ -825,37 +834,37 @@ sub FunctionPlusSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionPluginSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Plugin);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Plugin);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/athelas.pl');
-	$Plugin = new ATHELAS;
+	require './module/athelas.pl';
+	$Plugin = ATHELAS->new;
 	$Plugin->Load($Sys);
 	
-	my	(@pluginSet,@validSet,$id,$valid);
+	my (@pluginSet, @validSet, $id, $valid);
 	
-	$Plugin->GetKeySet('ALL','',\@pluginSet);
+	$Plugin->GetKeySet('ALL', '', \@pluginSet);
 	@validSet = $Form->GetAtArray('PLUGIN_VALID');
 	
-	foreach $id (@pluginSet){
+	foreach $id (@pluginSet) {
 		$valid = 0;
-		foreach (@validSet){
-			if($_ eq $id){
+		foreach (@validSet) {
+			if ($_ eq $id) {
 				$valid = 1;
 				last;
 			}
 		}
-		push(@$pLog,$Plugin->Get('NAME',$id) . " を" . ($valid ? '有効' : '無効') . "に設定しました。");
-		$Plugin->Set($id,'VALID',$valid);
+		push @$pLog, $Plugin->Get('NAME', $id) . ' を' . ($valid ? '有効' : '無効') . 'に設定しました。';
+		$Plugin->Set($id, 'VALID', $valid);
 	}
 	$Plugin->Save($Sys);
 	
@@ -874,20 +883,20 @@ sub FunctionPluginSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionPluginUpdate
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Plugin);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Plugin);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,0,'*')) == 0){
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/athelas.pl');
-	$Plugin = new ATHELAS;
+	require './module/athelas.pl';
+	$Plugin = ATHELAS->new;
 	
 	# 情報の更新と保存
 	$Plugin->Load($Sys);
@@ -896,8 +905,8 @@ sub FunctionPluginUpdate
 	
 	# ログの設定
 	{
-		push(@$pLog,"■ プラグイン情報の更新");
-		push(@$pLog,"　プラグイン情報の更新を完了しました。");
+		push @$pLog, '■ プラグイン情報の更新';
+		push @$pLog, '　プラグイン情報の更新を完了しました。';
 	}
 	return 0;
 }

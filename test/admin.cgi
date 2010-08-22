@@ -8,6 +8,9 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
+
 # CGIの実行結果を終了コードとする
 exit(AdminCGI());
 
@@ -22,40 +25,47 @@ exit(AdminCGI());
 sub AdminCGI
 {
 	my ($Sys, $Form, %SYS);
-	my ($oModule, $modName, $userID);
+	my ($oModule, $modName, $userID, $name, $pass);
 	
 	# システム初期設定
 	SystemSetting(\%SYS);
 	
 	# 0chシステム情報を取得
-	require "$SYS{'MAINCGI'}/module/melkor.pl";
+	require "./module/melkor.pl";
 	$Sys = new MELKOR;
 	$Sys->Init();
 	$Sys->Set('ADMIN', \%SYS);
 	$SYS{'SECINFO'}->Init($Sys);
 	
 	# フォーム情報を取得
-	require "$SYS{'MAINCGI'}/module/samwise.pl";
+	require "./module/samwise.pl";
 	$Form = new SAMWISE;
 	$Form->DecodeForm(0);
+	$Form->Set('FALSE', 0);
+	
+	$name = $Form->Get('UserName');
+	$pass = $Form->Get('PassWord');
+	$name = '' if (! defined $name);
+	$pass = '' if (! defined $pass);
 	
 	# ログインユーザ設定
-	$userID	= $SYS{'SECINFO'}->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+	$userID = $SYS{'SECINFO'}->IsLogin($name, $pass);
 	$SYS{'USER'} = $userID;
 	
 	# 処理モジュール名を取得
-	$modName = $Form->Get('MODULE') eq '' ? 'login' : $Form->Get('MODULE');
+	$modName = $Form->Get('MODULE');
+	$modName = 'login' if (! defined $modName || $modName eq '');
 	
 	# 処理モジュールオブジェクトの生成
 	require "./mordor/$modName.pl";
 	$oModule = new MODULE;
 	
 	# 表示モード
-	if ($Form->Get('MODE') eq 'DISP') {
+	if (defined $Form->Get('MODE') && $Form->Get('MODE') eq 'DISP') {
 		$oModule->DoPrint($Sys, $Form, \%SYS);
 	}
 	# 機能モード
-	elsif ($Form->Get('MODE') eq 'FUNC') {
+	elsif (defined $Form->Get('MODE') && $Form->Get('MODE') eq 'FUNC') {
 		$oModule->DoFunction($Sys, $Form, \%SYS);
 	}
 	# ログイン
@@ -80,7 +90,6 @@ sub SystemSetting
 	my ($pSYS) = @_;
 	
 	%$pSYS = (
-		'MAINCGI'	=> '../test',	# cgi設置パス(未対応)
 		'SECINFO'	=> undef,		# セキュリティ情報
 		'LOGGER'	=> undef,		# ログオブジェクト
 		'AD_BBS'	=> undef,		# BBS情報オブジェクト

@@ -8,6 +8,9 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
+
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
 
@@ -89,11 +92,15 @@ sub Initialize
 		'SET'	=> $oSET,
 		'CONV'	=> $oCONV,
 		'DAT'	=> $oDAT,
+		'PAGE'	=> $Page,
 		'CODE'	=> 'sjis'
 	);
 	
 	# システム初期化
 	$pSYS->{'SYS'}->Init();
+	
+	# 夢が広がりんぐ
+	$pSYS->{'SYS'}->{'MainCGI'} = $pSYS;
 	
 	# 起動パラメータの解析
 	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);

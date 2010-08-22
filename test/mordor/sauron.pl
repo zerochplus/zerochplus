@@ -8,7 +8,10 @@
 #============================================================================================================
 package	SAURON;
 
-require('./module/thorin.pl');
+use strict;
+use warnings;
+
+require './module/thorin.pl';
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -20,8 +23,8 @@ require('./module/thorin.pl');
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@MnuStr,@MnuUrl);
+	my $this = shift;
+	my ($obj, @MnuStr, @MnuUrl);
 	
 	$obj = {
 		'SYS'		=> undef,														# MELKOR保持
@@ -31,7 +34,7 @@ sub new
 		'MNUURL'	=> \@MnuUrl,													# 機能リストURL
 		'MNUNUM'	=> 0															# 機能リスト数
 	};
-	bless $obj,$this;
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -47,12 +50,12 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub Create
 {
-	my		$this = shift;
-	my		($Sys,$Form) = @_;
+	my $this = shift;
+	my ($Sys, $Form) = @_;
 	
 	$this->{'SYS'}		= $Sys;
 	$this->{'FORM'}		= $Form;
-	$this->{'INN'}		= new THORIN;
+	$this->{'INN'}		= THORIN->new;
 	$this->{'MNUNUM'}	= 0;
 	
 	return $this->{'INN'};
@@ -69,11 +72,11 @@ sub Create
 #------------------------------------------------------------------------------------------------------------
 sub SetMenu
 {
-	my		$this = shift;
-	my		($str,$url) = @_;
+	my $this = shift;
+	my ($str, $url) = @_;
 	
-	push(@{$this->{'MNUSTR'}},$str);
-	push(@{$this->{'MNUURL'}},$url);
+	push @{$this->{'MNUSTR'}}, $str;
+	push @{$this->{'MNUURL'}}, $url;
 	
 	$this->{'MNUNUM'} ++;
 }
@@ -88,22 +91,22 @@ sub SetMenu
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
-	my		$this = shift;
-	my		($ttl,$mode) = @_;
-	my		($Tad,$Tin,$TPlus);
+	my $this = shift;
+	my ($ttl, $mode) = @_;
+	my ($Tad, $Tin, $TPlus);
 	
-	$Tad	= new THORIN;
+	$Tad	= THORIN->new;
 	$Tin	= $this->{'INN'};
 	
-	PrintHTML($Tad,$ttl);															# HTMLヘッダ出力
-	PrintCSS($Tad,$this->{'SYS'});													# CSS出力
-	PrintHead($Tad,$ttl,$mode);														# ヘッダ出力
-	PrintList($Tad,$this->{'MNUNUM'},$this->{'MNUSTR'},$this->{'MNUURL'});			# 機能リスト出力
-	PrintInner($Tad,$Tin,$ttl);														# 機能内容出力
-	PrintCommonInfo($Tad,$this->{'FORM'});
-	PrintFoot($Tad,$this->{'FORM'}->Get('UserName'),$this->{'SYS'}->Get('VERSION'));# フッタ出力
+	PrintHTML($Tad, $ttl);																# HTMLヘッダ出力
+	PrintCSS($Tad, $this->{'SYS'});														# CSS出力
+	PrintHead($Tad, $ttl, $mode);														# ヘッダ出力
+	PrintList($Tad, $this->{'MNUNUM'}, $this->{'MNUSTR'}, $this->{'MNUURL'});			# 機能リスト出力
+	PrintInner($Tad, $Tin, $ttl);														# 機能内容出力
+	PrintCommonInfo($Tad, $this->{'FORM'});
+	PrintFoot($Tad, $this->{'FORM'}->Get('UserName'), $this->{'SYS'}->Get('VERSION'));	# フッタ出力
 	
-	$Tad->Flush(0,0,'');															# 画面出力
+	$Tad->Flush(0, 0, '');																# 画面出力
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -116,20 +119,20 @@ sub Print
 #------------------------------------------------------------------------------------------------------------
 sub PrintNoList
 {
-	my		$this = shift;
-	my		($ttl,$mode) = @_;
-	my		($Tad,$Tin);
+	my $this = shift;
+	my ($ttl, $mode) = @_;
+	my ($Tad, $Tin);
 	
-	$Tad = new THORIN;
+	$Tad = THORIN->new;
 	$Tin = $this->{'INN'};
 	
-	PrintHTML($Tad,$ttl);															# HTMLヘッダ出力
-	PrintCSS($Tad,$this->{'SYS'});													# CSS出力
-	PrintHead($Tad,$ttl,$mode);														# ヘッダ出力
-	PrintInner($Tad,$Tin,$ttl);														# 機能内容出力
-	PrintFoot($Tad,'NONE',$this->{'SYS'}->Get('VERSION'));	# フッタ出力
+	PrintHTML($Tad, $ttl);															# HTMLヘッダ出力
+	PrintCSS($Tad, $this->{'SYS'});													# CSS出力
+	PrintHead($Tad, $ttl, $mode);													# ヘッダ出力
+	PrintInner($Tad, $Tin, $ttl);													# 機能内容出力
+	PrintFoot($Tad, 'NONE', $this->{'SYS'}->Get('VERSION'));						# フッタ出力
 	
-	$Tad->Flush(0,0,'');															# 画面出力
+	$Tad->Flush(0, 0, '');															# 画面出力
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -143,7 +146,7 @@ sub PrintNoList
 #------------------------------------------------------------------------------------------------------------
 sub PrintHTML
 {
-	my		($Page,$ttl) = @_;
+	my ($Page, $ttl) = @_;
 	
 	$Page->Print("Content-type: text/html\n\n<html><head><title>ぜろちゃんねる管理");
 	$Page->Print(" - [ $ttl ]</title>\n");
@@ -159,8 +162,8 @@ sub PrintHTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintCSS
 {
-	my		($Page,$Sys) = @_;
-	my		($data);
+	my ($Page, $Sys) = @_;
+	my ($data);
 	
 	$data = $Sys->Get('DATA');
 	
@@ -181,8 +184,8 @@ sub PrintCSS
 #------------------------------------------------------------------------------------------------------------
 sub PrintHead
 {
-	my		($Page,$ttl,$mode) = @_;
-	my		($common);
+	my ($Page, $ttl, $mode) = @_;
+	my ($common);
 	
 	$common = '<a href="javascript:DoSubmit';
 	
@@ -191,7 +194,7 @@ sub PrintHead
 	$Page->Print("<div class=\"MainMenu\" align=right>");
 	
 	# システム管理メニュー
-	if	($mode == 1){
+	if ($mode == 1) {
 		$Page->Print("$common('sys.top','DISP','NOTICE');\">トップ</a> | ");
 		$Page->Print("$common('sys.bbs','DISP','LIST');\">掲示板</a> | ");
 		$Page->Print("$common('sys.user','DISP','LIST');\">ユーザー</a> | ");
@@ -200,7 +203,7 @@ sub PrintHead
 		$Page->Print("$common('sys.edit','DISP','BANNER_PC');\">各種編集</a> | ");
 	}
 	# 掲示板管理メニュー
-	elsif	($mode == 2){
+	elsif ($mode == 2) {
 		$Page->Print("$common('bbs.thread','DISP','LIST');\">スレッド</a> | ");
 		$Page->Print("$common('bbs.pool','DISP','LIST');\">プール</a> | ");
 		$Page->Print("$common('bbs.kako','DISP','LIST');\">過去ログ</a> | ");
@@ -211,7 +214,7 @@ sub PrintHead
 		$Page->Print("$common('bbs.log','DISP','INFO');\">ログ閲覧</a> | ");
 	}
 	# スレッド管理メニュー
-	elsif	($mode == 3){
+	elsif ($mode == 3) {
 		$Page->Print("$common('thread.res','DISP','LIST');\">レス一覧</a> | ");
 		$Page->Print("$common('thread.del','DISP','LIST');\">削除レス一覧</a> ");
 	}
@@ -232,22 +235,22 @@ sub PrintHead
 #------------------------------------------------------------------------------------------------------------
 sub PrintList
 {
-	my		($Page,$n,$str,$url) = @_;
-	my		($i);
+	my ($Page, $n, $str, $url) = @_;
+	my ($i, $strURL, $strTXT);
 	
 	$Page->Print("<td align=center valign=top class=\"Content\">");
 	$Page->Print("<table width=95% cellspacing=0><tr><td class=\"FunctionList\">\n");
 	
-	for	($i = 0;$i < $n;$i++){
+	for ($i = 0 ; $i < $n ; $i++) {
 		$strURL = $$url[$i];
 		$strTXT = $$str[$i];
-		if	($strURL eq ''){
+		if ($strURL eq '') {
 			$Page->Print("<font color=gray>$strTXT</font>\n");
-			if($strTXT ne '<hr>'){
+			if ($strTXT ne '<hr>') {
 				$Page->Print('<br>');
 			}
 		}
-		else{
+		else {
 			$Page->Print("<a href=\"javascript:DoSubmit($$url[$i]);\" >");
 			$Page->Print("$$str[$i]</a><br>\n");
 		}
@@ -266,7 +269,7 @@ sub PrintList
 #------------------------------------------------------------------------------------------------------------
 sub PrintInner
 {
-	my		($Page1,$Page2,$ttl) = @_;
+	my ($Page1, $Page2, $ttl) = @_;
 	
 	$Page1->Print("<td width=80% valign=top class=\"Function\">\n");
 	$Page1->Print("<div class=\"FuncTitle\">$ttl</div><br>");
@@ -284,14 +287,14 @@ sub PrintInner
 #------------------------------------------------------------------------------------------------------------
 sub PrintCommonInfo
 {
-	my		($Page,$Form) = @_;
+	my ($Page, $Form) = @_;
 	
-	$Page->HTMLInput('hidden','MODULE',"");
-	$Page->HTMLInput('hidden','MODE',"");
-	$Page->HTMLInput('hidden','MODE_SUB',"");
+	$Page->HTMLInput('hidden', 'MODULE', '');
+	$Page->HTMLInput('hidden', 'MODE', '');
+	$Page->HTMLInput('hidden', 'MODE_SUB', '');
 	
-	$Page->HTMLInput('hidden','UserName',$Form->Get('UserName'));
-	$Page->HTMLInput('hidden','PassWord',$Form->Get('PassWord'));
+	$Page->HTMLInput('hidden', 'UserName', $Form->Get('UserName'));
+	$Page->HTMLInput('hidden', 'PassWord', $Form->Get('PassWord'));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -304,7 +307,7 @@ sub PrintCommonInfo
 #------------------------------------------------------------------------------------------------------------
 sub PrintFoot
 {
-	my		($Page,$user,$ver) = @_;
+	my ($Page, $user, $ver) = @_;
 	
 	$Page->Print("</tr></table>");
 	$Page->Print("<div class=\"MainFoot\">");
@@ -324,9 +327,9 @@ sub PrintFoot
 #------------------------------------------------------------------------------------------------------------
 sub PrintComplete
 {
-	my		$this = shift;
-	my		($processName,$pLog) = @_;
-	my		($Page,$text);
+	my $this = shift;
+	my ($processName, $pLog) = @_;
+	my ($Page, $text);
 	
 	$Page = $this->{'INN'};
 	
@@ -335,7 +338,7 @@ sub PrintComplete
 	$Page->Print("<small>処理ログ<hr><blockquote>");
 	
 	# ログの表示
-	foreach	$text (@$pLog){
+	foreach $text (@$pLog) {
 		$Page->Print("$text<br>\n");
 	}
 	$Page->Print("</blockquote><hr></small></td></tr></table>");
@@ -351,52 +354,52 @@ sub PrintComplete
 #------------------------------------------------------------------------------------------------------------
 sub PrintError
 {
-	my		$this = shift;
-	my		($pLog) = @_;
-	my		($Page,$ecode);
+	my $this = shift;
+	my ($pLog) = @_;
+	my ($Page, $ecode);
 	
 	$Page = $this->{'INN'};
 	
 	# エラーコードの抽出
-	$ecode = pop(@$pLog);
+	$ecode = pop @$pLog;
 	
 	$Page->Print("<br><center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td><br><font color=red><b>");
 	$Page->Print("ERROR:$ecode<hr><blockquote>\n");
 	
-	if		($ecode == 1000){
+	if ($ecode == 1000) {
 		$Page->Print("本機能の処理を実行する権限がありません。");
 	}
-	elsif	($ecode == 1001){
+	elsif ($ecode == 1001) {
 		$Page->Print("入力必須項目が空欄になっています。");
 	}
-	elsif	($ecode == 1002){
+	elsif ($ecode == 1002) {
 		$Page->Print("設定項目に規定外の文字が使用されています。");
 	}
-	elsif	($ecode == 2000){
+	elsif ($ecode == 2000) {
 		$Page->Print("掲示板ディレクトリの作成に失敗しました。<br>");
 		$Page->Print("パーミッション、または既に同名の掲示板が作成されていないかを確認してください。");
 	}
-	elsif	($ecode == 2001){
+	elsif ($ecode == 2001) {
 		$Page->Print("SETTING.TXTの生成に失敗しました。");
 	}
-	elsif	($ecode == 2002){
+	elsif ($ecode == 2002) {
 		$Page->Print("掲示板構\成要素の生成に失敗しました。");
 	}
-	elsif	($ecode == 2003){
+	elsif ($ecode == 2003) {
 		$Page->Print("過去ログ初期情報の生成に失敗しました。");
 	}
-	elsif	($ecode == 2004){
+	elsif ($ecode == 2004) {
 		$Page->Print("掲示板情報の更新に失敗しました。");
 	}
-	else{
+	else {
 		$Page->Print("不明なエラーが発生しました。");
 	}
 	
 	# エラーログがあれば出力する
-	if	(@$pLog){
+	if (@$pLog) {
 		$Page->Print('<hr>');
-		foreach	(@$pLog){
+		foreach (@$pLog) {
 			$Page->Print("$_<br>\n");
 		}
 	}

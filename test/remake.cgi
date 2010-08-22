@@ -8,9 +8,11 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
+
 # CGIの実行結果を終了コードとする
 exit(REMAKECGI());
-
 #------------------------------------------------------------------------------------------------------------
 #
 #	remake.cgiメイン
@@ -27,17 +29,17 @@ sub REMAKECGI
 	$Page = new THORIN;
 	
 	# 初期化に成功したら更新処理を開始
-	if (($err = Initialize(\%SYS)) == 0) {
-				require './module/varda.pl';
-				my $BBSAid = new VARDA;
-				
-				eval {
-					$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
-					$BBSAid->CreateIndex();
-					$BBSAid->CreateIIndex();
-					$BBSAid->CreateSubback();
-				};
-			PrintBBSJump(\%SYS, $Page);
+	if (($err = Initialize(\%SYS, $Page)) == 0) {
+		require './module/varda.pl';
+		my $BBSAid = new VARDA;
+		
+		eval {
+			$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
+			$BBSAid->CreateIndex();
+			$BBSAid->CreateIIndex();
+			$BBSAid->CreateSubback();
+		};
+		PrintBBSJump(\%SYS, $Page);
 	}
 	else {
 		PrintBBSError(\%SYS, $Page, $err);
@@ -59,7 +61,8 @@ sub REMAKECGI
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
-	my ($Sys) = @_;
+	my ($Sys, $Page) = @_;
+	my ($bbs);
 	
 	# 使用モジュールの初期化
 	require './module/melkor.pl';
@@ -73,7 +76,8 @@ sub Initialize
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
 		'CONV'		=> new GALADRIEL,
-		'FORM'		=> new SAMWISE
+		'FORM'		=> new SAMWISE,
+		'PAGE'		=> $Page,
 	);
 	
 	# form情報設定
@@ -83,15 +87,22 @@ sub Initialize
 	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
-	if ($Sys->{'FORM'}->Get('bbs') =~ /\W/) {
+	
+	# 夢が広がりんぐ
+	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
+	
+	$bbs = $Sys->{'FORM'}->Get('bbs');
+	$Sys->{'SYS'}->Set('BBS', '.__');
+	if ($bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'SYS'}->Get('BBSPATH') . "/$bbs") {
 		return 999;
 	}
-	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs'));
+	
+	$Sys->{'SYS'}->Set('BBS', $bbs);
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	$Sys->{'SYS'}->Set('MODE', 'CREATE');
 	
 	# SETTING.TXTの読み込み
-	if (!$Sys->{'SET'}->Load($Sys->{'SYS'})) {
+	if (! $Sys->{'SET'}->Load($Sys->{'SYS'})) {
 		return 999;
 	}
 	
@@ -156,6 +167,7 @@ sub PrintBBSJump
 sub PrintBBSError
 {
 	my ($Sys, $Page, $err) = @_;
+	my ($ERROR);
 	
 	require './module/orald.pl';
 	$ERROR = new ORALD;
