@@ -313,12 +313,8 @@ sub IsTime
 	for ($i = $n - 1 ; $i >= 0 ; $i--) {
 		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
 		chomp $hst;
-		if ($host eq $hst) {
-			if ($nw - $tm > $tmn) { return 0; }
-			else {
-				return ($tmn - ($nw - $tm));	# c‚è•b”‚ğ•Ô‚·
-			}
-		}
+		next if ($host ne $hst);
+		return (($_ = $tmn - ($nw - $tm)) > 0 ? $_ : 0);	# c‚è•b”‚ğ•Ô‚·
 	}
 	return 0;
 }
@@ -337,7 +333,7 @@ sub IsSamba
 {
 	my $this = shift;
 	my ($sb, $host) = @_;
-	my (@iplist, $i, $n, $tm, $nw, $hst, $kind);
+	my (@iplist, $i, $j, $n, $tm, $nw, $hst, $kind);
 	
 	$nw = time;
 	$n = @{$this->{'LOG'}};
@@ -345,16 +341,21 @@ sub IsSamba
 	
 	return (0, 0) if ($kind != 6);
 	
-	for ($i = 0 ; $i < $n ; $i++) {
+	for ($i = $n - 1, $j = $nw ; $i >= 0 ; $i--) {
 		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
 		chomp $hst;
-		if (($host eq $hst) && ($sb >= $nw - $tm)) {
+		next if ($host ne $hst);
+		if ($sb > $j - $tm) {
 			push @iplist, $tm;
+			$j = $tm;
+		}
+		else {
+			last;
 		}
 	}
 	$n = @iplist;
 	if ($n) {
-		return ($n, ($nw - $iplist[$#iplist]));
+		return ($n, ($nw - $iplist[0]));
 	}
 	return (0, 0);
 }

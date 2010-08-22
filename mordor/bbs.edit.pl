@@ -694,7 +694,7 @@ sub FunctionValidUserEdit
 	push @$pLog, '■以下のユーザを指定';
 	foreach (@validUsers) {
 		$vUsers->Add($_);
-		push @$pLog, "　　$_";
+		push @$pLog, '　　' . $_;
 	}
 	push @$pLog, '■指定ユーザ種別：' . $Form->Get('VALID_TYPE');
 	push @$pLog, '■指定ユーザ処置：' . $Form->Get('VALID_METHOD');

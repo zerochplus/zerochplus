@@ -15,6 +15,7 @@ package	MELKOR;
 
 use strict;
 use warnings;
+no warnings 'redefine';
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -265,7 +266,8 @@ sub InitSystemValue
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
-		'SAMBA'		=> 10,										# 連続書き込み規制時間
+		'SAMBATM'	=> 10,										# 連続書き込み規制時間
+		'ISSAMBA'	=> 0,										# SAMBA規制
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
@@ -280,7 +282,7 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBA',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
+		'SAMBATM',	'ISSAMBA',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
 	);
 }
 
