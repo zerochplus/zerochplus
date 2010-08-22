@@ -63,7 +63,7 @@ sub PCGI
 	}
 	else {
 		# 検索あり
-		$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, $Form->Get('word'));
+		$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, $Form->Get('word', ''));
 	}
 	
 	# ページの出力

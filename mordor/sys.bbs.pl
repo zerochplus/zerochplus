@@ -197,7 +197,7 @@ sub PrintBBSList
 	$BBS->Load($SYS);
 	$Category->Load($SYS);
 	
-	$sCat = $Form->Get('BBS_CATEGORY');
+	$sCat = $Form->Get('BBS_CATEGORY', '');
 	
 	# ユーザ所属のBBS一覧を取得
 	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@belongBBS);
@@ -625,7 +625,8 @@ sub FunctionBBSCreate
 	if (! (EARENDIL::CreateDirectory($createPath, $Sys->Get('PM-BDIR')))) {
 		return 2000;
 	}
-	eval {
+#	eval
+	{
 		# サブディレクトリ生成
 		EARENDIL::CreateDirectory("$createPath/i", $Sys->Get('PM-BDIR'));
 		EARENDIL::CreateDirectory("$createPath/dat", $Sys->Get('PM-BDIR'));
@@ -649,7 +650,8 @@ sub FunctionBBSCreate
 		require './module/nazguls.pl';
 		$BBS = NAZGUL->new;
 		$BBS->Load($Sys);
-		eval {
+#		eval
+		{
 			$inheritPath = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $bbsInherit);
 			EARENDIL::Copy("$inheritPath/SETTING.TXT", "$createPath/SETTING.TXT");
 			EARENDIL::Copy("$inheritPath/info/groups.cgi", "$createPath/info/groups.cgi");
@@ -661,7 +663,8 @@ sub FunctionBBSCreate
 	my ($bbsSetting);
 	
 	# 掲示板設定情報生成
-	eval {
+#	eval
+	{
 		require './module/isildur.pl';
 		$bbsSetting = ISILDUR->new;
 		
@@ -694,7 +697,8 @@ sub FunctionBBSCreate
 	push @$pLog, '■掲示板設定完了...';
 	
 	# 掲示板構成要素生成
-	eval {
+#	eval
+	{
 		my ($BBSAid);
 		require './module/varda.pl';
 		$BBSAid = VARDA->new;
@@ -712,7 +716,8 @@ sub FunctionBBSCreate
 	push @$pLog, '■掲示板構\成要素生成完了...';
 	
 	# 過去ログインデクス生成
-	eval {
+#	eval
+	{
 		require './module/thorin.pl';
 		require './module/celeborn.pl';
 		my $PastLog = CELEBORN->new;
@@ -726,7 +731,8 @@ sub FunctionBBSCreate
 	push @$pLog, '■過去ログインデクス生成完了...';
 	
 	# 掲示板情報に追加
-	eval {
+#	eval
+	{
 		require './module/nazguls.pl';
 		my $BBS = NAZGUL->new;
 		$BBS->Load($Sys);
@@ -772,7 +778,8 @@ sub FunctionBBSUpdate
 		$bbs = $BBS->Get('DIR', $id);
 		$name = $BBS->Get('NAME', $id);
 		$Sys->Set('BBS', $bbs);
-		eval {
+#		eval
+		{
 			$Sys->Set('MODE', 'CREATE');
 			$BBSAid->Init($Sys, undef);
 			$BBSAid->CreateIndex();
@@ -858,10 +865,9 @@ sub FunctionBBSDelete
 	
 	foreach $id (@bbsSet) {
 		$dir	= $BBS->Get('DIR', $id);
+		next if (! defined $dir);
 		$name	= $BBS->Get('NAME', $id);
 		$path	= $Sys->Get('BBSPATH') . "/$dir";
-		
-		next if (! defined $dir);
 		
 		# 掲示板ディレクトリと掲示板情報の削除
 		EARENDIL::DeleteDirectory($path);

@@ -43,7 +43,7 @@ sub SearchCGI
 	PrintHead($Sys, $Page, $BBS, $Form);
 	
 	# 検索ワードがある場合は検索を実行する
-	if (! $Form->Equal('WORD', '')) {
+	if ($Form->Get('WORD', '') ne '') {
 		Search($Sys, $Form, $Page, $BBS);
 	}
 	PrintFoot($Sys, $Page);
@@ -64,9 +64,9 @@ sub PrintHead
 	my ($pBBS, $bbs, $name, $dir, $Banner);
 	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types, @bbsSet, $id);
 	
-	$sMODE	= $Form->Get('MODE');
-	$sBBS	= $Form->Get('BBS');
-	$sKEY	= $Form->Get('KEY');
+	$sMODE	= $Form->Get('MODE', '');
+	$sBBS	= $Form->Get('BBS', '');
+	$sKEY	= $Form->Get('KEY', '');
 	$sWORD	= $Form->Get('WORD');
 	@sTYPE	= $Form->GetAtArray('TYPE', 0);
 	
@@ -246,8 +246,9 @@ sub Search
 	$Type = ($types[0] || 0) | ($types[1] || 0) | ($types[2] || 0);
 	
 	# 検索オブジェクトの設定と検索の実行
-	eval {
-		$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS'), $Form->Get('KEY'));
+#	eval
+	{
+		$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS', ''), $Form->Get('KEY', ''));
 		$Search->Run($Form->Get('WORD'));
 	};
 	if ($@ ne '') {

@@ -67,7 +67,8 @@ sub Load
 	my $this = shift;
 	my ($var, $val, @dlist, $pSYS, $sysFile);
 	
-	eval {
+#	eval
+	{
 		# システム情報ハッシュの初期化
 		undef %{$this->{'SYS'}};
 		InitSystemValue(\%{$this->{'SYS'}}, \@{$this->{'KEY'}});
@@ -112,7 +113,8 @@ sub Save
 	my $this = shift;
 	my ($val);
 	
-	eval {
+#	eval
+	{
 		open SYS, '>' . $this->{'SYS'}->{'SYSFILE'};
 		flock SYS, 2;
 		binmode SYS;
@@ -132,15 +134,19 @@ sub Save
 #	システム設定値取得
 #	-------------------------------------------------------------------------------------
 #	@param	$key	取得キー
+#			$default : デフォルト
 #	@return	設定値
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
+	my ($val);
 	
-	return $this->{'SYS'}->{$key};
+	$val = $this->{'SYS'}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

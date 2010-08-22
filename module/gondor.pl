@@ -55,7 +55,8 @@ sub DESTROY
 	if ($this->{'STAT'}) {
 		my $handle	= $this->{'HANDLE'};
 		if ($handle) {
-			eval {
+#			eval
+			{
 				close $handle;
 				chmod $this->{'PERM'}, $this->{'PATH'};
 			};
@@ -78,7 +79,8 @@ sub Load
 	my $this = shift;
 	my ($SYS, $szPath, $readOnly) = @_;
 	
-	eval {
+#	eval
+	{
 		$this->{'RES'} = 0;
 		
 		# 状態が初期状態なら読み込み開始
@@ -98,7 +100,7 @@ sub Load
 				}
 				
 				# 書き込みモードの場合
-				if (!$readOnly) {
+				if (! $readOnly) {
 					close DATFILE;
 					open DATFILE, "+> $szPath";
 					flock DATFILE, 2;
@@ -154,7 +156,8 @@ sub Save
 	if ($this->{'STAT'} && $this->{'HANDLE'}) {
 		if (! $this->{'MODE'}) {
 			$handle = $this->{'HANDLE'};
-			eval {
+#			eval
+			{
 				truncate $handle, 0;
 				seek $handle, 0, 0;
 				print $handle @{$this->{'LINE'}};
@@ -184,7 +187,8 @@ sub Close
 	
 	# ファイルオープン状態の場合はクローズする
 	if ($this->{'STAT'}) {
-		eval {
+#		eval
+		{
 			my $handle	= $this->{'HANDLE'};
 			close $handle;
 			chmod $this->{'PERM'}, $this->{'PATH'};
@@ -320,7 +324,8 @@ sub Stop
 	$stopData = "書けませんよ。。。<>停止<>停止<>真・スレッドストッパー。。。（￣ー￣）ﾆﾔﾘｯ<>\n";
 	$res = 0;
 	
-	eval {
+#	eval
+	{
 		# レス最大数超えてる場合はスレスト不可
 		if ($this->Size() <= $SYS->Get('RESMAX')) {
 			# 停止状態じゃない場合のみ実行
@@ -353,7 +358,8 @@ sub Start
 	my ($res, $line);
 	
 	$res = 0;
-	eval {
+#	eval
+	{
 		# 停止状態の場合のみ実行
 		if ($this->{'PERM'} eq $SYS->Get('PM-STOP')) {
 			# 最終行を削除して保存
@@ -383,13 +389,15 @@ sub DirectAppend
 	my ($SYS, $path, $data) = @_;
 	my $ret = 0;
 	
-	eval {
+#	eval
+	{
 		if (GetPermission($path) ne $SYS->Get('PM-STOP')) {
-			open DATFILE, ">> $path";
-			flock DATFILE, 2;
-			binmode DATFILE;
-			print DATFILE "$data";
-			close DATFILE;
+			if (open DATFILE, ">> $path") {
+				flock DATFILE, 2;
+				binmode DATFILE;
+				print DATFILE "$data";
+				close DATFILE;
+			}
 			chmod $SYS->Get('PM-DAT'), $path;
 		}
 		else {

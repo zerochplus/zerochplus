@@ -640,7 +640,8 @@ sub FunctionGroupImport
 	$dst = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/capgroups.cgi';
 	
 	# グループ設定をコピー
-	eval {
+#	eval
+	{
 		EARENDIL::Copy($src, $dst);
 	};
 	

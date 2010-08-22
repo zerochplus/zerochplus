@@ -134,14 +134,16 @@ sub DoFunction
 	$DAT = ARAGORN->new;
 	
 	# 掲示板情報の読み込みとグループ設定
-	eval {
+#	eval
+	{
 		$BBS->Load($Sys);
 		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	};
 	
 	# datの読み込み
-	eval {
+#	eval
+	{
 		$Sys->Set('KEY', $Form->Get('TARGET_THREAD'));
 		my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
 		$DAT->Load($Sys, $datPath, 1);
@@ -559,7 +561,8 @@ sub FunctionResDelete
 	$Dat->Load($Sys, $datPath, 0);
 	
 	# 削除と同時に削除ログへ削除した内容を保存する
-	eval {
+#	eval
+	{
 		open DELLOG,">> $path";
 		flock DELLOG, 2;
 		binmode DELLOG;

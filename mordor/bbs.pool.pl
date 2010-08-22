@@ -562,7 +562,8 @@ sub FunctionCreateLogs
 	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/pool';
 	$bCreate = 0;
 	
-	eval {
+#	eval
+	{
 		foreach $key (@poolSet) {
 			if ($Dat->Load($Sys,"$basePath/$key.cgi", 1)) {
 				if (CreateKAKOLog($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key)) {
@@ -630,7 +631,8 @@ sub CreateKAKOLog
 	$color[4]	= $Set->Get('BBS_ALINK_COLOR');
 	$color[5]	= $Set->Get('BBS_VLINK_COLOR');
 	
-	eval {
+#	eval
+	{
 		require './module/earendil.pl';
 		
 		$Page->Clear();

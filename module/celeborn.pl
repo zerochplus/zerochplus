@@ -90,7 +90,8 @@ sub Save
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	eval {
+#	eval
+	{
 		open KAKO, "+> $path";
 		flock KAKO, 2;
 		binmode KAKO;
@@ -156,19 +157,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	ユーザID
+#			$default : デフォルト
 #	@return	ユーザ情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
 	my ($val);
 	
 	$val = $this->{$kind}->{$key};
-	$val = '' if (! defined $val);
 	
-	return $val;
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -310,7 +311,8 @@ sub UpdateIndex
 	@dirs = keys %PATHES;
 	unshift @dirs, '';
 	
-	eval {
+#	eval
+	{
 		# パスごとにindexを生成する
 		foreach $path (@dirs) {
 			# 1階層下のサブフォルダを取得する

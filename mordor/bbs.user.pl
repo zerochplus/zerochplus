@@ -421,7 +421,8 @@ sub PrintGroupImport
 	my ($Page, $SYS, $Form, $BBS) = @_;
 	my (@bbsSet, $id, $name);
 	
-	eval {
+#	eval
+	{
 		$SYS->Set('_TITLE', 'Group Import');
 		
 		# 所属BBSを取得
@@ -634,7 +635,8 @@ sub FunctionGroupImport
 	$dst = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/groups.cgi';
 	
 	# グループ設定をコピー
-	eval {
+#	eval
+	{
 		EARENDIL::Copy($src, $dst);
 	};
 	

@@ -64,7 +64,8 @@ sub DESTROY
 	if ($this->{'STAT'}) {
 		my $handle = $this->{'HANDLE'};
 		if ($handle) {
-			eval {
+#			eval
+			{
 				close $handle;
 			};
 		}
@@ -104,7 +105,8 @@ sub Open
 	}
 	$File .= '.cgi';
 	
-	eval {
+#	eval
+	{
 		if ($this->{'STAT'} == 0) {
 			my $handle = $this->{'HANDLE'};
 			open $handle, "+>> $File";
@@ -134,7 +136,8 @@ sub Close
 	my $this = shift;
 	
 	if ($this->{'STAT'} == 1) {
-		eval {
+#		eval
+		{
 			my $handle = $this->{'HANDLE'};
 			close $handle;
 			$this->{'STAT'} = 0;
@@ -156,7 +159,8 @@ sub Read
 	my $ret = -1;
 	
 	if ($this->{'STAT'} == 1) {
-		eval {
+#		eval
+		{
 			my $handle = $this->{'HANDLE'};
 			my $count = 0;
 			undef @{$this->{'LOGS'}};
@@ -189,7 +193,8 @@ sub Write
 	if ($this->{'STAT'}) {
 		if (! ($this->{'MODE'} & 1)) {
 			my $handle = $this->{'HANDLE'};
-			eval {
+#			eval
+			{
 				truncate $handle, 0;
 				seek $handle, 0, 0;
 				for (my $i = 0 ; $i < $this->{'SIZE'} ; $i++) {
@@ -242,7 +247,8 @@ sub Put
 		my $old = shift @{$this->{'LOGS'}};
 		if ($this->{'MODE'} & 4) {
 			my $logName = $this->{'PATH'} . '_old.cgi';
-			eval {
+#			eval
+			{
 				open OLDLOG, ">> $logName";
 				flock OLDLOG, 2;
 				binmode OLDLOG;
@@ -286,7 +292,8 @@ sub MoveToOld
 	my $this = shift;
 	my ($i);
 	
-	eval {
+#	eval
+	{
 		open OLDLOG, ">> " . $this->{'PATH'} . '_old.cgi';
 		flock OLDLOG, 2;
 		binmode OLDLOG;

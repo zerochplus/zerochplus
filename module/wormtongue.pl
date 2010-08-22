@@ -101,7 +101,8 @@ sub Save
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
 	
-	eval {
+#	eval
+	{
 		open NGWORD, "> $path";
 		flock NGWORD, 2;
 		binmode NGWORD;
@@ -139,19 +140,19 @@ sub Add
 #	NGワードデータ取得 - Get
 #	-------------------------------------------
 #	引　数：$key : 取得キー
+#			$default : デフォルト
 #	戻り値：データ
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
 	my ($val);
 	
 	$val = $this->{$key};
-	$val = '' if (! $val);
 	
-	return $val;
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

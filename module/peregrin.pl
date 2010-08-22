@@ -129,13 +129,15 @@ sub Save
 	$file	= $this->{'FILE'};
 	
 	if ($this->{'KIND'}) {
-		eval { chmod 0666, "$path/$file"; };				# パーミッション設定
+#		eval
+		{ chmod 0666, "$path/$file"; };				# パーミッション設定
 		if (open LOG, "> $path/$file") {
 			flock LOG, 2;
 			print LOG @{$this->{'LOG'}};
 			close LOG;
 		}
-		eval { chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
+#		eval
+		{ chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
 	}
 }
 

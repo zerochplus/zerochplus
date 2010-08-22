@@ -126,7 +126,8 @@ sub Write
 	}
 	
 	# データの書き込み
-	eval {
+#	eval
+	{
 		my ($oSys, $oSet, $oForm, $oConv);
 		my (@elem, $date, $data, $data2, $resNum, $datPath, $id);
 		
@@ -162,7 +163,8 @@ sub Write
 		SaveHost($oSys, $oForm);
 		
 		# datファイルへ直接書き込み
-		eval {
+#		eval
+		{
 			if (($err = ARAGORN::DirectAppend($oSys, $datPath, $data2)) == 0) {
 				# レス数が最大数を超えたらover設定をする
 				if (($resNum = ARAGORN::GetNumFromFile($datPath)) >= $oSys->Get('RESMAX')) {

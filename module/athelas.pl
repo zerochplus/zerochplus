@@ -223,7 +223,8 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	eval {
+#	eval
+	{
 		open PLUGINS, "+> $path";
 		flock PLUGINS, 2;
 		binmode PLUGINS;
@@ -289,15 +290,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	ユーザID
+#			$default : デフォルト
 #	@return	ユーザ情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -343,7 +348,8 @@ sub Add
 	if (-e "./plugin/$file") {
 		if ($file =~ /0ch_(.*)\.pl/) {
 			my $className = "ZPL_$1";
-			eval {
+#			eval
+			{
 				require("./plugin/$file");
 				my $plugin = new $className;
 				$this->{'FILE'}->{$id}		= $file;

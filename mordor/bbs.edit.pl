@@ -792,7 +792,8 @@ sub FunctionLastEdit
 	}
 	# ’l‚ªÝ’è‚³‚ê‚½ê‡‚Í1000.txt‚ðì¬‚·‚é
 	else {
-		eval {
+#		eval
+		{
 			open LAST, ">$lastPath";
 			flock LAST, 2;
 			binmode LAST;
