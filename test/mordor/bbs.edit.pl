@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		'LOG'	=> \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,62 +44,62 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$BASE,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $BASE, $BBS, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	$BBS = $pSys->{'AD_BBS'};
 	
 	# 掲示板情報の読み込みとグループ設定
-	if	($BBS eq undef){
-		require('./module/nazguls.pl');
-		$BBS = new NAZGUL;
+	if (! defined $BBS){
+		require './module/nazguls.pl';
+		$BBS = NAZGUL->new;
 		
 		$BBS->Load($Sys);
-		$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	}
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys,$Sys->Get('BBS'));
+	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
-	if	($subMode eq 'HEAD'){														# ヘッダ編集画面
-		PrintHeaderEdit($Page,$Sys,$Form);
+	if ($subMode eq 'HEAD') {														# ヘッダ編集画面
+		PrintHeaderEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'FOOT'){													# フッタ編集画面
-		PrintFooterEdit($Page,$Sys,$Form);
+	elsif ($subMode eq 'FOOT') {													# フッタ編集画面
+		PrintFooterEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'META'){													# META編集画面
-		PrintMETAEdit($Page,$Sys,$Form);
+	elsif ($subMode eq 'META') {													# META編集画面
+		PrintMETAEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'USER'){													# 規制ユーザ編集画面
-		PrintValidUserEdit($Page,$Sys,$Form);
+	elsif ($subMode eq 'USER') {													# 規制ユーザ編集画面
+		PrintValidUserEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'NGWORD'){													# NGワード編集画面
-		PrintNGWordsEdit($Page,$Sys,$Form);
+	elsif ($subMode eq 'NGWORD') {													# NGワード編集画面
+		PrintNGWordsEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'LAST'){													# 1001編集画面
-		PrintLastEdit($Page,$Sys,$Form);
+	elsif ($subMode eq 'LAST') {													# 1001編集画面
+		PrintLastEdit($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# 設定完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('各種編集処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# 設定完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('各種編集処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# 設定失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# 設定失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
 	# 掲示板情報を設定
-	$Page->HTMLInput('hidden','TARGET_BBS',$Form->Get('TARGET_BBS'));
+	$Page->HTMLInput('hidden', 'TARGET_BBS', $Form->Get('TARGET_BBS'));
 	
-	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME',$Form->Get('TARGET_BBS')),2);
+	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME', $Form->Get('TARGET_BBS')), 2);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -111,54 +114,54 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err, $BBS);
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
 	
 	# 管理情報を登録
 	$BBS->Load($Sys);
-	$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+	$Sys->Set('ADMIN', $pSys);
 	$pSys->{'SECINFO'}->SetGroupInfo($Sys->Get('BBS'));
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
 	
-	if	($subMode eq 'HEAD'){														# ヘッダ編集
-		$err = FunctionTextEdit($Sys,$Form,1,$this->{'LOG'});
+	if ($subMode eq 'HEAD') {														# ヘッダ編集
+		$err = FunctionTextEdit($Sys, $Form, 1, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FOOT'){													# フッタ編集
-		$err = FunctionTextEdit($Sys,$Form,2,$this->{'LOG'});
+	elsif ($subMode eq 'FOOT') {													# フッタ編集
+		$err = FunctionTextEdit($Sys, $Form, 2, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'META'){													# META編集
-		$err = FunctionTextEdit($Sys,$Form,3,$this->{'LOG'});
+	elsif ($subMode eq 'META') {													# META編集
+		$err = FunctionTextEdit($Sys, $Form, 3, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'USER'){													# 規制ユーザ編集
-		$err = FunctionValidUserEdit($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'USER') {													# 規制ユーザ編集
+		$err = FunctionValidUserEdit($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'NGWORD'){													# NGワード編集
-		$err = FunctionNGWordEdit($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'NGWORD') {													# NGワード編集
+		$err = FunctionNGWordEdit($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'LAST'){													# 1001編集
-		$err = FunctionLastEdit($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'LAST') {													# 1001編集
+		$err = FunctionLastEdit($Sys, $Form, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"BBS_EDIT($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "BBS_EDIT($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"BBS_EDIT($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "BBS_EDIT($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
 	
 	$pSys->{'AD_BBS'} = $BBS;
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -171,30 +174,30 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys,$bbs) = @_;
-	my		($bAuth) = 0;
+	my ($Base, $pSys, $bbs) = @_;
+	my ($bAuth) = 0;
 	
-	$Base->SetMenu("ヘッダの編集","'bbs.edit','DISP','HEAD'");
-	$Base->SetMenu("フッタの編集","'bbs.edit','DISP','FOOT'");
-	$Base->SetMenu("META情報の編集","'bbs.edit','DISP','META'");
-	$Base->SetMenu("<hr>","");
+	$Base->SetMenu('ヘッダの編集', "'bbs.edit','DISP','HEAD'");
+	$Base->SetMenu('フッタの編集', "'bbs.edit','DISP','FOOT'");
+	$Base->SetMenu('META情報の編集', "'bbs.edit','DISP','META'");
+	$Base->SetMenu('<hr>', '');
 	
 	# 管理グループ設定権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},11,$bbs)){
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 11, $bbs)) {
 		$Base->SetMenu("規制ユーザの編集","'bbs.edit','DISP','USER'");
 		$bAuth = 1;
 	}
 	# 管理グループ設定権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},10,$bbs)){
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 10, $bbs)) {
 		$Base->SetMenu("NGワードの編集","'bbs.edit','DISP','NGWORD'");
 		$bAuth = 1;
 	}
-	if	($bAuth){
-		$Base->SetMenu("<hr>","");
+	if ($bAuth) {
+		$Base->SetMenu('<hr>', '');
 	}
-	$Base->SetMenu("1001の編集","'bbs.edit','DISP','LAST'");
-	$Base->SetMenu("<hr>","");
-	$Base->SetMenu("システム管理へ戻る","'sys.bbs','DISP','LIST'");
+	$Base->SetMenu('1001の編集', "'bbs.edit','DISP','LAST'");
+	$Base->SetMenu('<hr>', '');
+	$Base->SetMenu('システム管理へ戻る', "'sys.bbs','DISP','LIST'");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -209,33 +212,33 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintHeaderEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Head,$Setting,$pHead,$common,$isAuth);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Head, $Setting, $pHead, $common, $isAuth);
 	
-	$SYS->Set('_TITLE','BBS Header Edit');
+	$SYS->Set('_TITLE', 'BBS Header Edit');
 	
-	require('./module/isildur.pl');
-	require('./module/legolas.pl');
-	$Head = new LEGOLAS;
-	$Setting = new ISILDUR;
-	$Head->Load($SYS,'HEAD');
+	require './module/isildur.pl';
+	require './module/legolas.pl';
+	$Head = LEGOLAS->new;
+	$Setting = ISILDUR->new;
+	$Head->Load($SYS, 'HEAD');
 	$Setting->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},14,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
 	$Page->Print("<tr><td colspan=2 align=center>");
 	
 	# ヘッダプレビュー表示
-	if	(!$Form->Equal('HEAD_TEXT','')){
+	if (! $Form->Equal('HEAD_TEXT', '')) {
 		$Head->Set(\($Form->Get('HEAD_TEXT')));
 	}
 	
 	# プレビューデータの作成
-	my $PreviewPage = new THORIN;
-	$Head->Print($PreviewPage,$Setting);
+	my $PreviewPage = THORIN->new;
+	$Head->Print($PreviewPage, $Setting);
 	$PreviewPage->{'BUFF'} = CreatePreviewData($PreviewPage->{'BUFF'});
 	$Page->Merge($PreviewPage);
 	
@@ -244,13 +247,13 @@ sub PrintHeaderEdit
 	$Page->Print("<textarea name=HEAD_TEXT rows=11 cols=80 wrap=off>");
 	
 	# ヘッダ内容テキストの表示
-	if	($Form->Equal('HEAD_TEXT','')){
+	if ($Form->Equal('HEAD_TEXT', '')) {
 		$pHead = $Head->Get();
-		foreach	(@$pHead){
+		foreach (@$pHead) {
 			$Page->Print($_);
 		}
 	}
-	else{
+	else {
 		$Page->Print($Form->Get('HEAD_TEXT'));
 	}
 	
@@ -258,7 +261,7 @@ sub PrintHeaderEdit
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','HEAD')\"> ");
@@ -280,29 +283,29 @@ sub PrintHeaderEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintFooterEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Foot,$common,$isAuth);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Foot, $common, $isAuth);
 	
-	$SYS->Set('_TITLE','BBS Footer Edit');
+	$SYS->Set('_TITLE', 'BBS Footer Edit');
 	
-	require('./module/legolas.pl');
-	$Foot = new LEGOLAS;
-	$Foot->Load($SYS,'FOOT');
+	require './module/legolas.pl';
+	$Foot = LEGOLAS->new;
+	$Foot->Load($SYS, 'FOOT');
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},14,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
 	
 	$Page->Print("<table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
 	$Page->Print("<tr><td colspan=2 style=\"background-image:url(./datas/default_bac.gif)\">");
 	
 	# フッタプレビュー表示
-	if	(!$Form->Equal('FOOT_TEXT','')){
+	if (! $Form->Equal('FOOT_TEXT', '')) {
 		$Foot->Set(\($Form->Get('FOOT_TEXT')));
 	}
 	# プレビューデータの作成
-	my $PreviewPage = new THORIN;
-	$Foot->Print($PreviewPage,undef);
+	my $PreviewPage = THORIN->new;
+	$Foot->Print($PreviewPage, undef);
 	$PreviewPage->{'BUFF'} = CreatePreviewData($PreviewPage->{'BUFF'});
 	$Page->Merge($PreviewPage);
 	
@@ -311,10 +314,10 @@ sub PrintFooterEdit
 	$Page->Print("<textarea name=FOOT_TEXT rows=11 cols=80 wrap=off>");
 	
 	# フッタ内容テキストの表示
-	if	($Form->Equal('FOOT_TEXT','')){
-		$Foot->Print($Page,undef);
+	if ($Form->Equal('FOOT_TEXT', '')) {
+		$Foot->Print($Page, undef);
 	}
-	else{
+	else {
 		$Page->Print($Form->Get('FOOT_TEXT'));
 	}
 	
@@ -322,7 +325,7 @@ sub PrintFooterEdit
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','FOOT')\"> ");
@@ -344,17 +347,17 @@ sub PrintFooterEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintMETAEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Meta,$common,$isAuth);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Meta, $common, $isAuth);
 	
-	$SYS->Set('_TITLE','BBS META Edit');
+	$SYS->Set('_TITLE', 'BBS META Edit');
 	
-	require('./module/legolas.pl');
-	$Meta = new LEGOLAS;
-	$Meta->Load($SYS,'META');
+	require './module/legolas.pl';
+	$Meta = LEGOLAS->new;
+	$Meta->Load($SYS, 'META');
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},14,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -362,13 +365,13 @@ sub PrintMETAEdit
 	$Page->Print("<textarea name=META_TEXT rows=11 cols=80 wrap=off>");
 	
 	# フッタ内容テキストの表示
-	$Meta->Print($Page,undef);
+	$Meta->Print($Page, undef);
 	
 	$Page->Print("</textarea></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','META')\">");
@@ -389,17 +392,17 @@ sub PrintMETAEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintValidUserEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($vUsers,$pUsers,$common,$isAuth,@kind);
+	my ($Page, $SYS, $Form) = @_;
+	my ($vUsers, $pUsers, $common, $isAuth, @kind);
 	
-	$SYS->Set('_TITLE','BBS Valid User Edit');
+	$SYS->Set('_TITLE', 'BBS Valid User Edit');
 	
-	require('./module/faramir.pl');
-	$vUsers = new FARAMIR;
+	require './module/faramir.pl';
+	$vUsers = FARAMIR->new;
 	$vUsers->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},11,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 11, $SYS->Get('BBS'));
 	$pUsers = $vUsers->Get('USER');
 	
 	$kind[0] = $vUsers->Get('TYPE') eq 'disable' ? '' : 'selected';
@@ -412,7 +415,7 @@ sub PrintValidUserEdit
 	$Page->Print("<tr><td class=\"DetailTitle\">対象ホスト一覧</td><td>");
 	$Page->Print("<textarea name=VALID_USERS rows=10 cols=70 wrap=off>");
 	
-	foreach	(@$pUsers){
+	foreach (@$pUsers) {
 		$Page->Print("$_\n");
 	}
 	
@@ -432,7 +435,7 @@ sub PrintValidUserEdit
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','USER')\">");
@@ -453,17 +456,17 @@ sub PrintValidUserEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintNGWordsEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Words,$pWords,$common,$isAuth,@kind);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Words, $pWords, $common, $isAuth, @kind);
 	
-	$SYS->Set('_TITLE','BBS NG Words Edit');
+	$SYS->Set('_TITLE', 'BBS NG Words Edit');
 	
-	require('./module/wormtongue.pl');
-	$Words = new WORMTONGUE;
+	require './module/wormtongue.pl';
+	$Words = WORMTONGUE->new;
 	$Words->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},10,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 10, $SYS->Get('BBS'));
 	$pWords = $Words->Get('NGWORD');
 	
 	$kind[0] = $Words->Get('METHOD') eq 'disable' ? 'selected' : '';
@@ -477,7 +480,7 @@ sub PrintNGWordsEdit
 	$Page->Print("<tr><td class=\"DetailTitle\">NGワード一覧</td><td>");
 	$Page->Print("<textarea name=NG_WORDS rows=10 cols=70 wrap=off>");
 	
-	foreach	(@$pWords){
+	foreach (@$pWords) {
 		$Page->Print("$_\n");
 	}
 	
@@ -495,7 +498,7 @@ sub PrintNGWordsEdit
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','NGWORD')\">");
@@ -516,43 +519,50 @@ sub PrintNGWordsEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintLastEdit
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($common,$isAuth,$data,$isLast,@elem);
+	my ($Page, $SYS, $Form) = @_;
+	my ($common, $isAuth, $data, $isLast, @elem, $path);
 	
-	$SYS->Set('_TITLE','BBS 1001 Edit');
+	$SYS->Set('_TITLE', 'BBS 1001 Edit');
 	$Form->DecodeForm(1);
 	
 	$data = '１００１<><>Over 1000 Thread<>このスレッドは１０００を超えました。<br>';
 	$data .= 'もう書けないので、新しいスレッドを立ててくださいです。。。<>';
-	if	(!$Form->IsExist('LAST_FROM')){
+	if (!$Form->IsExist('LAST_FROM')) {
 		# 1000.txtの読み込み
 		$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/1000.txt';
 		$isLast = 0;
 		
-		if	(-e $path){
-			open(LAST,"<$path");
-			while(<LAST>){
+		if (-e $path) {
+			open LAST, $path;
+			while(<LAST>) {
 				$data = $_;
 				last;
 			}
-			close(LAST);
-			chomp($data);
+			close LAST;
+			chomp $data;
 			$isLast = 1;
 		}
 	}
-	else{
-		my	$formLast = '';
-		$formLast .= $Form->Get('LAST_FROM') . '<>' . $Form->Get('LAST_mail') . '<>';
-		$formLast .= $Form->Get('LAST_date') . '<>' . $Form->Get('LAST_MESSAGE') . '<>';
-		if	($formLast ne '<><><><>'){
+	else {
+		my $formLast = join('<>',
+			$Form->Get('LAST_FROM'),
+			$Form->Get('LAST_mail'),
+			$Form->Get('LAST_date'),
+			$Form->Get('LAST_MESSAGE'),
+			''
+		);
+		if ($formLast ne '<><><><>'){
 			$data = $formLast;
 			$isLast = 1;
 		}
 	}
-	@elem = split(/<>/,$data);
+	@elem = split(/<>/, $data);
+	for (0 .. 4) {
+		$elem[$_] = '' if (! defined $elem[$_]);
+	}
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'},14,$SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
@@ -560,12 +570,10 @@ sub PrintLastEdit
 	$Page->Print("<tr><td>");
 	
 	# プレビュー表示
-	$Page->Print("<dt>1001 名前：<b><font color=green>$elem[0]</font></b>")			if	($elem[1] eq '');
-	$Page->Print("<dt>1001 名前：<b><a href=\"mailto:$elem[1]\">$elem[0]</a></b>")	if	($elem[1] ne '');
+	$Page->Print("<dt>1001 名前：<b><font color=green>$elem[0]</font></b>")			if ($elem[1] eq '');
+	$Page->Print("<dt>1001 名前：<b><a href=\"mailto:$elem[1]\">$elem[0]</a></b>")	if ($elem[1] ne '');
 	$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd>");
-	if	(!$isLast){
-		undef(@elem);
-	}
+	@elem = ('', '', '', '', '') if (! $isLast);
 	
 	$Page->Print("</td></tr></table></dl></td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>内容編集</td></tr>");
@@ -584,7 +592,7 @@ sub PrintLastEdit
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','LAST')\"> ");
@@ -607,39 +615,39 @@ sub PrintLastEdit
 #------------------------------------------------------------------------------------------------------------
 sub FunctionTextEdit
 {
-	my		($Sys,$Form,$mode,$pLog) = @_;
-	my		($Texts,$readKey,$formKey,$value);
+	my ($Sys, $Form, $mode, $pLog) = @_;
+	my ($Texts, $readKey, $formKey, $value);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,14,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 14, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	
 	# 読み取り用のキーを設定する
-	if		($mode == 1){
+	if ($mode == 1) {
 		$readKey = 'HEAD';
 		$formKey = 'HEAD_TEXT';
-		push(@$pLog,"head.txtを設定しました。");
+		push @$pLog, 'head.txtを設定しました。';
 	}
-	elsif	($mode == 2){
+	elsif ($mode == 2) {
 		$readKey = 'FOOT';
 		$formKey = 'FOOT_TEXT';
-		push(@$pLog,"foot.txtを設定しました。");
+		push @$pLog, 'foot.txtを設定しました。';
 	}
-	elsif	($mode == 3){
+	elsif ($mode == 3) {
 		$readKey = 'META';
 		$formKey = 'META_TEXT';
-		push(@$pLog,"meta.txtを設定しました。");
+		push @$pLog, 'meta.txtを設定しました。';
 	}
 	
-	require('./module/legolas.pl');
-	$Texts = new LEGOLAS;
-	$Texts->Load($Sys,$readKey);
+	require './module/legolas.pl';
+	$Texts = LEGOLAS->new;
+	$Texts->Load($Sys, $readKey);
 	
 	$value = $Form->Get($formKey);
 	$Texts->Set(\$value);
@@ -662,34 +670,34 @@ sub FunctionTextEdit
 #------------------------------------------------------------------------------------------------------------
 sub FunctionValidUserEdit
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($vUsers,@validUsers);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($vUsers, @validUsers);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,11,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 11, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/faramir.pl');
-	$vUsers = new FARAMIR;
+	require './module/faramir.pl';
+	$vUsers = FARAMIR->new;
 	$vUsers->Load($Sys);
 	
-	@validUsers = split(/\n/,$Form->Get('VALID_USERS'));
-	$vUsers->Set('TYPE',$Form->Get('VALID_TYPE'));
-	$vUsers->Set('METHOD',$Form->Get('VALID_METHOD'));
+	@validUsers = split(/\n/, $Form->Get('VALID_USERS'));
+	$vUsers->Set('TYPE', $Form->Get('VALID_TYPE'));
+	$vUsers->Set('METHOD', $Form->Get('VALID_METHOD'));
 	
 	$vUsers->Clear();
-	push(@$pLog,"■以下のユーザを指定");
-	foreach	(@validUsers){
+	push @$pLog, '■以下のユーザを指定';
+	foreach (@validUsers) {
 		$vUsers->Add($_);
-		push(@$pLog,"　　" . $_);
+		push @$pLog, '　　' . $_;
 	}
-	push(@$pLog,"■指定ユーザ種別：" . $Form->Get('VALID_TYPE'));
-	push(@$pLog,"■指定ユーザ処置：" . $Form->Get('VALID_METHOD'));
+	push @$pLog, '■指定ユーザ種別：' . $Form->Get('VALID_TYPE');
+	push @$pLog, '■指定ユーザ処置：' . $Form->Get('VALID_METHOD');
 	
 	$vUsers->Save($Sys);
 	
@@ -708,33 +716,33 @@ sub FunctionValidUserEdit
 #------------------------------------------------------------------------------------------------------------
 sub FunctionNGWordEdit
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Words,@ngWords);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Words, @ngWords);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,10,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 10, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/wormtongue.pl');
-	$Words = new WORMTONGUE;
+	require './module/wormtongue.pl';
+	$Words = WORMTONGUE->new;
 	$Words->Load($Sys);
 	
-	@ngWords = split(/\n/,$Form->Get('NG_WORDS'));
-	$Words->Set('METHOD',$Form->Get('NG_METHOD'));
-	$Words->Set('SUBSTITUTE',$Form->Get('NG_SUBSTITUTE'));
+	@ngWords = split(/\n/, $Form->Get('NG_WORDS'));
+	$Words->Set('METHOD', $Form->Get('NG_METHOD'));
+	$Words->Set('SUBSTITUTE', $Form->Get('NG_SUBSTITUTE'));
 	
 	$Words->Clear();
-	push(@$pLog,"■NGワードとして以下を設定");
-	foreach	(@ngWords){
+	push @$pLog, '■NGワードとして以下を設定';
+	foreach (@ngWords) {
 		$Words->Add($_);
-		push(@$pLog,"　　" . $_);
+		push @$pLog, '　　' . $_;
 	}
-	push(@$pLog,"■NGワード処置：" . $Form->Get('NG_METHOD'));
+	push @$pLog, '■NGワード処置：' . $Form->Get('NG_METHOD');
 	
 	$Words->Save($Sys);
 	
@@ -753,15 +761,15 @@ sub FunctionNGWordEdit
 #------------------------------------------------------------------------------------------------------------
 sub FunctionLastEdit
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Texts,$readKey,$formKey,$value);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Texts, $readKey, $formKey, $value, $lastPath, $name, $mail, $date, $cont, $forCheck);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,14,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 14, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -778,24 +786,24 @@ sub FunctionLastEdit
 	$forCheck = $name . $mail . $date . $cont;
 	
 	# 全て空欄の場合は1000.txtを削除しデフォルト1001を使用
-	if	($forCheck eq ''){
-		unlink($lastPath);
-		push(@$pLog,"■1000.txtを破棄してデフォルトの1001を使用します。");
+	if ($forCheck eq ''){
+		unlink $lastPath;
+		push @$pLog, '■1000.txtを破棄してデフォルトの1001を使用します。';
 	}
 	# 値が設定された場合は1000.txtを作成する
-	else{
-		eval{
-			open(LAST,">$lastPath");
-			flock(LAST,2);
-			binmode(LAST);
+	else {
+		eval {
+			open LAST, ">$lastPath";
+			flock LAST, 2;
+			binmode LAST;
 			print LAST "$name<>$mail<>$date<>$cont<>\n";
-			close(LAST);
+			close LAST;
 		};
-		if	($@ ne ''){
-			push(@$pLog,$@);
+		if ($@ ne ''){
+			push @$pLog, $@;
 			return 9999;
 		}
-		push(@$pLog,"■1000.txtを設定しました。");
+		push @$pLog, '■1000.txtを設定しました。';
 	}
 	
 	return 0;
@@ -811,14 +819,14 @@ sub FunctionLastEdit
 #------------------------------------------------------------------------------------------------------------
 sub CreatePreviewData
 {
-	my	($pData) = @_;
-	my	@temp;
+	my ($pData) = @_;
+	my @temp;
 	
-	foreach(@$pData){
+	foreach (@$pData) {
 		$_ =~ s/<[fF][oO][rR][mM].*?>/<!--form--><br>/g;
 		$_ =~ s/<\/[fF][oO][rR][mM]>/<!--\/form--><br>/g;
 		$_ =~ s/[nN][aA][mM][eE].*?=/_name_=/g;
-		push(@temp,$_);
+		push @temp, $_;
 	}
 	return \@temp;
 }

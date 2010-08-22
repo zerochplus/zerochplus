@@ -12,9 +12,13 @@
 #	2010.08.14 ID仕様変更 トリップ仕様変更
 #	           禁則処理2ch完全互換
 #	2010.08.15 プラグイン対応維持につき文字処理の分割
+#	2010.08.21 新仕様トリップ対応修正
 #
 #============================================================================================================
 package	GALADRIEL;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -410,22 +414,25 @@ sub GetRemoteHost
 	my ($HOST, $HOST2);
 	
 	$HOST = $ENV{'REMOTE_ADDR'};
-	$HOST2 = "";
+	$HOST2 = '';
 	
 	if ($HOST =~ /\d$/) {
 		$HOST = gethostbyaddr(pack('c4', split(/\./, $HOST)), 2) || $HOST;
 	}
-	if ($ENV{'HTTP_VIA'} =~ s/.*\s(\d+)\.(\d+)\.(\d+)\.(\d+)/$1.$2.$3.$4/) {
-		$HOST2 = $ENV{'HTTP_VIA'};
+	if (defined $ENV{'HTTP_VIA'} && $ENV{'HTTP_VIA'} =~ /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$/) {
+		$HOST2 = $1;
 	}
-	if ($ENV{'HTTP_X_FORWARDED_FOR'} =~ s/^(\d+)\.(\d+)\.(\d+)\.(\d+)(\D*).*/$1.$2.$3.$4/) {
-		$HOST2 = $ENV{'HTTP_X_FORWARDED_FOR'};
+	if (defined $ENV{'HTTP_X_FORWARDED_FOR'} && $ENV{'HTTP_X_FORWARDED_FOR'} =~ /^([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/) {
+		$HOST2 = $1;
 	}
-	if ($ENV{'HTTP_FORWARDED'} =~ s/.*\s(\d+)\.(\d+)\.(\d+)\.(\d+)/$1.$2.$3.$4/) {
-		$HOST2 = $ENV{'HTTP_FORWARDED'};
+	if (defined $ENV{'HTTP_FORWARDED'} && $ENV{'HTTP_FORWARDED'} =~ /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$/) {
+		$HOST2 = $1;
 	}
-	$HOST2 = gethostbyaddr(pack('c4', split(/\./, $HOST2)), 2);
-	$HOST .= "&lt;$HOST2&gt;" if ($HOST2);
+	
+	if ($HOST2) {
+		$HOST2 = gethostbyaddr(pack('c4', split(/\./, $HOST2)), 2);
+		$HOST .= "&lt;$HOST2&gt;";
+	}
 	
 	return $HOST;
 }
@@ -475,6 +482,9 @@ sub MakeID
 #	2010.08.14 windyakin ★
 #	 -> 新仕様トリップの選択性に対応
 #
+#	2010.08.21 色々
+#	 -> 新仕様トリップ対応修正
+#
 #------------------------------------------------------------------------------------------------------------
 sub ConvertTrip
 {
@@ -508,8 +518,8 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			use Digest::SHA1 qw(sha1_base64);
-			$trip = substr(sha1_base64($$key), 0, 12);
+			require 'Digest/SHA1.pm';
+			$trip = substr(Digest::SHA1::sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
@@ -664,7 +674,7 @@ sub GetDate
 	
 	# 曜日の取得
 	$week = ('日', '月', '火', '水', '木', '金', '土')[$info[6]];
-	if ($oSet ne undef) {
+	if (defined $oSet) {
 		if (! $oSet->Equal('BBS_YMD_WEEKS', '')) {
 			@weeks = split(/\//, $oSet->Get('BBS_YMD_WEEKS'));
 			$week = $weeks[$info[6]];
@@ -777,6 +787,8 @@ sub ConvertCharacter1
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
+	$$data = '' if (! defined $$data);
+	
 	# all
 	$$data =~ s/</&lt;/g;
 	$$data =~ s/>/&gt;/g;
@@ -812,6 +824,8 @@ sub ConvertCharacter2
 {
 	my $this = shift;
 	my ($data, $mode) = @_;
+	
+	$$data = '' if (! defined $$data);
 	
 	# name mail
 	if ($mode == 0 || $mode == 1) {

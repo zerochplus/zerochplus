@@ -10,6 +10,9 @@
 #
 #============================================================================================================
 
+use strict;
+use warnings;
+
 # CGIの実行結果を終了コードとする
 exit(SearchCGI());
 
@@ -23,6 +26,8 @@ exit(SearchCGI());
 #------------------------------------------------------------------------------------------------------------
 sub SearchCGI
 {
+	my ($Sys, $Page, $Form, $BBS);
+	
 	require './module/melkor.pl';
 	require './module/thorin.pl';
 	require './module/samwise.pl';
@@ -38,7 +43,7 @@ sub SearchCGI
 	PrintHead($Sys, $Page, $BBS, $Form);
 	
 	# 検索ワードがある場合は検索を実行する
-	if (!$Form->Equal('WORD', '')) {
+	if (! $Form->Equal('WORD', '')) {
 		Search($Sys, $Form, $Page, $BBS);
 	}
 	PrintFoot($Sys, $Page);
@@ -57,7 +62,7 @@ sub PrintHead
 {
 	my ($Sys, $Page, $BBS, $Form) = @_;
 	my ($pBBS, $bbs, $name, $dir, $Banner);
-	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types);
+	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types, @bbsSet, $id);
 	
 	$sMODE	= $Form->Get('MODE');
 	$sBBS	= $Form->Get('BBS');
@@ -65,7 +70,7 @@ sub PrintHead
 	$sWORD	= $Form->Get('WORD');
 	@sTYPE	= $Form->GetAtArray('TYPE', 0);
 	
-	$types = $sTYPE[0] | $sTYPE[1] | $sTYPE[2];
+	$types = ($sTYPE[0] || 0) | ($sTYPE[1] || 0) | ($sTYPE[2] || 0);
 	$cTYPE[0] = ($types & 1 ? 'checked' : '');
 	$cTYPE[1] = ($types & 2 ? 'checked' : '');
 	$cTYPE[2] = ($types & 4 ? 'checked' : '');
@@ -76,7 +81,7 @@ sub PrintHead
 	$Banner->Load($Sys);
 
 	$Page->Print("Content-type: text/html;charset=Shift_JIS\n\n");
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -107,27 +112,27 @@ $Page->Print(<<HTML);
 HTML
 
 	if ($sMODE eq 'ALL') {
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
      <option value="ALL" selected>鯖内全検索</option>
      <option value="BBS">BBS指定全検索</option>
      <option value="THREAD">スレッド指定全検索</option>
 HTML
 	}
 	elsif ($sMODE eq 'BBS' || $sMODE eq '') {
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
      <option value="ALL">鯖内全検索</option>
      <option value="BBS" selected>BBS指定全検索</option>
      <option value="THREAD">スレッド指定全検索</option>
 HTML
 	}
 	elsif ($sMODE eq 'THREAD') {
-$Page->Print(<<HTML);
+		$Page->Print(<<HTML);
      <option value="ALL">鯖内全検索</option>
      <option value="BBS">BBS指定全検索</option>
      <option value="THREAD" selected>スレッド指定全検索</option>
 HTML
 	}
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
     </select>
     </td>
    </tr>
@@ -150,7 +155,7 @@ HTML
 			$Page->Print("     <option value=\"$dir\">$name</option>\n");
 		}
 	}
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
     </select>
     </td>
    </tr>
@@ -205,7 +210,7 @@ sub PrintFoot
 	
 	$ver = $Sys->Get('VERSION');
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 
 <div class="foot">
 <a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
@@ -238,7 +243,7 @@ sub Search
 	$Mode = 2 if ($Form->Equal('MODE', 'THREAD'));
 	
 	@types = $Form->GetAtArray('TYPE', 0);
-	$Type = $types[0] | $types[1] | $types[2];
+	$Type = ($types[0] || 0) | ($types[1] || 0) | ($types[2] || 0);
 	
 	# 検索オブジェクトの設定と検索の実行
 	eval {
@@ -289,7 +294,7 @@ sub PrintResultHead
 {
 	my ($Page, $n) = @_;
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#efefef" style="margin-bottom:1.2em;" align="center">
  <tr>
   <td>
@@ -329,7 +334,7 @@ sub PrintResult
 			$Page->Print("<a href=\"mailto:$$pResult[4]\">$$pResult[3]</a>");
 		}
 		
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
  </b>：$$pResult[5]</dt>
     <dd>
     $$pResult[6]
@@ -373,7 +378,7 @@ sub PrintNoHit
 {
 	my ($Page) = @_;
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <dt>
  0 名前：<font color="forestgreen"><b>検索エンジソ＠ぜろちゃんねるプラス</b></font>：No Hit
 </dt>
@@ -399,7 +404,7 @@ sub PrintSystemError
 {
 	my ($Page, $msg) = @_;
 	
-$Page->Print(<<HTML);
+	$Page->Print(<<HTML);
 <br>
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#efefef" align="center">
  <tr>

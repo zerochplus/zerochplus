@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		'LOG' => \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,72 +44,72 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$BASE,$BBS,$DAT);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $BASE, $BBS, $DAT, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	$BBS = $pSys->{'AD_BBS'};
 	$DAT = $pSys->{'AD_DAT'};
 	
 	# 掲示板情報の読み込みとグループ設定
-	if	($pSys->{'AD_BBS'} eq undef){
-		require('./module/nazguls.pl');
-		$BBS = new NAZGUL;
+	if (! defined $pSys->{'AD_BBS'}) {
+		require './module/nazguls.pl';
+		$BBS = NAZGUL->new;
 		
 		$BBS->Load($Sys);
-		$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	}
 	
 	# datの読み込み
-	if	($pSys->{'AD_DAT'} eq undef){
-		require('./module/gondor.pl');
-		$DAT = new ARAGORN;
+	if (! defined $pSys->{'AD_DAT'}) {
+		require './module/gondor.pl';
+		$DAT = ARAGORN->new;
 		
-		$Sys->Set('KEY',$Form->Get('TARGET_THREAD'));
-		my	$datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
-		$DAT->Load($Sys,$datPath,1);
+		$Sys->Set('KEY', $Form->Get('TARGET_THREAD'));
+		my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
+		$DAT->Load($Sys, $datPath, 1);
 	}
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys,$Sys->Get('BBS'));
+	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
-	if		($subMode eq 'LIST'){													# レス一覧画面
-		PrintResList($Page,$Sys,$Form,$DAT);
+	if ($subMode eq 'LIST') {														# レス一覧画面
+		PrintResList($Page, $Sys, $Form, $DAT);
 	}
-	elsif	($subMode eq 'EDIT'){													# レス編集画面
-		PrintResEdit($Page,$Sys,$Form,$DAT);
+	elsif ($subMode eq 'EDIT') {													# レス編集画面
+		PrintResEdit($Page, $Sys, $Form, $DAT);
 	}
-	elsif	($subMode eq 'ABONE'){													# レス削除確認画面
-		PrintResDelete($Page,$Sys,$Form,$DAT,1);
+	elsif ($subMode eq 'ABONE') {													# レス削除確認画面
+		PrintResDelete($Page, $Sys, $Form, $DAT, 1);
 	}
-	elsif	($subMode eq 'DELETE'){													# レス削除確認画面
-		PrintResDelete($Page,$Sys,$Form,$DAT,0);
+	elsif ($subMode eq 'DELETE') {													# レス削除確認画面
+		PrintResDelete($Page, $Sys, $Form, $DAT, 0);
 	}
-	elsif	($subMode eq 'DELLUMP'){												# レス一括削除画面
-		PrintResLumpDelete($Page,$Sys,$Form,$DAT);
+	elsif ($subMode eq 'DELLUMP') {													# レス一括削除画面
+		PrintResLumpDelete($Page, $Sys, $Form, $DAT);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# 完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('過去ログ処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# 完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('過去ログ処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# 失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# 失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
 	# 掲示板・スレッド情報を設定
-	$Page->HTMLInput('hidden','TARGET_BBS',$Form->Get('TARGET_BBS'));
-	$Page->HTMLInput('hidden','TARGET_THREAD',$Form->Get('TARGET_THREAD'));
+	$Page->HTMLInput('hidden', 'TARGET_BBS', $Form->Get('TARGET_BBS'));
+	$Page->HTMLInput('hidden', 'TARGET_THREAD', $Form->Get('TARGET_THREAD'));
 	
-	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME',$Form->Get('TARGET_BBS'))
-					. ' - ' . $DAT->GetSubject(),3);
+	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME', $Form->Get('TARGET_BBS'))
+					. ' - ' . $DAT->GetSubject(), 3);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -121,55 +124,55 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err,$BBS,$DAT);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err, $BBS, $DAT);
 	
-	require('./module/gondor.pl');
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
-	$DAT = new ARAGORN;
+	require './module/gondor.pl';
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
+	$DAT = ARAGORN->new;
 	
 	# 掲示板情報の読み込みとグループ設定
-	eval{
+	eval {
 		$BBS->Load($Sys);
-		$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	};
 	
 	# datの読み込み
-	eval{
-		$Sys->Set('KEY',$Form->Get('TARGET_THREAD'));
-		my	$datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
-		$DAT->Load($Sys,$datPath,1);
+	eval {
+		$Sys->Set('KEY', $Form->Get('TARGET_THREAD'));
+		my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
+		$DAT->Load($Sys, $datPath, 1);
 	};
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
 	
-	if		($subMode eq 'EDIT'){													# レス編集
-		$err = FunctionResEdit($Sys,$Form,$DAT,$this->{'LOG'});
+	if ($subMode eq 'EDIT') {													# レス編集
+		$err = FunctionResEdit($Sys, $Form, $DAT, $this->{'LOG'});
 	}
-	elsif		($subMode eq 'ABONE'){												# レスあぼ～ん
-		$err = FunctionResDelete($Sys,$Form,$DAT,$this->{'LOG'},1);
+	elsif ($subMode eq 'ABONE') {												# レスあぼ～ん
+		$err = FunctionResDelete($Sys, $Form, $DAT, $this->{'LOG'}, 1);
 	}
-	elsif		($subMode eq 'DELETE'){												# レス削除
-		$err = FunctionResDelete($Sys,$Form,$DAT,$this->{'LOG'},0);
+	elsif ($subMode eq 'DELETE') {												# レス削除
+		$err = FunctionResDelete($Sys, $Form, $DAT, $this->{'LOG'}, 0);
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"RESPONSE($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "RESPONSE($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"RESPONSE($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "RESPONSE($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
 	$pSys->{'AD_BBS'} = $BBS;
 	$pSys->{'AD_DAT'} = $DAT;
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -182,21 +185,21 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys,$bbs) = @_;
+	my ($Base, $pSys, $bbs) = @_;
 	
-	$Base->SetMenu("レス一覧","'thread.res','DISP','LIST'");
+	$Base->SetMenu('レス一覧', "'thread.res','DISP','LIST'");
 	
 	# レス削除権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},12,$bbs)){
-		$Base->SetMenu("レス一括削除","'thread.res','DISP','DELLUMP'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 12, $bbs)){
+		$Base->SetMenu('レス一括削除', "'thread.res','DISP','DELLUMP'");
 	}
 	# 管理グループ権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},1,$bbs)){
-		$Base->SetMenu("<hr>","");
-		$Base->SetMenu("書き込みログ","'thread.res','DISP','LOG_THREAD_WRITE'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 1, $bbs)){
+	#	$Base->SetMenu('<hr>', '');
+	#	$Base->SetMenu('書き込みログ', "'thread.res','DISP','LOG_THREAD_WRITE'");
 	}
-	$Base->SetMenu("<hr>","");
-	$Base->SetMenu("掲示板管理へ戻る","'bbs.thread','DISP','LIST'");
+	$Base->SetMenu('<hr>', '');
+	$Base->SetMenu('掲示板管理へ戻る', "'bbs.thread','DISP','LIST'");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -215,17 +218,17 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintResList
 {
-	my		($Page,$Sys,$Form,$Dat) = @_;
-	my		(@elem,$resNum,$dispNum,$dispSt,$dispEd,$common,$i);
-	my		($pRes,$isAbone,$isEdit);
+	my ($Page, $Sys, $Form, $Dat) = @_;
+	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
+	my ($pRes, $isAbone, $isEdit, $format);
 	
-	$Sys->Set('_TITLE','Res List');
+	$Sys->Set('_TITLE', 'Res List');
 	
 	# 表示書式の設定
 	$format = $Form->Get('DISP_FORMAT') eq '' ? 'l10' : $Form->Get('DISP_FORMAT');
-	($dispSt,$dispEd) = AnalyzeFormat($format,$Dat);
+	($dispSt, $dispEd) = AnalyzeFormat($format, $Dat);
 	
-	$common	= "DoSubmit('thread.res','DISP','LIST');";
+	$common = "DoSubmit('thread.res','DISP','LIST');";
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2 align=right>表\示書式：<input type=text name=DISP_FORMAT");
@@ -235,42 +238,42 @@ sub PrintResList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:300\">Contents</td></tr>\n");
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},12,$Sys->Get('BBS'));
-	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},13,$Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
+	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 13, $Sys->Get('BBS'));
 	
 	# レス一覧を出力
-	for	($i = $dispSt;$i < $dispEd;$i++){
+	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$pRes	= $Dat->Get($i);
-		@elem	= split(/<>/,$$pRes);
+		@elem	= split(/<>/, $$pRes);
 		
 		$Page->Print("<tr><td class=\"Response\" valign=top>");
 		
 		# レス削除権による表示抑制
-		if	($isAbone){
+		if ($isAbone) {
 			$Page->Print("<input type=checkbox name=RESS value=$i></td>");
 		}
-		else{
+		else {
 			$Page->Print("</td>");
 		}
 		$Page->Print("<td class=\"Response\"><dt>");
 		
 		# レス編集権による表示抑制
-		if	($isEdit){
+		if ($isEdit) {
 			$common = "\"javascript:SetOption('SELECT_RES','$i');";
 			$common = $common . "DoSubmit('thread.res','DISP','EDIT')\"";
 			$Page->Print("<a href=$common>" . ($i + 1) . "</a>");
 		}
-		else{
+		else {
 			$Page->Print('' . ($i + 1));
 		}
 		$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
 		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd></td></tr>\n");
 	}
-	$Page->HTMLInput('hidden','SELECT_RES','');
+	$Page->HTMLInput('hidden', 'SELECT_RES', '');
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	# システム権限有無による表示抑制
-	if	($isAbone){
+	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.res','DISP'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"あぼ～ん\" $common,'ABONE')\"> ");
@@ -293,20 +296,21 @@ sub PrintResList
 #------------------------------------------------------------------------------------------------------------
 sub PrintResEdit
 {
-	my		($Page,$Sys,$Form,$Dat) = @_;
-	my		(@elem,$pRes,$isEdit);
+	my ($Page, $Sys, $Form, $Dat) = @_;
+	my (@elem, $pRes, $isEdit, $common);
 	
-	$Sys->Set('_TITLE','Res Edit');
+	$Sys->Set('_TITLE', 'Res Edit');
 	
-	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},13,$Sys->Get('BBS'));
+	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 13, $Sys->Get('BBS'));
 	$pRes	= $Dat->Get($Form->Get('SELECT_RES'));
-	@elem	= split(/<>/,$$pRes);
+	@elem	= split(/<>/, $$pRes);
 	
 	$elem[3] =~ s/^ //;
 	$elem[3] =~ s/ $//;
 	$elem[3] =~ s/ ?<br> ?/\n/g;
 	foreach (0 .. 3) {
 		$elem[$_] =~ s/&/&amp;/g;
+		$elem[$_] =~ s/"/&quot;/g;
 		$elem[$_] =~ s/</&lt;/g;
 		$elem[$_] =~ s/>/&gt;/g;
 	}
@@ -323,10 +327,10 @@ sub PrintResEdit
 	$Page->Print("<textarea name=MESSAGE cols=70 rows=10>$elem[3]</textarea></td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
 	
-	$Page->HTMLInput('hidden','SELECT_RES',$Form->Get('SELECT_RES'));
+	$Page->HTMLInput('hidden', 'SELECT_RES', $Form->Get('SELECT_RES'));
 	
 	# システム権限有無による表示抑制
-	if	($isEdit){
+	if ($isEdit) {
 		$common = "onclick=\"DoSubmit('thread.res','FUNC'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　変更　\" $common,'EDIT')\"> ");
@@ -348,16 +352,16 @@ sub PrintResEdit
 #------------------------------------------------------------------------------------------------------------
 sub PrintResDelete
 {
-	my		($Page,$Sys,$Form,$Dat,$mode) = @_;
-	my		(@resSet,@elem,$pRes,$num,$common,$isAbone);
+	my ($Page, $Sys, $Form, $Dat, $mode) = @_;
+	my (@resSet, @elem, $pRes, $num, $common, $isAbone);
 	
-	$Sys->Set('_TITLE','Res Delete Confirm');
+	$Sys->Set('_TITLE', 'Res Delete Confirm');
 	
 	# 選択レスを取得
 	@resSet = $Form->GetAtArray('RESS');
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},12,$Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td>以下のレスを" . ($mode ? 'あぼ～ん' : '削除') . "します。</td></tr>\n");
@@ -365,19 +369,19 @@ sub PrintResDelete
 	$Page->Print("<tr><td class=\"DetailTitle\">Contents</td></tr>\n");
 	
 	# レス一覧を出力
-	foreach	$num (@resSet){
+	foreach $num (@resSet) {
 		$pRes	= $Dat->Get($num);
-		@elem	= split(/<>/,$$pRes);
+		@elem	= split(/<>/, $$pRes);
 		
 		$Page->Print("<tr><td class=\"Response\"><dt>" . ($num + 1));
 		$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
 		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd></td></tr>\n");
-		$Page->HTMLInput('hidden','RESS',$num);
+		$Page->HTMLInput('hidden', 'RESS', $num);
 	}
 	$Page->Print("<tr><td><hr></td></tr>\n");
 	
 	# システム権限有無による表示抑制
-	if	($isAbone){
+	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.res','FUNC','";
 		$common = $common . ($mode ? 'ABONE' : 'DELETE') . "')\"";
 		$Page->Print("<tr><td align=right>");
@@ -400,20 +404,21 @@ sub PrintResDelete
 #------------------------------------------------------------------------------------------------------------
 sub PrintResLumpDelete
 {
-	my		($Page,$Sys,$Form,$Dat) = @_;
-	my		(@resSet,@elem,$pRes,$format,$num,$common,$isAbone);
+	my ($Page, $Sys, $Form, $Dat) = @_;
+	my (@resSet, @elem, $pRes, $format, $num, $common, $isAbone);
 	
-	$Sys->Set('_TITLE','Res Lump Delete');
+	$Sys->Set('_TITLE', 'Res Lump Delete');
 	
 	# 書式の解析
+	$num = 0;
 	$format = $Form->Get('DEL_FORMAT');
-	if	($format ne ''){
-		AnalyzeDeleteFormat($format,$Dat,\@resSet);
+	if ($format ne '') {
+		AnalyzeDeleteFormat($format, $Dat, \@resSet);
 		$num = @resSet;
 	}
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},12,$Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -421,24 +426,24 @@ sub PrintResLumpDelete
 	$Page->Print("<input type=text name=DEL_FORMAT size=40 value=$format></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
-	if	($num > 0){
+	if ($num > 0) {
 		$Page->Print("<tr><td colspan=2 class=\"DetailTitle\">Delete Contents</td></tr>");
 		
 		# レス一覧を出力
-		foreach	$num (@resSet){
+		foreach $num (@resSet) {
 			$pRes	= $Dat->Get($num);
-			@elem	= split(/<>/,$$pRes);
+			@elem	= split(/<>/, $$pRes);
 			
 			$Page->Print("<tr><td colspan=2 class=\"Response\"><dt>" . ($num + 1));
 			$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
 			$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd></td></tr>\n");
-			$Page->HTMLInput('hidden','RESS',$num);
+			$Page->HTMLInput('hidden', 'RESS', $num);
 		}
 		$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	}
 	
 	# システム権限有無による表示抑制
-	if	($isAbone){
+	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.res'";
 		$Page->Print("<tr><td align=right colspan=2>");
 		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','DELLUMP')\"> ");
@@ -462,13 +467,13 @@ sub PrintResLumpDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionResEdit
 {
-	my		($Sys, $Form, $Dat, $pLog) = @_;
-	my		(@elem, $pRes, $data);
+	my ($Sys, $Form, $Dat, $pLog) = @_;
+	my (@elem, $pRes, $data);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $Sys->Get('ADMIN')->{'USER'};
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, 13, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -519,24 +524,24 @@ sub FunctionResEdit
 #------------------------------------------------------------------------------------------------------------
 sub FunctionResDelete
 {
-	my		($Sys,$Form,$Dat,$pLog,$mode) = @_;
-	my		(@resSet,$pRes,$abone,$path,$tm,$user,$delCnt,$num,$datPath);
+	my ($Sys, $Form, $Dat, $pLog, $mode) = @_;
+	my (@resSet, $pRes, $abone, $path, $tm, $user, $delCnt, $num, $datPath);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $Sys->Get('ADMIN')->{'USER'};
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $Sys->Get('ADMIN')->{'USER'};
 		
-		if	(($SEC->IsAuthority($chkID,12,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 12, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	
 	# あぼ～ん時は削除名を取得
-	if	($mode){
-		my	$Setting;
-		require('./module/isildur.pl');
-		$Setting = new ISILDUR;
+	if ($mode) {
+		my $Setting;
+		require './module/isildur.pl';
+		$Setting = ISILDUR->new;
 		$Setting->Load($Sys);
 		$abone	= $Setting->Get('BBS_DELETE_NAME');
 	}
@@ -551,26 +556,26 @@ sub FunctionResDelete
 	
 	# datを書き込みモードで読み直す
 	$Dat->Close();
-	$Dat->Load($Sys,$datPath,0);
+	$Dat->Load($Sys, $datPath, 0);
 	
 	# 削除と同時に削除ログへ削除した内容を保存する
-	eval{
-		open(DELLOG,">>$path");
-		flock(DELLOG,2);
-		binmode(DELLOG);
-		foreach	$num (@resSet){
+	eval {
+		open DELLOG,">> $path";
+		flock DELLOG, 2;
+		binmode DELLOG;
+		foreach $num (@resSet) {
 			$pRes = $Dat->Get($num - $delCnt);
 			print DELLOG "$tm<>$user<>$num<>$mode<>$$pRes";
-			if	($mode){
-				$Dat->Set($num,"$abone<>$abone<>$abone<>$abone<>$abone\n");
+			if ($mode) {
+				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
 			}
-			else{
+			else {
 				$Dat->Delete($num - $delCnt);
 				$delCnt ++;
 			}
 		}
-		close(DELLOG);
-		chmod($Sys->Get('PM-LOG'),$path);
+		close DELLOG;
+		chmod($Sys->Get('PM-LOG'), $path);
 	};
 	
 	# 保存
@@ -579,19 +584,19 @@ sub FunctionResDelete
 	# ログの設定
 	$delCnt = 0;
 	$abone	= '';
-	push(@$pLog,'以下のレスを' . ($mode ? 'あぼ～ん' : '削除') . 'しました。');
-	foreach	(@resSet){
-		if	($delCnt > 5){
-			push(@$pLog,$abone);
+	push @$pLog, '以下のレスを' . ($mode ? 'あぼ～ん' : '削除') . 'しました。';
+	foreach (@resSet) {
+		if ($delCnt > 5) {
+			push @$pLog, $abone;
 			$abone = '';
 			$delCnt = 0;
 		}
-		else{
-			$abone .= ($_ + 1) . ',';
+		else {
+			$abone .= ($_ + 1) . ', ';
 			$delCnt ++;
 		}
 	}
-	push(@$pLog,$abone);
+	push @$pLog, $abone;
 	
 	return 0;
 }
@@ -608,25 +613,25 @@ sub FunctionResDelete
 #------------------------------------------------------------------------------------------------------------
 sub AnalyzeDeleteFormat
 {
-	my	($format,$Dat,$pSet) = @_;
-	my	(%deleteTable,@elem,$i,$st,$ed);
+	my ($format, $Dat, $pSet) = @_;
+	my (%deleteTable, @elem, $i, $st, $ed);
 	
 	# セパレータで分解
-	@elem = split(/\,/,$format);
+	@elem = split(/\, /, $format);
 	
 	# 1区分ずつ書式解析をしてハッシュ(二重登録防止のため)に格納
-	foreach	(@elem){
-		($st,$ed) = AnalyzeFormat($_,$Dat);
-		if	($st != 0 || $ed != 0){
-			for	($i = $st;$i < $ed;$i++){
+	foreach (@elem){
+		($st, $ed) = AnalyzeFormat($_, $Dat);
+		if ($st != 0 || $ed != 0) {
+			for ($i = $st ; $i < $ed ; $i++) {
 				$deleteTable{$i} = 'true';
 			}
 		}
 	}
 	
 	# 結果を配列に設定
-	foreach	(sort{$a<=>$b}(keys(%deleteTable))){
-		push(@$pSet,$_);
+	foreach (sort {$a <=> $b} (keys %deleteTable)) {
+		push @$pSet, $_;
 	}
 }
 
@@ -636,54 +641,54 @@ sub AnalyzeDeleteFormat
 #	-------------------------------------------------------------------------------------
 #	@param	$format	書式文字列
 #	@param	$Dat	ARAGORNオブジェクト
-#	@return	(開始番号,終了番号)
+#	@return	(開始番号, 終了番号)
 #
 #------------------------------------------------------------------------------------------------------------
 sub AnalyzeFormat
 {
-	my	($format,$Dat) = @_;
-	my	($start,$end,$max);
+	my ($format, $Dat) = @_;
+	my ($start, $end, $max);
 	
 	# 書式エラー
-	if	($format =~ /[^0-9\-l]/ || $format eq ''){
-		return (0,0);
+	if ($format =~ /[^0-9\-l]/ || $format eq '') {
+		return (0, 0);
 	}
 	$max = $Dat->Size();
 	
 	# 最新n件
-	if		($format =~ /l(\d+)/){
+	if ($format =~ /l(\d+)/) {
 		$end	= $max;
-		$start	= ($max - $1) > 0 ? ($max - $1) : 1;
+		$start	= ($max - $1 + 1) > 0 ? ($max - $1 + 1) : 1;
 	}
 	# n～m
-	elsif	($format =~ /(\d+)-(\d+)/){
+	elsif ($format =~ /(\d+)-(\d+)/) {
 		$start	= $1 > $max ? $max : $1;
 		$end	= $2 > $max ? $max : $2;
 	}
 	# n以降すべて
-	elsif	($format =~ /(\d+)-/){
+	elsif ($format =~ /(\d+)-/) {
 		$start	= $1 > $max ? $max : $1;
 		$end	= $max;
 	}
 	# n以前すべて
-	elsif	($format =~ /-(\d+)/){
+	elsif ($format =~ /-(\d+)/) {
 		$start	= 1;
 		$end	= $1 > $max ? $max : $1;
 	}
 	# nのみ
-	elsif	($format =~ /(\d+)/){
+	elsif ($format =~ /(\d+)/) {
 		$start	= $1 > $max ? $max : $1;
 		$end	= $1 > $max ? $max : $1;
 	}
 	
 	# 順序正規化
-	if	($start > $end){
+	if ($start > $end) {
 		$max = $start;
 		$start = $end;
 		$end = $start;
 	}
 	
-	return ($start - 1,$end);
+	return ($start - 1, $end);
 }
 
 #============================================================================================================

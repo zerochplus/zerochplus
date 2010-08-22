@@ -10,6 +10,8 @@ package HTTPSERVICE;
 
 use Socket;
 use strict;
+use warnings;
+
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -76,7 +78,7 @@ sub request
 	
 	# httpリクエスト文字列の生成
 	@uris = split(/\//, $this->{'URI'});
-	if (($host = getTargetAddress($uris[2])) eq undef) {
+	if (! defined ($host = getTargetAddress($uris[2]))) {
 		return -1;
 	}
 	$uri = $this->{'URI'};
@@ -226,7 +228,7 @@ sub setContentType
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub setContentType
+sub setConnection
 {
 	my $this = shift;
 	my ($conn) = @_;

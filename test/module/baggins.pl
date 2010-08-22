@@ -28,6 +28,9 @@
 #============================================================================================================
 package	BILBO;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -369,7 +372,7 @@ sub UpdateAll
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my (@dirSet, $id, $base, $n, $num, $first, $subj);
+	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el);
 	
 	undef $this->{'SUBJECT'};
 	undef $this->{'RES'};
@@ -440,6 +443,9 @@ sub GetPosition
 #
 #============================================================================================================
 package	FRODO;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -712,7 +718,7 @@ sub UpdateAll
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my (@dirSet, $id, $base, $n, $num, $first, $subj);
+	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el);
 	
 	undef $this->{'SUBJECT'};
 	undef $this->{'RES'};

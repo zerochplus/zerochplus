@@ -7,6 +7,9 @@
 #
 #============================================================================================================
 package	IMRAHIL;
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #	Modeのビットについて
 #	--------------------------------------
@@ -84,18 +87,18 @@ sub Open
 	my ($File, $Limit, $Mode) = @_;
 	my $ret = -1;
 	
-	if ($File ne undef && $Limit ne undef && $Mode ne undef) {
+	if (defined $File && defined $Limit && defined $Mode) {
 		$this->{'PATH'} = $File;
 		$this->{'LIMIT'} = $Limit;
 		$this->{'MODE'} = $Mode;
 	}
 	else {
 		$File = $this->{'PATH'};
-		$Limit = $this->{'LIMIT'};
-		$Mode = $this->{'MODE'};
+		$Limit = int $this->{'LIMIT'};
+		$Mode = int $this->{'MODE'};
 	}
 	
-	if ($this->{'HANDLE'} eq undef) {
+	if (defined  $this->{'HANDLE'}) {
 		local *HANDLE;
 		$this->{'HANDLE'} = *HANDLE;
 	}
@@ -184,12 +187,12 @@ sub Write
 	
 	# ファイルオープン状態なら書き込みを実行する
 	if ($this->{'STAT'}) {
-		if (!($this->{'MODE'} & 1)) {
+		if (! ($this->{'MODE'} & 1)) {
 			my $handle = $this->{'HANDLE'};
 			eval {
 				truncate $handle, 0;
 				seek $handle, 0, 0;
-				for ($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
+				for (my $i = 0 ; $i < $this->{'SIZE'} ; $i++) {
 					print $handle $this->{'LOGS'}->[$i] . "\n";
 				}
 				close $handle;

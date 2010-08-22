@@ -9,6 +9,9 @@
 #============================================================================================================
 package	BALROGS;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -50,7 +53,7 @@ sub Create
 {
 	my $this = shift;
 	my ($SYS, $mode, $type, $bbs, $thread) = @_;
-	my ($pSearchSet);
+	my ($pSearchSet, $dir, $set);
 	
 	$this->{'SYS'} = $SYS;
 	$this->{'TYPE'} = $type;
@@ -61,8 +64,8 @@ sub Create
 	if ($mode == 0) {
 		require './module/baggins.pl';
 		require './module/nazguls.pl';
-		my $BBSs = new NAZGUL;
-		my $Threads = new BILBO;
+		my $BBSs = NAZGUL->new;
+		my $Threads = BILBO->new;
 		my (@bbsSet, @threadSet, $bbsID, $threadID, $set);
 		
 		$BBSs->Load($SYS);
@@ -85,7 +88,7 @@ sub Create
 	# 掲示板内全検索
 	elsif ($mode == 1) {
 		require './module/baggins.pl';
-		my $Threads = new BILBO;
+		my $Threads = BILBO->new;
 		my (@threadSet, $threadID, $set);
 		
 		$SYS->Set('BBS', $bbs);
@@ -108,9 +111,9 @@ sub Create
 	}
 	
 	# datモジュール読み込み
-	if ($this->{'ARAGORN'} eq undef) {
+	if (! defined $this->{'ARAGORN'}) {
 		require './module/gondor.pl';
-		$this->{'ARAGORN'} = new ARAGORN;
+		$this->{'ARAGORN'} = ARAGORN->new;
 	}
 }
 
@@ -168,7 +171,7 @@ sub Search
 {
 	my ($this, $word) = @_;
 	my ($pDAT, $pResultSet, $SetStr);
-	my ($bbs, $key, $i, $bFind);
+	my ($bbs, $key, $i, $bFind, $Path, $pDat, @elem);
 	
 	$bbs	= $this->{'SYS'}->Get('BBS');
 	$key	= $this->{'SYS'}->Get('KEY');
