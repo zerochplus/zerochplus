@@ -113,6 +113,8 @@ sub Print
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	$message	= $this->{'MESSAGE'}->{$err};
 	
+	$mode = '0' if (! defined $mode);
+	
 	# エラーメッセージの置換
 	while ($message =~ /{!(.*?)!}/) {
 		my $rep = $SYS->Get($1);

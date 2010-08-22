@@ -511,7 +511,7 @@ sub IsRegulation
 		# レス書き込み(連続投稿)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
 			if ($LOG->Search($host, 2) >= $oSET->Get('timeclose')) {
-			#	return 501;
+				return 501;
 			}
 		}
 		# レス書き込み(二重投稿)
