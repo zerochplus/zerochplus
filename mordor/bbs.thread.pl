@@ -350,7 +350,7 @@ sub PrintThreadStop
 		$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
 	}
 	$Page->Print("<tr><td colspan=3 align=right>");
-	$Page->Print("<input type=button value=\"　$text　\" onclick=\"$common;\"> ");
+	$Page->Print('<input type=button value="　' . $text . "　\" onclick=\"$common;\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 }
