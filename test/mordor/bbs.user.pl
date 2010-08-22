@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		'LOG' => \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,59 +44,59 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$BASE,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $BASE, $BBS, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	$BBS = $pSys->{'AD_BBS'};
 	
 	# 掲示板情報の読み込みとグループ設定
-	if	($BBS eq undef){
-		require('./module/nazguls.pl');
-		$BBS = new NAZGUL;
+	if (! defined $BBS) {
+		require './module/nazguls.pl';
+		$BBS = NAZGUL->new;
 		
 		$BBS->Load($Sys);
-		$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	}
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys,$Sys->Get('BBS'));
+	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
-	if		($subMode eq 'LIST'){													# グループ一覧画面
-		PrintGroupList($Page,$Sys,$Form);
+	if ($subMode eq 'LIST') {														# グループ一覧画面
+		PrintGroupList($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'CREATE'){													# グループ作成画面
-		PrintGroupSetting($Page,$Sys,$Form,0);
+	elsif ($subMode eq 'CREATE') {													# グループ作成画面
+		PrintGroupSetting($Page, $Sys, $Form, 0);
 	}
-	elsif	($subMode eq 'EDIT'){													# グループ編集画面
-		PrintGroupSetting($Page,$Sys,$Form,1);
+	elsif ($subMode eq 'EDIT') {													# グループ編集画面
+		PrintGroupSetting($Page, $Sys, $Form, 1);
 	}
-	elsif	($subMode eq 'DELETE'){													# グループ削除確認画面
-		PrintGroupDelete($Page,$Sys,$Form);
+	elsif ($subMode eq 'DELETE') {													# グループ削除確認画面
+		PrintGroupDelete($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'IMPORT'){													# グループインポート画面
-		PrintGroupImport($Page,$Sys,$Form,$BBS);
+	elsif ($subMode eq 'IMPORT') {													# グループインポート画面
+		PrintGroupImport($Page, $Sys, $Form, $BBS);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# グループ設定完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('管理グループ処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# グループ設定完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('管理グループ処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# グループ設定失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# グループ設定失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
 	# 掲示板情報を設定
-	$Page->HTMLInput('hidden','TARGET_BBS',$Form->Get('TARGET_BBS'));
+	$Page->HTMLInput('hidden', 'TARGET_BBS', $Form->Get('TARGET_BBS'));
 	
-	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME',$Form->Get('TARGET_BBS')),2);
+	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME', $Form->Get('TARGET_BBS')), 2);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -108,46 +111,46 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err, $BBS);
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
 	
 	# 管理情報を登録
 	$BBS->Load($Sys);
-	$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+	$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	$pSys->{'SECINFO'}->SetGroupInfo($Sys->Get('BBS'));
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
 	
-	if		($subMode eq 'CREATE'){													# グループ作成
-		$err = FunctionGroupSetting($Sys,$Form,0,$this->{'LOG'});
+	if ($subMode eq 'CREATE') {													# グループ作成
+		$err = FunctionGroupSetting($Sys, $Form, 0, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'EDIT'){													# グループ編集
-		$err = FunctionGroupSetting($Sys,$Form,1,$this->{'LOG'});
+	elsif ($subMode eq 'EDIT') {													# グループ編集
+		$err = FunctionGroupSetting($Sys, $Form, 1, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'DELETE'){													# グループ削除
-		$err = FunctionGroupDelete($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'DELETE') {													# グループ削除
+		$err = FunctionGroupDelete($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'IMPORT'){													# グループインポート
-		$err = FunctionGroupImport($Sys,$Form,$this->{'LOG'},$BBS);
+	elsif ($subMode eq 'IMPORT') {													# グループインポート
+		$err = FunctionGroupImport($Sys, $Form, $this->{'LOG'}, $BBS);
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"USER_GROUP($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"USER_GROUP($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"USER_GROUP($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"USER_GROUP($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
 	$pSys->{'AD_BBS'} = $BBS;
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -160,17 +163,17 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys,$bbs) = @_;
+	my ($Base, $pSys, $bbs) = @_;
 	
-	$Base->SetMenu("グループ一覧","'bbs.user','DISP','LIST'");
+	$Base->SetMenu('グループ一覧', "'bbs.user','DISP','LIST'");
 	
 	# 管理グループ設定権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},1,$bbs)){
-		$Base->SetMenu("グループ登録","'bbs.user','DISP','CREATE'");
-		$Base->SetMenu("グループインポート","'bbs.user','DISP','IMPORT'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 1, $bbs)) {
+		$Base->SetMenu('グループ登録', "'bbs.user','DISP','CREATE'");
+		$Base->SetMenu('グループインポート', "'bbs.user','DISP','IMPORT'");
 	}
-	$Base->SetMenu("<hr>","");
-	$Base->SetMenu("システム管理へ戻る","'sys.bbs','DISP','LIST'");
+	$Base->SetMenu('<hr>', '');
+	$Base->SetMenu('システム管理へ戻る', "'sys.bbs','DISP','LIST'");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -185,13 +188,13 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintGroupList
 {
-	my		($Page,$Sys,$Form) = @_;
-	my		($Group,$BBS,@groupSet,@user,$name,$expl,$id,$common,$isAuth,$n);
+	my ($Page, $Sys, $Form) = @_;
+	my ($Group, $BBS, @groupSet, @user, $name, $expl, $id, $common, $isAuth, $n);
 	
-	$Sys->Set('_TITLE','Group List');
+	$Sys->Set('_TITLE', 'Group List');
 	
-	require('./module/elves.pl');
-	$Group = new GILDOR;
+	require './module/elves.pl';
+	$Group = GILDOR->new;
 	
 	# グループ情報の読み込み
 	$Group->Load($Sys);
@@ -205,32 +208,32 @@ sub PrintGroupList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Users</td></tr>\n");
 	
 	# 権限取得
-	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'},1,$Sys->Get('BBS'));
+	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 1, $Sys->Get('BBS'));
 	
 	# グループ一覧を出力
-	foreach	$id (@groupSet){
-		$name = $Group->Get('NAME',$id);
-		$expl = $Group->Get('EXPL',$id);
-		@user = split(/\,/,$Group->Get('USERS',$id));
+	foreach $id (@groupSet) {
+		$name = $Group->Get('NAME', $id);
+		$expl = $Group->Get('EXPL', $id);
+		@user = split(/\, /, $Group->Get('USERS', $id));
 		$n = @user;
 		
 		$common = "\"javascript:SetOption('SELECT_GROUP','$id');";
-		$common = $common . "DoSubmit('bbs.user','DISP','EDIT')\"";
+		$common .= "DoSubmit('bbs.user','DISP','EDIT')\"";
 		
 		# 権限によって表示を抑制
 		$Page->Print("<tr><td><input type=checkbox name=GROUPS value=$id></td>");
-		if	($isAuth){
+		if ($isAuth) {
 			$Page->Print("<td><a href=$common>$name</a></td><td>$expl</td><td>$n</td></tr>\n");
 		}
-		else{
+		else {
 			$Page->Print("<td>$name</td><td>$expl</td><td>$n</td></tr>\n");
 		}
 	}
-	$Page->HTMLInput('hidden','SELECT_GROUP','');
+	$Page->HTMLInput('hidden', 'SELECT_GROUP', '');
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
-	if	($isAuth){
+	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.user','DISP'";
 		$Page->Print("<tr><td colspan=4 align=right>");
 		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
@@ -246,45 +249,45 @@ sub PrintGroupList
 #	@param	$Page	ページコンテキスト
 #	@param	$SYS	システム変数
 #	@param	$Form	フォーム変数
-#	@param	$mode	作成の場合:0,編集の場合:1
+#	@param	$mode	作成の場合:0, 編集の場合:1
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintGroupSetting
 {
-	my		($Page,$Sys,$Form,$mode) = @_;
-	my		($Group,$User,@userSet,@authNum,$i,$num,$id);
-	my		($name,$expl,@auth,@user,$common);
+	my ($Page, $Sys, $Form, $mode) = @_;
+	my ($Group, $User, @userSet, @authNum, $i, $num, $id);
+	my ($name, $expl, @auth, @user, $common);
 	
-	$Sys->Set('_TITLE','Group Edit')	if	($mode == 1);
-	$Sys->Set('_TITLE','Group Create')	if	($mode == 0);
+	$Sys->Set('_TITLE', 'Group Edit')	if ($mode == 1);
+	$Sys->Set('_TITLE', 'Group Create')	if ($mode == 0);
 	
-	require('./module/elves.pl');
-	$User = new GLORFINDEL;
-	$Group = new GILDOR;
+	require './module/elves.pl';
+	$User = GLORFINDEL->new;
+	$Group = GILDOR->new;
 	
 	# ユーザ情報の読み込み
 	$User->Load($Sys);
 	$Group->Load($Sys);
-	$User->GetKeySet('ALL','',\@userSet);
+	$User->GetKeySet('ALL', '', \@userSet);
 	
 	# 編集モードならユーザ情報を取得する
-	if	($mode){
-		$name = $Group->Get('NAME',$Form->Get('SELECT_GROUP'));
-		$expl = $Group->Get('EXPL',$Form->Get('SELECT_GROUP'));
-		@auth = split(/\,/,$Group->Get('AUTH',$Form->Get('SELECT_GROUP')));
-		@user = split(/\,/,$Group->Get('USERS',$Form->Get('SELECT_GROUP')));
+	if ($mode) {
+		$name = $Group->Get('NAME', $Form->Get('SELECT_GROUP'));
+		$expl = $Group->Get('EXPL', $Form->Get('SELECT_GROUP'));
+		@auth = split(/\, /, $Group->Get('AUTH', $Form->Get('SELECT_GROUP')));
+		@user = split(/\, /, $Group->Get('USERS', $Form->Get('SELECT_GROUP')));
 		
 		# 権限番号マッピング配列を作成
-		for	($i = 0;$i < 15;$i++){
+		for ($i = 0 ; $i < 15 ; $i++) {
 			$authNum[$i] = '';
 		}
-		foreach	$num (@auth){
+		foreach $num (@auth) {
 			$authNum[$num - 1] = 'checked';
 		}
 	}
-	else{
-		$Form->Set('SELECT_GROUP','');
+	else {
+		$Form->Set('SELECT_GROUP', '');
 	}
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
@@ -321,16 +324,16 @@ sub PrintGroupSetting
 	$Page->Print("</td>\n<td valign=top>");
 	
 	# 所属ユーザ一覧表示
-	foreach	$id (@userSet){
+	foreach $id (@userSet) {
 		# システム権限ユーザ、他のグループに所属しているユーザは非表示
-		if	(0 == $User->Get('SYSAD',$id) &&
-			($Group->GetBelong($id) eq '' || $Group->GetBelong($id) eq $Form->Get('SELECT_GROUP'))){
-			my	$userName = $User->Get('NAME',$id);
-			my	$fullName = $User->Get('FULL',$id);
-			my	$check = '';
-			foreach	(@user){
-				if	($_ eq $id){
-					$check = 'checked'
+		if (0 == $User->Get('SYSAD', $id) &&
+			($Group->GetBelong($id) eq '' || $Group->GetBelong($id) eq $Form->Get('SELECT_GROUP'))) {
+			my $userName = $User->Get('NAME', $id);
+			my $fullName = $User->Get('FULL', $id);
+			my $check = '';
+			foreach (@user) {
+				if ($_ eq $id) {
+					$check = 'checked';
 				}
 			}
 			$Page->Print("<input type=checkbox name=BELONGUSER value=$id $check>$userName($fullName)<br>");
@@ -341,7 +344,7 @@ sub PrintGroupSetting
 	$common = "'" . $Form->Get('MODE_SUB') . "'";
 	$common = "onclick=\"DoSubmit('bbs.user','FUNC',$common)\"";
 	
-	$Page->HTMLInput('hidden','SELECT_GROUP',$Form->Get('SELECT_GROUP'));
+	$Page->HTMLInput('hidden', 'SELECT_GROUP', $Form->Get('SELECT_GROUP'));
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
 	$Page->Print("<tr><td colspan=2 align=right>");
@@ -361,13 +364,13 @@ sub PrintGroupSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintGroupDelete
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Group,$BBS,@groupSet,$name,$expl,$rang,$id,$common);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Group, $BBS, @groupSet, $name, $expl, $rang, $id, $common);
 	
-	$SYS->Set('_TITLE','Group Delete Confirm');
+	$SYS->Set('_TITLE', 'Group Delete Confirm');
 	
-	require('./module/elves.pl');
-	$Group = new GILDOR;
+	require './module/elves.pl';
+	$Group = GILDOR->new;
 	$Group->Load($SYS);
 	
 	# ユーザ情報を取得
@@ -382,13 +385,13 @@ sub PrintGroupDelete
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:200\">Subscription</td>");
 	
 	# ユーザリストを出力
-	foreach	$id (@groupSet){
-		$name = $Group->Get('NAME',$id);
-		$expl = $Group->Get('EXPL',$id);
+	foreach $id (@groupSet) {
+		$name = $Group->Get('NAME', $id);
+		$expl = $Group->Get('EXPL', $id);
 		
 		$Page->Print("<tr><td>$name</a></td>");
 		$Page->Print("<td>$expl</td></tr>\n");
-		$Page->HTMLInput('hidden','GROUPS',$id);
+		$Page->HTMLInput('hidden', 'GROUPS', $id);
 	}
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
@@ -415,33 +418,33 @@ sub PrintGroupDelete
 #------------------------------------------------------------------------------------------------------------
 sub PrintGroupImport
 {
-	my		($Page,$SYS,$Form,$BBS) = @_;
-	my		(@bbsSet,$id,$name);
+	my ($Page, $SYS, $Form, $BBS) = @_;
+	my (@bbsSet, $id, $name);
 	
-	eval{
-	$SYS->Set('_TITLE','Group Import');
-	
-	# 所属BBSを取得
-	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'},$BBS,\@bbsSet);
-	
-	$Page->Print("<center><table cellspcing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">既存BBSからインポート</td>");
-	$Page->Print("<td><select name=IMPORT_BBS><option value=\"\">--掲示板を選択--</option>");
-	
-	# 掲示板一覧の出力
-	foreach	$id (@bbsSet){
-		$name	= $BBS->Get('NAME',$id);
-		$Page->Print("<option value=$id>$name</option>\n");
-	}
-	
-	$Page->Print("</select></td></tr>");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
-	$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','IMPORT');\"></td></tr></table>");
+	eval {
+		$SYS->Set('_TITLE', 'Group Import');
+		
+		# 所属BBSを取得
+		$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@bbsSet);
+		
+		$Page->Print("<center><table cellspcing=2 width=100%>");
+		$Page->Print("<tr><td colspan=2><hr></td></tr>");
+		$Page->Print("<tr><td class=\"DetailTitle\">既存BBSからインポート</td>");
+		$Page->Print("<td><select name=IMPORT_BBS><option value=\"\">--掲示板を選択--</option>");
+		
+		# 掲示板一覧の出力
+		foreach $id (@bbsSet) {
+			$name	= $BBS->Get('NAME', $id);
+			$Page->Print("<option value=$id>$name</option>\n");
+		}
+		
+		$Page->Print("</select></td></tr>");
+		$Page->Print("<tr><td colspan=2><hr></td></tr>");
+		$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
+		$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','IMPORT');\"></td></tr></table>");
 	};
 	
-	if($@ ne undef){
+	if (defined $@) {
 		print $@;
 	}
 }
@@ -452,36 +455,36 @@ sub PrintGroupImport
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
-#	@param	$mode	編集:1,作成:0
+#	@param	$mode	編集:1, 作成:0
 #	@param	$pLog	ログ用
 #	@return	エラーコード
 #
 #------------------------------------------------------------------------------------------------------------
 sub FunctionGroupSetting
 {
-	my		($Sys,$Form,$mode,$pLog) = @_;
-	my		($Group,$User,@userSet,@authNum,@belongUser);
-	my		($name,$expl,$auth,$user,$i);
+	my ($Sys, $Form, $mode, $pLog) = @_;
+	my ($Group, $User, @userSet, @authNum, @belongUser);
+	my ($name, $expl, $auth, $user, $i);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('GROUPNAME');
-		if	(!$Form->IsInput(\@inList)){
+		my @inList = ('GROUPNAME');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
 	}
-	require('./module/elves.pl');
-	$User = new GLORFINDEL;
-	$Group = new GILDOR;
+	require './module/elves.pl';
+	$User = GLORFINDEL->new;
+	$Group = GILDOR->new;
 	
 	# ユーザ情報の読み込み
 	$User->Load($Sys);
@@ -493,43 +496,43 @@ sub FunctionGroupSetting
 	
 	# 権限情報の生成
 	$auth = '';
-	$authNum[0]		= $Form->Equal('A_USERGROUP','on') ? 1 : 0;
-	$authNum[1]		= $Form->Equal('A_CAPGROUP','on') ? 1 : 0;
-	$authNum[2]		= $Form->Equal('A_THREADSTOP','on') ? 1 : 0;
-	$authNum[3]		= $Form->Equal('A_THREADPOOL','on') ? 1 : 0;
-	$authNum[4]		= $Form->Equal('A_TREADDELETE','on') ? 1 : 0;
-	$authNum[5]		= $Form->Equal('A_THREADINFO','on') ? 1 : 0;
-	$authNum[6]		= $Form->Equal('A_PASTCREATE','on') ? 1 : 0;
-	$authNum[7]		= $Form->Equal('A_PASTDELETE','on') ? 1 : 0;
-	$authNum[8]		= $Form->Equal('A_BBSSETTING','on') ? 1 : 0;
-	$authNum[9]		= $Form->Equal('A_NGWORDS','on') ? 1 : 0;
-	$authNum[10]	= $Form->Equal('A_ACCESUSER','on') ? 1 : 0;
-	$authNum[11]	= $Form->Equal('A_RESABONE','on') ? 1 : 0;
-	$authNum[12]	= $Form->Equal('A_RESEDIT','on') ? 1 : 0;
-	$authNum[13]	= $Form->Equal('A_BBSEDIT','on') ? 1 : 0;
-	$authNum[14]	= $Form->Equal('A_LOGVIEW','on') ? 1 : 0;
+	$authNum[0]		= $Form->Equal('A_USERGROUP', 'on') ? 1 : 0;
+	$authNum[1]		= $Form->Equal('A_CAPGROUP', 'on') ? 1 : 0;
+	$authNum[2]		= $Form->Equal('A_THREADSTOP', 'on') ? 1 : 0;
+	$authNum[3]		= $Form->Equal('A_THREADPOOL', 'on') ? 1 : 0;
+	$authNum[4]		= $Form->Equal('A_TREADDELETE', 'on') ? 1 : 0;
+	$authNum[5]		= $Form->Equal('A_THREADINFO', 'on') ? 1 : 0;
+	$authNum[6]		= $Form->Equal('A_PASTCREATE', 'on') ? 1 : 0;
+	$authNum[7]		= $Form->Equal('A_PASTDELETE', 'on') ? 1 : 0;
+	$authNum[8]		= $Form->Equal('A_BBSSETTING', 'on') ? 1 : 0;
+	$authNum[9]		= $Form->Equal('A_NGWORDS', 'on') ? 1 : 0;
+	$authNum[10]	= $Form->Equal('A_ACCESUSER', 'on') ? 1 : 0;
+	$authNum[11]	= $Form->Equal('A_RESABONE', 'on') ? 1 : 0;
+	$authNum[12]	= $Form->Equal('A_RESEDIT', 'on') ? 1 : 0;
+	$authNum[13]	= $Form->Equal('A_BBSEDIT', 'on') ? 1 : 0;
+	$authNum[14]	= $Form->Equal('A_LOGVIEW', 'on') ? 1 : 0;
 	
-	for	($i = 1;$i < 16;$i++){
-		if	($authNum[$i - 1]){
-			$auth .= "$i,";
+	for ($i = 1 ; $i < 16 ; $i++) {
+		if ($authNum[$i - 1]) {
+			$auth .= "$i, ";
 		}
 	}
-	$auth = substr($auth,0,length($auth) - 1);
+	$auth = substr($auth, 0, length($auth) - 1);
 	
 	# 所属ユーザ情報の生成
 	@belongUser = $Form->GetAtArray('BELONGUSER');
-	$user = join(',',@belongUser);
+	$user = join(', ', @belongUser);
 	
 	# 設定情報の登録
-	if	($mode){
-		my	$groupID = $Form->Get('SELECT_GROUP');
-		$Group->Set($groupID,'NAME',$name);
-		$Group->Set($groupID,'EXPL',$expl);
-		$Group->Set($groupID,'AUTH',$auth);
-		$Group->Set($groupID,'USERS',$user);
+	if ($mode) {
+		my $groupID = $Form->Get('SELECT_GROUP');
+		$Group->Set($groupID, 'NAME', $name);
+		$Group->Set($groupID, 'EXPL', $expl);
+		$Group->Set($groupID, 'AUTH', $auth);
+		$Group->Set($groupID, 'USERS', $user);
 	}
-	else{
-		$Group->Add($name,$expl,$auth,$user);
+	else {
+		$Group->Add($name, $expl, $auth, $user);
 	}
 	
 	# 設定を保存
@@ -537,14 +540,14 @@ sub FunctionGroupSetting
 	
 	# 処理ログ
 	{
-		my	$id;
-		push(@$pLog,"■以下のグループを登録しました。");
-		push(@$pLog,"グループ名称：$name");
-		push(@$pLog,"説明：$expl");
-		push(@$pLog,"権限：$auth");
-		push(@$pLog,"所属ユーザ：");
-		foreach	$id (@belongUser){
-			push(@$pLog,"　　> " . $User->Get('NAME',$id));
+		my $id;
+		push @$pLog, '■以下のグループを登録しました。';
+		push @$pLog, "グループ名称：$name";
+		push @$pLog, "説明：$expl";
+		push @$pLog, "権限：$auth";
+		push @$pLog, '所属ユーザ：';
+		foreach $id (@belongUser) {
+			push @$pLog,"　　> " . $User->Get('NAME', $id);
 		}
 	}
 	
@@ -563,34 +566,34 @@ sub FunctionGroupSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionGroupDelete
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Group,@groupSet,$id);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Group, @groupSet, $id);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/elves.pl');
-	$Group = new GILDOR;
+	require './module/elves.pl';
+	$Group = GILDOR->new;
 	
 	# ユーザ情報の読み込み
 	$Group->Load($Sys);
 	
-	push(@$pLog,"■以下のグループを削除しました。");
+	push @$pLog, '■以下のグループを削除しました。';
 	@groupSet = $Form->GetAtArray('GROUPS');
 	
-	foreach	$id (@groupSet){
-		if	($Group->GetBelong($Sys->Get('ADMIN')->{'USER'}) eq $id){
+	foreach $id (@groupSet) {
+		if ($Group->GetBelong($Sys->Get('ADMIN')->{'USER'}) eq $id) {
 			push(@$pLog,
-				"※自分の所属グループのため「" . $Group->Get('NAME',$id) . "」を削除できませんでした。");
+				'※自分の所属グループのため「' . $Group->Get('NAME',$id) . '」を削除できませんでした。');
 		}
-		else{
-			push(@$pLog,$Group->Get('NAME',$id) . '(' . $Group->Get('EXPL',$id) . ')');
+		else {
+			push @$pLog, $Group->Get('NAME', $id) . '(' . $Group->Get('EXPL', $id) . ')';
 			$Group->Delete($id);
 		}
 	}
@@ -613,36 +616,36 @@ sub FunctionGroupDelete
 #------------------------------------------------------------------------------------------------------------
 sub FunctionGroupImport
 {
-	my		($Sys,$Form,$pLog,$BBS) = @_;
-	my		($src,$dst);
+	my ($Sys, $Form, $pLog, $BBS) = @_;
+	my ($src, $dst);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,1,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
-	require('./module/earendil.pl');
+	require './module/earendil.pl';
 	
-	$src = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR',$Form->Get('IMPORT_BBS')) . '/info/groups.cgi';
+	$src = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $Form->Get('IMPORT_BBS')) . '/info/groups.cgi';
 	$dst = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/groups.cgi';
 	
 	# グループ設定をコピー
-	eval{
-		EARENDIL::Copy($src,$dst);
+	eval {
+		EARENDIL::Copy($src, $dst);
 	};
 	
 	# ログの出力
-	if	($@ ne ''){
-		push(@$pLog,$@);
+	if ($@ ne '') {
+		push @$pLog, $@;
 		return 9999;
 	}
-	else{
-		my	$name = $BBS->Get('NAME',$Form->Get('IMPORT_BBS'));
-		push(@$pLog,"「" . $name . "」のグループ設定をインポートしました。");
+	else {
+		my $name = $BBS->Get('NAME', $Form->Get('IMPORT_BBS'));
+		push @$pLog, "「$name」のグループ設定をインポートしました。";
 	}
 	return 0;
 }

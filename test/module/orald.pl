@@ -13,6 +13,9 @@
 #============================================================================================================
 package	ORALD;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -47,7 +50,7 @@ sub Load
 {
 	my $this = shift;
 	my ($M) = @_;
-	my (@readBuff, $path, $err, $subj, $msg);
+	my (@readBuff, $path, $err, $subj, $msg, @elem);
 	
 	undef %{$this->{'ERR'}};
 	$path = '.' . $M->Get('INFO') . '/errmsg.cgi';
@@ -125,13 +128,13 @@ sub Print
 	# エラーログを保存
 	{
 		require './module/peregrin.pl';
-		my $P = new PEREGRIN;
+		my $P = PEREGRIN->new;
 		$P->Load($SYS, 'ERR', '');
-		$P->Set('', $err, $version, $host);
+		$P->Set('', $err, $version, $host, $mode);
 		$P->Save($SYS);
 	}
 	
-	if ($mode eq "O") {
+	if ($mode eq 'O') {
 		my $subject = $this->{'SUBJECT'}->{$err};
 		$Page->Print("Content-type: text/html\n\n<html><head><title>");
 		$Page->Print("ＥＲＲＯＲ！</title></head><!--nobanner-->\n");

@@ -18,6 +18,9 @@
 #============================================================================================================
 package	FARAMIR;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -29,13 +32,11 @@ package	FARAMIR;
 sub new
 {
 	my $this = shift;
-	my (@USER, $TYPE, $METHOD, $obj);
-	
-	undef(%USER);
+	my (@USER, $obj);
 	
 	$obj = {
-		'TYPE'		=> $TYPE,
-		'METHOD'	=> $METHOD,
+		'TYPE'		=> '',
+		'METHOD'	=> '',
 		'USER'		=> \@USER
 	};
 	bless $obj, $this;
@@ -198,19 +199,19 @@ sub Check
 			last;
 		}
 	}
-	if ($flag && $this->{'TYPE'} eq 'disable') {	# 規制ユーザ
-		if ($this->{'METHOD'} eq 'disable') {		# 処理：書き込み不可
+	if ($flag && $this->{'TYPE'} eq 'disable') {		# 規制ユーザ
+		if ($this->{'METHOD'} eq 'disable') {			# 処理：書き込み不可
 			return 4;
 		}
-		elsif ($this->{'METHOD'} eq 'host') {		# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
 			return 2;
 		}
 	}
 	elsif (! $flag && $this->{'TYPE'} eq 'enable') {	# 限定ユーザ以外
-		if ($this->{'METHOD'} eq 'disable') {		# 処理：書き込み不可
+		if ($this->{'METHOD'} eq 'disable') {			# 処理：書き込み不可
 			return 4;
 		}
-		elsif ($this->{'METHOD'} eq 'host') {		# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
 			return 2;
 		}
 	}

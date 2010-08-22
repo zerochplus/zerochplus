@@ -8,6 +8,9 @@
 #============================================================================================================
 package	MODULE;
 
+use strict;
+use warnings;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -18,13 +21,13 @@ package	MODULE;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my		$this = shift;
-	my		($obj,@LOG);
+	my $this = shift;
+	my ($obj, @LOG);
 	
 	$obj = {
 		'LOG'	=> \@LOG
 	};
-	bless($obj,$this);
+	bless $obj, $this;
 	
 	return $obj;
 }
@@ -41,68 +44,68 @@ sub new
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$BASE,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $BASE, $BBS, $Page);
 	
-	require('./mordor/sauron.pl');
-	$BASE = new SAURON;
+	require './mordor/sauron.pl';
+	$BASE = SAURON->new;
 	$BBS = $pSys->{'AD_BBS'};
 	
 	# 掲示板情報の読み込みとグループ設定
-	if	($BBS eq undef){
-		require('./module/nazguls.pl');
-		$BBS = new NAZGUL;
+	if (! defined $BBS) {
+		require './module/nazguls.pl';
+		$BBS = NAZGUL->new;
 		
 		$BBS->Load($Sys);
-		$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR',$Form->Get('TARGET_BBS')));
+		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	}
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys,$Form);
+	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE,$pSys,$Sys->Get('BBS'));
+	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
-	if	($subMode eq 'SETINFO'){													# 設定情報画面
-		PrintSettingInfo($Page,$Sys,$Form);
+	if ($subMode eq 'SETINFO') {													# 設定情報画面
+		PrintSettingInfo($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'SETBASE'){												# 基本設定画面
-		PrintBaseSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'SETBASE') {													# 基本設定画面
+		PrintBaseSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'SETCOLOR'){												# カラー設定画面
-		PrintColorSetting($Page,$Sys,$Form,0);
+	elsif ($subMode eq 'SETCOLOR') {												# カラー設定画面
+		PrintColorSetting($Page, $Sys, $Form, 0);
 	}
-	elsif	($subMode eq 'SETCOLORC'){												# カラー設定確認画面
-		PrintColorSetting($Page,$Sys,$Form,1);
+	elsif ($subMode eq 'SETCOLORC') {												# カラー設定確認画面
+		PrintColorSetting($Page, $Sys, $Form, 1);
 	}
-	elsif	($subMode eq 'SETLIMIT'){												# 制限設定画面
-		PrintLimitSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'SETLIMIT') {												# 制限設定画面
+		PrintLimitSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'SETOTHER'){												# その他設定画面
-		PrintOtherSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'SETOTHER') {												# その他設定画面
+		PrintOtherSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'SETORIGIN'){												# オリジナル設定画面
-		PrintOriginalSetting($Page,$Sys,$Form);
+	elsif ($subMode eq 'SETORIGIN') {												# オリジナル設定画面
+		PrintOriginalSetting($Page, $Sys, $Form);
 	}
-	elsif	($subMode eq 'SETIMPORT'){												# インポート画面
-		PrintSettingImport($Page,$Sys,$Form,$BBS);
+	elsif ($subMode eq 'SETIMPORT') {												# インポート画面
+		PrintSettingImport($Page, $Sys, $Form, $BBS);
 	}
-	elsif	($subMode eq 'COMPLETE'){												# 設定完了画面
-		$Sys->Set('_TITLE','Process Complete');
-		$BASE->PrintComplete('掲示板設定処理',$this->{'LOG'});
+	elsif ($subMode eq 'COMPLETE') {												# 設定完了画面
+		$Sys->Set('_TITLE', 'Process Complete');
+		$BASE->PrintComplete('掲示板設定処理', $this->{'LOG'});
 	}
-	elsif	($subMode eq 'FALSE'){													# 設定失敗画面
-		$Sys->Set('_TITLE','Process Failed');
+	elsif ($subMode eq 'FALSE') {													# 設定失敗画面
+		$Sys->Set('_TITLE', 'Process Failed');
 		$BASE->PrintError($this->{'LOG'});
 	}
 	
 	# 掲示板情報を設定
-	$Page->HTMLInput('hidden','TARGET_BBS',$Form->Get('TARGET_BBS'));
+	$Page->HTMLInput('hidden', 'TARGET_BBS', $Form->Get('TARGET_BBS'));
 	
-	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME',$Form->Get('TARGET_BBS')),2);
+	$BASE->Print($Sys->Get('_TITLE') . ' - ' . $BBS->Get('NAME', $Form->Get('TARGET_BBS')), 2);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -117,53 +120,53 @@ sub DoPrint
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
-	my		$this = shift;
-	my		($Sys,$Form,$pSys) = @_;
-	my		($subMode,$err,$BBS);
+	my $this = shift;
+	my ($Sys, $Form, $pSys) = @_;
+	my ($subMode, $err, $BBS);
 	
-	require('./module/nazguls.pl');
-	$BBS = new NAZGUL;
+	require './module/nazguls.pl';
+	$BBS = NAZGUL->new;
 	
 	# 管理情報を登録
 	$BBS->Load($Sys);
-	$Sys->Set('BBS',$BBS->Get('DIR',$Form->Get('TARGET_BBS')));
-	$Sys->Set('ADMIN',$pSys);
+	$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+	$Sys->Set('ADMIN', $pSys);
 	$pSys->{'SECINFO'}->SetGroupInfo($Sys->Get('BBS'));
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
 	
-	if	($subMode eq 'SETBASE'){													# 基本設定
-		$err = FunctionBaseSetting($Sys,$Form,$this->{'LOG'});
+	if ($subMode eq 'SETBASE') {													# 基本設定
+		$err = FunctionBaseSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SETCOLOR'){												# カラー設定
-		$err = FunctionColorSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'SETCOLOR') {												# カラー設定
+		$err = FunctionColorSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SETLIMIT'){												# 制限設定
-		$err = FunctionLimitSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'SETLIMIT') {												# 制限設定
+		$err = FunctionLimitSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SETOTHER'){												# その他設定
-		$err = FunctionOtherSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'SETOTHER') {												# その他設定
+		$err = FunctionOtherSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SETORIGIN'){												# オリジナル設定
-		$err = FunctionOriginalSetting($Sys,$Form,$this->{'LOG'});
+	elsif ($subMode eq 'SETORIGIN') {												# オリジナル設定
+		$err = FunctionOriginalSetting($Sys, $Form, $this->{'LOG'});
 	}
-	elsif	($subMode eq 'SETIMPORT'){												# インポート
-		$err = FunctionSettingImport($Sys,$Form,$this->{'LOG'},$BBS);
+	elsif ($subMode eq 'SETIMPORT') {												# インポート
+		$err = FunctionSettingImport($Sys, $Form, $this->{'LOG'}, $BBS);
 	}
 	
 	# 処理結果表示
-	if	($err){
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"THREAD($subMode)",'ERROR:'.$err);
-		push(@{$this->{'LOG'}},$err);
-		$Form->Set('MODE_SUB','FALSE');
+	if ($err) {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"THREAD($subMode)", "ERROR:$err");
+		push @{$this->{'LOG'}}, $err;
+		$Form->Set('MODE_SUB', 'FALSE');
 	}
-	else{
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"THREAD($subMode)",'COMPLETE');
-		$Form->Set('MODE_SUB','COMPLETE');
+	else {
+		$pSys->{'LOGGER'}->Put($Form->Get('UserName'),"THREAD($subMode)", 'COMPLETE');
+		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
 	$pSys->{'AD_BBS'} = $BBS;
-	$this->DoPrint($Sys,$Form,$pSys);
+	$this->DoPrint($Sys, $Form, $pSys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -176,23 +179,23 @@ sub DoFunction
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my		($Base,$pSys,$bbs) = @_;
+	my ($Base, $pSys, $bbs) = @_;
 	
-	$Base->SetMenu("設定情報","'bbs.setting','DISP','SETINFO'");
+	$Base->SetMenu('設定情報', "'bbs.setting','DISP','SETINFO'");
 	
 	# 管理グループ設定権限のみ
-	if	($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'},9,$bbs)){
-		$Base->SetMenu("<hr>","");
-		$Base->SetMenu("基本設定","'bbs.setting','DISP','SETBASE'");
-		$Base->SetMenu("カラー設定","'bbs.setting','DISP','SETCOLOR'");
-		$Base->SetMenu("制限設定","'bbs.setting','DISP','SETLIMIT'");
-		$Base->SetMenu("その他設定","'bbs.setting','DISP','SETOTHER'");
-		$Base->SetMenu("<hr>","");
-		$Base->SetMenu("0chオリジナル設定","'bbs.setting','DISP','SETORIGIN'");
-		$Base->SetMenu("設定インポート","'bbs.setting','DISP','SETIMPORT'");
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 9, $bbs)){
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('基本設定', "'bbs.setting','DISP','SETBASE'");
+		$Base->SetMenu('カラー設定', "'bbs.setting','DISP','SETCOLOR'");
+		$Base->SetMenu('制限設定', "'bbs.setting','DISP','SETLIMIT'");
+		$Base->SetMenu('その他設定', "'bbs.setting','DISP','SETOTHER'");
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('0chオリジナル設定', "'bbs.setting','DISP','SETORIGIN'");
+		$Base->SetMenu('設定インポート', "'bbs.setting','DISP','SETIMPORT'");
 	}
-	$Base->SetMenu("<hr>","");
-	$Base->SetMenu("システム管理へ戻る","'sys.bbs','DISP','LIST'");
+	$Base->SetMenu('<hr>', '');
+	$Base->SetMenu('システム管理へ戻る', "'sys.bbs','DISP','LIST'");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -207,13 +210,13 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintSettingInfo
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Setting,@settingKeys,$key,$val);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Setting, @settingKeys, $key, $val, $keyNum, $i);
 	
-	$SYS->Set('_TITLE','BBS Setting Information');
+	$SYS->Set('_TITLE', 'BBS Setting Information');
 	
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($SYS);
 	
 	$Setting->GetKeySet(\@settingKeys);
@@ -222,7 +225,7 @@ sub PrintSettingInfo
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	
-	for	($i = 0;$i < ($keyNum / 2);$i++){
+	for ($i = 0 ; $i < ($keyNum / 2) ; $i++) {
 		$key = $settingKeys[$i * 2];
 		$val = $Setting->Get($key);
 		$Page->Print("<tr><td class=\"DetailTitle\">$key</td><td>$val</td>");
@@ -247,14 +250,14 @@ sub PrintSettingInfo
 #------------------------------------------------------------------------------------------------------------
 sub PrintBaseSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Setting);
-	my		($setSubTitle,$setKanban,$setKnabanLink,$setBackPict,$setNoName,$setAbone);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Setting);
+	my ($setSubTitle, $setKanban, $setKnabanLink, $setBackPict, $setNoName, $setAbone);
 	
-	$SYS->Set('_TITLE','BBS Base Setting');
+	$SYS->Set('_TITLE', 'BBS Base Setting');
 	
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($SYS);
 	
 	$setSubTitle	= $Setting->Get('BBS_SUBTITLE');
@@ -297,21 +300,21 @@ sub PrintBaseSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintColorSetting
 {
-	my		($Page,$SYS,$Form,$flg) = @_;
-	my		($Setting);
-	my		($setIndexTitle,$setThreadTitle,$setIndexBG,$setThreadBG,$setCreateBG);
-	my		($setMenuBG,$setText,$setLink,$setLinkA,$setLinkV,$setName);
+	my ($Page, $SYS, $Form, $flg) = @_;
+	my ($Setting);
+	my ($setIndexTitle, $setThreadTitle, $setIndexBG, $setThreadBG, $setCreateBG);
+	my ($setMenuBG, $setText, $setLink, $setLinkA, $setLinkV, $setName);
 	
-	$SYS->Set('_TITLE','BBS Color Setting');
+	$SYS->Set('_TITLE', 'BBS Color Setting');
 	
 	# SETTING.TXTから値を取得
-	if	($flg == 0){
-		require('./module/isildur.pl');
-		$Setting = new ISILDUR;
+	if ($flg == 0) {
+		require './module/isildur.pl';
+		$Setting = ISILDUR->new;
 		$Setting->Load($SYS);
 	}
 	# フォーム情報から値を取得
-	else{
+	else {
 		$Setting = $Form;
 	}
 	
@@ -367,7 +370,7 @@ sub PrintColorSetting
 	$Page->Print("<tr><td colspan=6><hr></td></tr>");
 	
 	# スレッドプレビューの表示
-	if	(1){
+	if (1) {
 		$Page->Print("<tr><td class=\"DetailTitle\" colspan=3>indexプレビュー</td>");
 		$Page->Print("<td class=\"DetailTitle\" colspan=3>スレッドプレビュー</td></tr>");
 		$Page->Print("<tr><td colspan=3 bgcolor=$setIndexBG>");
@@ -406,16 +409,16 @@ sub PrintColorSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintLimitSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Setting);
-	my		($setSubjectMax,$setNameMax,$setMailMax,$setContMax,$setThreadMax,$setWriteMax);
-	my		($setContinueMax,$setNoName,$setProxy,$setOverSea,$setIPSave,$setTomato);
-	my		($setIDForce,$setIDNone,$setIDHost,$setIDDisp);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Setting);
+	my ($setSubjectMax, $setNameMax, $setMailMax, $setContMax, $setThreadMax, $setWriteMax);
+	my ($setContinueMax, $setNoName, $setProxy, $setOverSea, $setIPSave, $setTomato);
+	my ($setIDForce, $setIDNone, $setIDHost, $setIDDisp);
 	
-	$SYS->Set('_TITLE','BBS Limitter Setting');
+	$SYS->Set('_TITLE', 'BBS Limitter Setting');
 	
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($SYS);
 	
 	# 設定値を取得
@@ -486,15 +489,15 @@ sub PrintLimitSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintOtherSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Setting);
-	my		($setThreadNum,$setContentNum,$setContentLine,$setThreadMenu,$setUnicode);
-	my		($setCookie,$setNameCookie,$setMailCookie,$setNewThread,$setConfirm,$setWeek);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Setting);
+	my ($setThreadNum, $setContentNum, $setContentLine, $setThreadMenu, $setUnicode);
+	my ($setCookie, $setNameCookie, $setMailCookie, $setNewThread, $setConfirm, $setWeek);
 	
-	$SYS->Set('_TITLE','BBS Other Setting');
+	$SYS->Set('_TITLE', 'BBS Other Setting');
 	
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($SYS);
 	
 	$setThreadNum	= $Setting->Get('BBS_THREAD_NUMBER');
@@ -557,13 +560,13 @@ sub PrintOtherSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintOriginalSetting
 {
-	my		($Page,$SYS,$Form) = @_;
-	my		($Setting,@setItem,@readOnly);
+	my ($Page, $SYS, $Form) = @_;
+	my ($Setting, @setItem, @readOnly);
 	
-	$SYS->Set('_TITLE','BBS 0ch Original Setting');
+	$SYS->Set('_TITLE', 'BBS 0ch Original Setting');
 	
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($SYS);
 	
 	$setItem[0]	= $Setting->Get('BBS_DATMAX');
@@ -617,13 +620,13 @@ sub PrintOriginalSetting
 #------------------------------------------------------------------------------------------------------------
 sub PrintSettingImport
 {
-	my		($Page,$SYS,$Form,$BBS) = @_;
-	my		(@bbsSet,$id,$name);
+	my ($Page, $SYS, $Form, $BBS) = @_;
+	my (@bbsSet, $id, $name);
 	
-	$SYS->Set('_TITLE','BBS Setting Import');
+	$SYS->Set('_TITLE', 'BBS Setting Import');
 	
 	# 所属BBSを取得
-	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'},$BBS,\@bbsSet);
+	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@bbsSet);
 	
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
@@ -632,8 +635,8 @@ sub PrintSettingImport
 	$Page->Print("<td><select name=IMPORT_BBS><option value=\"\">--掲示板を選択--</option>");
 	
 	# 掲示板一覧の出力
-	foreach	$id (@bbsSet){
-		$name	= $BBS->Get('NAME',$id);
+	foreach $id (@bbsSet) {
+		$name = $BBS->Get('NAME', $id);
 		$Page->Print("<option value=$id>$name</option>\n");
 	}
 	
@@ -658,38 +661,38 @@ sub PrintSettingImport
 #------------------------------------------------------------------------------------------------------------
 sub FunctionBaseSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Setting);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Setting);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_SUBTITLE','BBS_NONAME_NAME','BBS_DELETE_NAME');
-		if	(!$Form->IsInput(\@inList)){
+		my @inList = ('BBS_SUBTITLE', 'BBS_NONAME_NAME', 'BBS_DELETE_NAME');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		foreach	(@inList){
-			push(@$pLog,"「$_」を「" . $Form->Get($_) . "」に設定");
+		foreach (@inList) {
+			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
-	$Setting->Set('BBS_SUBTITLE',$Form->Get('BBS_SUBTITLE'));
-	$Setting->Set('BBS_TITLE_PICTURE',$Form->Get('BBS_TITLE_PICTURE'));
-	$Setting->Set('BBS_TITLE_LINK',$Form->Get('BBS_TITLE_LINK'));
-	$Setting->Set('BBS_BG_PICTURE',$Form->Get('BBS_BG_PICTURE'));
-	$Setting->Set('BBS_NONAME_NAME',$Form->Get('BBS_NONAME_NAME'));
-	$Setting->Set('BBS_DELETE_NAME',$Form->Get('BBS_DELETE_NAME'));
+	$Setting->Set('BBS_SUBTITLE', $Form->Get('BBS_SUBTITLE'));
+	$Setting->Set('BBS_TITLE_PICTURE', $Form->Get('BBS_TITLE_PICTURE'));
+	$Setting->Set('BBS_TITLE_LINK', $Form->Get('BBS_TITLE_LINK'));
+	$Setting->Set('BBS_BG_PICTURE', $Form->Get('BBS_BG_PICTURE'));
+	$Setting->Set('BBS_NONAME_NAME', $Form->Get('BBS_NONAME_NAME'));
+	$Setting->Set('BBS_DELETE_NAME', $Form->Get('BBS_DELETE_NAME'));
 	
 	$Setting->Save($Sys);
 	
@@ -708,45 +711,45 @@ sub FunctionBaseSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionColorSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Setting);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Setting);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_TITLE_COLOR','BBS_SUBJECT_COLOR','BBS_BG_COLOR','BBS_THREAD_COLOR',
-						'BBS_MAKETHREAD_COLOR','BBS_MENU_COLOR','BBS_TEXT_COLOR','BBS_LINK_COLOR',
-						'BBS_ALINK_COLOR','BBS_VLINK_COLOR','BBS_NAME_COLOR');
-		if	(!$Form->IsInput(\@inList)){
+		my @inList = ('BBS_TITLE_COLOR', 'BBS_SUBJECT_COLOR', 'BBS_BG_COLOR', 'BBS_THREAD_COLOR',
+						'BBS_MAKETHREAD_COLOR', 'BBS_MENU_COLOR', 'BBS_TEXT_COLOR', 'BBS_LINK_COLOR',
+						'BBS_ALINK_COLOR', 'BBS_VLINK_COLOR', 'BBS_NAME_COLOR');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		foreach	(@inList){
-			push(@$pLog,"「$_」を「" . $Form->Get($_) . "」に設定");
+		foreach (@inList) {
+			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
-	$Setting->Set('BBS_TITLE_COLOR',$Form->Get('BBS_TITLE_COLOR'));
-	$Setting->Set('BBS_SUBJECT_COLOR',$Form->Get('BBS_SUBJECT_COLOR'));
-	$Setting->Set('BBS_BG_COLOR',$Form->Get('BBS_BG_COLOR'));
-	$Setting->Set('BBS_THREAD_COLOR',$Form->Get('BBS_THREAD_COLOR'));
-	$Setting->Set('BBS_MAKETHREAD_COLOR',$Form->Get('BBS_MAKETHREAD_COLOR'));
-	$Setting->Set('BBS_MENU_COLOR',$Form->Get('BBS_MENU_COLOR'));
-	$Setting->Set('BBS_TEXT_COLOR',$Form->Get('BBS_TEXT_COLOR'));
-	$Setting->Set('BBS_LINK_COLOR',$Form->Get('BBS_LINK_COLOR'));
-	$Setting->Set('BBS_ALINK_COLOR',$Form->Get('BBS_ALINK_COLOR'));
-	$Setting->Set('BBS_VLINK_COLOR',$Form->Get('BBS_VLINK_COLOR'));
-	$Setting->Set('BBS_NAME_COLOR',$Form->Get('BBS_NAME_COLOR'));
+	$Setting->Set('BBS_TITLE_COLOR', $Form->Get('BBS_TITLE_COLOR'));
+	$Setting->Set('BBS_SUBJECT_COLOR', $Form->Get('BBS_SUBJECT_COLOR'));
+	$Setting->Set('BBS_BG_COLOR', $Form->Get('BBS_BG_COLOR'));
+	$Setting->Set('BBS_THREAD_COLOR', $Form->Get('BBS_THREAD_COLOR'));
+	$Setting->Set('BBS_MAKETHREAD_COLOR', $Form->Get('BBS_MAKETHREAD_COLOR'));
+	$Setting->Set('BBS_MENU_COLOR', $Form->Get('BBS_MENU_COLOR'));
+	$Setting->Set('BBS_TEXT_COLOR', $Form->Get('BBS_TEXT_COLOR'));
+	$Setting->Set('BBS_LINK_COLOR', $Form->Get('BBS_LINK_COLOR'));
+	$Setting->Set('BBS_ALINK_COLOR', $Form->Get('BBS_ALINK_COLOR'));
+	$Setting->Set('BBS_VLINK_COLOR', $Form->Get('BBS_VLINK_COLOR'));
+	$Setting->Set('BBS_NAME_COLOR', $Form->Get('BBS_NAME_COLOR'));
 	
 	$Setting->Save($Sys);
 	
@@ -765,61 +768,61 @@ sub FunctionColorSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionLimitSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Setting);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Setting);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_SUBJECT_COUNT','BBS_NAME_COUNT','BBS_MAIL_COUNT','BBS_MESSAGE_COUNT',
-						'BBS_THREAD_TATESUGI','timecount','timeclose');
+		my @inList = ('BBS_SUBJECT_COUNT', 'BBS_NAME_COUNT', 'BBS_MAIL_COUNT', 'BBS_MESSAGE_COUNT',
+						'BBS_THREAD_TATESUGI', 'timecount', 'timeclose');
 		# 入力有無
-		if	(!$Form->IsInput(\@inList)){
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
 		# 規定外文字
-		if	(!$Form->IsNumber(\@inList)){
+		if (!$Form->IsNumber(\@inList)) {
 			return 1002;
 		}
-		foreach	(@inList){
-			push(@$pLog,"「$_」を「" . $Form->Get($_) . "」に設定");
+		foreach (@inList) {
+			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
-	$Setting->Set('BBS_SUBJECT_COUNT',$Form->Get('BBS_SUBJECT_COUNT'));
-	$Setting->Set('BBS_NAME_COUNT',$Form->Get('BBS_NAME_COUNT'));
-	$Setting->Set('BBS_MAIL_COUNT',$Form->Get('BBS_MAIL_COUNT'));
-	$Setting->Set('BBS_MESSAGE_COUNT',$Form->Get('BBS_MESSAGE_COUNT'));
-	$Setting->Set('BBS_THREAD_TATESUGI',$Form->Get('BBS_THREAD_TATESUGI'));
-	$Setting->Set('timecount',$Form->Get('timecount'));
-	$Setting->Set('timeclose',$Form->Get('timeclose'));
-	$Setting->Set('NANASHI_CHECK',($Form->Equal('NANASHI_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_PROXY_CHECK',($Form->Equal('BBS_PROXY_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_JP_CHECK',($Form->Equal('BBS_JP_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_SLIP',($Form->Equal('BBS_SLIP','on') ? 'checked' : ''));
-	$Setting->Set('BBS_RAWIP_CHECK',($Form->Equal('BBS_RAWIP_CHECK','on') ? 'checked' : ''));
+	$Setting->Set('BBS_SUBJECT_COUNT', $Form->Get('BBS_SUBJECT_COUNT'));
+	$Setting->Set('BBS_NAME_COUNT', $Form->Get('BBS_NAME_COUNT'));
+	$Setting->Set('BBS_MAIL_COUNT', $Form->Get('BBS_MAIL_COUNT'));
+	$Setting->Set('BBS_MESSAGE_COUNT', $Form->Get('BBS_MESSAGE_COUNT'));
+	$Setting->Set('BBS_THREAD_TATESUGI', $Form->Get('BBS_THREAD_TATESUGI'));
+	$Setting->Set('timecount', $Form->Get('timecount'));
+	$Setting->Set('timeclose', $Form->Get('timeclose'));
+	$Setting->Set('NANASHI_CHECK', ($Form->Equal('NANASHI_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_PROXY_CHECK', ($Form->Equal('BBS_PROXY_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_JP_CHECK', ($Form->Equal('BBS_JP_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_SLIP', ($Form->Equal('BBS_SLIP', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_RAWIP_CHECK', ($Form->Equal('BBS_RAWIP_CHECK', 'on') ? 'checked' : ''));
 	
 	# ID表示設定
 	{
-		my	@IDs = ('BBS_FORCE_ID','BBS_DISP_IP','BBS_NO_ID');
+		my @IDs = ('BBS_FORCE_ID', 'BBS_DISP_IP', 'BBS_NO_ID');
 		
-		foreach	(@IDs){
-			if	($Form->Equal('ID_DISP',$_)){
-				$Setting->Set($_,'checked');
+		foreach (@IDs) {
+			if ($Form->Equal('ID_DISP', $_)) {
+				$Setting->Set($_, 'checked');
 			}
-			else{
-				$Setting->Set($_,'');
+			else {
+				$Setting->Set($_, '');
 			}
 		}
 	}
@@ -840,43 +843,43 @@ sub FunctionLimitSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionOtherSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Setting);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Setting);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_THREAD_NUMBER','BBS_CONTENTS_NUMBER','BBS_LINE_NUMBER','BBS_MAX_MENU_THREAD');
-		if	(!$Form->IsInput(\@inList)){
+		my @inList = ('BBS_THREAD_NUMBER', 'BBS_CONTENTS_NUMBER', 'BBS_LINE_NUMBER', 'BBS_MAX_MENU_THREAD');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		foreach	(@inList){
-			push(@$pLog,"「$_」を「" . $Form->Get($_) . "」に設定");
+		foreach (@inList) {
+			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
-	$Setting->Set('BBS_THREAD_NUMBER',$Form->Get('BBS_THREAD_NUMBER'));
-	$Setting->Set('BBS_CONTENTS_NUMBER',$Form->Get('BBS_CONTENTS_NUMBER'));
-	$Setting->Set('BBS_LINE_NUMBER',$Form->Get('BBS_LINE_NUMBER'));
-	$Setting->Set('BBS_MAX_MENU_THREAD',$Form->Get('BBS_MAX_MENU_THREAD'));
-	$Setting->Set('BBS_UNICODE',($Form->Equal('BBS_UNICODE','on') ? 'pass' : 'change'));
-	$Setting->Set('SUBBBS_CGI_ON',($Form->Equal('SUBBBS_CGI_ON','on') ? '1' : ''));
-	$Setting->Set('BBS_NAMECOOKIE_CHECK',($Form->Equal('BBS_NAMECOOKIE_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_MAILCOOKIE_CHECK',($Form->Equal('BBS_MAILCOOKIE_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_PASSWORD_CHECK',($Form->Equal('BBS_PASSWORD_CHECK','on') ? 'checked' : ''));
-	$Setting->Set('BBS_NEWSUBJECT',($Form->Equal('BBS_NEWSUBJECT','on') ? '1' : ''));
-	$Setting->Set('BBS_YMD_WEEKS',$Form->Get('BBS_YMD_WEEKS'));
+	$Setting->Set('BBS_THREAD_NUMBER', $Form->Get('BBS_THREAD_NUMBER'));
+	$Setting->Set('BBS_CONTENTS_NUMBER', $Form->Get('BBS_CONTENTS_NUMBER'));
+	$Setting->Set('BBS_LINE_NUMBER', $Form->Get('BBS_LINE_NUMBER'));
+	$Setting->Set('BBS_MAX_MENU_THREAD', $Form->Get('BBS_MAX_MENU_THREAD'));
+	$Setting->Set('BBS_UNICODE', ($Form->Equal('BBS_UNICODE', 'on') ? 'pass' : 'change'));
+	$Setting->Set('SUBBBS_CGI_ON', ($Form->Equal('SUBBBS_CGI_ON', 'on') ? '1' : ''));
+	$Setting->Set('BBS_NAMECOOKIE_CHECK', ($Form->Equal('BBS_NAMECOOKIE_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_MAILCOOKIE_CHECK', ($Form->Equal('BBS_MAILCOOKIE_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_PASSWORD_CHECK', ($Form->Equal('BBS_PASSWORD_CHECK', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_NEWSUBJECT', ($Form->Equal('BBS_NEWSUBJECT', 'on') ? '1' : ''));
+	$Setting->Set('BBS_YMD_WEEKS', $Form->Get('BBS_YMD_WEEKS'));
 	
 	$Setting->Save($Sys);
 	
@@ -895,39 +898,39 @@ sub FunctionOtherSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionOriginalSetting
 {
-	my		($Sys,$Form,$pLog) = @_;
-	my		($Setting);
+	my ($Sys, $Form, $pLog) = @_;
+	my ($Setting);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('BBS_TRIPCOLUMN','BBS_COLUMN_NUMBER');
-		if	(!$Form->IsInput(\@inList)){
+		my @inList = ('BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER');
+		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		foreach	(@inList){
-			push(@$pLog,"「$_」を「" . $Form->Get($_) . "」に設定");
+		foreach (@inList) {
+			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
-	$Setting->Set('BBS_DATMAX',$Form->Get('BBS_DATMAX'));
-	$Setting->Set('BBS_COOKIEPATH',$Form->Get('BBS_COOKIEPATH'));
-	$Setting->Set('BBS_REFERER_CUSHION',$Form->Get('BBS_REFERER_CUSHION'));
-	$Setting->Set('BBS_TRIPCOLUMN',$Form->Get('BBS_TRIPCOLUMN'));
-	$Setting->Set('BBS_COLUMN_NUMBER',$Form->Get('BBS_COLUMN_NUMBER'));
-	$Setting->Set('BBS_READONLY',$Form->Get('BBS_READONLY'));
-	$Setting->Set('BBS_THREADCAPONLY',($Form->Equal('BBS_THREADCAPONLY','on') ? 'checked' : ''));
+	$Setting->Set('BBS_DATMAX', $Form->Get('BBS_DATMAX'));
+	$Setting->Set('BBS_COOKIEPATH', $Form->Get('BBS_COOKIEPATH'));
+	$Setting->Set('BBS_REFERER_CUSHION', $Form->Get('BBS_REFERER_CUSHION'));
+	$Setting->Set('BBS_TRIPCOLUMN', $Form->Get('BBS_TRIPCOLUMN'));
+	$Setting->Set('BBS_COLUMN_NUMBER', $Form->Get('BBS_COLUMN_NUMBER'));
+	$Setting->Set('BBS_READONLY', $Form->Get('BBS_READONLY'));
+	$Setting->Set('BBS_THREADCAPONLY', ($Form->Equal('BBS_THREADCAPONLY', 'on') ? 'checked' : ''));
 	
 	$Setting->Save($Sys);
 	
@@ -946,78 +949,78 @@ sub FunctionOriginalSetting
 #------------------------------------------------------------------------------------------------------------
 sub FunctionSettingImport
 {
-	my		($Sys,$Form,$pLog,$BBS) = @_;
-	my		($Setting,@setKeys,@importKeys,$key);
+	my ($Sys, $Form, $pLog, $BBS) = @_;
+	my ($Setting, @setKeys, @importKeys, $key);
 	
 	# 権限チェック
 	{
-		my	$SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my	$chkID	= $SEC->IsLogin($Form->Get('UserName'),$Form->Get('PassWord'));
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if	(($SEC->IsAuthority($chkID,9,$Sys->Get('BBS'))) == 0){
+		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	# 入力チェック
 	{
-		my	@inList = ('IMPORT_BBS');
+		my @inList = ('IMPORT_BBS');
 		
 		# 既存掲示板からのインポート時のみ
-		if	($Form->Equal('IMPORT_KIND','FROM_BBS')){
+		if ($Form->Equal('IMPORT_KIND', 'FROM_BBS')) {
 			# 入力有無
-			if	(!$Form->IsInput(\@inList)){
+			if (! $Form->IsInput(\@inList)) {
 				return 1001;
 			}
 		}
 	}
-	require('./module/isildur.pl');
-	$Setting = new ISILDUR;
+	require './module/isildur.pl';
+	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
 	
 	# importするキーを設定する
 	$Setting->GetKeySet(\@setKeys);
-	foreach	(@setKeys){
-		if	($_ ne 'BBS_TITLE' && $_ ne 'BBS_SUBTITLE'){
-			push(@importKeys,$_);
+	foreach (@setKeys) {
+		if ($_ ne 'BBS_TITLE' && $_ ne 'BBS_SUBTITLE') {
+			push @importKeys, $_;
 		}
 	}
 	
 	# 既存BBSからインポート
-	if	($Form->Equal('IMPORT_KIND','FROM_BBS')){
-		my	$bbs = $BBS->Get('DIR',$Form->Get('IMPORT_BBS'));
-		my	$baseSetting = new ISILDUR;
-		my	$path = $Sys->Get('BBSPATH') . '/' . $bbs . '/SETTING.TXT';
+	if ($Form->Equal('IMPORT_KIND', 'FROM_BBS')) {
+		my $bbs = $BBS->Get('DIR', $Form->Get('IMPORT_BBS'));
+		my $baseSetting = ISILDUR->new;
+		my $path = $Sys->Get('BBSPATH') . "/$bbs/SETTING.TXT";
 		
-		push(@$pLog,"■掲示板「$path」から設定情報をインポートします。");
+		push @$pLog, "■掲示板「$path」から設定情報をインポートします。";
 		
 		# 既存BBSのSETTING.TXTを読み込む
-		if	($baseSetting->LoadFrom($path)){
+		if ($baseSetting->LoadFrom($path)) {
 			# 設定情報を設定する
-			foreach	$key (@importKeys){
-				$Setting->Set($key,$baseSetting->Get($key));
-				push(@$pLog,"　　「$key」をインポートしました。");
+			foreach $key (@importKeys) {
+				$Setting->Set($key, $baseSetting->Get($key));
+				push @$pLog, "　　「$key」をインポートしました。";
 			}
 		}
 	}
 	# 直接インポート
-	else{
-		my	$data = $Form->Get('IMPORT_DIRECT');
-		my	@datas = split(/\r\n|\r|\n/,$data);
-		my	(%setTemp,$line,$inKey);
+	else {
+		my $data = $Form->Get('IMPORT_DIRECT');
+		my @datas = split(/\r\n|\r|\n/, $data);
+		my (%setTemp, $line, $inKey);
 		
-		push(@$pLog,"■入力内容をインポートします。");
+		push @$pLog, '■入力内容をインポートします。';
 		
 		# フォーム情報から設定情報ハッシュを作成する
-		foreach	$line (@datas){
-			($key,$data) = split(/=/,$line);
+		foreach $line (@datas){
+			($key, $data) = split(/=/, $line);
 			$setTemp{$key} = $data;
 		}
 		# 設定情報を設定する
-		foreach	$key (keys(%setTemp)){
-			foreach	$inKey (@importKeys){
-				if	($key eq $inKey){
-					$Setting->Set($key,$setTemp{$key});
-					push(@$pLog,"　　「$key」をインポートしました。");
+		foreach $key (keys %setTemp) {
+			foreach $inKey (@importKeys) {
+				if ($key eq $inKey) {
+					$Setting->Set($key, $setTemp{$key});
+					push @$pLog, "　　「$key」をインポートしました。";
 				}
 			}
 		}

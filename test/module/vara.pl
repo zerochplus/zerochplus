@@ -9,10 +9,12 @@
 #	2010.08.12 規制選択性導入のため仕様変更
 #	2010.08.13 ログ保存形式変更による仕様変更
 #	2010.08.15 0ch本家プラグインとの互換性復活
-#	2010.08.20 プラグイン個別設定による変更
 #
 #============================================================================================================
 package	VARA;
+
+use strict;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -65,30 +67,30 @@ sub Init
 	$this->{'CONV'}		= $Conv;
 	
 	# モジュールが用意されてない場合はここで生成する
-	if ($Set eq undef) {
+	if (! defined $Set) {
 		require './module/isildur.pl';
-		$this->{'SET'} = new ISILDUR;
+		$this->{'SET'} = ISILDUR->new;
 		$this->{'SET'}->Load($Sys);
 	}
-	if ($Thread eq undef) {
+	if (! defined $Thread) {
 		require './module/baggins.pl';
-		$this->{'THREADS'} = new BILBO;
+		$this->{'THREADS'} = BILBO->new;
 		$this->{'THREADS'}->Load($Sys);
 	}
-	if ($Conv eq undef) {
+	if (! defined $Conv) {
 		require './module/galadriel.pl';
-		$this->{'CONV'} = new GALADRIEL;
+		$this->{'CONV'} = GALADRIEL->new;
 	}
 	
 	# キャップ管理モジュールロード
 	require './module/ungoliants.pl';
-	$this->{'SECURITY'} = new SECURITY;
+	$this->{'SECURITY'} = SECURITY->new;
 	$this->{'SECURITY'}->Init($Sys);
 	$this->{'SECURITY'}->SetGroupInfo($Sys->Get('BBS'));
 	
 	# 拡張機能情報管理モジュールロード
 	require './module/athelas.pl';
-	$this->{'PLUGIN'} = new ATHELAS;
+	$this->{'PLUGIN'} = ATHELAS->new;
 	$this->{'PLUGIN'}->Load($Sys);
 }
 
@@ -135,7 +137,9 @@ sub Write
 		$oConv	= $this->{'CONV'};
 		
 		# 書き込み直前処理
-		ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1);
+		if ($err = ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1)) {
+			return $err;
+		}
 		
 		# レス要素の取得
 		$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
@@ -210,7 +214,7 @@ sub Write
 sub ReadyBeforeCheck
 {
 	my ($this) = @_;
-	my ($Sys, $Form, @pluginSet);
+	my ($Sys, $Form, @pluginSet, $capPass, $capID);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
@@ -219,28 +223,23 @@ sub ReadyBeforeCheck
 	my ($from, $mail);
 	$from = $Form->Get('FROM');
 	$mail = $Form->Get('mail');
-	$from =~ s/<br>//g;
-	$mail =~ s/<br>//g;
+	$from =~ s/\n//g;
+	$mail =~ s/\n//g;
 	$Form->Set('NAME', $from);
 	$Form->Set('MAIL', $mail);
-	$Form->Set('FROM', $from);
-	$Form->Set('mail', $mail);
 	
 	# キャップパスの抽出と削除
 	if ($mail =~ /(#|＃)(.+)/) {
-		my ($capPass, $capID);
-		
 		$mail =~ s/＃/#/;
 		$mail =~ s/#(.+)//;
 		$capPass = $1;
 		
 		# キャップ情報設定
 		$capID = $this->{'SECURITY'}->GetCapID($capPass);
-		if ($capID) {
-			$Sys->Set('CAPID', $capID);
-		}
 		$Form->Set('mail', $mail);
 	}
+	$capID = '' if (! defined $capID);
+	$Sys->Set('CAPID', $capID);
 	
 	# datパスの生成
 	my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
@@ -264,10 +263,49 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet, $text);
+	my ($Sys, $Form, @pluginSet, $text, $host, $from);
 	
-	$Sys = $this->{'SYS'};
-	$Form = $this->{'FORM'};
+	$Sys	= $this->{'SYS'};
+	$Form	= $this->{'FORM'};
+	$host	= $this->{'FORM'}->Get('HOST');
+	$from	= $this->{'FORM'}->Get('FROM');
+	
+	# 規制ユーザ・NGワードチェック
+	{
+		my ($vUser, $ngWord, $check, @checkKey);
+		# 規制ユーザ
+		require './module/faramir.pl';
+		$vUser = FARAMIR->new;
+		$vUser->Load($Sys);
+		$check = $vUser->Check($host);
+		if ($check == 4) {
+			return 601;
+		}
+		if ($check == 2) {
+			if ($from =~ /$host/i) {
+				$this->{'FORM'}->Set('FROM', "</b>[´･ω･｀] <b>$from");
+			}
+			else {
+				return 601;
+			}
+		}
+		
+		# NGワード
+		require './module/wormtongue.pl';
+		$ngWord = WORMTONGUE->new;
+		$ngWord->Load($Sys);
+		@checkKey = ('FROM', 'mail', 'MESSAGE');
+		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
+		if ($check == 3) {
+			return 600;
+		}
+		if ($check == 1) {
+			$ngWord->Method($this->{'FORM'}, \@checkKey);
+		}
+		if ($check == 2) {
+			$this->{'FORM'}->Set('FROM', "$from<font color=\"tomato\">$host</font>");
+		}
+	}
 	
 	# pluginに渡す値を設定
 	$Sys->Set('_ERR', 0);
@@ -280,6 +318,8 @@ sub ReadyBeforeWrite
 	$text = $Form->Get('MESSAGE');
 	$text =~ s/<br>/ <br> /g;
 	$Form->Set('MESSAGE', " $text ");
+	
+	return 0;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -297,7 +337,7 @@ sub ReadyBeforeWrite
 sub ExecutePlugin
 {
 	my ($this, $type) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet);
+	my ($Sys, $Form, $Plugin, $id, @pluginSet, $Config);
 	
 	$Sys = $this->{'SYS'};
 	$Form = $this->{'FORM'};
@@ -345,49 +385,12 @@ sub IsRegulation
 	$oSET		= $this->{'SET'};
 	$oSEC		= $this->{'SECURITY'};
 	$host		= $this->{'FORM'}->Get('HOST');
-	$bbs		= $this->{'FORM'}->Get('BBS');
+	$bbs		= $this->{'FORM'}->Get('bbs');
 	$from		= $this->{'FORM'}->Get('FROM');
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
 	$Samba		= $oSYS->Get('SAMBA');
 	$mode		= $oSYS->Get('AGENT');
-	
-	# 規制ユーザ・NGワードチェック
-	{
-		my ($vUser, $ngWord, $check, @checkKey);
-		# 規制ユーザ
-		require './module/faramir.pl';
-		$vUser = new FARAMIR;
-		$vUser->Load($oSYS);
-		$check = $vUser->Check($host);
-		if ($check == 4) {
-			return 601;
-		}
-		if ($check == 2) {
-			if ($from =~ /$host/i) {
-				$this->{'FORM'}->Set('FROM', "</b>[´･ω･｀] <b>$from");
-			}
-			else {
-				return 601;
-			}
-		}
-		
-		# NGワード
-		require './module/wormtongue.pl';
-		$ngWord = new WORMTONGUE;
-		$ngWord->Load($oSYS);
-		@checkKey = ('FROM', 'mail', 'MESSAGE');
-		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
-		if ($check == 3) {
-			return 600;
-		}
-		if ($check == 1) {
-			$ngWord->Method($this->{'FORM'}, \@checkKey);
-		}
-		if ($check == 2) {
-			$this->{'FORM'}->Set('FROM', "$from<font color=\"tomato\">$host</font>");
-		}
-	}
 	
 	# レス書き込みモード時のみ
 	if ($oSYS->Equal('MODE', 2)) {
@@ -460,7 +463,7 @@ sub IsRegulation
 		}
 		# スレッド作成(スレッド立てすぎ)
 		require './module/peregrin.pl';
-		my $LOG = new PEREGRIN;
+		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
 			if ($LOG->Search($host, 1)) {
@@ -473,12 +476,29 @@ sub IsRegulation
 	# レス書き込みモード
 	else {
 		require './module/peregrin.pl';
-		my $LOG = new PEREGRIN;
+		my $LOGs = PEREGRIN->new;
+		$LOGs->Load($oSYS, 'SMB');
+		$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+		$LOGs->Save($oSYS);
+		
+		# SAMBA
+		if (! $oSEC->IsAuthority($capID, 12, $bbs)) {
+			my ($n, $tm) = $LOGs->IsSamba($Samba, $host);
+			if ($tm > 0) {
+				$oSYS->Set('WAIT', $tm);
+				$oSYS->Set('SAMBA', $n);
+				$oSYS->Set('SAMBATM', $Samba);
+				return 505;
+			}
+		}
+		
+		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
+		
 		# レス書き込み(連続投稿)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
 			if ($LOG->Search($host, 2) >= $oSET->Get('timeclose')) {
-				return 501;
+			#	return 501;
 			}
 		}
 		# レス書き込み(二重投稿)
@@ -489,8 +509,8 @@ sub IsRegulation
 				}
 			}
 		}
-		# Samba規制
 		
+=for
 		# 短時間投稿
 		if (!$oSEC->IsAuthority($capID, 12, $bbs)) {
 			my $tm = $LOG->IsTime($Samba, $host);
@@ -499,6 +519,7 @@ sub IsRegulation
 				return 503;
 			}
 		}
+=cut
 		$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
 		$LOG->Save($oSYS);
 	}
@@ -591,7 +612,7 @@ sub NormalizationNameMail
 	$name =~ s:fusianasan|山崎渉: </b>$host<b>:g;
 	
 	# キャップ名結合
-	if ($capName ne '') {
+	if (defined $capName && $capName ne '') {
 		$name = ($Form->Get('NAME') ? "$name＠" : '') . "$capName ★";
 	}
 	
@@ -756,7 +777,7 @@ sub SaveHost
 	$bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	
 	require './module/imrahil.pl';
-	$Logger = new IMRAHIL;
+	$Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/log/HOST", 500, 2 | 4) == 0) {
 		$Logger->Put($Form->Get('HOST'), $Sys->Get('KEY'), $Sys->Get('MODE'));
@@ -784,7 +805,7 @@ sub SaveHistory
 	$content = $Form->Get('MESSAGE');
 	
 	require './module/imrahil.pl';
-	$Logger = new IMRAHIL;
+	$Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/info/history", $Sys->Get('HISMAX'), 2 | 4) == 0) {
 		$Logger->Put($threadInfo, $resNum, $content, $name);
