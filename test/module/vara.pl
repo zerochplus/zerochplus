@@ -481,7 +481,7 @@ sub IsRegulation
 		$LOGs = PEREGRIN->new;
 		$LOGs->Load($oSYS, 'SMB');
 		
-		# SAMBA
+		# Samba
 		if ($oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
 			($n, $tm) = $LOGs->IsSamba($Samba, $host);
 			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);

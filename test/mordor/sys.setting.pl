@@ -477,10 +477,10 @@ sub PrintPlusSetting
 	$Page->Print("<tr><td>同じIPからの書き込みの文字数が変化しない場合規制する</td>");
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制 / SAMBA規制</td></tr>\n");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制 / Samba規制</td></tr>\n");
 	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
 	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
-	$Page->Print("<tr><td>SAMBA規制にする</td>");
+	$Page->Print("<tr><td>Samba規制にする</td>");
 	$Page->Print("<td><input type=checkbox name=ISSAMBA $issamba value=on></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
@@ -816,7 +816,7 @@ sub FunctionPlusSetting
 		push @$pLog, '　　　 バナー表\示：' . $SYSTEM->Get('BANNER');
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
 		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
-		push @$pLog, '　　　 SAMBA規制：' . $SYSTEM->Get('ISSAMBA');
+		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
 	}
 	return 0;
