@@ -345,7 +345,8 @@ sub FunctionLogDelete
 	$logFile = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/HOST'	if ($mode == 1);
 	$logFile = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/errs'	if ($mode == 2);
 	
-	eval {
+#	eval
+	{
 		# ƒƒOî•ñ‚Ìíœ
 		$Logger->Open($logFile, 0, 2 | 4);
 		

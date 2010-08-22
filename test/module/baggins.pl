@@ -130,7 +130,8 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
 	
-	eval {
+#	eval
+	{
 		open SUBJ, "+> $path";
 		flock SUBJ, 2;
 		truncate SUBJ, 0;
@@ -188,15 +189,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	スレッドID
+#			$default : デフォルト
 #	@return	スレッド情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -495,9 +500,10 @@ sub Load
 	if (-e $path) {
 		open SUBJ, $path;
 		while (<SUBJ>) {
+			chomp;
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
-			$elem[1] =~ s/ ?\((\d+)\)\n//;
+			$elem[1] =~ s/ ?\((\d+)\)$//;
 			$elem[2] = $1;
 			
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
@@ -526,13 +532,15 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	
-	eval {
+#	eval
+	{
 		open SUBJ, "+> $path";
 		flock SUBJ, 2;
 		truncate SUBJ, 0;
 		seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{SUBJECT}->{$_});
 			$data = "$_.dat<>" . $this->{SUBJECT}->{$_} . ' (' . $this->{RES}->{$_} . ')';
 			
 			print SUBJ "$data\n";
@@ -584,15 +592,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	スレッドID
+#			$default : デフォルト
 #	@return	スレッド情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

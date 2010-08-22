@@ -31,7 +31,8 @@ sub Copy
 	my ($src, $dst) = @_;
 	my ($perm);
 	
-	eval {
+#	eval
+	{
 		if (-e $src) {
 			$perm = (stat $src)[2];	# パーミッション取得
 			open SRC, "< $src";
@@ -63,7 +64,8 @@ sub Move
 	my ($src, $dst) = @_;
 	my ($perm);
 	
-	eval {
+#	eval
+	{
 		if (-e $src) {
 			$perm = (stat $src)[2];	# パーミッション取得
 			open SRC, "< $src";

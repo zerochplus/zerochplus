@@ -110,11 +110,11 @@ sub Initialize
 	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
 	
 	# BBS指定がおかしい
-	if ($elem[0] eq '') {
+	if (! defined $elem[0] || $elem[0] eq '') {
 		return 2011;
 	}
 	# スレッドキー指定がおかしい
-	elsif (($elem[1] eq '') || ($elem[1] =~ /[^0-9]/) ||
+	elsif (! defined $elem[1] || $elem[1] eq '' || ($elem[1] =~ /[^0-9]/) ||
 			(length($elem[1]) != 10 && length($elem[1]) != 9)) {
 		return 3001;
 	}
@@ -428,19 +428,19 @@ sub PrintReadFoot
 	if ($rmax > $Sys->{'DAT'}->Size()) {
 		my ($tm, $cgiPath, $cookName, $cookMail);
 		
+		$cookName = '';
+		$cookMail = '';
+		
 		# cookie設定ON時はcookieを取得する
 		if ($oSYS->Equal('AGENT', 0) && $Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			require './module/radagast.pl';
 			$Cookie = new RADAGAST;
 			$Cookie->Init();
-			$cookName = $Cookie->Get('NAME');
-			$cookMail = $Cookie->Get('MAIL');
+			$cookName = $Cookie->Get('NAME', '');
+			$cookMail = $Cookie->Get('MAIL', '');
 		}
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
-		
-		$cookName = '' if (! defined $cookName);
-		$cookMail = '' if (! defined $cookMail);
 		
 		$Page->Print(<<HTML);
 <form method="POST" action="$cgiPath/bbs.cgi">

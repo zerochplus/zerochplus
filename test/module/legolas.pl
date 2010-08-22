@@ -99,7 +99,8 @@ sub Save
 	$file = $this->{'FILE'};
 	
 	if ($path) {
-		eval {
+#		eval
+		{
 			chmod 0666, "$path/$file";
 			open HEAD, "> $path/$file";
 			flock HEAD, 2;

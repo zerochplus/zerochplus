@@ -553,6 +553,8 @@ sub ConvertOption
 	my ($opt) = @_;
 	my (@ret);
 	
+	$opt = '' if (! defined $opt);
+	
 	@ret = (-1, -1, -1, -1, -1);		# ‰Šú’l
 	
 	if ($opt =~ /l(\d+)n/) {			# ÅVnŒ(1–³‚µ)

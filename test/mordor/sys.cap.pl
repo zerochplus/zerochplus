@@ -269,6 +269,11 @@ sub PrintCapSetting
 	}
 	else {
 		$Form->Set('SELECT_CAP', '');
+		$name	= '';
+		$pass	= '';
+		$expl	= '';
+		$full	= '';
+		$sysad	= '';
 	}
 	
 	$Page->Print("<center><table border=0 cellspacing=2>");

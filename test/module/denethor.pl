@@ -146,31 +146,40 @@ sub Save
 	$file[1] = '.' . $M->Get('INFO') . '/bannermb.cgi';
 	$file[2] = '.' . $M->Get('INFO') . '/bannersub.cgi';
 	
-	eval { chmod 0666, $file[0]; };	# PC用書き込み
+#	eval
+	{ chmod 0666, $file[0]; };	# PC用書き込み
 	open BANPC, "> $file[0]";
 	binmode BANPC;
-	eval { flock BANPC, 2; };
+#	eval
+	{ flock BANPC, 2; };
 	print BANPC "$$this{'COLPC'}\n";
 	print BANPC "$$this{'TEXTPC'}";
 	close BANPC;
-	eval { chmod $M->Get('PM-ADM'), $file[0]; };
+#	eval
+	{ chmod $M->Get('PM-ADM'), $file[0]; };
 	
-	eval { chmod 0666, $file[2]; };	# PC用書き込み
+#	eval
+	{ chmod 0666, $file[2]; };	# PC用書き込み
 	open BANSB, "> $file[2]";
 	binmode BANSB;
-	eval { flock BANSB, 2; };
+#	eval
+	{ flock BANSB, 2; };
 	print BANSB "$$this{'TEXTSB'}";
 	close BANSB;
-	eval { chmod $M->Get('PM-ADM'), $file[2]; };
+#	eval
+	{ chmod $M->Get('PM-ADM'), $file[2]; };
 	
-	eval { chmod 0666, $file[1]; };	# 携帯用書き込み
+#	eval
+	{ chmod 0666, $file[1]; };	# 携帯用書き込み
 	open BANMB, "> $file[1]";
 	binmode BANMB;
-	eval { flock BANMB, 2; };
+#	eval
+	{ flock BANMB, 2; };
 	print BANMB "$$this{'COLMB'}\n";
 	print BANMB "$$this{'TEXTMB'}";
 	close BANMB;
-	eval { chmod $M->Get('PM-ADM'), $file[1]; };
+#	eval
+	{ chmod $M->Get('PM-ADM'), $file[1]; };
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -195,15 +204,19 @@ sub Set
 #	バナー情報取得 - Get
 #	-------------------------------------------
 #	引　数：$key : 取得キー
+#			$default : デフォルト
 #	戻り値：取得値
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
+	my ($val);
 	
-	return $this->{$key};
+	$val = $this->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

@@ -53,7 +53,8 @@ sub Load
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
 	if (-e $path) {
-		eval {
+#		eval
+		{
 			open SETTING, "< $path";
 			while (<SETTING>) {
 				chomp $_;
@@ -83,7 +84,8 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
-	eval {
+#	eval
+	{
 		open SETTING, "+> $path";
 		flock SETTING, 2;
 		binmode SETTING;
@@ -115,7 +117,8 @@ sub LoadFrom
 	undef %{$this->{'SETTING'}};
 	
 	if (-e $path) {
-		eval {
+#		eval
+		{
 			open SETTING, "< $path";
 			while (<SETTING>) {
 				chomp $_;
@@ -143,7 +146,8 @@ sub SaveAs
 	my ($path) = @_;
 	my ($key, $val);
 	
-	eval {
+#	eval
+	{
 		open SETTING, "+> $path";
 		flock SETTING, 2;
 		binmode SETTING;
@@ -198,15 +202,19 @@ sub Equal
 #	掲示板設定値取得
 #	-------------------------------------------------------------------------------------
 #	@param	$key	設定キー
+#			$default : デフォルト
 #	@return	設定値
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
+	my ($val);
 	
-	return($this->{'SETTING'}->{$key});
+	$val = $this->{'SETTING'}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

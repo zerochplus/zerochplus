@@ -84,7 +84,8 @@ sub request
 	$uri = $this->{'URI'};
 	$request = createRequestString($this, $host, $uri);
 	
-	eval {
+#	eval
+	{
 		my ($sockaddr, $response, $uri);
 		
 		# ソケットの作成

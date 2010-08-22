@@ -33,7 +33,8 @@ sub REMAKECGI
 		require './module/varda.pl';
 		my $BBSAid = new VARDA;
 		
-		eval {
+#		eval
+		{
 			$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
 			$BBSAid->CreateIndex();
 			$BBSAid->CreateIIndex();
@@ -91,13 +92,12 @@ sub Initialize
 	# –²‚ªL‚ª‚è‚ñ‚®
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
 	
-	$bbs = $Sys->{'FORM'}->Get('bbs');
-	$Sys->{'SYS'}->Set('BBS', '.__');
-	if ($bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'SYS'}->Get('BBSPATH') . "/$bbs") {
+	$bbs = $Sys->{'FORM'}->Get('bbs', '');
+	$Sys->{'SYS'}->Set('BBS', $bbs);
+	if ($bbs eq '' || $bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'SYS'}->Get('BBSPATH') . "/$bbs") {
 		return 999;
 	}
 	
-	$Sys->{'SYS'}->Set('BBS', $bbs);
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	$Sys->{'SYS'}->Set('MODE', 'CREATE');
 	

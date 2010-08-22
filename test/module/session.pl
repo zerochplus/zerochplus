@@ -88,7 +88,8 @@ sub setSession
 	$id = createSessionID($ENV{'REMOTE_ADDR'});
 	$filePath = './info/session/' . $id;
 	
-	eval {
+#	eval
+	{
 		if (-e $filePath) {
 			open SESSION, "+> $filePath";
 			flock SESSION, 2;

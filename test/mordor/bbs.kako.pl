@@ -184,8 +184,8 @@ sub PrintKakoLogList
 	
 	# 表示数の設定
 	$logNum		= @logSet;
-	$dispNum	= ($Form->Get('DISPNUM_KAKO') eq '' ? 10 : $Form->Get('DISPNUM_KAKO'));
-	$dispSt		= ($Form->Get('DISPST_KAKO') eq '' ? 0 : $Form->Get('DISPST_KAKO'));
+	$dispNum	= $Form->Get('DISPNUM_KAKO', 10);
+	$dispSt		= $Form->Get('DISPST_KAKO', 0);
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $logNum ? $logNum : ($dispSt + $dispNum));
 	
@@ -346,6 +346,7 @@ sub FunctionLogDelete
 	$Logs->Load($Sys);
 	
 	foreach $id (@logSet) {
+		next if (! defined $Logs->Get('KEY', $id));
 		push @$pLog, '過去ログ「' . $Logs->Get('SUBJECT', $id) . '」を削除しました。';
 		
 		# 過去ログファイルの削除

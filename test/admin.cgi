@@ -43,29 +43,26 @@ sub AdminCGI
 	$Form->DecodeForm(0);
 	$Form->Set('FALSE', 0);
 	
-	$name = $Form->Get('UserName');
-	$pass = $Form->Get('PassWord');
-	$name = '' if (! defined $name);
-	$pass = '' if (! defined $pass);
+	$name = $Form->Get('UserName', '');
+	$pass = $Form->Get('PassWord', '');
 	
 	# ログインユーザ設定
 	$userID = $SYS{'SECINFO'}->IsLogin($name, $pass);
 	$SYS{'USER'} = $userID;
 	
 	# 処理モジュール名を取得
-	$modName = $Form->Get('MODULE');
-	$modName = 'login' if (! defined $modName || $modName eq '');
+	$modName = $Form->Get('MODULE', 'login');
 	
 	# 処理モジュールオブジェクトの生成
 	require "./mordor/$modName.pl";
 	$oModule = new MODULE;
 	
 	# 表示モード
-	if (defined $Form->Get('MODE') && $Form->Get('MODE') eq 'DISP') {
+	if ($Form->Get('MODE', '') eq 'DISP') {
 		$oModule->DoPrint($Sys, $Form, \%SYS);
 	}
 	# 機能モード
-	elsif (defined $Form->Get('MODE') && $Form->Get('MODE') eq 'FUNC') {
+	elsif ($Form->Get('MODE', '') eq 'FUNC') {
 		$oModule->DoFunction($Sys, $Form, \%SYS);
 	}
 	# ログイン

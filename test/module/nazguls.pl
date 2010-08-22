@@ -102,7 +102,8 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
-	eval {
+#	eval
+	{
 		open BBSS, "+> $path";
 		flock BBSS, 2;
 		binmode BBSS;
@@ -166,15 +167,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	ユーザID
+#			$default : デフォルト
 #	@return	ユーザ情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -434,7 +439,8 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
-	eval {
+#	eval
+	{
 		open CATS, "+> $path";
 		flock CATS, 2;
 		binmode CATS;
@@ -483,15 +489,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	カテゴリID
+#			$default : デフォルト
 #	@return	カテゴリ情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

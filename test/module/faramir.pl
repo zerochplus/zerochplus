@@ -97,7 +97,8 @@ sub Save
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	eval {
+#	eval
+	{
 		open USER, "> $path";
 		flock USER, 2;
 		binmode USER;
@@ -135,15 +136,19 @@ sub Add
 #	ユーザデータ取得 - Get
 #	-------------------------------------------
 #	引　数：$key : 取得キー
+#			$default : デフォルト
 #	戻り値：ユーザデータ
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
+	my ($val);
 	
-	return $this->{$key};
+	$val = $this->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

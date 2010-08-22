@@ -92,7 +92,8 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	eval {
+#	eval
+	{
 		open NOTICE, "+>$path";
 		flock NOTICE, 2;
 		binmode NOTICE;
@@ -158,15 +159,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	ID
+#			$default : デフォルト
 #	@return	情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------

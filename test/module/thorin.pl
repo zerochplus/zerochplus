@@ -86,7 +86,8 @@ sub Flush
 	
 	# ファイルへ出力
 	if ($flag) {
-		eval {
+#		eval
+		{
 			open OUTPUT, "+> $szFilePath";
 			flock OUTPUT, 2;
 			truncate OUTPUT, 0;

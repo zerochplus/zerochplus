@@ -218,8 +218,8 @@ sub PrintThreadList
 	$base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
 	
 	# 表示数の設定
-	$dispNum	= ($Form->Get('DISPNUM') eq '' ? 10 : $Form->Get('DISPNUM'));
-	$dispSt		= ($Form->Get('DISPST') eq '' ? 0 : $Form->Get('DISPST'));
+	$dispNum	= $Form->Get('DISPNUM', 10);
+	$dispSt		= $Form->Get('DISPST', 0);
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $ThreadNum ? $ThreadNum : ($dispSt + $dispNum));
 	
@@ -604,6 +604,7 @@ sub FunctionThreadPooling
 	$path		= $Sys->Get('BBSPATH') . "/$bbs";
 	
 	foreach $id (@threadList) {
+		next if (! defined $Threads->Get('RES', $id));
 		push @$pLog, 'スレッド「' . $Threads->Get('SUBJECT', $id) . '」をDAT落ち';
 		$Pools->Add($id, $Threads->Get('SUBJECT', $id), $Threads->Get('RES', $id));
 		$Threads->Delete($id);

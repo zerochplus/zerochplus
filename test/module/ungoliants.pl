@@ -107,7 +107,8 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
-	eval {
+#	eval
+	{
 		open USERS, "+> $path";
 		flock USERS, 2;
 		binmode USERS;
@@ -172,15 +173,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	情報種別
 #	@param	$key	キャップID
+#			$default : デフォルト
 #	@return	キャップ情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -360,7 +365,8 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
 	
-	eval {
+#	eval
+	{
 		open GROUPS, "+> $path";
 		flock GROUPS, 2;
 		binmode GROUPS;
@@ -411,15 +417,19 @@ sub GetKeySet
 #	-------------------------------------------------------------------------------------
 #	@param	$kind	種別
 #	@param	$key	グループID
+#			$default : デフォルト
 #	@return	グループ名
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($kind, $key) = @_;
+	my ($kind, $key, $default) = @_;
+	my ($val);
 	
-	return $this->{$kind}->{$key};
+	$val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -604,19 +614,20 @@ sub Init
 #	@param	$id		キャップ/グループID
 #	@param	$key	取得キー
 #	@param	$f		取得種別
+#			$default : デフォルト
 #	@return	正式なキャップなら1を返す
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($id, $key, $f) = @_;
+	my ($id, $key, $f, $default) = @_;
 	
 	if ($f) {
-		return $this->{'CAP'}->Get($key, $id);
+		return $this->{'CAP'}->Get($key, $id, $default);
 	}
 	else {
-		return $this->{'GROUP'}->Get($key, $id);
+		return $this->{'GROUP'}->Get($key, $id, $default);
 	}
 }
 

@@ -178,10 +178,8 @@ sub PrintNoticeList
 	
 	# 表示数の設定
 	$listNum	= @noticeSet;
-	$dispNum	= ((! defined $Form->Get('DISPNUM_NOTICE') || $Form->Get('DISPNUM_NOTICE') eq '')
-					? 5 : $Form->Get('DISPNUM_NOTICE'));
-	$dispSt		= ((! defined $Form->Get('DISPST_NOTICE') || $Form->Get('DISPST_NOTICE') eq '')
-					? 0 : $Form->Get('DISPST_NOTICE'));
+	$dispNum	= $Form->Get('DISPNUM_NOTICE', 5);
+	$dispSt		= $Form->Get('DISPST_NOTICE', 0);
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
 	
@@ -204,7 +202,7 @@ sub PrintNoticeList
 	# 通知一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$id = $noticeSet[$i];
-		if ($Notices->IsInclude($id, $curUser) && !$Notices->IsLimitOut($id)) {
+		if ($Notices->IsInclude($id, $curUser) && ! $Notices->IsLimitOut($id)) {
 			if ($Notices->Get('FROM', $id) eq '0000000000') {
 				$from = '0ch管理システム';
 			}

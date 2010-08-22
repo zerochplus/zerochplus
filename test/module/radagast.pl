@@ -46,7 +46,7 @@ sub Init
 	my $this = shift;
 	my (@pairs, $name, $value, $gCode);
 	
-	require './module/jcode.pl';
+	#require './module/jcode.pl';
 	undef $this->{'COOKIE'};
 	
 	if ($ENV{'HTTP_COOKIE'}) {
@@ -54,8 +54,8 @@ sub Init
 		foreach (@pairs) {
 			($name, $value) = split(/=/, $_);
 			$name =~ s/ //g;
-			$gCode = jcode::getcode(*value);
-			jcode::convert(*value, $gCode);
+			#$gCode = jcode::getcode(*value);
+			#jcode::convert(*value, $gCode);
 			$this->{'COOKIE'}->{$name} = $value;
 		}
 		return 1;
@@ -84,15 +84,19 @@ sub Set
 #	cookie値取得
 #	-------------------------------------------------------------------------------------
 #	@param	$key	キー
+#			$default : デフォルト
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($key, $default) = @_;
+	my ($val);
 	
-	return $this->{'COOKIE'}->{$key};
+	$val = $this->{'COOKIE'}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
 }
 
 #------------------------------------------------------------------------------------------------------------
