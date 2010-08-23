@@ -44,8 +44,7 @@ sub BBSCGI
 				require './module/varda.pl';
 				my $BBSAid = new VARDA;
 				
-#				eval
-				{
+				eval {
 					$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
 					$BBSAid->CreateIndex();
 					$BBSAid->CreateIIndex();
@@ -98,6 +97,9 @@ sub BBSCGI
 #	@param	なし
 #	@return	なし
 #
+#	2010.08.23 windyakin ★
+#	 -> クッキーとスレッド作成の順序を変更
+#
 #------------------------------------------------------------------------------------------------------------
 sub Initialize
 {
@@ -131,8 +133,8 @@ sub Initialize
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
 	
 	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
-	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
-	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
+	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs'));
+	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
 	# ホスト情報設定.携帯の場合は機種情報を設定
@@ -164,6 +166,15 @@ sub Initialize
 	if ($Sys->{'FORM'}->IsExist('key'))	{ $Sys->{'SYS'}->Set('MODE', 2); }
 	else								{ $Sys->{'SYS'}->Set('MODE', 1); }
 	
+	# スレッド作成モードでMESSAGEが無い：スレッド作成画面
+	if ($Sys->{'SYS'}->Equal('MODE', 1)) {
+		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
+			return 9000;
+		}
+		$Sys->{'FORM'}->Set('key', time);
+		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
+	}
+	
 	# cookieの存在チェック(PCのみ)
 	if (!$Sys->{'SYS'}->Equal('AGENT', 'O')) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
@@ -181,15 +192,6 @@ sub Initialize
 				return 9001;
 			}
 		}
-	}
-	
-	# スレッド作成モードでMESSAGEが無い：スレッド作成画面
-	if ($Sys->{'SYS'}->Equal('MODE', 1)) {
-		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
-			return 9000;
-		}
-		$Sys->{'FORM'}->Set('key', time);
-		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
 	}
 	
 	return 0;
@@ -265,12 +267,15 @@ sub PrintBBSThreadCreate
 	{
 		my ($tblCol, $name, $mail, $cgiPath, $bbs, $tm, $ver);
 		$tblCol		= $SET->Get('BBS_MAKETHREAD_COLOR');
-		$name		= $Sys->{'COOKIE'}->Get('NAME', '');
-		$mail		= $Sys->{'COOKIE'}->Get('MAIL', '');
+		$name		= $Sys->{'COOKIE'}->Get('NAME');
+		$mail		= $Sys->{'COOKIE'}->Get('MAIL');
 		$bbs		= $Sys->{'FORM'}->Get('bbs');
 		$tm			= $Sys->{'FORM'}->Get('time');
 		$ver		= $Sys->{'SYS'}->Get('VERSION');
 		$server		= $Sys->{'SYS'}->Get('SERVER');
+		
+		$name = '' if (! defined $name);
+		$mail = '' if (! defined $mail);
 		
 		$Page->Print(<<HTML);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
@@ -568,8 +573,8 @@ sub PrintBBSJump
 	else {
 		my $COOKIE = $Sys->{'COOKIE'};
 		my $oSET = $Sys->{'SET'};
-		my $name = $Sys->{'FORM'}->Get('NAME', '');
-		my $mail = $Sys->{'FORM'}->Get('MAIL', '');
+		my $name = $Sys->{'FORM'}->Get('NAME');
+		my $mail = $Sys->{'FORM'}->Get('MAIL');
 		
 		$COOKIE->Set('NAME', $name)	if ($oSET->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
 		$COOKIE->Set('MAIL', $mail)	if ($oSET->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
@@ -605,12 +610,12 @@ HTML
 	}
 	# デバッグ用表示
 	if (0) {
-		$Page->Print('MODE:' . $Sys->{'SYS'}->Get('MODE', '') . '<br>');
-		$Page->Print('KEY:' . $Sys->{'FORM'}->Get('key', '') . '<br>');
-		$Page->Print('SUBJECT:' . $Sys->{'FORM'}->Get('subject', '') . '<br>');
-		$Page->Print('NAME:' . $Sys->{'FORM'}->Get('FROM', '') . '<br>');
-		$Page->Print('MAIL:' . $Sys->{'FORM'}->Get('mail', '') . '<br>');
-		$Page->Print('CONTENT:' . $Sys->{'FORM'}->Get('MESSAGE', '') . '<br>');
+		$Page->Print('MODE:' . $Sys->{'SYS'}->Get('MODE') . '<br>');
+		$Page->Print('KEY:' . $Sys->{'FORM'}->Get('key') . '<br>');
+		$Page->Print('SUBJECT:' . $Sys->{'FORM'}->Get('subject') . '<br>');
+		$Page->Print('NAME:' . $Sys->{'FORM'}->Get('FROM') . '<br>');
+		$Page->Print('MAIL:' . $Sys->{'FORM'}->Get('mail') . '<br>');
+		$Page->Print('CONTENT:' . $Sys->{'FORM'}->Get('MESSAGE') . '<br>');
 	}
 	$Page->Print("\n</body>\n</html>\n");
 }

@@ -106,6 +106,8 @@ sub Init
 #	 -> ログ保存形式変更による規制チェック位置の変更
 #	2010.08.15 色々
 #	 -> プラグイン1,2の実行順序変更
+#	2020.08.23 windyakin ★
+#	 -> 規制チェック位置の変更, ログ保存を別に
 #
 #------------------------------------------------------------------------------------------------------------
 sub Write
@@ -122,6 +124,10 @@ sub Write
 	}
 	# 入力内容チェック(本文)
 	if (($err = NormalizationContents($this))) {
+		return $err;
+	}
+	# 規制チェック
+	if (($err = IsRegulation($this))) {
 		return $err;
 	}
 	
@@ -153,11 +159,11 @@ sub Write
 		$data2		= "$data\n";
 		$datPath	= $oSys->Get('DATPATH');
 		
-		# 規制チェック
-		# なぜこんなところに？ -> http://yakin.38-ch.net/test/read.cgi/windyakin/1281101424/597
-		if ($err = IsRegulation($this, $data)) {
-			return $err;
-		}
+		# ログ書き込み
+		require './module/peregrin.pl';
+		my $LOG = PEREGRIN->new;
+		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
+		$LOG->Save($oSys);
 		
 		# リモートホスト保存(SETTING.TXT変更により、常に保存)
 		SaveHost($oSys, $oForm);
@@ -365,7 +371,7 @@ sub ExecutePlugin
 #
 #	規制チェック
 #	-------------------------------------------------------------------------------------
-#	@param	$this, $datas
+#	@param	$this
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
 #
@@ -379,7 +385,7 @@ sub ExecutePlugin
 #------------------------------------------------------------------------------------------------------------
 sub IsRegulation
 {
-	my ($this, $datas) = @_;
+	my ($this) = @_;
 	my ($oSYS, $oSET, $oSEC);
 	my ($err, $host, $bbs, $datPath, $capID, $Samba, $from, $mode);
 	
@@ -422,9 +428,11 @@ sub IsRegulation
 	}
 	# PROXYチェック
 	if ($oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
-		if ($this->{'CONV'}->IsProxy(\$host)) {
-			$this->{'FORM'}->Set('FROM', "</b> [―{}\@{}\@{}-] <b>$from");
-			return 997 if (! $oSEC->IsAuthority($capID, 19, $bbs));
+		if ($this->{'CONV'}->IsProxy($this->{'FORM'}, $from, $mode)) {
+			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
+			if (! $oSEC->IsAuthority($capID, 19, $bbs)){
+				return 997;
+			}
 		}
 	}
 	# 読取専用
@@ -525,8 +533,8 @@ sub IsRegulation
 			}
 		}
 		
-		$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
-		$LOG->Save($oSYS);
+		#$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
+		#$LOG->Save($oSYS);
 	}
 	
 	# パスを保存
