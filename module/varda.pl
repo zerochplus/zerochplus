@@ -744,7 +744,7 @@ sub PrintResponse
 			$Page->Print("$dispBuff[$k]<br>");
 		}
 		$Page->Print("<font color=\"green\">（省略されました・・全てを読むには");
-		$Page->Print("<a href=\"$path\" target=\"_blank\">こちら</a>");
+		$Page->Print("<a href=\"$path\" target=\"_blank\">ここ</a>");
 		$Page->Print("を押してください）</font><br><br></dd>\n");
 	}
 }

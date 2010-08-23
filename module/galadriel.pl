@@ -797,7 +797,7 @@ sub ConvertCharacter1
 	
 	# mail
 	if ($mode == 1) {
-		$$data =~ s/"/&quot;/g;
+		$$data =~ s/"/&quot;/g;#"
 	}
 	
 	# text
@@ -900,20 +900,28 @@ sub IsReferer
 #
 #	2010.08.12 windyakin ★
 #	 -> BBQ, BBX, スパムちゃんぷるー のDNSBL問い合わせ式に変更
+#	2010.08.23 windyakin ★
+#	 -> p2.2ch.net をプロキシ経由で書き込みした場合串マークを表示
 #
 #------------------------------------------------------------------------------------------------------------
 sub IsProxy
 {
 	my $this = shift;
-	my ($host) = @_;
+	my ($oForm, $from, $mode) = @_;
 	my ($addr, @dnsbls);
 	
-	if ($host !~ /\.(?:docomo|ezweb|vodafone|jp-[a-z]|softbank|prin)\.ne\.jp$/ ) {
-		
-		$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
-		@dnsbls = ('niku.2ch.net', 'bbx.2ch.net', 'dnsbl.spam-champuru.livedoor.com');
-		foreach my $dnsbl (@dnsbls) {
-			return 1 if (join('.', unpack('C*', gethostbyname("$addr.$dnsbl"))) eq '127.0.0.2');
+	# 携帯, iPhone(3G回線) はプロキシ規制を回避する
+	if ( $mode eq "O" || $mode eq "i"  ) {
+		return 0;
+	}
+	
+	# DNSBL問い合わせ
+	$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
+	@dnsbls = ('niku.2ch.net', 'bbx.2ch.net', 'dnsbl.spam-champuru.livedoor.com');
+	foreach my $dnsbl (@dnsbls) {
+		if (join('.', unpack('C*', gethostbyname("$addr.$dnsbl"))) eq '127.0.0.2') {
+			$oForm->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
+			return ( $mode eq "P" ? 0 : 1 );
 		}
 		
 	}
