@@ -164,11 +164,13 @@ sub Write
 		$datPath	= $oSys->Get('DATPATH');
 		
 		# ログ書き込み
-		require './module/peregrin.pl';
-		my $LOG = PEREGRIN->new;
-		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
-		$LOG->Save($oSys);
+		if ($oSys->Equal('MODE', 2)) {
+			require './module/peregrin.pl';
+			my $LOG = PEREGRIN->new;
+			$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
+			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
+			$LOG->Save($oSys);
+		}
 		
 		# リモートホスト保存(SETTING.TXT変更により、常に保存)
 		SaveHost($oSys, $oForm);
