@@ -155,6 +155,7 @@ sub Write
 		$id			= $oConv->MakeID($oSys->Get('SERVER'), 8);
 		$date		= $oConv->GetDate($oSet);
 		$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
+		$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
 		$data		= join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
 		$data2		= "$data\n";
 		$datPath	= $oSys->Get('DATPATH');
@@ -162,6 +163,7 @@ sub Write
 		# ログ書き込み
 		require './module/peregrin.pl';
 		my $LOG = PEREGRIN->new;
+		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
 		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
 		$LOG->Save($oSys);
 		
@@ -579,7 +581,7 @@ sub NormalizationNameMail
 	# キャップ情報取得
 	$capID = $Sys->Get('CAPID');
 	if ($capID && $oSEC->IsAuthority($capID, 17, $bbs)) {
-		$capName = $oSEC->Get($capID, 'NAME', 1);
+		$capName = $oSEC->Get($capID, 'NAME', 1, '');
 	}
 	
 	# トリップキーを切り離す
@@ -603,9 +605,9 @@ sub NormalizationNameMail
 	
 	# プラグイン実行 フォーム情報再取得
 	$this->ExecutePlugin($Sys->Get('MODE'));
-	$name		= $Form->Get('FROM');
-	$mail		= $Form->Get('mail');
-	$subject	= $Form->Get('subject');
+	$name		= $Form->Get('FROM', '');
+	$mail		= $Form->Get('mail', '');
+	$subject	= $Form->Get('subject', '');
 	$bbs		= $Form->Get('bbs');
 	$host		= $Form->Get('HOST');
 	
@@ -621,12 +623,13 @@ sub NormalizationNameMail
 	$name =~ s|#.+$| </b>◆$key <b>|;
 	
 	# fusiana変換 2ch互換
-	$name =~ s:fusianasan|山崎渉:</b>$host<b>:;
-	$name =~ s:fusianasan|山崎渉: </b>$host<b>:g;
+	$name =~ s/山崎渉/fusianasan/g;
+	$name =~ s|fusianasan|</b>$host<b>|g;
+	$name =~ s|fusianasan| </b>$host<b>|g;
 	
 	# キャップ名結合
 	if (defined $capName && $capName ne '') {
-		$name = ($Form->Get('NAME') ? "$name＠" : '') . "$capName ★";
+		$name = ($name ne '' ? "$name＠" : '') . "$capName ★";
 	}
 	
 	
