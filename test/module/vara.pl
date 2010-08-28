@@ -155,7 +155,10 @@ sub Write
 		$id			= $oConv->MakeID($oSys->Get('SERVER'), 8);
 		$date		= $oConv->GetDate($oSet);
 		$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
+		
+		# プラグイン「 BE(HS)っぽいもの 」ver.0.x.x
 		$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
+		
 		$data		= join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
 		$data2		= "$data\n";
 		$datPath	= $oSys->Get('DATPATH');
