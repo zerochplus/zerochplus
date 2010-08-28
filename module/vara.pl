@@ -492,34 +492,53 @@ sub IsRegulation
 	}
 	# ƒŒƒX‘‚«ž‚Ýƒ‚[ƒh
 	else {
-		my ($n, $tm, $LOGs);
+		my ($LOGs, $LOGh, $n, $tm, $ishoushi, $htm, $houshi);
 		require './module/peregrin.pl';
 		
 		$LOGs = PEREGRIN->new;
 		$LOGs->Load($oSYS, 'SMB');
 		
+		$LOGh = PEREGRIN->new;
+		$LOGh->Load($oSYS, 'SBH');
+		
 		# Samba
-		if ($oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
+		if ($Samba && $oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
+			$houshi = int $oSYS->Get('HOUSHI');
+			if ($houshi) {
+				($ishoushi, $htm) = $LOGh->IsHoushi($houshi, $host);
+				if ($ishoushi) {
+					$oSYS->Set('WAIT', $htm);
+					#$oSYS->Set('WAIT', $houshi);
+					return 507;
+				}
+			}
+			
 			($n, $tm) = $LOGs->IsSamba($Samba, $host);
+			
 			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
 			$LOGs->Save($oSYS);
 			
 			if ($tm > 0) {
-				$oSYS->Set('WAIT', $tm);
-				$oSYS->Set('SAMBA', $n);
-				return 505;
+				if ($houshi && $n > 5) {
+					$oSYS->Set('WAIT', $houshi);
+					$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+					$LOGh->Save($oSYS);
+					return 507;
+				}
+				else {
+					$oSYS->Set('WAIT', $tm);
+					$oSYS->Set('SAMBA', $n);
+					return ($houshi && $n > 3 ? 506 : 505);
+				}
 			}
 		}
 		# ’ZŽžŠÔ“Še
-		if (! $oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+		if ($Samba && ! $oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
 			$tm = $LOGs->IsTime($Samba, $host);
 			if ($tm > 0) {
 				$oSYS->Set('WAIT', $tm);
 				return 503;
 			}
-			
-			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
-			$LOGs->Save($oSYS);
 		}
 		
 		my $LOG = PEREGRIN->new;

@@ -115,7 +115,7 @@ sub Print
 	$version	= $SYS->Get('VERSION');
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	$message	= $this->{'MESSAGE'}->{$err};
-	
+	$message	=~ s/\x5cn/\n/g;
 	$mode = '0' if (! defined $mode);
 	
 	# エラーメッセージの置換
@@ -162,7 +162,7 @@ sub Print
 		$COOKIE->Out($Page, $oSET->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");
-		$Page->Print(<<HTML);
+		$Page->Print(<<HTML) if ($err < 505 || $err > 508);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -195,6 +195,34 @@ $msg
 </body>
 </html>
 HTML
+		
+		if ($err >= 505 && $err <= 508) {
+			my $sambaerr = {
+				'505' => '593',
+				'506' => '599',
+				'507' => '594',
+				'508' => '594',
+			}->{$err};
+			$Page->Print(<<HTML);
+<html lang="ja">
+<head>
+<title>ＥＲＲＯＲ！</title>
+<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+</head>
+<!--nobanner-->
+<body>
+<!-- 2ch_X:error -->
+<div>
+ＥＲＲＯＲ - $sambaerr $message
+<br>
+</div>
+<hr>
+<div>(Samba24-2.13互換)</div>
+<div align="right">$version</div>
+</body>
+</html>
+HTML
+		}
 		
 	}
 }
