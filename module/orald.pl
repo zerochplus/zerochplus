@@ -203,22 +203,32 @@ HTML
 				'507' => '594',
 				'508' => '594',
 			}->{$err};
+			
 			$Page->Print(<<HTML);
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
-<title>ＥＲＲＯＲ！</title>
-<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+
+	<title>ＥＲＲＯＲ！</title>
+
 </head>
 <!--nobanner-->
 <body>
 <!-- 2ch_X:error -->
+
 <div>
 ＥＲＲＯＲ - $sambaerr $message
 <br>
 </div>
+
 <hr>
+
 <div>(Samba24-2.13互換)</div>
+
 <div align="right">$version</div>
+
 </body>
 </html>
 HTML
