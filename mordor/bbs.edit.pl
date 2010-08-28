@@ -213,7 +213,7 @@ sub SetMenuList
 sub PrintHeaderEdit
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Head, $Setting, $pHead, $common, $isAuth);
+	my ($Head, $Setting, $pHead, $common, $isAuth, $data);
 	
 	$SYS->Set('_TITLE', 'BBS Header Edit');
 	
@@ -231,9 +231,14 @@ sub PrintHeaderEdit
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
 	$Page->Print("<tr><td colspan=2 align=center>");
 	
+	$data = $Form->Get('HEAD_TEXT', '');
 	# ヘッダプレビュー表示
-	if (! $Form->Equal('HEAD_TEXT', '')) {
-		$Head->Set(\($Form->Get('HEAD_TEXT')));
+	if ($data ne '') {
+		$Head->Set(\$data);
+	}
+	else {
+		$pHead = $Head->Get();
+		$data = join '', @$pHead;
 	}
 	
 	# プレビューデータの作成
@@ -247,15 +252,10 @@ sub PrintHeaderEdit
 	$Page->Print("<textarea name=HEAD_TEXT rows=11 cols=80 wrap=off>");
 	
 	# ヘッダ内容テキストの表示
-	if ($Form->Equal('HEAD_TEXT', '')) {
-		$pHead = $Head->Get();
-		foreach (@$pHead) {
-			$Page->Print($_);
-		}
-	}
-	else {
-		$Page->Print($Form->Get('HEAD_TEXT'));
-	}
+	$data =~ s/&/&amp;/g;
+	$data =~ s/</&lt;/g;
+	$data =~ s/>/&gt;/g;
+	$Page->Print($data);
 	
 	$Page->Print("</textarea></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -284,7 +284,7 @@ sub PrintHeaderEdit
 sub PrintFooterEdit
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Foot, $common, $isAuth);
+	my ($Foot, $common, $isAuth, $data, $pFoot);
 	
 	$SYS->Set('_TITLE', 'BBS Footer Edit');
 	
@@ -299,10 +299,16 @@ sub PrintFooterEdit
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
 	$Page->Print("<tr><td colspan=2 style=\"background-image:url(./datas/default_bac.gif)\">");
 	
+	$data = $Form->Get('FOOT_TEXT', '');
 	# フッタプレビュー表示
-	if (! $Form->Equal('FOOT_TEXT', '')) {
-		$Foot->Set(\($Form->Get('FOOT_TEXT')));
+	if ($data ne '') {
+		$Foot->Set(\$data);
 	}
+	else {
+		$pFoot = $Foot->Get();
+		$data = join '', @$pFoot;
+	}
+	
 	# プレビューデータの作成
 	my $PreviewPage = THORIN->new;
 	$Foot->Print($PreviewPage, undef);
@@ -314,12 +320,10 @@ sub PrintFooterEdit
 	$Page->Print("<textarea name=FOOT_TEXT rows=11 cols=80 wrap=off>");
 	
 	# フッタ内容テキストの表示
-	if ($Form->Equal('FOOT_TEXT', '')) {
-		$Foot->Print($Page, undef);
-	}
-	else {
-		$Page->Print($Form->Get('FOOT_TEXT'));
-	}
+	$data =~ s/&/&amp;/g;
+	$data =~ s/</&lt;/g;
+	$data =~ s/>/&gt;/g;
+	$Page->Print($data);
 	
 	$Page->Print("</textarea></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -348,13 +352,16 @@ sub PrintFooterEdit
 sub PrintMETAEdit
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Meta, $common, $isAuth);
+	my ($Meta, $common, $isAuth, $data, $pMeta);
 	
 	$SYS->Set('_TITLE', 'BBS META Edit');
 	
 	require './module/legolas.pl';
 	$Meta = LEGOLAS->new;
 	$Meta->Load($SYS, 'META');
+	
+	$pMeta = $Meta->Get();
+	$data = join '', @$pMeta;
 	
 	# 権限取得
 	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
@@ -365,7 +372,10 @@ sub PrintMETAEdit
 	$Page->Print("<textarea name=META_TEXT rows=11 cols=80 wrap=off>");
 	
 	# フッタ内容テキストの表示
-	$Meta->Print($Page, undef);
+	$data =~ s/&/&amp;/g;
+	$data =~ s/</&lt;/g;
+	$data =~ s/>/&gt;/g;
+	$Page->Print($data);
 	
 	$Page->Print("</textarea></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -527,7 +537,7 @@ sub PrintLastEdit
 	
 	$data = '１００１<><>Over 1000 Thread<>このスレッドは１０００を超えました。<br>';
 	$data .= 'もう書けないので、新しいスレッドを立ててくださいです。。。<>';
-	if (!$Form->IsExist('LAST_FROM')) {
+	if (! $Form->IsExist('LAST_FROM')) {
 		# 1000.txtの読み込み
 		$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/1000.txt';
 		$isLast = 0;
@@ -542,21 +552,24 @@ sub PrintLastEdit
 			chomp $data;
 			$isLast = 1;
 		}
+		@elem = split(/<>/, $data);
+		$elem[3] = substr $elem[3], 1, -1;
 	}
 	else {
 		my $formLast = join('<>',
-			$Form->Get('LAST_FROM'),
-			$Form->Get('LAST_mail'),
-			$Form->Get('LAST_date'),
-			$Form->Get('LAST_MESSAGE'),
+			$Form->Get('LAST_FROM', ''),
+			$Form->Get('LAST_mail', ''),
+			$Form->Get('LAST_date', ''),
+			$Form->Get('LAST_MESSAGE', ''),
 			''
 		);
 		if ($formLast ne '<><><><>'){
 			$data = $formLast;
 			$isLast = 1;
 		}
+		@elem = split(/<>/, $data);
+		$elem[3] =~ s/\n/ <br> /g;
 	}
-	@elem = split(/<>/, $data);
 	for (0 .. 4) {
 		$elem[$_] = '' if (! defined $elem[$_]);
 	}
@@ -575,6 +588,14 @@ sub PrintLastEdit
 	$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd>");
 	@elem = ('', '', '', '', '') if (! $isLast);
 	
+	$elem[3] =~ s/ ?<br> ?/\n/g;
+	for (0 .. 4) {
+		$elem[$_] =~ s/&/&amp;/g;
+		$elem[$_] =~ s/</&lt;/g;
+		$elem[$_] =~ s/>/&gt;/g;
+		$elem[$_] =~ s/"/&quot;/g;
+	}
+	
 	$Page->Print("</td></tr></table></dl></td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>内容編集</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">名前</td><td>");
@@ -585,8 +606,6 @@ sub PrintLastEdit
 	$Page->Print("<input type=text size=60 name=LAST_date value=\"$elem[2]\"></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">本文</td><td>");
 	$Page->Print("<textarea name=LAST_MESSAGE rows=10 cols=70 wrap=off>");
-	
-	$elem[3] =~ s/<br>/\n/g;
 	
 	$Page->Print("$elem[3]</textarea></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -779,10 +798,10 @@ sub FunctionLastEdit
 	$lastPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/1000.txt';
 	
 	# フォーム情報の取得
-	$name = $Form->Get('LAST_FROM');
-	$mail = $Form->Get('LAST_mail');
-	$date = $Form->Get('LAST_date');
-	$cont = $Form->Get('LAST_MESSAGE');
+	$name = $Form->Get('LAST_FROM', '');
+	$mail = $Form->Get('LAST_mail', '');
+	$date = $Form->Get('LAST_date', '');
+	$cont = $Form->Get('LAST_MESSAGE', '');
 	$forCheck = $name . $mail . $date . $cont;
 	
 	# 全て空欄の場合は1000.txtを削除しデフォルト1001を使用
@@ -792,12 +811,20 @@ sub FunctionLastEdit
 	}
 	# 値が設定された場合は1000.txtを作成する
 	else {
+		$name =~ s/\n//g;
+		$mail =~ s/\n//g;
+		$date =~ s/\n//g;
+		$cont =~ s/\n/ <br> /g;
+		$name =~ s/<>/&lt;&gt;/g;
+		$mail =~ s/<>/&lt;&gt;/g;
+		$date =~ s/<>/&lt;&gt;/g;
+		$cont =~ s/<>/&lt;&gt;/g;
 #		eval
 		{
-			open LAST, ">$lastPath";
+			open LAST, "> $lastPath";
 			flock LAST, 2;
 			binmode LAST;
-			print LAST "$name<>$mail<>$date<>$cont<>\n";
+			print LAST "$name<>$mail<>$date<> $cont <>\n";
 			close LAST;
 		};
 		if ($@ ne ''){
