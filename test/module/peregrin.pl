@@ -91,6 +91,7 @@ sub Load
 	elsif ($log eq 'WRT')	{ $file = "$key.cgi";	$kind = 3; }	# 書き込みログ
 	elsif ($log eq 'HST')	{ $file = "HOSTs.cgi";	$kind = 5; }	# ホストログ
 	elsif ($log eq 'SMB')	{ $file = "samba.cgi";	$kind = 6; }	# Sambaログ
+	elsif ($log eq 'SBH')	{ $file = "houshi.cgi";	$kind = 7; }	# Samba規制ログ
 	else {															# 異常
 		$file = '';
 		$kind = 0;
@@ -98,7 +99,7 @@ sub Load
 	
 	if ($kind) {													# 正常に設定
 		if (-e "$path/$file") {
-			open LOG, "<$path/$file";
+			open LOG, "< $path/$file";
 			while (<LOG>) {
 				push @{$this->{'LOG'}}, $_;
 				$this->{'NUM'}++;
@@ -326,10 +327,10 @@ sub IsTime
 #
 #	Samba判定 - IsSamba
 #	-------------------------------------------
-#	引　数：$M    : 
-#			$host : 
-#	戻り値：$n    : Samba回数
-#			$tm   : 必要待ち時間
+#	引　数：$sb			: Samba時間(秒)
+#			$host		: 
+#	戻り値：$n			: Samba回数
+#			$tm			: 必要待ち時間
 #
 #------------------------------------------------------------------------------------------------------------
 sub IsSamba
@@ -359,6 +360,42 @@ sub IsSamba
 	$n = @iplist;
 	if ($n) {
 		return ($n, ($nw - $iplist[0]));
+	}
+	return (0, 0);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	奉仕活動中判定 - IsHoushi
+#	-------------------------------------------
+#	引　数：$houshi		: 奉仕活動時間(分)
+#			$host		: 
+#	戻り値：$ishoushi	: 奉仕活動中
+#			$tm			: 必要待ち時間(分)
+#
+#------------------------------------------------------------------------------------------------------------
+sub IsHoushi
+{
+	my $this = shift;
+	my ($houshi, $host) = @_;
+	my (@iplist, $i, $n, $tm, $nw, $hst, $kind);
+	
+	$nw = time;
+	$n = @{$this->{'LOG'}};
+	$kind = $this->{'KIND'};
+	
+	return (0, 0) if ($kind != 7);
+	
+	for ($i = $n - 1 ; $i >= 0 ; $i--) {
+		($tm, undef, undef, $hst) = split(/<>/, $this->{'LOG'}->[$i]);
+		chomp $hst;
+		next if ($host ne $hst);
+		if ($houshi * 60 > ($_ = $nw - $tm)) {
+			return (1, $houshi - ($_ - ($_ % 60 || 60)) / 60);
+		}
+		else {
+			return (0, 0);
+		}
 	}
 	return (0, 0);
 }

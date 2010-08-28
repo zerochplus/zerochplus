@@ -435,7 +435,7 @@ sub PrintOtherSetting
 sub PrintPlusSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Prtext, $Prlink, $Trip12);
+	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Houshi, $Prtext, $Prlink, $Trip12);
 	my ($banner, $kakiko, $trip12, $issamba);
 	my ($common);
 	
@@ -446,6 +446,7 @@ sub PrintPlusSetting
 	$Counter	= $SYS->Get('COUNTER');
 	$Samba		= $SYS->Get('SAMBATM');
 	$isSamba	= $SYS->Get('ISSAMBA');
+	$Houshi		= $SYS->Get('HOUSHI');
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
 	$Trip12		= $SYS->Get('TRIP12');
@@ -478,10 +479,12 @@ sub PrintPlusSetting
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制 / Samba規制</td></tr>\n");
-	$Page->Print("<tr><td>連続投稿規制秒数を入力</td>");
+	$Page->Print("<tr><td>連続投稿規制秒数を入力(0で規制無効)</td>");
 	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
-	$Page->Print("<tr><td>Samba規制にする</td>");
+	$Page->Print("<tr><td>Sambaにする</td>");
 	$Page->Print("<td><input type=checkbox name=ISSAMBA $issamba value=on></td></tr>\n");
+	$Page->Print("<tr><td>Samba規制分数を入力(0で規制無効)</td>");
+	$Page->Print("<td><input type=text size=60 name=HOUSHI value=\"$Houshi\"></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
@@ -804,6 +807,7 @@ sub FunctionPlusSetting
 	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
 	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
 	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
+	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
@@ -817,6 +821,7 @@ sub FunctionPlusSetting
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
 		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
 		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
+		push @$pLog, '　　　 Samba規制分数：' . $SYSTEM->Get('HOUSHI');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
 	}
 	return 0;
