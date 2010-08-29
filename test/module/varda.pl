@@ -461,7 +461,7 @@ sub PrintIndexPreview
 			my $className = $Plugin->Get('CLASS', $id);
 			if (-e "./plugin/$file") {
 				require "./plugin/$file";
-				my $Config = new PLUGINCONF($Plugin, $id);
+				my $Config = PLUGINCONF->new($Plugin, $id);
 				$commands[$count] = $className->new($Config);
 				$count++;
 			}
