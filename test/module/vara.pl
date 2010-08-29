@@ -553,13 +553,13 @@ sub IsRegulation
 			}
 		}
 		# ƒŒƒX‘‚«ž‚Ý(“ñd“Še)
-		#if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
-		#	if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
-		#		if ($LOG->Search($host, 1) == length($this->{'FORM'}->Get('MESSAGE'))) {
-		#			return 502;
-		#		}
-		#	}
-		#}
+		if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
+			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
+				if ($LOG->Search($host, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
+					return 502;
+				}
+			}
+		}
 		
 		#$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
 		#$LOG->Save($oSYS);
