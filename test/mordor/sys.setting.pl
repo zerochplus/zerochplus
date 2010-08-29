@@ -195,9 +195,9 @@ sub PrintSystemInfo
 {
 	my ($Page, $SYS, $Form) = @_;
 	
-	$SYS->Set('_TITLE', '0ch Administrator Information');
+	$SYS->Set('_TITLE', '0ch+ Administrator Information');
 	
-	$Page->Print("<br><b>0ch BBS - Administrator Script</b>");
+	$Page->Print("<br><b>0ch+ BBS - Administrator Script</b>");
 }
 
 #------------------------------------------------------------------------------------------------------------
