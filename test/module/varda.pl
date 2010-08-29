@@ -201,7 +201,7 @@ sub CreateSubback
 {
 	my $this = shift;
 	my ($Sys, $Threads, $bbsSetting, $oConv, $Page);
-	my ($path, $i, $name, $key, $res, $cgiPath, $title, $code, $bbs);
+	my ($path, $i, $name, $key, $res, $cgipath, $title, $code, $bbs);
 	my (@threadSet, $max, $Caption, $version);
 	
 	require './module/thorin.pl';
@@ -212,7 +212,7 @@ sub CreateSubback
 	$bbsSetting	= $this->{'SET'};
 	$oConv		= $this->{'CONV'};
 	
-	$cgiPath	= $Sys->Get('SERVER') . $Sys->Get('CGIPATH');
+	$cgipath	= $Sys->Get('CGIPATH');
 	$title		= $bbsSetting->Get('BBS_TITLE');
 	$code		= $this->{'CODE'};
 	$i			= 1;
@@ -273,7 +273,7 @@ HTML
 <hr>
 
 <div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $version
 </div>
 
@@ -560,11 +560,11 @@ KAKIKO
 sub PrintIndexFoot
 {
 	my ($this, $Page, $Caption) = @_;
-	my ($SYS, $tblCol, $cgiPath, $bbs, $ver, $tm, $samba);
+	my ($SYS, $tblCol, $cgipath, $bbs, $ver, $tm, $samba);
 	
 	$SYS		= $this->{'SYS'};
 	$tblCol		= $this->{'SET'}->Get('BBS_MAKETHREAD_COLOR');
-	$cgiPath	= $SYS->Get('SERVER') . $SYS->Get('CGIPATH');
+	$cgipath	= $SYS->Get('CGIPATH');
 	$bbs		= $SYS->Get('BBS');
 	$ver		= $SYS->Get('VERSION');
 	$samba		= $SYS->Get('SAMBATM');
@@ -576,7 +576,7 @@ sub PrintIndexFoot
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
  <tr>
   <td>
-  <form method="POST" action="$cgiPath/bbs.cgi" style="margin:1.2em 0;">
+  <form method="POST" action="$cgipath/bbs.cgi" style="margin:1.2em 0;">
   <input type="submit" value="新規スレッド作成画面へ"><br>
   <input type="hidden" name="bbs" value="$bbs">
   <input type="hidden" name="time" value="$tm">
@@ -589,7 +589,7 @@ FORM
 	# スレッド作成フォームはindexと同じ画面に表示
 	else {
 		$Page->Print(<<FORM);
-<form method="POST" action="$cgiPath/bbs.cgi">
+<form method="POST" action="$cgipath/bbs.cgi">
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" style="margin-bottom:1.2em;" align="center">
  <tr>
   <td></td>
@@ -612,7 +612,7 @@ FORM
 	
 	$Page->Print(<<FOOT);
 <div style="margin-top:1.2em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 <a href="http://0ch.mine.nu/">ぜろちゃんねる</a> <a href="http://zerochplus.sourceforge.jp/">プラス</a>
 BBS.CGI - $ver (Perl)
 +<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>

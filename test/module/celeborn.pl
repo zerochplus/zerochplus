@@ -409,7 +409,9 @@ sub OutputIndex
 {
 	my ($Sys, $Page, $Banner, $pInfo, $base, $path, $Set) = @_;
 	my (@elem, $info, $version);
-	my ($Caption, $bbsRoot, $board);
+	my ($Caption, $bbsRoot, $board, $cgipath);
+	
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	
 	require './module/legolas.pl';
 	$Caption = LEGOLAS->new;
@@ -476,7 +478,7 @@ HTML
 <hr>
 
 <div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $version
 </div>
 </body>

@@ -233,14 +233,14 @@ HTML
 	elsif ($mode == 2) {
 		
 $Page->Print(<<HTML);
- <a href="javascript:DoSubmit('bbs.thread','DISP','LIST'">スレッド</a> |
- <a href="javascript:DoSubmit('bbs.pool','DISP','LIST'">プール</a> |
- <a href="javascript:DoSubmit('bbs.kako','DISP','LIST'">過去ログ</a> |
- <a href="javascript:DoSubmit('bbs.setting','DISP','SETINFO'">掲示板設定</a> |
- <a href="javascript:DoSubmit('bbs.edit','DISP','HEAD'">各種編集</a> |
- <a href="javascript:DoSubmit('bbs.user','DISP','LIST'">管理グループ</a> |
- <a href="javascript:DoSubmit('bbs.cap','DISP','LIST'">キャップグループ</a> |
- <a href="javascript:DoSubmit('bbs.log','DISP','INFO'">ログ閲覧</a> |
+ <a href="javascript:DoSubmit('bbs.thread','DISP','LIST');">スレッド</a> |
+ <a href="javascript:DoSubmit('bbs.pool','DISP','LIST');">プール</a> |
+ <a href="javascript:DoSubmit('bbs.kako','DISP','LIST');">過去ログ</a> |
+ <a href="javascript:DoSubmit('bbs.setting','DISP','SETINFO');">掲示板設定</a> |
+ <a href="javascript:DoSubmit('bbs.edit','DISP','HEAD');">各種編集</a> |
+ <a href="javascript:DoSubmit('bbs.user','DISP','LIST');">管理グループ</a> |
+ <a href="javascript:DoSubmit('bbs.cap','DISP','LIST');">キャップグループ</a> |
+ <a href="javascript:DoSubmit('bbs.log','DISP','INFO');">ログ閲覧</a> |
 HTML
 		
 	}

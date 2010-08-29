@@ -608,7 +608,9 @@ sub CreateKAKOLog
 {
 	my ($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key) = @_;
 	my ($datPath, $logDir, $logPath, $i, @color, $title, $board, $var);
-	my ($Caption);
+	my ($Caption, $cgipath);
+	
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	
 	require './module/legolas.pl';
 	$Caption = LEGOLAS->new;
@@ -690,7 +692,7 @@ HTML
  <a href="$board/kako/">¡‰ß‹ŽƒƒO‘qŒÉ‚Ö–ß‚é¡</a>
 </div>
 <div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $var
 </div>
 
