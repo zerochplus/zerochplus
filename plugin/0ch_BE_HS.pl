@@ -93,6 +93,7 @@ sub execute
 	
 	# 悪さ対策でとりあえず空にする
 	$form->Set('BEID', '');
+	$form->Set('BERANK', '0');
 	
 	if ( $name =~ /!BE.+!HS/ ) {
 		
@@ -107,11 +108,35 @@ sub execute
 			$key = $2;
 		}
 		
+		my ($CONV, $SET, $trip12, $column, $trip, $key2);
+		my $trip12 = 0;
+		if (defined $sys->{'MainCGI'}) {
+			$CONV = $sys->{'MainCGI'}->{'CONV'};
+			$SET = $sys->{'MainCGI'}->{'SET'};
+			$trip12 = $sys->Get('TRIP12');
+		}
+		else {
+			require './module/galadriel.pl';
+			$CONV = new GALADRIEL;
+			require './module/isildur.pl';
+			$SET = new ISILDUR;
+			$SET->Load($sys)
+		}
+		
 		# トリップ変換してやるー
-		my $trip = ConvertTrip($key);
+		$column = $SET->Get('BBS_TRIPCOLUMN');
+		$trip = $CONV->ConvertTrip(\$key, $column, $trip12);
 		
 		# とりあえず消す
 		$name =~ s/!BE.+!HS//;
+		if ($name =~ /#(.+)$/) {
+			$key2 = $1;
+			if ($form->IsExist('TRIPKEY')) {
+				$key2 = $CONV->ConvertTrip(\$key2, $column, $trip12);
+				$form->Set('TRIPKEY', $key2);
+			}
+		}
+		
 		$form->Set('FROM', $name);
 		
 		# BEプロフのURLですね！
@@ -142,7 +167,7 @@ sub execute
 				
 				# ポイント取得
 				if ( $content =~ m/<p><b>be.{8}<\/b>:([0-9]+)<\/p>/ ) {
-					$point = BeRank($1);
+					$point = BeRank($form, $1);
 				}
 				else {
 					# おかしかったらみんな０ポイント
@@ -176,7 +201,7 @@ sub execute
 #	@return	$trip	トリップ
 #
 #------------------------------------------------------------------------------------------------------------
-sub ConvertTrip
+sub ConvertTrip1
 {
 	
 	my ( $key ) = @_;
@@ -227,20 +252,39 @@ sub BeGet {
 #
 #	BE会員ランク取得
 #	-------------------------------------------------------------------------------------
+#	@param	$form	$form
 #	@param	$point	ポイント
 #	@return	ランク表示形式 2BP(0)
 #
 #------------------------------------------------------------------------------------------------------------
 sub BeRank {
 	
-	my ( $point ) = @_;
+	my ( $form, $point ) = @_;
 	
-	if ( $point < 10000 )		{ $point = "2BP($point)"; }
-	elsif ( $point < 12000 )	{ $point = "BRZ($point)"; }
-	elsif ( $point < 100000 )	{ $point = "PLT($point)"; }
-	elsif ( $point < 500000 )	{ $point = "DIA($point)"; }
-	elsif ( $point >= 500000 )	{ $point = "S★($point)"; }
-	else						{ $point = "2BP(0)"; }
+	if ( $point < 10000 ) {
+		$point = "2BP($point)";
+		$form->Set('BERANK', 1);
+	}
+	elsif ( $point < 12000 ) {
+		$point = "BRZ($point)";
+		$form->Set('BERANK', 2);
+	}
+	elsif ( $point < 100000 ) {
+		$point = "PLT($point)";
+		$form->Set('BERANK', 3);
+	}
+	elsif ( $point < 500000 ) {
+		$point = "DIA($point)";
+		$form->Set('BERANK', 4);
+	}
+	elsif ( $point >= 500000 ) {
+		$point = "S★($point)";
+		$form->Set('BERANK', 5);
+	}
+	else {
+		$point = "2BP(0)";
+		$form->Set('BERANK', 1);
+	}
 	
 	return $point;
 	
