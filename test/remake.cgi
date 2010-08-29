@@ -30,16 +30,29 @@ sub REMAKECGI
 	
 	# 初期化に成功したら更新処理を開始
 	if (($err = Initialize(\%SYS, $Page)) == 0) {
+		require './module/baggins.pl';
 		require './module/varda.pl';
+		my $Threads = BILBO->new;
 		my $BBSAid = new VARDA;
+		my $Sys = $SYS{'SYS'};
 		
+		# subject.txt
 #		eval
 		{
-			$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
+			#$Threads->Load($Sys);
+			$Threads->UpdateAll($Sys);
+			$Threads->Save($Sys);
+		};
+		
+		# index.html
+#		eval
+		{
+			$BBSAid->Init($Sys, $SYS{'SET'});
 			$BBSAid->CreateIndex();
 			$BBSAid->CreateIIndex();
 			$BBSAid->CreateSubback();
 		};
+		
 		PrintBBSJump(\%SYS, $Page);
 	}
 	else {
