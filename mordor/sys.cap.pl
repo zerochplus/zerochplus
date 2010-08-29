@@ -388,7 +388,7 @@ sub FuncCapSetting
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		if (! $Form->IsAlphabet(\@inList)) {
+		if (! $Form->IsCapKey(\@inList)) {
 			return 1002;
 		}
 	}
