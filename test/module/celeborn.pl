@@ -411,7 +411,7 @@ sub OutputIndex
 	my (@elem, $info, $version);
 	my ($Caption, $bbsRoot, $board, $cgipath);
 	
-	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
+	$cgipath	= $Sys->Get('CGIPATH');
 	
 	require './module/legolas.pl';
 	$Caption = LEGOLAS->new;
