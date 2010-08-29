@@ -161,6 +161,7 @@ sub PrintNoticeList
 	my ($Page, $Sys, $Form) = @_;
 	my ($Notices, @noticeSet, $from, $subj, $text, $date, $id, $common);
 	my ($dispNum, $i, $dispSt, $dispEd, $listNum, $isAuth, $curUser);
+	my ($orz, $or2);
 	
 	$Sys->Set('_TITLE', 'User Notice List');
 	
@@ -183,18 +184,30 @@ sub PrintNoticeList
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
 	
+	$orz = $dispSt - $dispNum;
+	$or2 = $dispSt + $dispNum;
+	
 	$common		= "DoSubmit('sys.top','DISP','NOTICE');";
 	
-	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td></td><td><b><a href=\"javascript:SetOption('DISPST_NOTICE', " . ($dispSt - $dispNum));
-	$Page->Print(");$common\">&lt;&lt; PREV</a> | <a href=\"javascript:SetOption('DISPST_NOTICE', ");
-	$Page->Print("" . ($dispSt + $dispNum) . ");$common\">NEXT &gt;&gt;</a></b>");
-	$Page->Print("</td><td align=right colspan=2>");
-	$Page->Print("表\示数<input type=text name=DISPNUM_NOTICE size=4 value=$dispNum>");
-	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td style=\"width:30\"><br></td>");
-	$Page->Print("<td colspan=3 class=\"DetailTitle\">Notification</td></tr>\n");
+$Page->Print(<<HTML);
+  <table border="0" cellspacing="2" width="100%">
+   <tr>
+    <td>
+    </td>
+    <td>
+    <a href="javascript:SetOption('DISPST_NOTICE', $orz);$common">&lt;&lt; PREV</a> |
+    <a href="javascript:SetOption('DISPST_NOTICE', $or2);$common">NEXT &gt;&gt;</a>
+    </td>
+    <td align=right colspan="2">
+    表\示数 <input type=text name="DISPNUM_NOTICE" size="4" value="$dispNum">
+    <input type=button value="　表\示　" onclick="$common">
+    </td>
+   </tr>
+   <tr>
+    <td style="width:30px;"><br></td>
+    <td colspan="3" class="DetailTitle">Notification</td>
+   </tr>
+HTML
 	
 	# カレントユーザ
 	$curUser = $Sys->Get('ADMIN')->{'USER'};
@@ -213,23 +226,36 @@ sub PrintNoticeList
 			$text = $Notices->Get('TEXT', $id);
 			$date = GALADRIEL::GetDateFromSerial(undef, $Notices->Get('DATE', $id), 0);
 			
-			$Page->Print("<tr><td><input type=checkbox name=NOTICES value=\"$id\"></td>");
-			$Page->Print("<td class=\"Response\" colspan=3>");
-			$Page->Print("<dt><b>$subj <font color=blue>From：</b>$from</font>　");
-			$Page->Print("$date</dt><dd><br>$text<br><br></dd>\n");
+$Page->Print(<<HTML);
+   <tr>
+    <td><input type=checkbox name="NOTICES" value="$id"></td>
+    <td class="Response" colspan="3">
+    <dl style="margin:0px;">
+     <dt><b>$subj</b> <font color="blue">From：$from</font> $date</dt>
+      <dd>
+      $text<br>
+      <br></dd>
+    </dl>
+    </td>
+   </tr>
+HTML
+
 		}
 		else {
 			$dispEd++ if ($dispEd + 1 < $listNum);
 		}
 	}
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
 	
-	$common = "onclick=\"DoSubmit('sys.top','FUNC'";
-	$Page->Print("<tr><td colspan=4 align=right>");
-	$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\"> ");
-	$Page->Print("</td></tr>\n");
-	$Page->Print("</table></dl><br>");
-	$Page->HTMLInput('hidden', 'DISPST_NOTICE', '');
+$Page->Print(<<HTML);
+   <tr>
+    <td colspan="4" align="right">
+    <input type="button" value="　削除　" onclick="DoSubmit('sys.top','FUNC','DELETE')">
+    </td>
+   </tr>
+  </table>
+  <input type="hidden" name="DISPST_NOTICE" value="">
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -253,43 +279,72 @@ sub PrintNoticeCreate
 	$User = $Sys->Get('ADMIN')->{'SECINFO'}->{'USER'};
 	$User->GetKeySet('ALL', '', \@userSet);
 	
-	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	
-	$Page->Print("<tr><td class=\"DetailTitle\">タイトル</td><td>");
-	$Page->Print("<input type=text size=60 name=NOTICE_TITLE></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">本文</td><td>");
-	$Page->Print("<textarea rows=10 cols=70 name=NOTICE_CONTENT wrap=off></textarea></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">通知先ユーザ</td><td>");
-	$Page->Print("<table width=100% cellspaing=2>");
+$Page->Print(<<HTML);
+  <table border="0" cellspacing="2" width="100%">
+    <tr>
+    <td class="DetailTitle">タイトル</td>
+    <td><input type="text" size="60" name="NOTICE_TITLE"></td>
+   </tr>
+   <tr>
+    <td class="DetailTitle">本文</td>
+    <td>
+    <textarea rows="10" cols="70" name="NOTICE_CONTENT"></textarea>
+    </td>
+   </tr>
+   <tr>
+    <td class="DetailTitle">通知先ユーザ</td>
+    <td>
+    <table width="100%" cellspacing="2">
+HTML
 	
 	if ($isSysad) {
-		$Page->Print("<tr><td class=\"DetailTitle\">");
-		$Page->Print("<input type=radio name=NOTICE_KIND value=ALL>全体通知</td>");
-		$Page->Print("<td>有効期限：<input type=text name=NOTICE_LIMIT size=10 value=30>日</td></tr>");
-		$Page->Print("<tr><td class=\"DetailTitle\">");
-		$Page->Print("<input type=radio name=NOTICE_KIND value=ONE checked>個別通知</td><td>");
+		
+$Page->Print(<<HTML);
+     <tr>
+      <td class="DetailTitle">
+      <input type="radio" name="NOTICE_KIND" value="ALL">全体通知
+      </td>
+      <td>
+      有効期限：<input type="text" name="NOTICE_LIMIT" size="10" value="30">日
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">
+      <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
+      </td>
+      <td>
+HTML
 	}
 	else {
-		$Page->Print("<tr><td class=\"DetailTitle\">");
-		$Page->Print("<input type=hidden name=NOTICE_KIND value=ONE>個別通知</td><td>");
+$Page->Print(<<HTML);
+     <tr>
+      <td class="DetailTitle">
+      <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
+      </td>
+      <td>
+HTML
 	}
 	
 	# ユーザ一覧を表示
 	foreach $id (@userSet) {
 		$name = $User->Get('NAME', $id);
 		$full = $User->Get('FULL', $id);
-		$Page->Print("<input type=checkbox name=NOTICE_USERS value=\"$id\"> $name（$full）<br>");
+		$Page->Print("      <input type=\"checkbox\" name=\"NOTICE_USERS\" value=\"$id\"> $name($full)<br>\n");
 	}
-	$Page->Print("</td></tr></table></td></tr>");
 	
-	$common = "onclick=\"DoSubmit('sys.top','FUNC'";
-	
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
-	$Page->Print("<input type=button value=\"　送信　\" $common,'CREATE')\"> ");
-	$Page->Print("</td></tr>\n");
-	$Page->Print("</table>");
+$Page->Print(<<HTML);
+      </td>
+     </tr>
+    </table>
+    </td>
+   </tr>
+   <tr>
+    <td colspan="2" align="right">
+    <input type="button" value="　送信　" onclick="DoSubmit('sys.top','FUNC','CREATE')">
+    </td>
+   </tr>
+  </table>
+HTML
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -307,6 +362,7 @@ sub PrintAdminLog
 	my ($Page, $Sys, $Form, $Logger) = @_;
 	my ($common);
 	my ($dispNum, $i, $dispSt, $dispEd, $listNum, $isSysad, $data, @elem);
+	my ($orz, $or2);
 	
 	$Sys->Set('_TITLE', 'Operation Log');
 	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 0, '*');
@@ -319,19 +375,28 @@ sub PrintAdminLog
 	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
 	$common		= "DoSubmit('sys.top','DISP','ADMINLOG');";
 	
-	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2><b><a href=\"javascript:SetOption('DISPST_LOG', " . ($dispSt - $dispNum));
-	$Page->Print(");$common\">&lt;&lt; PREV</a> | <a href=\"javascript:SetOption('DISPST_LOG', ");
-	$Page->Print("" . ($dispSt + $dispNum) . ");$common\">NEXT &gt;&gt;</a></b>");
-	$Page->Print("</td><td align=right colspan=2>");
-	$Page->Print("表\示数<input type=text name=DISPNUM_LOG size=4 value=$dispNum>");
-	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+	$orz		= $dispSt - $dispNum;
+	$or2		= $dispSt + $dispNum;
 	
-	$Page->Print("<tr><td class=\"DetailTitle\">Date</td>");
-	$Page->Print("<td class=\"DetailTitle\">User</td>");
-	$Page->Print("<td class=\"DetailTitle\">Operation</td>");
-	$Page->Print("<td class=\"DetailTitle\">Result</td></tr>\n");
+$Page->Print(<<HTML);
+  <table border="0" cellspacing="2" width="100%">
+   <tr>
+    <td colspan="2">
+    <a href="javascript:SetOption('DISPST_LOG', $orz);$common">&lt;&lt; PREV</a> |
+    <a href="javascript:SetOption('DISPST_LOG', $or2);$common">NEXT &gt;&gt;</a>
+    </td>
+    <td align="right" colspan="2">
+    表\示数 <input type="text" name="DISPNUM_LOG" size="4" value="$dispNum">
+    <input type="button" value="　表\示　" onclick="$common">
+    </td>
+   </tr>
+   <tr>
+    <td class="DetailTitle">Date</td>
+    <td class="DetailTitle">User</td>
+    <td class="DetailTitle">Operation</td>
+    <td class="DetailTitle">Result</td>
+   </tr>
+HTML
 	
 	require './module/galadriel.pl';
 	
@@ -341,20 +406,28 @@ sub PrintAdminLog
 		@elem = split(/<>/, $data);
 		if (1) {
 			$elem[0] = GALADRIEL::GetDateFromSerial(undef, $elem[0], 0);
-			$Page->Print("<tr><td>$elem[0]</td><td>$elem[1]</td><td>$elem[2]</td><td>$elem[3]</td></tr>\n");
+			$Page->Print("   <tr><td>$elem[0]</td><td>$elem[1]</td><td>$elem[2]</td><td>$elem[3]</td></tr>\n");
 		}
 		else {
 			$dispEd++ if ($dispEd + 1 < $listNum);
 		}
 	}
-	$common = "onclick=\"DoSubmit('sys.top','FUNC'";
 	
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
-	$Page->Print("<input type=button value=\"ログの削除\" $common,'LOG_REMOVE')\"> ");
-	$Page->Print("</td></tr>\n");
-	$Page->Print("</table><br>");
-	$Page->HTMLInput('hidden', 'DISPST_LOG', '');
+$Page->Print(<<HTML);
+   <tr>
+    <td colspan="4"><hr></td>
+   </tr>
+   <tr>
+    <td colspan="4" align="right">
+    <input type="button" value="ログの削除" onclick="DoSubmit('sys.top','FUNC','LOG_REMOVE')">
+    </td>
+   </tr>
+  </table>
+  
+  <input type="hidden" name="DISPST_LOG" value="">
+  
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
