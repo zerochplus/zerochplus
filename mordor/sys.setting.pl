@@ -435,8 +435,8 @@ sub PrintOtherSetting
 sub PrintPlusSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Houshi, $Prtext, $Prlink, $Trip12);
-	my ($banner, $kakiko, $trip12, $issamba);
+	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Houshi, $Prtext, $Prlink, $Trip12, $Msec);
+	my ($banner, $kakiko, $trip12, $issamba, $msec);
 	my ($common);
 	
 	$SYS->Set('_TITLE', 'System ZerochPlus Original Setting');
@@ -450,11 +450,13 @@ sub PrintPlusSetting
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
 	$Trip12		= $SYS->Get('TRIP12');
+	$Msec		= $SYS->Get('MSEC');
 	
 	$banner		= ($Banner == 1 ? 'checked' : '');
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
 	$trip12		= ($Trip12 == 1 ? 'checked' : '');
 	$issamba	= ($isSamba == 1 ? 'checked' : '');
+	$msec		= ($Msec == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
 	
@@ -489,6 +491,10 @@ sub PrintPlusSetting
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
 	$Page->Print("<td><input type=checkbox name=TRIP12 $trip12 value=on></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">msec表\示</td></tr>\n");
+	$Page->Print("<tr><td>ミリ秒まで表\示する</small></td>");
+	$Page->Print("<td><input type=checkbox name=MSEC $msec value=on></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");
@@ -809,6 +815,7 @@ sub FunctionPlusSetting
 	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
 	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
+	$SYSTEM->Set('MSEC', ($Form->Equal('MSEC', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
@@ -823,6 +830,7 @@ sub FunctionPlusSetting
 		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
 		push @$pLog, '　　　 Samba規制分数：' . $SYSTEM->Get('HOUSHI');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
+		push @$pLog, '　　　 ミリ秒表示：' . $SYSTEM->Get('MSEC');
 	}
 	return 0;
 }

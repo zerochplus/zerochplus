@@ -281,6 +281,7 @@ sub InitSystemValue
 		'PRTEXT'	=> 'ぜろちゃんねるプラス',					# PR欄の表示文字列
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
 		'TRIP12'	=> 0,										# 12桁トリップを変換するかどうか
+		'MSEC'		=> 0,										# msecまで表示するか
 	);
 	
 	# 情報保持キー
@@ -289,7 +290,8 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBATM',	'ISSAMBA',	'HOUSHI',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',
+		'SAMBATM',	'ISSAMBA',	'HOUSHI',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',
+		'TRIP12',	'MSEC',
 	);
 }
 
