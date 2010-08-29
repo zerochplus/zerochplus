@@ -127,7 +127,7 @@ sub PrintNoList
 	$Tin = $this->{'INN'};
 	
 	PrintHTML($Tad, $ttl);															# HTMLヘッダ出力
-	PrintCSS($Tad, $this->{'SYS'});													# CSS出力
+	PrintCSS($Tad, $this->{'SYS'}, $ttl);											# CSS出力
 	PrintHead($Tad, $ttl, $mode);													# ヘッダ出力
 	PrintInner($Tad, $Tin, $ttl);													# 機能内容出力
 	PrintFoot($Tad, 'NONE', $this->{'SYS'}->Get('VERSION'));						# フッタ出力
@@ -148,8 +148,16 @@ sub PrintHTML
 {
 	my ($Page, $ttl) = @_;
 	
-	$Page->Print("Content-type: text/html\n\n<html><head><title>ぜろちゃんねる管理");
-	$Page->Print(" - [ $ttl ]</title>\n");
+	$Page->Print("Content-type: text/html\n\n");
+	$Page->Print(<<HTML);
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+ 
+ <title>ぜろちゃんねる管理 - [ $ttl ]</title>
+ 
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -162,15 +170,26 @@ sub PrintHTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintCSS
 {
-	my ($Page, $Sys) = @_;
+	my ($Page, $Sys, $ttl) = @_;
 	my ($data);
 	
 	$data = $Sys->Get('DATA');
 	
-	$Page->Print('<meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">');
-	$Page->Print("<link rel=stylesheet href=\".$data/admin.css\" type=text/css>");
-	$Page->Print("<script language=javascript src=\".$data/admin.js\"></script>");
-	$Page->Print("</head><!--nobanner-->\n");
+$Page->Print(<<HTML);
+ <meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">
+ 
+ <meta http-equiv="Content-Script-Type" content="text/javascript">
+ <meta http-equiv="Content-Style-Type" content="text/css">
+ 
+ <meta name="robots" content="noindex,nofollow">
+ 
+ <link rel="stylesheet" href=".$data/admin.css" type="text/css">
+ <script language="javascript" src=".$data/admin.js"></script>
+ 
+</head>
+<!--nobanner-->
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -189,38 +208,62 @@ sub PrintHead
 	
 	$common = '<a href="javascript:DoSubmit';
 	
-	$Page->Print("<body>");
-	$Page->Print("<form name=ADMIN action=\"./admin.cgi\" method=\"POST\">");
-	$Page->Print("<div class=\"MainMenu\" align=right>");
+$Page->Print(<<HTML);
+<body>
+
+<form name="ADMIN" action="./admin.cgi" method="POST">
+
+<div class="MainMenu" align="right">
+HTML
 	
 	# システム管理メニュー
 	if ($mode == 1) {
-		$Page->Print("$common('sys.top','DISP','NOTICE');\">トップ</a> | ");
-		$Page->Print("$common('sys.bbs','DISP','LIST');\">掲示板</a> | ");
-		$Page->Print("$common('sys.user','DISP','LIST');\">ユーザー</a> | ");
-		$Page->Print("$common('sys.cap','DISP','LIST');\">キャップ</a> | ");
-		$Page->Print("$common('sys.setting','DISP','INFO');\">システム設定</a> | ");
-		$Page->Print("$common('sys.edit','DISP','BANNER_PC');\">各種編集</a> | ");
+		
+$Page->Print(<<HTML);
+ <a href="javascript:DoSubmit('sys.top','DISP','NOTICE');">トップ</a> |
+ <a href="javascript:DoSubmit('sys.bbs','DISP','LIST');">掲示板</a> |
+ <a href="javascript:DoSubmit('sys.user','DISP','LIST');">ユーザー</a> |
+ <a href="javascript:DoSubmit('sys.cap','DISP','LIST');">キャップ</a> |
+ <a href="javascript:DoSubmit('sys.setting','DISP','INFO');">システム設定</a> |
+ <a href="javascript:DoSubmit('sys.edit','DISP','BANNER_PC');">各種編集</a> |
+HTML
+		
 	}
 	# 掲示板管理メニュー
 	elsif ($mode == 2) {
-		$Page->Print("$common('bbs.thread','DISP','LIST');\">スレッド</a> | ");
-		$Page->Print("$common('bbs.pool','DISP','LIST');\">プール</a> | ");
-		$Page->Print("$common('bbs.kako','DISP','LIST');\">過去ログ</a> | ");
-		$Page->Print("$common('bbs.setting','DISP','SETINFO');\">掲示板設定</a> | ");
-		$Page->Print("$common('bbs.edit','DISP','HEAD');\">各種編集</a> | ");
-		$Page->Print("$common('bbs.user','DISP','LIST');\">管理グループ</a> | ");
-		$Page->Print("$common('bbs.cap','DISP','LIST');\">キャップグループ</a> | ");
-		$Page->Print("$common('bbs.log','DISP','INFO');\">ログ閲覧</a> | ");
+		
+$Page->Print(<<HTML);
+ <a href="javascript:DoSubmit('bbs.thread','DISP','LIST'">スレッド</a> |
+ <a href="javascript:DoSubmit('bbs.pool','DISP','LIST'">プール</a> |
+ <a href="javascript:DoSubmit('bbs.kako','DISP','LIST'">過去ログ</a> |
+ <a href="javascript:DoSubmit('bbs.setting','DISP','SETINFO'">掲示板設定</a> |
+ <a href="javascript:DoSubmit('bbs.edit','DISP','HEAD'">各種編集</a> |
+ <a href="javascript:DoSubmit('bbs.user','DISP','LIST'">管理グループ</a> |
+ <a href="javascript:DoSubmit('bbs.cap','DISP','LIST'">キャップグループ</a> |
+ <a href="javascript:DoSubmit('bbs.log','DISP','INFO'">ログ閲覧</a> |
+HTML
+		
 	}
 	# スレッド管理メニュー
 	elsif ($mode == 3) {
-		$Page->Print("$common('thread.res','DISP','LIST');\">レス一覧</a> | ");
-		$Page->Print("$common('thread.del','DISP','LIST');\">削除レス一覧</a> ");
+		
+$Page->Print(<<HTML);
+ <a href="javascript:DoSubmit('thread.res','DISP','LIST');">レス一覧</a> |
+ <a href="javascript:DoSubmit('thread.del','DISP','LIST');">削除レス一覧</a> |
+HTML
+		
 	}
-	$Page->Print("<a $common('login','','');\">ログオフ</a>");
-	$Page->Print("</div>\n<div class=\"MainHead\" align=right>0ch+ BBS System Manager</div>");
-	$Page->Print("<table cellspacing=0 width=100%><tr style=\"height:400px\">");
+	
+$Page->Print(<<HTML);
+ <a href="javascript:DoSubmit('login','','');">ログオフ</a>
+</div>
+ 
+<div class="MainHead" align="right">0ch+ BBS System Manager</div>
+
+<table cellspacing="0" width="100%">
+ <tr style="height:400px">
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -238,24 +281,35 @@ sub PrintList
 	my ($Page, $n, $str, $url) = @_;
 	my ($i, $strURL, $strTXT);
 	
-	$Page->Print("<td align=center valign=top class=\"Content\">");
-	$Page->Print("<table width=95% cellspacing=0><tr><td class=\"FunctionList\">\n");
+$Page->Print(<<HTML);
+  <td align="center" valign="top" class="Content">
+  <table width="95%" cellspacing="0">
+   <tr>
+    <td class="FunctionList">
+HTML
 	
 	for ($i = 0 ; $i < $n ; $i++) {
 		$strURL = $$url[$i];
 		$strTXT = $$str[$i];
 		if ($strURL eq '') {
-			$Page->Print("<font color=gray>$strTXT</font>\n");
+			$Page->Print("    <font color=\"gray\">$strTXT</font>\n");
 			if ($strTXT ne '<hr>') {
-				$Page->Print('<br>');
+				$Page->Print('    <br>'."\n");
 			}
 		}
 		else {
-			$Page->Print("<a href=\"javascript:DoSubmit($$url[$i]);\" >");
+			$Page->Print("    <a href=\"javascript:DoSubmit($$url[$i]);\">");
 			$Page->Print("$$str[$i]</a><br>\n");
 		}
 	}
-	$Page->Print("</td></tr></table></td>\n");
+	
+$Page->Print(<<HTML);
+    </td>
+   </tr>
+  </table>
+  </td>
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -271,10 +325,15 @@ sub PrintInner
 {
 	my ($Page1, $Page2, $ttl) = @_;
 	
-	$Page1->Print("<td width=80% valign=top class=\"Function\">\n");
-	$Page1->Print("<div class=\"FuncTitle\">$ttl</div><br>");
+$Page1->Print(<<HTML);
+  <td width="80%" valign="top" class="Function">
+  <div class="FuncTitle">$ttl</div>
+HTML
+	
 	$Page1->Merge($Page2);
-	$Page1->Print("</td>\n");
+	
+	$Page1->Print("  </td>\n");
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -288,13 +347,21 @@ sub PrintInner
 sub PrintCommonInfo
 {
 	my ($Page, $Form) = @_;
+	my ($user, $pass);
 	
-	$Page->HTMLInput('hidden', 'MODULE', '');
-	$Page->HTMLInput('hidden', 'MODE', '');
-	$Page->HTMLInput('hidden', 'MODE_SUB', '');
+	$user = $Form->Get('UserName');
+	$pass = $Form->Get('PassWord');
 	
-	$Page->HTMLInput('hidden', 'UserName', $Form->Get('UserName'));
-	$Page->HTMLInput('hidden', 'PassWord', $Form->Get('PassWord'));
+$Page->Print(<<HTML);
+  <!-- ▼こんなところに地下要塞(ry -->
+   <input type="hidden" name="MODULE" value="">
+   <input type="hidden" name="MODE" value="">
+   <input type="hidden" name="MODE_SUB" value="">
+   <input type="hidden" name="UserName" value="$user">
+   <input type="hidden" name="PassWord" value="$pass">
+  <!-- △こんなところに地下要塞(ry -->
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -309,11 +376,21 @@ sub PrintFoot
 {
 	my ($Page, $user, $ver) = @_;
 	
-	$Page->Print("</tr></table>");
-	$Page->Print("<div class=\"MainFoot\">");
-	$Page->Print("Copyright 2001 - 2010 0ch BBS : Loggin User - <b>$user</b><br>");
-	$Page->Print("Build Version:<b>$ver</b>");
-	$Page->Print("</div></form></body></html>");
+$Page->Print(<<HTML);
+ </tr>
+</table>
+
+<div class="MainFoot">
+ Copyright 2001 - 2010 0ch BBS : Loggin User - <b>$user</b><br>
+ Build Version:<b>$ver</b>
+</div>
+
+</form>
+
+</body>
+</html>
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -333,15 +410,33 @@ sub PrintComplete
 	
 	$Page = $this->{'INN'};
 	
-	$Page->Print("<br><center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td><b>$processNameを正常に完了しました。</b><br><br>");
-	$Page->Print("<small>処理ログ<hr><blockquote>");
+$Page->Print(<<HTML);
+  <table border="0" cellspacing="0" cellpadding="0" width="100%" align="center">
+   <tr>
+    <td>
+    
+    <div class="oExcuted">
+     $processNameを正常に完了しました。
+    </div>
+   
+    <div class="LogExport">処理ログ</div>
+    <hr>
+    <blockquote class="LogExport">
+HTML
 	
 	# ログの表示
 	foreach $text (@$pLog) {
-		$Page->Print("$text<br>\n");
+		$Page->Print("     $text<br>\n");
 	}
-	$Page->Print("</blockquote><hr></small></td></tr></table>");
+	
+$Page->Print(<<HTML);
+    </blockquote>
+    <hr>
+    </td>
+   </tr>
+  </table>
+HTML
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -363,49 +458,65 @@ sub PrintError
 	# エラーコードの抽出
 	$ecode = pop @$pLog;
 	
-	$Page->Print("<br><center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td><br><font color=red><b>");
-	$Page->Print("ERROR:$ecode<hr><blockquote>\n");
+$Page->Print(<<HTML);
+  <table border="0" cellspacing="0" cellpadding="0" width="100%" align="center">
+   <tr>
+    <td>
+    
+    <div class="xExcuted">
+HTML
 	
 	if ($ecode == 1000) {
-		$Page->Print("本機能の処理を実行する権限がありません。");
+		$Page->Print("     ERROR:$ecode - 本機能の処理を実行する権限がありません。\n");
 	}
 	elsif ($ecode == 1001) {
-		$Page->Print("入力必須項目が空欄になっています。");
+		$Page->Print("     ERROR:$ecode - 入力必須項目が空欄になっています。\n");
 	}
 	elsif ($ecode == 1002) {
-		$Page->Print("設定項目に規定外の文字が使用されています。");
+		$Page->Print("     ERROR:$ecode - 設定項目に規定外の文字が使用されています。\n");
 	}
 	elsif ($ecode == 2000) {
-		$Page->Print("掲示板ディレクトリの作成に失敗しました。<br>");
-		$Page->Print("パーミッション、または既に同名の掲示板が作成されていないかを確認してください。");
+		$Page->Print("     ERROR:$ecode - 掲示板ディレクトリの作成に失敗しました。<br>\n");
+		$Page->Print("     パーミッション、または既に同名の掲示板が作成されていないかを確認してください。\n");
 	}
 	elsif ($ecode == 2001) {
-		$Page->Print("SETTING.TXTの生成に失敗しました。");
+		$Page->Print("     ERROR:$ecode - SETTING.TXTの生成に失敗しました。\n");
 	}
 	elsif ($ecode == 2002) {
-		$Page->Print("掲示板構\成要素の生成に失敗しました。");
+		$Page->Print("     ERROR:$ecode - 掲示板構\成要素の生成に失敗しました。\n");
 	}
 	elsif ($ecode == 2003) {
-		$Page->Print("過去ログ初期情報の生成に失敗しました。");
+		$Page->Print("     ERROR:$ecode - 過去ログ初期情報の生成に失敗しました。\n");
 	}
 	elsif ($ecode == 2004) {
-		$Page->Print("掲示板情報の更新に失敗しました。");
+		$Page->Print("     ERROR:$ecode - 掲示板情報の更新に失敗しました。\n");
 	}
 	else {
-		$Page->Print("不明なエラーが発生しました。");
+		$Page->Print("     ERROR:$ecode - 不明なエラーが発生しました。\n");
 	}
 	
+$Page->Print(<<HTML);
+    </div>
+    
+HTML
+
 	# エラーログがあれば出力する
 	if (@$pLog) {
 		$Page->Print('<hr>');
+		$Page->Print("    <blockquote>");
 		foreach (@$pLog) {
-			$Page->Print("$_<br>\n");
+			$Page->Print("    $_<br>\n");
 		}
+		$Page->Print("    </blockquote>");
+		$Page->Print('<hr>');
 	}
 	
-	$Page->Print("</blockquote><hr></b></font>");
-	$Page->Print("</td></tr></table>");
+$Page->Print(<<HTML);
+    </td>
+   </tr>
+  </table>
+HTML
+	
 }
 
 #============================================================================================================
