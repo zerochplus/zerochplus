@@ -186,7 +186,7 @@ sub execute
 			
 		}
 		else {
-			$form->Set('BEID', 'BE:取得エラー(-1)');
+			$form->Set('BEID', '取得エラー(-1)');
 			return 0;
 		}
 		
