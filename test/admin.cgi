@@ -53,6 +53,7 @@ sub AdminCGI
 	
 	# 処理モジュール名を取得
 	$modName = $Form->Get('MODULE', 'login');
+	$modName = 'login' if (! $userID);
 	
 	# 処理モジュールオブジェクトの生成
 	require "./mordor/$modName.pl";
