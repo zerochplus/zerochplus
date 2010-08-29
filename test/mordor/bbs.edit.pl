@@ -554,7 +554,7 @@ sub PrintLastEdit
 		}
 		@elem = split(/<>/, $data);
 		$elem[3] = substr $elem[3], 1 if (substr($elem[3], 0, 1) eq ' ');
-		$elem[3] = substr $elem[3], 0, -1 if (substr($elem[3], -1) eq ' ');
+		$elem[3] = substr $elem[3], 0, -2 if (substr($elem[3], -1) eq ' ');
 	}
 	else {
 		my $formLast = join('<>',

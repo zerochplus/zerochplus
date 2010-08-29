@@ -626,6 +626,7 @@ sub NormalizationNameMail
 	$Form->Set('FROM', $name);
 	$Form->Set('mail', $mail);
 	$Form->Set('subject', $subject);
+	$Form->Set('TRIPKEY', $key);
 	
 	# プラグイン実行 フォーム情報再取得
 	$this->ExecutePlugin($Sys->Get('MODE'));
@@ -634,6 +635,7 @@ sub NormalizationNameMail
 	$subject	= $Form->Get('subject', '');
 	$bbs		= $Form->Get('bbs');
 	$host		= $Form->Get('HOST');
+	$key		= $Form->Get('TRIPKEY', '???');
 	
 	# 2ch互換
 	$name = substr($name, 1) if (index($name, ' ') == 0);
