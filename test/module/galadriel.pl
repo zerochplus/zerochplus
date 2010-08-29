@@ -449,15 +449,26 @@ sub GetRemoteHost
 sub MakeID
 {
 	my $this = shift;
-	my ($server,$column) = @_;
+	my ($server, $mode, $remote, $bbs, $column) = @_;
 	my @times = localtime time;
 	my (@nums, $ret, $host, $str);
 	
 	# 種の生成
-	@nums = split(/\./, $ENV{'REMOTE_ADDR'});									# IPを分解
-	$host = substr($nums[3], -3) . substr($nums[2], -1) . substr($nums[1], -1);	# 上位3つの1桁目取得
-	$str = $host . substr(crypt($server, $times[4]), -5);						# server名結合
-	$column = -1 * $column;														# 桁設定
+	if ( $mode eq 'O' || $mode eq 'P' ) {
+		# 端末番号 もしくは p2-user-hash の上位3文字を取得
+		$host = substr($remote, -3);
+	}
+	else {
+		# IPを分解
+		@nums = split(/\./, $ENV{'REMOTE_ADDR'});
+		# 上位3つの1桁目取得
+		$host = substr($nums[3], -3) . substr($nums[2], -1) . substr($nums[1], -1);
+	}
+	
+	# サーバー名･板名を結合する
+	$str = $host . substr(crypt($server, $times[4]), -3) . substr(crypt($bbs,$times[4]), -2);
+	# 桁を設定
+	$column = -1 * $column;
 	
 	# IDの生成
 	$ret = substr(crypt(crypt($str, $times[5]), $times[3] + 31), $column);
