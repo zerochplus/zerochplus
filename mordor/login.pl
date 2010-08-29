@@ -107,22 +107,49 @@ sub PrintLogin
 {
 	my ($Page, $Form) = @_;
 	
-	$Page->Print("<center><br><br><br><br>");
+$Page->Print(<<HTML);
+  <center>
+   <div align="center" class="LoginForm">
+HTML
 	
 	if ($Form->Get('FALSE') == 1) {
-		$Page->Print("<font color=red><b>※ユーザ名もしくはパスワードが間違っています。</b></font>");
+		$Page->Print("    <div class=\"xExcuted\">ユーザ名もしくはパスワードが間違っています。</div>\n");
 	}
-	$Page->Print("<br><br><table>\n");
-	$Page->Print("<tr><td>ユーザ名</td><td><input type=text name=UserName size=30></td></tr>");
-	$Page->Print("<tr><td>パスワード</td><td><input type=password name=PassWord size=30></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=center><hr><input type=submit value=\"　ログイン　\">");
-	$Page->Print("</td></tr></table><br><br><br><br><br><br><b>\n");
-	$Page->Print("<font face=Arial size=3 color=red>0ch Administration Page</font><br>");
-	$Page->Print("<font face=Arial>Powered by 0ch script and 0ch modules 2002-2004</font><br>");
-	$Page->Print("</b></center>\n");
 	
-	$Page->HTMLInput('hidden', 'MODE', 'FUNC');
-	$Page->HTMLInput('hidden', 'MODE_SUB', '');
+$Page->Print(<<HTML);
+    <table align="center" border="0" style="margin:30px 0;">
+     <tr>
+      <td>ユーザ名</td><td><input type="text" name="UserName" style="width:200px"></td>
+     </tr>
+     <tr>
+      <td>パスワード</td><td><input type="password" name="PassWord" style="width:200px"></td>
+     </tr>
+     <tr>
+      <td colspan="2" align="center">
+      <hr>
+      <input type="submit" value="　ログイン　">
+      </td>
+     </tr>
+    </table>
+    
+    <div class="Sorce">
+     <b>
+     <font face="Arial" size="3" color="red">0ch Administration Page</font><br>
+     <font face="Arial">Powered by 0ch script and 0ch modules 2002-2004</font>
+     </b>
+    </div>
+    
+   </div>
+   
+  </center>
+  
+  <!-- ▼こんなところに地下要塞(ry -->
+   <input type="hidden" name="MODE" value="FUNC">
+   <input type="hidden" name="MODE_SUB" value="">
+  <!-- △こんなところに地下要塞(ry -->
+  
+HTML
+	
 }
 
 #============================================================================================================

@@ -158,3 +158,8 @@ div.xExcuted	{
 					color:red;
 					font-size: 14px;
 				}
+
+div.LoginForm	{
+					padding: 50px 0;
+					width: 300px;
+				}
