@@ -392,7 +392,7 @@ sub GetAgentMode
 	if ( $host =~ /\.softbank.ne.jp/ ) {			return "O"; }			# SoftBank
 	if ( $host =~ /\.ezweb.ne.jp/ ) {				return "O"; }			# au
 	if ( $host =~ /\.prin.ne.jp/ ) {				return "O"; }			# Willcom
-	if ( $host =~ /cw43.razil.jp/ ) {				return "P"; }			# 公式p2
+	if ( $host =~ /(?:cw43|p202).razil.jp/ ) {		return "P"; }			# 公式p2
 	if ( $host =~ /\.panda-world.ne.jp/ ) {			return "i"; }			# iPhone( 3G )
 	if ( $UA =~ /iPhone; U; CPU iPhone/ ) {			return "I";	}			# iPhone(WiFi)
 	if ( $UA =~ /Debug Mobile Phone/ ) {			return "S"; }			# デバッグ用
@@ -911,7 +911,7 @@ sub IsProxy
 	my ($addr, @dnsbls);
 	
 	# 携帯, iPhone(3G回線) はプロキシ規制を回避する
-	if ( $mode eq "O" || $mode eq "i"  ) {
+	if ( $mode eq "O" || $mode eq "i" ) {
 		return 0;
 	}
 	

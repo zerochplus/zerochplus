@@ -674,7 +674,7 @@ sub GetProductInfo
 		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
 	}
 	# ŒöŽ®p2
-	elsif ( $host =~ /cw43.razil.jp$/ ) {
+	elsif ( $host =~ /(?:cw43|p202).razil.jp$/ ) {
 		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (”­Œ¾ŽÒ‚ÌƒzƒXƒg)
 		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (”­Œ¾ŽÒ‚ÌIP)
 		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (”­Œ¾ŽÒ‚ÌŒÅ‘ÌŽ¯•Ê”Ô†)
