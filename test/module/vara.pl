@@ -168,7 +168,7 @@ sub Write
 			require './module/peregrin.pl';
 			my $LOG = PEREGRIN->new;
 			$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
+			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT'));
 			$LOG->Save($oSys);
 		}
 		
