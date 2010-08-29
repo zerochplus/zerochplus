@@ -126,7 +126,7 @@ sub execute
 			$column = $SET->Get('BBS_TRIPCOLUMN');
 			$key = "#$key";
 			$CONV->ConvertTrip(\$key, $column);
-			$key =~ m|^.*\QŸ\E([A-Za-z0-9\.]+).*$|;
+			$key =~ m|Ÿ([A-Za-z0-9\.]+)|;
 			$trip = $1;
 		}
 		
