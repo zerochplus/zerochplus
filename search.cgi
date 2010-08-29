@@ -209,7 +209,7 @@ sub PrintFoot
 	my ($ver, $cgipath);
 	
 	$ver = $Sys->Get('VERSION');
-	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
+	$cgipath	= $Sys->Get('CGIPATH');
 	
 	$Page->Print(<<HTML);
 
@@ -259,7 +259,7 @@ sub Search
 	
 	# 検索結果セット取得
 	$Result = $Search->GetResultSet();
-	$n		= @$Result;
+	$n		= $Result ? @$Result : 0;
 	$base	= $Sys->Get('BBSPATH');
 	$word	= $Form->Get('WORD');
 	
@@ -382,7 +382,7 @@ sub PrintNoHit
 	
 	$Page->Print(<<HTML);
 <dt>
- 0 名前：<font color="forestgreen"><b>検索エンジソ＠ぜろちゃんねるプラス</b></font>：No Hit
+ 0 名前：<font color="forestgreen"><b>検索エンジソ\＠ぜろちゃんねるプラス</b></font>：No Hit
 </dt>
 <dd>
  <br>
@@ -415,7 +415,7 @@ sub PrintSystemError
   <div class="title">
   <small><b>【ヒット数：0】</b></small><font size="+2" color="red">システムエラー</font>
   </div>
-   <dt>0 名前：<font color="forestgreen"><b>検索エンジソ＠ぜろちゃんねるプラス</b></font>：System Error</dt>
+   <dt>0 名前：<font color="forestgreen"><b>検索エンジソ\＠ぜろちゃんねるプラス</b></font>：System Error</dt>
     <dd>
     <br>
     <br>

@@ -119,9 +119,9 @@ sub execute
 		}
 		else {
 			require './module/galadriel.pl';
-			$CONV = new GALADRIEL;
+			$CONV = GALADRIEL->new;
 			require './module/isildur.pl';
-			$SET = new ISILDUR;
+			$SET = ISILDUR->new;
 			$SET->Load($sys);
 			$column = $SET->Get('BBS_TRIPCOLUMN');
 			$key = "#$key";

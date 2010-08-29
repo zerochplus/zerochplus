@@ -467,7 +467,7 @@ $Page->Print(<<HTML);
 HTML
 	
 	if ($ecode == 1000) {
-		$Page->Print("     ERROR:$ecode - 本機能の処理を実行する権限がありません。\n");
+		$Page->Print("     ERROR:$ecode - 本機能\の処理を実行する権限がありません。\n");
 	}
 	elsif ($ecode == 1001) {
 		$Page->Print("     ERROR:$ecode - 入力必須項目が空欄になっています。\n");
