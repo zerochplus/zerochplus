@@ -168,7 +168,7 @@ sub Write
 			require './module/peregrin.pl';
 			my $LOG = PEREGRIN->new;
 			$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT'));
+			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
 			$LOG->Save($oSys);
 		}
 		
@@ -535,6 +535,8 @@ sub IsRegulation
 		# ’ZŠÔ“Še
 		if ($Samba && ! $oSYS->Get('ISSAMBA') && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
 			$tm = $LOGs->IsTime($Samba, $host);
+			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+			$LOGs->Save($oSYS);
 			if ($tm > 0) {
 				$oSYS->Set('WAIT', $tm);
 				return 503;

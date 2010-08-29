@@ -248,7 +248,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 1,										# デバグモード(*)
-		'VERSION'	=> '0ch BBS Plus 0.3.3a 2010/--/--',		# CGIバージョン
+		'VERSION'	=> '0ch+ BBS 0.3.3a 10----',				# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
