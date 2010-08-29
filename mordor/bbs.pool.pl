@@ -567,7 +567,7 @@ sub FunctionCreateLogs
 		foreach $key (@poolSet) {
 			if ($Dat->Load($Sys,"$basePath/$key.cgi", 1)) {
 				if (CreateKAKOLog($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key)) {
-					if ($Logs->Get('KEY', $key) eq '') {
+					if ($Logs->Get('KEY', $key, '') eq '') {
 						$Logs->Add($key, $Dat->GetSubject(), time, '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
 					}
 					else {

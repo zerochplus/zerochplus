@@ -219,7 +219,7 @@ sub PrintThreadList
 	
 	# •\Ž¦”‚ÌÝ’è
 	$dispNum	= $Form->Get('DISPNUM', 10);
-	$dispSt		= $Form->Get('DISPST', 0);
+	$dispSt		= $Form->Get('DISPST', 0) || 0;
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $ThreadNum ? $ThreadNum : ($dispSt + $dispNum));
 	
