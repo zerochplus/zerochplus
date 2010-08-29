@@ -365,7 +365,7 @@ sub PrintReadContents
 sub PrintReadFoot
 {
 	my ($Sys, $Page) = @_;
-	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $datPath, $datSize, $Cookie, $server);
+	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $datPath, $datSize, $Cookie, $server, $cgipath);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -376,7 +376,7 @@ sub PrintReadFoot
 	$rmax		= $oSYS->Get('RESMAX');
 	$datPath	= $oSYS->Get('BBSPATH') . "/$bbs/dat/$key.dat";
 	$datSize	= int((stat $datPath)[7] / 1024);
-	$server		= $oSYS->Get('SERVER');
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	
 	# datファイルのサイズ表示
 	$Page->Print("</dl>\n\n<font color=\"red\" face=\"Arial\"><b>${datSize}KB</b></font>\n\n");
@@ -426,7 +426,7 @@ sub PrintReadFoot
 	# 投稿フォームの表示
 	# レス最大数を超えている場合はフォーム表示しない
 	if ($rmax > $Sys->{'DAT'}->Size()) {
-		my ($tm, $cgiPath, $cookName, $cookMail);
+		my ($tm, $cookName, $cookMail);
 		
 		$cookName = '';
 		$cookMail = '';
@@ -440,10 +440,9 @@ sub PrintReadFoot
 			$cookMail = $Cookie->Get('MAIL', '');
 		}
 		$tm			= time;
-		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 		
 		$Page->Print(<<HTML);
-<form method="POST" action="$cgiPath/bbs.cgi">
+<form method="POST" action="$cgipath/bbs.cgi">
 <input type="hidden" name="bbs" value="$bbs"><input type="hidden" name="key" value="$key"><input type="hidden" name="time" value="$tm">
 <input type="submit" value="書き込む">
 名前：<input type="text" name="FROM" value="$cookName" size="19">
@@ -456,7 +455,7 @@ HTML
 	
 $Page->Print(<<HTML);
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $ver<br>
 <a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>

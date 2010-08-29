@@ -206,14 +206,15 @@ HTML
 sub PrintFoot
 {
 	my ($Sys, $Page) = @_;
-	my ($ver);
+	my ($ver, $cgipath);
 	
 	$ver = $Sys->Get('VERSION');
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	
 	$Page->Print(<<HTML);
 
 <div class="foot">
-<a href="http://validator.w3.org/check?uri=referer"><img src="/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 <a href="http://0ch.mine.nu/">‚º‚ë‚¿‚á‚ñ‚Ë‚é</a> <a href="http://zerochplus.sourceforge.jp/">ƒvƒ‰ƒX</a>
 SEARCH.CGI - $ver
 </div>

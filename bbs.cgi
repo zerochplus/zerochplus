@@ -209,7 +209,7 @@ sub Initialize
 sub PrintBBSThreadCreate
 {
 	my ($Sys, $Page) = @_;
-	my ($SET, $Caption, $title, $link, $image, $code, $server);
+	my ($SET, $Caption, $title, $link, $image, $code, $cgipath);
 	
 	require './module/legolas.pl';
 	$Caption = new LEGOLAS;
@@ -220,6 +220,7 @@ sub PrintBBSThreadCreate
 	$link	= $SET->Get('BBS_TITLE_LINK');
 	$image	= $SET->Get('BBS_TITLE_PICTURE');
 	$code	= $Sys->{'SYS'}->Get('ENCODE');
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	
 	# HTMLƒwƒbƒ_‚Ìo—Í
 	$Page->Print("Content-type: text/html\n\n");
@@ -273,7 +274,6 @@ sub PrintBBSThreadCreate
 		$bbs		= $Sys->{'FORM'}->Get('bbs');
 		$tm			= $Sys->{'FORM'}->Get('time');
 		$ver		= $Sys->{'SYS'}->Get('VERSION');
-		$server		= $Sys->{'SYS'}->Get('SERVER');
 		
 		$Page->Print(<<HTML);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
@@ -300,7 +300,7 @@ sub PrintBBSThreadCreate
 </table>
 
 <p>
-<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a> $ver
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a> $ver
 </p>
 HTML
 	}
