@@ -152,7 +152,7 @@ sub Write
 		$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 		
 		$err		= 0;
-		$id			= $oConv->MakeID($oSys->Get('SERVER'), 8);
+		$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oForm->Get('HOST'), $oSys->Get('BBS'), 8);
 		$date		= $oConv->GetDate($oSet);
 		$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
 		
