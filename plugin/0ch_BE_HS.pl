@@ -85,6 +85,8 @@ sub getType
 #------------------------------------------------------------------------------------------------------------
 sub execute
 {
+	use strict;
+	use warnings;
 	my $this = shift;
 	my ($sys, $form, $type) = @_;
 	
@@ -108,33 +110,33 @@ sub execute
 			$key = $2;
 		}
 		
-		my ($CONV, $SET, $trip12, $column, $trip, $key2);
-		my $trip12 = 0;
+		my ($CONV, $SET, $trip, $key2, $column, @ct_arg);
 		if (defined $sys->{'MainCGI'}) {
 			$CONV = $sys->{'MainCGI'}->{'CONV'};
 			$SET = $sys->{'MainCGI'}->{'SET'};
-			$trip12 = $sys->Get('TRIP12');
+			$column = $SET->Get('BBS_TRIPCOLUMN');
+			$trip = $CONV->ConvertTrip(\$key, $column, $sys->Get('TRIP12'));
 		}
 		else {
 			require './module/galadriel.pl';
 			$CONV = new GALADRIEL;
 			require './module/isildur.pl';
 			$SET = new ISILDUR;
-			$SET->Load($sys)
+			$SET->Load($sys);
+			$column = $SET->Get('BBS_TRIPCOLUMN');
+			$key = "#$key";
+			$CONV->ConvertTrip(\$key, $column);
+			$key =~ m|^.*\Q◆\E([A-Za-z0-9\.]+).*$|;
+			$trip = $1;
 		}
-		
-		# トリップ変換してやるー
-		$column = $SET->Get('BBS_TRIPCOLUMN');
-		$trip = $CONV->ConvertTrip(\$key, $column, $trip12);
 		
 		# とりあえず消す
 		$name =~ s/!BE.+!HS//;
-		if ($name =~ /#(.+)$/) {
+		if ($form->IsExist('TRIPKEY') && $name =~ /#(.+)$/) {
 			$key2 = $1;
-			if ($form->IsExist('TRIPKEY')) {
-				$key2 = $CONV->ConvertTrip(\$key2, $column, $trip12);
-				$form->Set('TRIPKEY', $key2);
-			}
+			$ct_arg[0] = \$key2;
+			$key2 = $CONV->ConvertTrip(\$key2, $column, $sys->Get('TRIP12'));
+			$form->Set('TRIPKEY', $key2);
 		}
 		
 		$form->Set('FROM', $name);
@@ -156,9 +158,9 @@ sub execute
 		Encode::from_to( $content, 'EUC-JP', 'Shift_JIS' );
 		
 		if ( $content =~ /<div id="sitename">\n<h1>(.+)<\/h1>/ ) {
-		
+			
 			my $name = $1;
-			$name =~ s|^.*◆([A-Za-z0-9\./]{10}).*$|$1|;
+			$name =~ s|^.*◆([A-Za-z0-9\./]{10,12}).*$|$1|;
 			
 			# 入力トリップとプロフのトリップの一致を調べる
 			if ( $trip eq $name ) {
