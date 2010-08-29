@@ -49,7 +49,7 @@ sub getName
 sub getExplanation
 {
 	my	$this = shift;
-	return '名前欄に tasukeruyo を記入するとUAを表示します';
+	return '名前欄に tasukeruyo を記入するとUAを表\示します';
 }
 
 #------------------------------------------------------------------------------------------------------------
