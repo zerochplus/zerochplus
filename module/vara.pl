@@ -168,7 +168,7 @@ sub Write
 			require './module/peregrin.pl';
 			my $LOG = PEREGRIN->new;
 			$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oForm->Get('AGENT'));
+			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT', 0));
 			$LOG->Save($oSys);
 		}
 		
@@ -553,13 +553,13 @@ sub IsRegulation
 			}
 		}
 		# ƒŒƒX‘‚«ž‚Ý(“ñd“Še)
-		if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
-			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
-				if ($LOG->Search($host, 1) == length($this->{'FORM'}->Get('MESSAGE'))) {
-					return 502;
-				}
-			}
-		}
+		#if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
+		#	if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
+		#		if ($LOG->Search($host, 1) == length($this->{'FORM'}->Get('MESSAGE'))) {
+		#			return 502;
+		#		}
+		#	}
+		#}
 		
 		#$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
 		#$LOG->Save($oSYS);
