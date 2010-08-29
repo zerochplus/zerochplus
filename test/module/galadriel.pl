@@ -677,7 +677,7 @@ sub CreatePath
 sub GetDate
 {
 	my $this = shift;
-	my ($oSet) = @_;
+	my ($oSet, $msect) = @_;
 	my (@info, @weeks, $week);
 	
 	$ENV{'TZ'} = "JST-9";
@@ -698,7 +698,15 @@ sub GetDate
 		$info[$_] = "0$info[$_]" if ($info[$_] < 10);
 	}
 	
+	# msec�̎擾
+	if ($msect) {
+		use Time::HiRes;
+		my $times = Time::HiRes::time;
+		$info[0] .= sprintf(".%02d", substr((split(/\./, $times))[1], 0, 2 ));
+	}
+	
 	return "$info[5]/$info[4]/$info[3]" . ($week eq '' ? '' : "($week)") . " $info[2]:$info[1]:$info[0]";
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
