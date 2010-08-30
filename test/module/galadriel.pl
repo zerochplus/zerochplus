@@ -377,6 +377,9 @@ sub GetTextInfo
 #	2010.08.13 windyakin ★
 #	 -> ID末尾文字正規化のため変更
 #
+#	2010.08.30 windyakin ★
+#	 -> フルブラウザ, AirH"の対応
+#
 #------------------------------------------------------------------------------------------------------------
 sub GetAgentMode
 {
@@ -386,16 +389,35 @@ sub GetAgentMode
 	
 	$host = $ENV{'REMOTE_HOST'};
 	
-	if ( $host =~ /\.docomo.ne.jp/ ) {				return "O"; }			# docomo
-	if ( $host =~ /\.jp-[a-z].ne.jp/ ) {			return "O"; }			# J-Phone
-	if ( $host =~ /\.vodafone.ne.jp/ ) {			return "O"; }			# Vodafone
-	if ( $host =~ /\.softbank.ne.jp/ ) {			return "O"; }			# SoftBank
-	if ( $host =~ /\.ezweb.ne.jp/ ) {				return "O"; }			# au
-	if ( $host =~ /\.prin.ne.jp/ ) {				return "O"; }			# Willcom
-	if ( $host =~ /(?:cw43|p202).razil.jp/ ) {		return "P"; }			# 公式p2
-	if ( $host =~ /\.panda-world.ne.jp/ ) {			return "i"; }			# iPhone( 3G )
-	if ( $UA =~ /iPhone; U; CPU iPhone/ ) {			return "I";	}			# iPhone(WiFi)
-	if ( $UA =~ /Debug Mobile Phone/ ) {			return "S"; }			# デバッグ用
+	# フルブラウザ軍
+	if ( $host =~ /proxy-f-\d+.docomo.ne.jp/ ) {		return "Q"; }			# iモード フルブラウザ
+	if ( $host =~ /\.pcsitebrowser.ne.jp/ ) {			return "Q"; }			# softbank PCサイトブラウザ
+	if ( $host =~ /\.brew.ne.jp/ ) {					return "Q"; }			# au PCサイトビューア
+	if ( $host =~ /ibis.ne.jp/ ) {						return "Q"; }			# ibis
+	if ( $host =~ /\.mobile.ogk.yahoo.co.jp/ ) {		return "Q"; }			# jigブラウザWEB
+	if ( $host =~ /\.jig.jp/ ) {						return "Q"; }			# jigブラウザ
+	if ( $host =~ /\.opera-mini.net/ ) {				return "Q"; }			# opera mini
+	
+	# 携帯軍
+	if ( $host =~ /\.docomo.ne.jp/ ) {					return "O"; }			# docomo
+	if ( $host =~ /\.jp-[a-z].ne.jp/ ) {				return "O"; }			# J-Phone
+	if ( $host =~ /\.vodafone.ne.jp/ ) {				return "O"; }			# Vodafone
+	if ( $host =~ /\.softbank.ne.jp/ ) {				return "O"; }			# SoftBank
+	if ( $host =~ /\.ezweb.ne.jp/ ) {					return "O"; }			# au
+	if ( $host =~ /\.prin.ne.jp/ ) {					return "O"; }			# Willcom
+	if ( $host =~ /\.emobile.ad.jp/ ) {					return "O"; }			# e-mobile(音声端末)
+	
+	# 一応AirH"
+	if ( $host =~ /AirH-.+\-.+.enjoy.ne.jp/ ) {			return "o"; }			# AirH"
+	if ( $host =~ /(AIRH\d+|AIRHFLC\d+|airh\d+\.mobile)\.ppp.infoweb.ne.jp/ ) { return "o"; } # AirH"
+	
+	# その他
+	if ( $host =~ /(?:cw43|p202).razil.jp/ ) {			return "P"; }			# 公式p2
+	if ( $host =~ /\.panda-world.ne.jp/ ) {				return "i"; }			# iPhone( 3G )
+	if ( $UA =~ /iPhone; U; CPU iPhone/ ) {				return "I";	}			# iPhone(WiFi)
+	
+	# デバッグ専用
+	if ( $UA =~ /Debug Mobile Phone/ ) {				return "S"; }			# デバッグ用
 	
 	return "0";
 }

@@ -673,6 +673,12 @@ sub GetProductInfo
 		$product = $ENV{'HTTP_X_UP_SUBNO'};
 		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
 	}
+	# e-mobile(音声端末)
+	elsif ( $host =~ /\.emobile.ad.jp$/ ) {
+		# $ENV{'X-EM-UID'} - 
+		$product = $ENV{'X-EM-UID'};
+		$product =~ s/x-em-uid: (.+)/$1/i;
+	}
 	# 公式p2
 	elsif ( $host =~ /(?:cw43|p202).razil.jp$/ ) {
 		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (発言者のホスト)
