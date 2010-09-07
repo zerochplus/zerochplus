@@ -304,13 +304,13 @@ sub PrintReadFoot
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 		
-		$Page->Print("<form method=\"POST\" action=\"$cgiPath/bbs.cgi\" utn>\n");
+		$Page->Print("<form method=\"POST\" action=\"$cgiPath/bbs.cgi?guid=ON\">\n");
 		$Page->Print("<input type=hidden name=bbs value=$bbs>");
 		$Page->Print("<input type=hidden name=key value=$key>");
 		$Page->Print("<input type=hidden name=time value=$tm>");
 		$Page->Print("\n–¼‘O<br><input type=text name=\"FROM\"><br>");
 		$Page->Print('E-mail<br><input type=text name="mail"><br>');
-		$Page->Print('<textarea rows=1 wrap=off name="MESSAGE"></textarea>');
+		$Page->Print('<textarea rows=3 wrap=off name="MESSAGE"></textarea>');
 		$Page->Print('<br><input type=submit value="‘‚«ž‚Þ"><br>');
 	}
 	$Page->Print("<small>$ver</small></form></body></html>\n");
