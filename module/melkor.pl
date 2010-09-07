@@ -118,8 +118,8 @@ sub Save
 		open SYS, '>' . $this->{'SYS'}->{'SYSFILE'};
 		flock SYS, 2;
 		binmode SYS;
-		truncate SYS, 0;
-		seek SYS, 0, 0;
+		#truncate SYS, 0;
+		#seek SYS, 0, 0;
 		foreach (@{$this->{'KEY'}}) {
 			$val = $this->{'SYS'}->{$_};
 			print SYS "$_<>$val\n";

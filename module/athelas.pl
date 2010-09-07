@@ -225,11 +225,11 @@ sub Save
 	
 #	eval
 	{
-		open PLUGINS, "+> $path";
+		open PLUGINS, "> $path";
 		flock PLUGINS, 2;
 		binmode PLUGINS;
-		truncate PLUGINS, 0;
-		seek PLUGINS, 0, 0;
+		#truncate PLUGINS, 0;
+		#seek PLUGINS, 0, 0;
 		foreach my $id (keys %{$this->{'FILE'}}) {
 			$data = join('<>',
 				$id,

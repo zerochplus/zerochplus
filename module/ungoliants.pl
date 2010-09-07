@@ -109,11 +109,11 @@ sub Save
 	
 #	eval
 	{
-		open USERS, "+> $path";
+		open USERS, "> $path";
 		flock USERS, 2;
 		binmode USERS;
-		truncate USERS, 0;
-		seek USERS, 0, 0;
+		#truncate USERS, 0;
+		#seek USERS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
 			$data = join('<>',
 				$_,
@@ -367,11 +367,11 @@ sub Save
 	
 #	eval
 	{
-		open GROUPS, "+> $path";
+		open GROUPS, "> $path";
 		flock GROUPS, 2;
 		binmode GROUPS;
-		truncate GROUPS, 0;
-		seek GROUPS, 0, 0;
+		#truncate GROUPS, 0;
+		#seek GROUPS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
 			$data = join('<>',
 				$_,

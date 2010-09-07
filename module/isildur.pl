@@ -86,11 +86,11 @@ sub Save
 	
 #	eval
 	{
-		open SETTING, "+> $path";
+		open SETTING, "> $path";
 		flock SETTING, 2;
 		binmode SETTING;
-		truncate SETTING, 0;
-		seek SETTING, 0, 0;
+		#truncate SETTING, 0;
+		#seek SETTING, 0, 0;
 		foreach $key (keys %{$this->{'SETTING'}}) {
 			$val = $this->{'SETTING'}->{$key};
 			print SETTING "$key=$val\n";
@@ -148,11 +148,11 @@ sub SaveAs
 	
 #	eval
 	{
-		open SETTING, "+> $path";
+		open SETTING, "> $path";
 		flock SETTING, 2;
 		binmode SETTING;
-		truncate SETTING, 0;
-		seek SETTING, 0, 0;
+		#truncate SETTING, 0;
+		#seek SETTING, 0, 0;
 		foreach $key (keys %{$this->{'SETTING'}}) {
 			$val = $this->{'SETTING'}->{$key};
 			print SETTING "$key=$val\n";

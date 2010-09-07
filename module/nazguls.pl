@@ -104,11 +104,11 @@ sub Save
 	
 #	eval
 	{
-		open BBSS, "+> $path";
+		open BBSS, "> $path";
 		flock BBSS, 2;
 		binmode BBSS;
-		truncate BBSS, 0;
-		seek BBSS, 0, 0;
+		#truncate BBSS, 0;
+		#seek BBSS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
 			$data = join('<>',
 				$_,
@@ -441,11 +441,11 @@ sub Save
 	
 #	eval
 	{
-		open CATS, "+> $path";
+		open CATS, "> $path";
 		flock CATS, 2;
 		binmode CATS;
-		truncate CATS, 0;
-		seek CATS, 0, 0;
+		#truncate CATS, 0;
+		#seek CATS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
 			$data = join('<>',
 				$_,
