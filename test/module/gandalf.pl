@@ -94,11 +94,11 @@ sub Save
 	
 #	eval
 	{
-		open NOTICE, "+>$path";
+		open NOTICE, "> $path";
 		flock NOTICE, 2;
 		binmode NOTICE;
-		truncate NOTICE, 0;
-		seek NOTICE, 0, 0;
+		#truncate NOTICE, 0;
+		#seek NOTICE, 0, 0;
 		foreach (keys %{$this->{'TO'}}) {
 			$data = join('<>',
 				$_,

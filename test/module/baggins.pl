@@ -132,10 +132,10 @@ sub Save
 	
 #	eval
 	{
-		open SUBJ, "+> $path";
+		open SUBJ, "> $path";
 		flock SUBJ, 2;
-		truncate SUBJ, 0;
-		seek SUBJ, 0, 0;
+		#truncate SUBJ, 0;
+		#seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
 			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
@@ -534,10 +534,10 @@ sub Save
 	
 #	eval
 	{
-		open SUBJ, "+> $path";
+		open SUBJ, "> $path";
 		flock SUBJ, 2;
-		truncate SUBJ, 0;
-		seek SUBJ, 0, 0;
+		#truncate SUBJ, 0;
+		#seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
 			next if (! defined $this->{SUBJECT}->{$_});

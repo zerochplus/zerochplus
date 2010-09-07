@@ -92,11 +92,11 @@ sub Save
 	
 #	eval
 	{
-		open KAKO, "+> $path";
+		open KAKO, "> $path";
 		flock KAKO, 2;
 		binmode KAKO;
-		truncate KAKO, 0;
-		seek KAKO, 0, 0;
+		#truncate KAKO, 0;
+		#seek KAKO, 0, 0;
 		foreach (keys %{$this->{'SUBJECT'}}) {
 			$data = join('<>',
 				$_,

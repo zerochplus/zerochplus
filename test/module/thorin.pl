@@ -88,10 +88,10 @@ sub Flush
 	if ($flag) {
 #		eval
 		{
-			open OUTPUT, "+> $szFilePath";
+			open OUTPUT, "> $szFilePath";
 			flock OUTPUT, 2;
-			truncate OUTPUT, 0;
-			seek OUTPUT, 0, 0;
+			#truncate OUTPUT, 0;
+			#seek OUTPUT, 0, 0;
 			print OUTPUT @{$this->{'BUFF'}};
 			close OUTPUT;
 			chmod $perm, $szFilePath;

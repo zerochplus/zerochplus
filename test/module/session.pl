@@ -91,10 +91,10 @@ sub setSession
 #	eval
 	{
 		if (-e $filePath) {
-			open SESSION, "+> $filePath";
+			open SESSION, "> $filePath";
 			flock SESSION, 2;
-			truncate SESSION, 0;
-			seek SESSION, 0, 0;
+			#truncate SESSION, 0;
+			#seek SESSION, 0, 0;
 			binmode SESSION;
 			
 			print SESSION $session->getId() . "\n";
