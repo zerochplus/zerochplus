@@ -79,8 +79,16 @@ sub DoPrint
 	elsif ($subMode eq 'OTHER') {													# その他設定画面
 		PrintOtherSetting($Page, $Sys, $Form);
 	}
+=pod
 	elsif ($subMode eq 'PLUS') {													# ぜろプラスオリジナル
 		PrintPlusSetting($Page, $Sys, $Form);
+	}
+=cut
+	elsif ($subMode eq 'VIEW') {													# 表示設定
+		PrintPlusViewSetting($Page, $Sys, $Form);
+	}
+	elsif ($subMode eq 'SEC') {														# 規制設定
+		PrintPlusSecSetting($Page, $Sys, $Form);
 	}
 	elsif ($subMode eq 'PLUGIN') {													# 拡張機能設定画面
 		PrintPluginSetting($Page, $Sys, $Form);
@@ -131,8 +139,16 @@ sub DoFunction
 	elsif ($subMode eq 'OTHER') {													# その他設定
 		$err = FunctionOtherSetting($Sys, $Form, $this->{'LOG'});
 	}
+=pod
 	elsif ($subMode eq 'PLUS') {													# ぜろプラスオリジナル
 		$err = FunctionPlusSetting($Sys, $Form, $this->{'LOG'});
+	}
+=cut
+	elsif ($subMode eq 'VIEW') {													# 表示設定
+		$err = FunctionPlusViewSetting($Sys, $Form, $this->{'LOG'});
+	}
+	elsif ($subMode eq 'SEC') {														# 規制設定
+		$err = FunctionPlusSecSetting($Sys, $Form, $this->{'LOG'});
 	}
 	elsif ($subMode eq 'SET_PLUGIN') {												# 拡張機能情報設定
 		$err = FunctionPluginSetting($Sys, $Form, $this->{'LOG'});
@@ -175,7 +191,9 @@ sub SetMenuList
 		$Base->SetMenu('パーミッション設定', "'sys.setting','DISP','PERMISSION'");
 		$Base->SetMenu('リミッタ設定', "'sys.setting','DISP','LIMITTER'");
 		$Base->SetMenu('その他設定', "'sys.setting','DISP','OTHER'");
-		$Base->SetMenu('ぜろプラオリジナル設定', "'sys.setting','DISP','PLUS'");
+		$Base->SetMenu('<hr>', '');
+		$Base->SetMenu('表示設定', "'sys.setting','DISP','VIEW'");
+		$Base->SetMenu('規制設定', "'sys.setting','DISP','SEC'");
 		$Base->SetMenu('<hr>', '');
 		$Base->SetMenu('拡張機能\設定', "'sys.setting','DISP','PLUGIN'");
 	}
@@ -421,44 +439,36 @@ sub PrintOtherSetting
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	ぜろちゃんねるプラスオリジナル設定画面の表示
+#	表示設定画面の表示(ぜろちゃんねるプラスオリジナル)
 #	-------------------------------------------------------------------------------------
 #	@param	$Page	ページコンテキスト
 #	@param	$SYS	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
-#	2010.08.12 windyakin ★
-#	 -> 新規作成
+#	2010.09.08 windyakin ★
+#	 -> 表示設定と規制設定の分離
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintPlusSetting
+sub PrintPlusViewSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $Kakiko, $Counter, $Samba, $isSamba, $Houshi, $Prtext, $Prlink, $Trip12, $Msec);
-	my ($banner, $kakiko, $trip12, $issamba, $msec);
+	my ($Banner, $Counter, $Prtext, $Prlink, $Msec);
+	my ($banner, $msec);
 	my ($common);
 	
-	$SYS->Set('_TITLE', 'System ZerochPlus Original Setting');
+	$SYS->Set('_TITLE', 'System View Setting');
 	
 	$Banner		= $SYS->Get('BANNER');
-	$Kakiko		= $SYS->Get('KAKIKO');
 	$Counter	= $SYS->Get('COUNTER');
-	$Samba		= $SYS->Get('SAMBATM');
-	$isSamba	= $SYS->Get('ISSAMBA');
-	$Houshi		= $SYS->Get('HOUSHI');
 	$Prtext		= $SYS->Get('PRTEXT');
 	$Prlink		= $SYS->Get('PRLINK');
-	$Trip12		= $SYS->Get('TRIP12');
 	$Msec		= $SYS->Get('MSEC');
 	
 	$banner		= ($Banner == 1 ? 'checked' : '');
-	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
-	$trip12		= ($Trip12 == 1 ? 'checked' : '');
-	$issamba	= ($isSamba == 1 ? 'checked' : '');
 	$msec		= ($Msec == 1 ? 'checked' : '');
 	
-	$common = "onclick=\"DoSubmit('sys.setting','FUNC','PLUS');\"";
+	$common = "onclick=\"DoSubmit('sys.setting','FUNC','VIEW');\"";
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2>各項目を設定して[設定]ボタンを押してください。</td></tr>");
@@ -476,6 +486,56 @@ sub PrintPlusSetting
 	$Page->Print("<tr><td>index.html以外の告知欄を表\示する</td>");
 	$Page->Print("<td><input type=checkbox name=BANNER $banner value=on></td></tr>\n");
 	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">msec表\示</td></tr>\n");
+	$Page->Print("<tr><td>ミリ秒まで表\示する</small></td>");
+	$Page->Print("<td><input type=checkbox name=MSEC $msec value=on></td></tr>\n");
+	
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
+	$Page->Print("</table>");
+	
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	規制設定画面の表示(ぜろちゃんねるプラスオリジナル)
+#	-------------------------------------------------------------------------------------
+#	@param	$Page	ページコンテキスト
+#	@param	$SYS	システム変数
+#	@param	$Form	フォーム変数
+#	@return	なし
+#
+#	2010.09.08 windyakin ★
+#	 -> 表示設定と規制設定の分離
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintPlusSecSetting
+{
+	
+	my ($Page, $SYS, $Form) = @_;
+	my ($Kakiko, $Samba, $isSamba, $Houshi, $Trip12);
+	my ($kakiko, $trip12, $issamba);
+	my ($common);
+	
+	$SYS->Set('_TITLE', 'System Regulation Setting');
+	
+	$Kakiko		= $SYS->Get('KAKIKO');
+	$Samba		= $SYS->Get('SAMBATM');
+	$isSamba	= $SYS->Get('ISSAMBA');
+	$Houshi		= $SYS->Get('HOUSHI');
+	$Trip12		= $SYS->Get('TRIP12');
+
+	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
+	$trip12		= ($Trip12 == 1 ? 'checked' : '');
+	$issamba	= ($isSamba == 1 ? 'checked' : '');
+	
+	$common = "onclick=\"DoSubmit('sys.setting','FUNC','SEC');\"";
+	
+	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=2>各項目を設定して[設定]ボタンを押してください。</td></tr>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">２重かきこですか？？</td></tr>\n");
 	$Page->Print("<tr><td>同じIPからの書き込みの文字数が変化しない場合規制する</td>");
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
@@ -491,10 +551,6 @@ sub PrintPlusSetting
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
 	$Page->Print("<td><input type=checkbox name=TRIP12 $trip12 value=on></td></tr>\n");
-	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">msec表\示</td></tr>\n");
-	$Page->Print("<tr><td>ミリ秒まで表\示する</small></td>");
-	$Page->Print("<td><input type=checkbox name=MSEC $msec value=on></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");
@@ -777,18 +833,18 @@ sub FunctionOtherSetting
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	ぜろちゃんねるプラスオリジナル設定
+#	表示設定(ぜろちゃんねるプラスオリジナル)
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@param	$pLog	ログ用
 #	@return	エラーコード
 #
-#	2010.08.12 windyakin ★
-#	 -> 新規作成
+#	2010.09.08 windyakin ★
+#	 -> 表示設定と規制設定の分離
 #
 #------------------------------------------------------------------------------------------------------------
-sub FunctionPlusSetting
+sub FunctionPlusViewSetting
 {
 	my ($Sys, $Form, $pLog) = @_;
 	my ($SYSTEM);
@@ -810,11 +866,6 @@ sub FunctionPlusSetting
 	$SYSTEM->Set('PRTEXT', $Form->Get('PRTEXT'));
 	$SYSTEM->Set('PRLINK', $Form->Get('PRLINK'));
 	$SYSTEM->Set('BANNER', ($Form->Equal('BANNER', 'on') ? 1 : 0));
-	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
-	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
-	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
-	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
-	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	$SYSTEM->Set('MSEC', ($Form->Equal('MSEC', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
@@ -825,12 +876,54 @@ sub FunctionPlusSetting
 		push @$pLog, '　　　 PR欄表\示文字列：' . $SYSTEM->Get('PRTEXT');
 		push @$pLog, '　　　 PR欄リンクURL：' . $SYSTEM->Get('PRLINK');
 		push @$pLog, '　　　 バナー表\示：' . $SYSTEM->Get('BANNER');
+		push @$pLog, '　　　 ミリ秒表示：' . $SYSTEM->Get('MSEC');
+	}
+	return 0;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	規制設定(ぜろちゃんねるプラスオリジナル)
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	システム変数
+#	@param	$Form	フォーム変数
+#	@param	$pLog	ログ用
+#	@return	エラーコード
+#
+#	2010.09.08 windyakin ★
+#	 -> 表示設定と規制設定の分離
+#
+#------------------------------------------------------------------------------------------------------------
+sub FunctionPlusSecSetting
+{
+	my ($Sys, $Form, $pLog) = @_;
+	my ($SYSTEM);
+	
+	# 権限チェック
+	{
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+			return 1000;
+		}
+	}
+	require './module/melkor.pl';
+	$SYSTEM = MELKOR->new;
+	$SYSTEM->Init();
+	
+	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
+	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
+	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
+	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
+	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
+	
+	{
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
 		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
 		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
 		push @$pLog, '　　　 Samba規制分数：' . $SYSTEM->Get('HOUSHI');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
-		push @$pLog, '　　　 ミリ秒表示：' . $SYSTEM->Get('MSEC');
 	}
 	return 0;
 }
