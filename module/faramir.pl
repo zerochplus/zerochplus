@@ -194,13 +194,14 @@ sub Set
 sub Check
 {
 	my $this = shift;
-	my ($host) = @_;
+	my ($sys, $host) = @_;
 	my ($flag);
 	
 	$flag = 0;
 	foreach (@{$this->{'USER'}}) {
 		if ($host =~ /$_/) {
 			$flag = 1;
+			$sys->Set('HITS', $_);
 			last;
 		}
 	}

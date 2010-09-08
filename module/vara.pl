@@ -292,7 +292,7 @@ sub ReadyBeforeWrite
 		require './module/faramir.pl';
 		$vUser = FARAMIR->new;
 		$vUser->Load($Sys);
-		$check = $vUser->Check($host);
+		$check = $vUser->Check($Sys, $host);
 		if ($check == 4) {
 			return 601;
 		}
