@@ -241,15 +241,6 @@ sub PrintReadMenu
 	$Page->Print('<a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/');
 	$Page->Print("disp/$account/00813400.gif\" alt=\"無料アクセスカウンターofuda.cc「全世界カウント計画」\"></a>\n");
 	
-	$Page->Print(<<HTML);
-<script type="text/javascript">
-<!--
-document.write('<iframe src="http://p2.2ch.io/getf.cgi?' + location + '" width="460" height="15"');
-document.write(' marginheight="0" marginwidth="0" scrolling="no" allowtransparency="true" frameborder="0"></iframe>');
-//-->
-</script>
-HTML
-	
 	$Page->Print("<div style=\"margin-top:1em;\">\n");
 	$Page->Print(" <span style=\"float:left;\">\n");
 	$Page->Print(" <a href=\"$pathBBS/\">■掲示板に戻る■</a>\n");
