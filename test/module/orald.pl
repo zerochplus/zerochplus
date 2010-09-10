@@ -120,7 +120,7 @@ sub Print
 	
 	# エラーメッセージの置換
 	while ($message =~ /{!(.*?)!}/) {
-		my $rep = $SYS->Get($1);
+		my $rep = $SYS->Get($1, '');
 		$message =~ s/{!$1!}/$rep/;
 	}
 	
