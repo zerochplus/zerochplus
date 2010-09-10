@@ -428,8 +428,8 @@ sub PrintLimitSetting
 	$setMailMax		= $Setting->Get('BBS_MAIL_COUNT');
 	$setContMax		= $Setting->Get('BBS_MESSAGE_COUNT');
 	$setThreadMax	= $Setting->Get('BBS_THREAD_TATESUGI');
-	$setWriteMax	= $Setting->Get('timecount');
-	$setContinueMax	= $Setting->Get('timeclose');
+	$setWriteMax	= $Setting->Get('timecount')||0;
+	$setContinueMax	= $Setting->Get('timeclose')||0;
 	$setNoName		= $Setting->Get('NANASHI_CHECK');
 	$setProxy		= $Setting->Get('BBS_PROXY_CHECK');
 	$setOverSea		= $Setting->Get('BBS_JP_CHECK');
@@ -789,6 +789,7 @@ sub FunctionLimitSetting
 	}
 	# 入力チェック
 	{
+		
 		my @inList = ('BBS_SUBJECT_COUNT', 'BBS_NAME_COUNT', 'BBS_MAIL_COUNT', 'BBS_MESSAGE_COUNT',
 						'BBS_THREAD_TATESUGI', 'timecount', 'timeclose');
 		# 入力有無
@@ -806,6 +807,11 @@ sub FunctionLimitSetting
 	require './module/isildur.pl';
 	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
+	
+	if ( $Form->Get('timeclose') eq 0 && $Form->Get('timecount') eq 0 ) {
+		$Form->Set('timeclose' ,'');
+		$Form->Set('timecount' ,'');
+	}
 	
 	$Setting->Set('BBS_SUBJECT_COUNT', $Form->Get('BBS_SUBJECT_COUNT'));
 	$Setting->Set('BBS_NAME_COUNT', $Form->Get('BBS_NAME_COUNT'));
