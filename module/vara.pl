@@ -282,8 +282,8 @@ sub ReadyBeforeWrite
 	
 	$Sys	= $this->{'SYS'};
 	$Form	= $this->{'FORM'};
-	$host	= $this->{'FORM'}->Get('HOST');
-	$from	= $this->{'FORM'}->Get('FROM');
+	$host	= $Form->Get('HOST');
+	$from	= $Form->Get('FROM');
 	
 	# ãKêßÉÜÅ[ÉUÅENGÉèÅ[ÉhÉ`ÉFÉbÉN
 	{
@@ -298,7 +298,7 @@ sub ReadyBeforeWrite
 		}
 		if ($check == 2) {
 			if ($from =~ /$host/i) {
-				$this->{'FORM'}->Set('FROM', "</b>[ÅL•É÷•ÅM] <b>$from");
+				$Form->Set('FROM', "</b>[ÅL•É÷•ÅM] <b>$from");
 			}
 			else {
 				return 601;
@@ -315,10 +315,10 @@ sub ReadyBeforeWrite
 			return 600;
 		}
 		if ($check == 1) {
-			$ngWord->Method($this->{'FORM'}, \@checkKey);
+			$ngWord->Method($Form, \@checkKey);
 		}
 		if ($check == 2) {
-			$this->{'FORM'}->Set('FROM', "</b>[ÅL+É÷+ÅM] $host <b>$from");
+			$Form->Set('FROM', "</b>[ÅL+É÷+ÅM] $host <b>$from");
 		}
 	}
 	
@@ -333,6 +333,13 @@ sub ReadyBeforeWrite
 	$text = $Form->Get('MESSAGE');
 	$text =~ s/<br>/ <br> /g;
 	$Form->Set('MESSAGE', " $text ");
+	
+	# ñºñ≥Çµê›íË
+	$from = $Form->Get('FROM');
+	unless ($from) {
+		$from = $this->{'SET'}->Get('BBS_NONAME_NAME');
+		$Form->Set('FROM', $from);
+	}
 	
 	return 0;
 }
@@ -694,9 +701,6 @@ sub NormalizationNameMail
 			return 152;
 		}
 	}
-	# ñºñ≥Çµê›íË
-	unless ($name) { $name = $oSET->Get('BBS_NONAME_NAME'); }
-	unless ($mail) { $mail = ''; }
 	
 	# ê≥ãKâªÇµÇΩì‡óeÇçƒìxê›íË
 	$Form->Set('FROM', $name);
