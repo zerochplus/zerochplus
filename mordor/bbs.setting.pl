@@ -414,6 +414,7 @@ sub PrintLimitSetting
 	my ($setSubjectMax, $setNameMax, $setMailMax, $setContMax, $setThreadMax, $setWriteMax);
 	my ($setContinueMax, $setNoName, $setProxy, $setOverSea, $setIPSave, $setTomato);
 	my ($setIDForce, $setIDNone, $setIDHost, $setIDDisp);
+	my ($disphost, $dispsakhalin, $dispsiberia);
 	
 	$SYS->Set('_TITLE', 'BBS Limitter Setting');
 	
@@ -438,6 +439,10 @@ sub PrintLimitSetting
 	$setIDNone		= $Setting->Get('BBS_NO_ID');
 	$setIDHost		= $Setting->Get('BBS_DISP_IP');
 	$setIDDisp		= (($setIDForce eq '') && ($setIDNone eq '') ? 'checked' : '');
+	
+	if ( $setIDHost eq 'checked' )			{ $disphost = 'checked'; }
+	elsif ( $setIDHost eq 'sakhalin' )		{ $dispsakhalin = 'checked'; }
+	elsif ( $setIDHost eq 'siberia' )		{ $dispsiberia = 'checked'; }
 	
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=4>各設定値を入力して[設定]ボタンを押してください。</td></tr>");
@@ -470,7 +475,9 @@ sub PrintLimitSetting
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_FORCE_ID $setIDForce>強制ID<br>");
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_ID_DISP $setIDDisp>任意ID<br>");
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_NO_ID $setIDNone>ID表\示無し<br>");
-	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP $setIDHost>ホスト表\示<br>");
+	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP1 $disphost>ホスト表\示<br>");
+	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP2 $dispsakhalin>発信元表\示(sakhalin)<br>");
+	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP3 $dispsiberia>発信元表\示(siberia)<br>");
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
@@ -815,6 +822,42 @@ sub FunctionLimitSetting
 	
 	# ID表示設定
 	{
+		# 酷いけど仕方ないね…
+		# HOST表示
+		if ( $Form->Equal('ID_DISP', 'BBS_DISP_IP1') ) {
+			$Setting->Set('BBS_DISP_IP', 'checked');
+			$Setting->Set('BBS_FORCE_ID', '');
+			$Setting->Set('BBS_NO_ID', '');
+		}
+		# sakhalin
+		elsif ( $Form->Equal('ID_DISP', 'BBS_DISP_IP2') ) {
+			$Setting->Set('BBS_DISP_IP', 'sakhalin');
+			$Setting->Set('BBS_FORCE_ID', '');
+			$Setting->Set('BBS_NO_ID', '');
+		}
+		# siberia
+		elsif ( $Form->Equal('ID_DISP', 'BBS_DISP_IP3') ) {
+			$Setting->Set('BBS_DISP_IP', 'siberia');
+			$Setting->Set('BBS_FORCE_ID', '');
+			$Setting->Set('BBS_NO_ID', '');
+		}
+		elsif ( $Form->Equal('ID_DISP', 'BBS_FORCE_ID') ) {
+			$Setting->Set('BBS_DISP_IP', '');
+			$Setting->Set('BBS_FORCE_ID', 'checked');
+			$Setting->Set('BBS_NO_ID', '');
+		}
+		elsif ( $Form->Equal('ID_DISP', 'BBS_NO_ID') ) {
+			$Setting->Set('BBS_DISP_IP', '');
+			$Setting->Set('BBS_FORCE_ID', '');
+			$Setting->Set('BBS_NO_ID', 'checked');
+		}
+		else {
+			$Setting->Set('BBS_DISP_IP', '');
+			$Setting->Set('BBS_FORCE_ID', '');
+			$Setting->Set('BBS_NO_ID', '');
+		}
+		
+=pod
 		my @IDs = ('BBS_FORCE_ID', 'BBS_DISP_IP', 'BBS_NO_ID');
 		
 		foreach (@IDs) {
@@ -825,6 +868,7 @@ sub FunctionLimitSetting
 				$Setting->Set($_, '');
 			}
 		}
+=cut
 	}
 	$Setting->Save($Sys);
 	
