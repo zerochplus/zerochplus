@@ -479,11 +479,11 @@ sub PrintNGWordsEdit
 	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 10, $SYS->Get('BBS'));
 	$pWords = $Words->Get('NGWORD');
 	
-	$kind[0] = $Words->Get('METHOD') eq 'disable' ? 'selected' : '';
-	$kind[1] = $Words->Get('METHOD') eq 'host' ? 'selected' : '';
-	$kind[2] = $Words->Get('METHOD') eq 'delete' ? 'selected' : '';
-	$kind[3] = $Words->Get('METHOD') eq 'substitute' ? 'selected' : '';
-	$kind[4] = $Words->Get('SUBSTITUTE');
+	$kind[0] = $Words->Get('METHOD', '') eq 'disable' ? 'selected' : '';
+	$kind[1] = $Words->Get('METHOD', '') eq 'host' ? 'selected' : '';
+	$kind[2] = $Words->Get('METHOD', '') eq 'delete' ? 'selected' : '';
+	$kind[3] = $Words->Get('METHOD', '') eq 'substitute' ? 'selected' : '';
+	$kind[4] = $Words->Get('SUBSTITUTE', '');
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");

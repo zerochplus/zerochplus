@@ -109,12 +109,12 @@ sub Save
 		#seek SETTING, 0, 0;
 		# ‡”Ô‚Éo—Í
 		foreach $key ( @ch2setting ) {
-			print SETTING $key."=".$this->{'SETTING'}->{$key}."\n";
+			print SETTING "$key=" . $this->Get($key, '') . "\n";
 			delete $orz{$key};
 		}
 		foreach $key (sort keys %orz) {
-			$val = $orz{$key};
-			print SETTING "$key=$val\n";
+			#$val = $orz{$key};
+			print SETTING "$key=" . $this->Get($key, '') . "\n";
 		}
 =pod
 		foreach $key (sort keys %{$this->{'SETTING'}}) {
