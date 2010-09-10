@@ -978,8 +978,14 @@ sub IsReferer
 sub IsProxy
 {
 	my $this = shift;
-	my ($oForm, $from, $mode) = @_;
+	my ($sys, $oForm, $from, $mode) = @_;
 	my ($addr, @dnsbls);
+	
+	@dnsbls = ();
+	
+	push(@dnsbls, 'niku.2ch.net') if($sys->Get('BBQ'));
+	push(@dnsbls, 'bbx.2ch.net') if($sys->Get('BBX'));
+	push(@dnsbls, 'dnsbl.spam-champuru.livedoor.com') if($sys->Get('SPAMCH'));
 	
 	# 携帯, iPhone(3G回線) はプロキシ規制を回避する
 	if ( $mode eq "O" || $mode eq "i" ) {
@@ -988,7 +994,6 @@ sub IsProxy
 	
 	# DNSBL問い合わせ
 	$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
-	@dnsbls = ('niku.2ch.net', 'bbx.2ch.net', 'dnsbl.spam-champuru.livedoor.com');
 	foreach my $dnsbl (@dnsbls) {
 		if (join('.', unpack('C*', gethostbyname("$addr.$dnsbl"))) eq '127.0.0.2') {
 			$oForm->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");

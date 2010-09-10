@@ -514,8 +514,8 @@ sub PrintPlusSecSetting
 {
 	
 	my ($Page, $SYS, $Form) = @_;
-	my ($Kakiko, $Samba, $isSamba, $Houshi, $Trip12);
-	my ($kakiko, $trip12, $issamba);
+	my ($Kakiko, $Samba, $isSamba, $Houshi, $Trip12, $BBQ, $BBX, $SpamCh);
+	my ($kakiko, $trip12, $issamba, $bbq, $bbx, $spamch);
 	my ($common);
 	
 	$SYS->Set('_TITLE', 'System Regulation Setting');
@@ -525,10 +525,16 @@ sub PrintPlusSecSetting
 	$isSamba	= $SYS->Get('ISSAMBA');
 	$Houshi		= $SYS->Get('HOUSHI');
 	$Trip12		= $SYS->Get('TRIP12');
+	$BBQ		= $SYS->Get('BBQ');
+	$BBX		= $SYS->Get('BBX');
+	$SpamCh		= $SYS->Get('SPAMCH');
 
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
 	$trip12		= ($Trip12 == 1 ? 'checked' : '');
 	$issamba	= ($isSamba == 1 ? 'checked' : '');
+	$bbq		= ($BBQ == 1 ? 'checked' : '' );
+	$bbx		= ($BBX == 1 ? 'checked' : '' );
+	$spamch		= ($SpamCh == 1 ? 'checked' : '' );
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','SEC');\"";
 	
@@ -551,6 +557,15 @@ sub PrintPlusSecSetting
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
 	$Page->Print("<td><input type=checkbox name=TRIP12 $trip12 value=on></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">DNSBL設定</td></tr>\n");
+	$Page->Print("<tr><td colspan=2>適用するDNSBLにチェックをいれてください<br>\n");
+	$Page->Print("<input type=checkbox name=BBQ $bbq value=on>");
+	$Page->Print("<a href=\"http://bbq.uso800.net/\" target=\"_blank\">BBQ</a>\n");
+	$Page->Print("<input type=checkbox name=BBX $bbx value=on>BBX\n");
+	$Page->Print("<input type=checkbox name=SPAMCH $spamch value=on>");
+	$Page->Print("<a href=\"http://spam-champuru.livedoor.com/dnsbl/\" target=\"_blank\">スパムちゃんぷるー</a>\n");
+	$Page->Print("</td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");
@@ -917,6 +932,9 @@ sub FunctionPlusSecSetting
 	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
 	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
+	$SYSTEM->Set('BBQ', ($Form->Equal('BBQ', 'on') ? 1 : 0));
+	$SYSTEM->Set('BBX', ($Form->Equal('BBX', 'on') ? 1 : 0));
+	$SYSTEM->Set('SPAMCH', ($Form->Equal('SPAMCH', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
@@ -926,6 +944,9 @@ sub FunctionPlusSecSetting
 		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
 		push @$pLog, '　　　 Samba規制分数：' . $SYSTEM->Get('HOUSHI');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
+		push @$pLog, '　　　 BBQ：' . $SYSTEM->Get('BBQ');
+		push @$pLog, '　　　 BBX：' . $SYSTEM->Get('BBX');
+		push @$pLog, '　　　 スパムちゃんぷるー：' . $SYSTEM->Get('SPAMCH');
 	}
 	return 0;
 }
