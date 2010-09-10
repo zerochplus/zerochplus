@@ -292,7 +292,7 @@ sub ReadyBeforeWrite
 		require './module/faramir.pl';
 		$vUser = FARAMIR->new;
 		$vUser->Load($Sys);
-		$check = $vUser->Check($Sys, $host);
+		$check = $vUser->Check($host);
 		if ($check == 4) {
 			return 601;
 		}
@@ -435,7 +435,7 @@ sub IsRegulation
 	}
 	# PROXYチェック
 	if (! $oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
-		if ($this->{'CONV'}->IsProxy($this->{'FORM'}, $from, $mode)) {
+		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			if (! $oSEC->IsAuthority($capID, 19, $bbs)){
 				return 997;

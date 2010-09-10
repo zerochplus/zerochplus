@@ -440,9 +440,9 @@ sub PrintLimitSetting
 	$setIDHost		= $Setting->Get('BBS_DISP_IP');
 	$setIDDisp		= (($setIDForce eq '') && ($setIDNone eq '') ? 'checked' : '');
 	
-	if ( $setIDHost eq 'checked' )			{ $disphost = 'checked'; }
-	elsif ( $setIDHost eq 'sakhalin' )		{ $dispsakhalin = 'checked'; }
-	elsif ( $setIDHost eq 'siberia' )		{ $dispsiberia = 'checked'; }
+	$disphost = ( $setIDHost eq 'checked' ? 'checked' : '' );
+	$dispsakhalin = ( $setIDHost eq 'sakhalin' ? 'checked' : '' );
+	$dispsiberia = ( $setIDHost eq 'siberia' ? 'checked' : '' );
 	
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=4>各設定値を入力して[設定]ボタンを押してください。</td></tr>");

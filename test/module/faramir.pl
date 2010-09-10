@@ -58,6 +58,8 @@ sub Load
 	my ($Sys) = @_;
 	my (@datas, @head, $path, $dummy);
 	
+	$this->{'SYS'} = $Sys;
+	
 	undef @{$this->{'USER'}};
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
@@ -194,8 +196,10 @@ sub Set
 sub Check
 {
 	my $this = shift;
-	my ($sys, $host) = @_;
-	my ($flag);
+	my ($host) = @_;
+	my ($flag, $sys);
+	
+	$sys = $this->{'SYS'};
 	
 	$flag = 0;
 	foreach (@{$this->{'USER'}}) {
