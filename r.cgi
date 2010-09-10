@@ -304,7 +304,7 @@ sub PrintReadFoot
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 		
-		$Page->Print("<form method=\"POST\" action=\"$cgiPath/bbs.cgi?guid=ON\" utn=\"1\">\n");
+		$Page->Print("<form method=\"POST\" action=\"$cgiPath/bbs.cgi?guid=ON\" utn>\n");
 		$Page->Print("<input type=hidden name=bbs value=$bbs>");
 		$Page->Print("<input type=hidden name=key value=$key>");
 		$Page->Print("<input type=hidden name=time value=$tm>");
