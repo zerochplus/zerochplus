@@ -80,9 +80,25 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $key, $val);
+	my ($path, $key, $val, @ch2setting, %orz);
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
+	
+	# ‚Q‚¿‚á‚ñ‚Ë‚é‚ÌSETTING.TXT‡˜
+	@ch2setting = (
+		'BBS_TITLE', 'BBS_TITLE_PICTURE', 'BBS_TITLE_COLOR', 'BBS_TITLE_LINK', 'BBS_BG_COLOR',
+		'BBS_BG_PICTURE', 'BBS_NONAME_NAME', 'BBS_MAKETHREAD_COLOR', 'BBS_MENU_COLOR', 'BBS_THREAD_COLOR',
+		'BBS_TEXT_COLOR', 'BBS_NAME_COLOR', 'BBS_LINK_COLOR', 'BBS_ALINK_COLOR', 'BBS_VLINK_COLOR',
+		'BBS_THREAD_NUMBER', 'BBS_CONTENTS_NUMBER', 'BBS_LINE_NUMBER', 'BBS_MAX_MENU_THREAD', 'BBS_SUBJECT_COLOR',
+		'BBS_PASSWORD_CHECK', 'BBS_UNICODE', 'BBS_DELETE_NAME', 'BBS_NAMECOOKIE_CHECK', 'BBS_MAILCOOKIE_CHECK',
+		'BBS_SUBJECT_COUNT', 'BBS_NAME_COUNT', 'BBS_MAIL_COUNT', 'BBS_MESSAGE_COUNT', 'BBS_NEWSUBJECT',
+		'BBS_THREAD_TATESUGI', 'BBS_AD2', 'SUBBBS_CGI_ON', 'NANASHI_CHECK', 'timecount', 'timeclose',
+		'BBS_PROXY_CHECK', 'BBS_OVERSEA_THREAD', 'BBS_OVERSEA_PROXY', 'BBS_RAWIP_CHECK', 'BBS_SLIP',
+		'BBS_DISP_IP', 'BBS_FORCE_ID', 'BBS_BE_ID', 'BBS_BE_TYPE2', 'BBS_NO_ID', 'BBS_JP_CHECK',
+		'BBS_VIP931', 'BBS_4WORLD', 'BBS_YMD_WEEKS'
+	);
+	
+	%orz = %{$this->{'SETTING'}};
 	
 #	eval
 	{
@@ -91,10 +107,21 @@ sub Save
 		binmode SETTING;
 		#truncate SETTING, 0;
 		#seek SETTING, 0, 0;
-		foreach $key (keys %{$this->{'SETTING'}}) {
+		# ‡”Ô‚Éo—Í
+		foreach $key ( @ch2setting ) {
+			print SETTING $key."=".$this->{'SETTING'}->{$key}."\n";
+			delete $orz{$key};
+		}
+		foreach $key (sort keys %orz) {
+			$val = $orz{$key};
+			print SETTING "$key=$val\n";
+		}
+=pod
+		foreach $key (sort keys %{$this->{'SETTING'}}) {
 			$val = $this->{'SETTING'}->{$key};
 			print SETTING "$key=$val\n";
 		}
+=cut
 		close SETTING;
 		chmod $Sys->Get('PM-TXT'), $path;
 	};
@@ -279,7 +306,7 @@ sub InitSettingData
 		'BBS_MESSAGE_COUNT'		=> 2048,
 		'BBS_NEWSUBJECT'		=> 1,
 		'BBS_THREAD_TATESUGI'	=> 5,
-		'BBS_AD2'				=> 0,
+		'BBS_AD2'				=> '',
 		'SUBBBS_CGI_ON'			=> 1,
 		'NANASHI_CHECK'			=> '',
 		'timecount'				=> 7,
@@ -291,6 +318,8 @@ sub InitSettingData
 		'BBS_SLIP'				=> '',
 		'BBS_DISP_IP'			=> 'checked',
 		'BBS_FORCE_ID'			=> '',
+		'BBS_BE_ID'				=> '',
+		'BBS_BE_TYPE2'			=> '',
 		'BBS_NO_ID'				=> '',
 		'BBS_JP_CHECK'			=> '',
 		'BBS_YMD_WEEKS'			=> '“ú/ŒŽ/‰Î/…/–Ø/‹à/“y',
@@ -303,7 +332,7 @@ sub InitSettingData
 		'BBS_THREADCAPONLY'		=> '',
 		'BBS_TRIPCOLUMN'		=> 10,
 		'BBS_SUBTITLE'			=> '‚Ü‚½[‚èŽG’k',
-		'BBS_COLUMN_NUMBER'		=> 128
+		'BBS_COLUMN_NUMBER'		=> 256
 	);
 }
 

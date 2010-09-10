@@ -684,6 +684,7 @@ sub GetProductInfo
 		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (î≠åæé“ÇÃÉzÉXÉg)
 		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (î≠åæé“ÇÃIP)
 		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (î≠åæé“ÇÃå≈ëÃéØï î‘çÜ)
+		$ENV{'REMOTE_P2'} = $ENV{'REMOTE_ADDR'};
 		$ENV{'REMOTE_ADDR'} = $ENV{'HTTP_X_P2_CLIENT_IP'};
 		if( $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} ne "" ) {
 			$product = $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'};

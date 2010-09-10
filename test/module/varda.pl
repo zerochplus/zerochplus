@@ -352,7 +352,7 @@ HEAD
 		}
 		# ŠÅ”Â‰æ‘œ‚ÉƒŠƒ“ƒN‚Í‚È‚µ
 		else {
-			$Page->Print("<img src=\"$image\" border=\"0\" alt\"$link\"></div>\n");
+			$Page->Print("<img src=\"$image\" border=\"0\" alt=\"$link\"></div>\n");
 		}
 	}
 	

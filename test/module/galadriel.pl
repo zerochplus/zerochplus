@@ -781,10 +781,10 @@ sub GetIDPart
 	$mode = '';
 	
 	# PC・携帯識別番号付加
-	if ($Set->Equal('BBS_SLIP', 'checked')) {
+	#if ($Set->Equal('BBS_SLIP', 'checked')) {
 		$mode = $agent;
 		$id .= $mode;
-	}
+	#}
 	
 	# ID非表示権限有り
 	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
@@ -795,8 +795,38 @@ sub GetIDPart
 	}
 	# ホスト表示
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
-		return " HOST:$host";
+		if ( $mode eq "O" ) {
+			return " HOST:$host $ENV{'REMOTE_HOST'}".( $mode ne "" ? " $mode" : "" );
+		}
+		elsif ( $mode eq "P" ) {
+			return " HOST:$host $ENV{'REMOTE_HOST'} ($ENV{'REMOTE_ADDR'})".( $mode ne "" ? " $mode" : "" );
+		}
+		else {
+			return " HOST:$host".( $mode ne "" ? " $mode" : "" );
+		}
 	}
+	# IP表示 Ver.Siberia
+	if ($Set->Equal('BBS_DISP_IP', 'siberia')){
+		if ( $mode eq "P" ) {
+			return " 発信元:$ENV{'REMOTE_P2'}".( $mode ne "" ? " $mode" : "" );
+		}
+		else {
+			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne "" ? " $mode" : "" );
+		}
+	}
+	# IP表示 Ver.Sakhalin
+	if ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
+		if ( $mode eq "P" ) {
+			return " 発信元:$ENV{'REMOTE_P2'} ($host)".( $mode ne "" ? " $mode" : "" );
+		}
+		elsif ( $mode eq "O" ) {
+			return " 発信元:$ENV{'REMOTE_ADDR'} ($host)".( $mode ne "" ? " $mode" : "" );
+		}
+		else {
+			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne "" ? " $mode" : "" );
+		}
+	}
+	
 	# ID表示無しならそのままリターン
 	if ($Set->Equal('BBS_NO_ID', 'checked')) {
 		return '';
