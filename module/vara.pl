@@ -318,7 +318,7 @@ sub ReadyBeforeWrite
 			$ngWord->Method($this->{'FORM'}, \@checkKey);
 		}
 		if ($check == 2) {
-			$this->{'FORM'}->Set('FROM', "$from<font color=\"tomato\">$host</font>");
+			$this->{'FORM'}->Set('FROM', "</b>[L+ƒÖ+M] $host <b>$from");
 		}
 	}
 	
@@ -548,8 +548,10 @@ sub IsRegulation
 		
 		# ƒŒƒX‘‚«‚İ(˜A‘±“Še)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
-			if ($LOG->Search($host, 2) >= $oSET->Get('timeclose')) {
-				return 501;
+			if ($oSET->Get('timeclose') ne "" && $oSET->Get('timecount') ne "" ) {
+				if ($LOG->Search($host, 2) >= $oSET->Get('timeclose')) {
+					return 501;
+				}
 			}
 		}
 		# ƒŒƒX‘‚«‚İ(“ñd“Še)
