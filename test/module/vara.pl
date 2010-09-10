@@ -434,7 +434,7 @@ sub IsRegulation
 		}
 	}
 	# PROXYチェック
-	if ($oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
+	if (! $oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsProxy($this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			if (! $oSEC->IsAuthority($capID, 19, $bbs)){

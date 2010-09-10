@@ -282,6 +282,11 @@ sub InitSystemValue
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
 		'TRIP12'	=> 0,										# 12桁トリップを変換するかどうか
 		'MSEC'		=> 0,										# msecまで表示するか
+		
+		# DNSBL設定
+		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
+		'BBX'		=> 1,										# BBX(bbx.2ch.net)
+		'SPAMCH'	=> 1,										# スパムちゃんぷるー
 	);
 	
 	# 情報保持キー
@@ -291,7 +296,7 @@ sub InitSystemValue
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
 		'SAMBATM',	'ISSAMBA',	'HOUSHI',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',
-		'TRIP12',	'MSEC',
+		'TRIP12',	'MSEC',		'BBQ',		'BBX',		'SPAMCH',
 	);
 }
 

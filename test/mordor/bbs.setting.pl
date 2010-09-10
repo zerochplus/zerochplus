@@ -457,8 +457,8 @@ sub PrintLimitSetting
 	$Page->Print("<input type=checkbox name=NANASHI_CHECK $setNoName value=on>チェック有り</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">メール文字数</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_MAIL_COUNT value=\"$setMailMax\"></td>");
-	$Page->Print("<td class=\"DetailTitle\">プロクシチェック</td><td>");
-	$Page->Print("<input type=checkbox name=BBS_PROXY_CHECK $setProxy value=on>チェック有り</td></tr>");
+	$Page->Print("<td class=\"DetailTitle\">DNSBLチェック</td><td>");
+	$Page->Print("<input type=checkbox name=BBS_PROXY_CHECK $setProxy value=on>スルーする</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">本文文字数</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_MESSAGE_COUNT value=\"$setContMax\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">海外ホスト規制</td><td>");
