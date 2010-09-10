@@ -918,6 +918,8 @@ sub FunctionPlusSecSetting
 	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	
+	$SYSTEM->Save();
+	
 	{
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
 		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
