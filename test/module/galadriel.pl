@@ -66,7 +66,7 @@ sub GetArgument
 	}
 	else {																			# QUERY_STRING
 		@Awork = split(/&/, $pENV->{'QUERY_STRING'});
-		@retArg = ("", "", 0, 1, 1000, 1, 0);
+		@retArg = ('', '', 0, 1, 1000, 1, 0);
 		foreach (@Awork) {
 			($var, $val) = split(/=/, $_);
 			if		($var eq 'bbs') {						$retArg[0] = $val; }	# BBS
@@ -174,8 +174,8 @@ sub ConvertURL
 			$work[0] =~ s/(www\.|\.com|\.net|\.jp|\.co|\.ne)//g;
 			$$text =~ s{$reg2}{<a href="$1://$2">$work[0]</a>};
 		}
-		$$text	=~ s/<br><br>/<br>/g;													# 空改行
-		$$text	=~ s/\s+<br>//g;														# 空白改行
+		$$text	=~ s/ <br>  <br> / <br> /g;													# 空改行
+		$$text	=~ s/\s+ <br> //g;														# 空白改行
 	}
 	else {																				# PCから
 		if ($cushion) {																	# クッションあり
