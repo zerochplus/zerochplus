@@ -10,6 +10,7 @@
 
 use strict;
 use warnings;
+use CGI::Carp qw(fatalsToBrowser);
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
@@ -163,13 +164,23 @@ sub PrintReadHead
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
-	$Page->Print("<html><head><title>$title</title>");
-	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
-	$Page->Print('</head><!--nobanner-->');
+$Page->Print(<<HTML);
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+<head>
+ 
+ <meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">
+ <meta http-equiv="Cache-Control" content="no-cache">
+ 
+ <title>$title</title>
+ 
+</head>
+<!--nobanner-->
+HTML
 	
 	# <body>タグ出力
 	{
-		$Page->Print('<body>');
+		$Page->Print('<body>'."\n");
 	}
 	
 	# バナー出力
@@ -216,18 +227,18 @@ sub PrintReadMenu
 	}
 	
 	# メニューの表示
-	$Page->Print("<a href=\"$pathBBS\">板</a> ");
-	$Page->Print("<a href=\"$pathAll\">1-</a> ");
-	$Page->Print("<a href=\"$pathPrev\">前</a> ");
-	$Page->Print("<a href=\"$pathNext\">次</a> ");
-	$Page->Print("<a href=\"$pathLast\">新</a> ");
-	$Page->Print("<a href=\"#res\">ﾚｽ</a><br><br>\n");
+	$Page->Print("<a href=\"$pathBBS\" accesskey=\"5\">板</a>");
+	$Page->Print("<a href=\"$pathAll\" accesskey=\"1\">1-</a>");
+	$Page->Print("<a href=\"$pathPrev\" accesskey=\"4\">前</a>");
+	$Page->Print("<a href=\"$pathNext\" accesskey=\"6\">次</a>");
+	$Page->Print("<a href=\"$pathLast?guid=ON\" accesskey=\"3\">新</a>");
+	$Page->Print("<a href=\"#res\" accesskey=\"7\">ﾚｽ</a>\n");
 	
 	# スレッドタイトル表示
 	{
 		my $title	= $Sys->{'DAT'}->GetSubject();
 		my $ttlCol	= $Sys->{'SET'}->Get('BBS_SUBJECT_COLOR');
-		$Page->Print("<dl><font color=$ttlCol size=+1>$title</font><br><br>\n");
+		$Page->Print("<hr>\n<font color=$ttlCol size=+1>$title</font><br>\n");
 	}
 }
 
@@ -292,7 +303,7 @@ sub PrintReadFoot
 		$pathNext = $Conv->CreatePath($oSYS, 1, $bbs, $key, "${f1}-${f2}n");
 		$pathPrev = $Conv->CreatePath($oSYS, 1, $bbs, $key, "${b1}-${b2}n");
 	}
-	$Page->Print('</dl><hr>');
+	$Page->Print('<hr>');
 	$Page->Print("<a href=\"$pathPrev\">前</a> ");
 	$Page->Print("<a href=\"$pathNext\">次</a><hr><a name=res></a>");
 	

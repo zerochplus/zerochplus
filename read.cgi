@@ -525,6 +525,9 @@ sub PrintReadSearch
 	$oDat->Load($oSys, '.' . $oSys->Get('DATA') . '/2000000000.dat', 1);
 	$size = $oDat->Size();
 	
+	# ‘¶Ý‚µ‚È‚¢‚Ì‚Å404‚ð•Ô‚·B
+	$Page->Print("Status: 404 Not Found\n");
+	
 	PrintReadHead($Sys, $Page);
 	
 	$Page->Print("\n<div style=\"margin-top:1em;\">\n");

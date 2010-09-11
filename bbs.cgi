@@ -561,7 +561,7 @@ sub PrintBBSJump
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# Œg‘Ñ—p•\¦
-	if ($SYS->Equal('AGENT', "O")) {
+	if ($SYS->Equal('AGENT', "O") || $SYS->Equal('AGENT', "i") ) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>‘‚«‚İŠ®—¹‚Å‚·<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">‚±‚¿‚ç</a>");
