@@ -174,8 +174,10 @@ sub ConvertURL
 			$work[0] =~ s/(www\.|\.com|\.net|\.jp|\.co|\.ne)//g;
 			$$text =~ s{$reg2}{<a href="$1://$2">$work[0]</a>};
 		}
-		$$text	=~ s/ <br>  <br> / <br> /g;													# 空改行
-		$$text	=~ s/\s+ <br> //g;														# 空白改行
+		$$text	=~ s/ <br> /<br>/g;														# 改行
+		$$text	=~ s/\s*<br>/<br>/g;													# 空白改行
+		$$text	=~ s/(?:<br>){2}/<br>/g;												# 空改行
+		$$text	=~ s/(?:<br>){3,}/<br><br>/g;												# 空改行
 	}
 	else {																				# PCから
 		if ($cushion) {																	# クッションあり
