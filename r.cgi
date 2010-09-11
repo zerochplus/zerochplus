@@ -360,15 +360,15 @@ sub PrintResponse
 		$bbs		= $oSYS->Get('BBS');
 		$key		= $oSYS->Get('KEY');
 		$elem[3]	= $oConv->DeleteText(\$elem[3], $maxLen);
-		$maxLen		= int(($len - length($elem[3])) / 20);
+		$maxLen		= (($_ = $len - length($elem[3])) + 20 - ($_ % 20 || 20)) / 20;
 		$path		= $oConv->CreatePath($oSYS, 1, $bbs, $key, "${n}n");
 		
 		$oConv->ConvertURL($oSYS, $Sys->{'SET'}, 1, \$elem[3]);
 		$oConv->ConvertQuotation($oSYS, \$elem[3], 1);
 		
-		if ($maxLen) {
+		#if ($maxLen) {
 			$elem[3] .= " <a href=\"$path\">è»$maxLen</a>";
-		}
+		#}
 	}
 	$Page->Print("<hr>[$n]$elem[0]</b>ÅF$elem[2]<br>$elem[3]<br>\n");
 }
