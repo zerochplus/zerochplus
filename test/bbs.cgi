@@ -133,16 +133,17 @@ sub Initialize
 	# –²‚ªL‚ª‚è‚ñ‚®
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
 	
+	# ƒzƒXƒgî•ñÝ’è(DNS‹tˆø‚«)
+	$ENV{'REMOTE_HOST'} = $Sys->{'CONV'}->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
+	$Sys->{'FORM'}->Set('HOST', $ENV{'REMOTE_HOST'});
+	
 	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
 	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
 	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
-	# ƒzƒXƒgî•ñÝ’è.Œg‘Ñ‚Ìê‡‚Í‹@Žíî•ñ‚ðÝ’è
-	if (! $Sys->{'SYS'}->Equal('AGENT', 'O') && ! $Sys->{'SYS'}->Equal('AGENT', 'P')) {
-		$Sys->{'FORM'}->Set('HOST', $Sys->{'CONV'}->GetRemoteHost());
-	}
-	else {
+	# Œg‘Ñ‚Ìê‡‚Í‹@Žíî•ñ‚ðÝ’è
+	if ($Sys->{'SYS'}->Get('AGENT') !~ /^[0P]$/) {
 		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
 		
 		if (! defined  $product) {
