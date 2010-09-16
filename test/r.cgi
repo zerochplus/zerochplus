@@ -159,6 +159,10 @@ sub PrintReadHead
 	$Banner = new DENETHOR;
 	$Banner->Load($Sys->{'SYS'});
 	
+	require './module/legolas.pl';
+	$Caption = new LEGOLAS;
+	$Caption->Load($Sys->{'SYS'}, 'META');
+	
 	$code	= $Sys->{'CODE'};
 	$title	= $Sys->{'DAT'}->GetSubject();
 	
@@ -168,12 +172,14 @@ $Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="ja">
 <head>
- 
- <meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">
- <meta http-equiv="Cache-Control" content="no-cache">
- 
- <title>$title</title>
- 
+<meta http-equiv=Content-Type content="text/html;charset=Shift_JIS">
+<meta http-equiv="Cache-Control" content="no-cache">
+HTML
+	
+	$Caption->Print($Page, undef);
+	
+$Page->Print(<<HTML);
+<title>$title</title>
 </head>
 <!--nobanner-->
 HTML
@@ -199,46 +205,24 @@ sub PrintReadMenu
 {
 	my ($Sys, $Page) = @_;
 	my ($oSYS, $bbs, $key, $baseBBS, $resNum);
-	my ($pathBBS, $pathAll, $pathLast, $pathMenu, $pathNext, $pathPrev);
+#	my ($pathBBS, $pathAll, $pathLast, $pathMenu, $pathNext, $pathPrev);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
 	$bbs		= $oSYS->Get('BBS');
 	$key		= $oSYS->Get('KEY');
-	$baseBBS	= $oSYS->Get('SERVER') . '/' . $bbs;
-	$pathBBS	= $baseBBS . '/i/index.html';
-	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
-	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
-	$resNum		= $Sys->{'DAT'}->Size();
 	
-	# 前、次番号の取得
-	{
-		my ($st, $ed, $b1, $b2, $f1, $f2);
-		
-		$st = $oSYS->GetOption(2);
-		$ed = $oSYS->GetOption(3);
-		$b1 = ($st - 11 > 0) ? ($st - 11) : 1;
-		$b2 = ($b1 == 1) ? 10 : ($b1 + 10);
-		$f1 = ($ed + 1 < $resNum) ? ($ed + 1) : $resNum;
-		$f2 = ($ed + 10 < $resNum) ? ($ed + 10) : $resNum;
-		
-		$pathNext = $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, "${f1}-${f2}n");
-		$pathPrev = $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, "${b1}-${b2}n");
-	}
-	
-	# メニューの表示
-	$Page->Print("<a href=\"$pathBBS\" accesskey=\"5\">板</a>");
-	$Page->Print("<a href=\"$pathAll\" accesskey=\"1\">1-</a>");
-	$Page->Print("<a href=\"$pathPrev\" accesskey=\"4\">前</a>");
-	$Page->Print("<a href=\"$pathNext\" accesskey=\"6\">次</a>");
-	$Page->Print("<a href=\"$pathLast?guid=ON\" accesskey=\"3\">新</a>");
-	$Page->Print("<a href=\"#res\" accesskey=\"7\">ﾚｽ</a>\n");
-	
+$Page->Print(<<HTML);
+前4)<a href="#down" accesskey="8">下</a>8)次6) 初1)新3)<a href="#res" accesskey="7">書</a>7) 板5)
+HTML
+
 	# スレッドタイトル表示
 	{
 		my $title	= $Sys->{'DAT'}->GetSubject();
 		my $ttlCol	= $Sys->{'SET'}->Get('BBS_SUBJECT_COLOR');
-		$Page->Print("<hr>\n<font color=$ttlCol size=+1>$title</font><br>\n");
+		$Page->Print("<hr>\n");
+		$Page->Print("<font color=\"$ttlCol\" size=\"+1\">$title</font>\n");
+		$Page->Print("<a name=\"top\"></a>\n");
 	}
 }
 
@@ -264,7 +248,7 @@ sub PrintReadContents
 	}
 	# 残りのレスを表示する
 	for ($i = $elem[1] ; $i <= $elem[2] ; $i++) {
-		PrintResponse($Sys, $Page, $i);
+		PrintResponse($Sys, $Page, $i, $elem[2]);
 	}
 }
 
@@ -280,6 +264,7 @@ sub PrintReadFoot
 {
 	my ($Sys, $Page) = @_;
 	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $pathNext, $pathPrev);
+	my ($baseBBS, $pathBBS, $pathAll, $pathLast, $resNum);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -288,6 +273,12 @@ sub PrintReadFoot
 	$key		= $oSYS->Get('KEY');
 	$ver		= $oSYS->Get('VERSION');
 	$rmax		= $oSYS->Get('RESMAX');
+	
+	$baseBBS	= $oSYS->Get('SERVER') . '/' . $bbs;
+	$pathBBS	= $baseBBS . '/i/index.html';
+	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
+	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
+	$resNum		= $Sys->{'DAT'}->Size();
 	
 	# 前、次番号の取得
 	{
@@ -304,8 +295,14 @@ sub PrintReadFoot
 		$pathPrev = $Conv->CreatePath($oSYS, 1, $bbs, $key, "${b1}-${b2}n");
 	}
 	$Page->Print('<hr>');
-	$Page->Print("<a href=\"$pathPrev\">前</a> ");
-	$Page->Print("<a href=\"$pathNext\">次</a><hr><a name=res></a>");
+	
+	# メニューの表示
+	$Page->Print("<a href=\"#top\" accesskey=\"2\">上</a>");
+	$Page->Print("<a href=\"$pathPrev\" accesskey=\"4\">前</a>");
+	$Page->Print("<a href=\"$pathNext\" accesskey=\"6\">次</a>");
+	$Page->Print("<a href=\"$pathLast?guid=ON\" accesskey=\"3\">新</a>");
+	$Page->Print("<a href=\"$pathAll\" accesskey=\"1\">1-</a>");
+	$Page->Print("<a href=\"$pathBBS\" accesskey=\"5\">板</a>");
 	
 	# 投稿フォームの表示
 	# レス最大数を超えている場合はフォーム表示しない
@@ -315,14 +312,19 @@ sub PrintReadFoot
 		$tm			= time;
 		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 		
-		$Page->Print("<form method=\"POST\" action=\"$cgiPath/bbs.cgi?guid=ON\" utn>\n");
-		$Page->Print("<input type=hidden name=bbs value=$bbs>");
-		$Page->Print("<input type=hidden name=key value=$key>");
-		$Page->Print("<input type=hidden name=time value=$tm>");
-		$Page->Print("\n名前<br><input type=text name=\"FROM\"><br>");
-		$Page->Print('E-mail<br><input type=text name="mail"><br>');
-		$Page->Print('<textarea rows=3 wrap=off name="MESSAGE"></textarea>');
-		$Page->Print('<br><input type=submit value="書き込む"><br>');
+$Page->Print(<<HTML);
+<hr>
+<a name=res></a>
+<form method="POST" action="$cgiPath/bbs.cgi?guid=ON" utn>
+<input type="hidden" name="bbs" value="$bbs">
+<input type="hidden" name="key" value="$key">
+<input type="hidden" name="time" value="$tm">
+<input type="hidden" name="mb" value="on">
+名前<br><input type="text" name="FROM"><br>
+E-mail<br><input type="text" name="mail"><br>
+<textarea rows="3" wrap="off" name="MESSAGE"></textarea>
+<br><input type="submit" value="書き込む"><br>
+HTML
 	}
 	$Page->Print("<small>$ver</small></form></body></html>\n");
 }
@@ -337,8 +339,8 @@ sub PrintReadFoot
 #------------------------------------------------------------------------------------------------------------
 sub PrintResponse
 {
-	my ($Sys, $Page, $n) = @_;
-	my ($oSYS, $oConv, $pDat, @elem, $maxLen, $len);
+	my ($Sys, $Page, $n, $last) = @_;
+	my ($oSYS, $oConv, $pDat, @elem, $maxLen, $len, $resNum);
 	
 	$oSYS	= $Sys->{'SYS'};
 	$oConv	= $Sys->{'CONV'};
@@ -347,6 +349,7 @@ sub PrintResponse
 	$len	= length $elem[3];
 	$maxLen	= $Sys->{'SET'}->Get('BBS_LINE_NUMBER');
 	$maxLen	= int($maxLen * 5);
+	$resNum	= $Sys->{'DAT'}->Size();
 	
 	# 表示範囲内か指定表示ならすべて表示する
 	if ($oSYS->GetOption(5) == 1 || $len <= $maxLen) {
@@ -370,7 +373,19 @@ sub PrintResponse
 			$elem[3] .= " <a href=\"$path\">省$maxLen</a>";
 		#}
 	}
-	$Page->Print("<hr>[$n]$elem[0]</b>：$elem[2]<br>$elem[3]<br>\n");
+	
+	# AASリンク取得
+	my ( $server, $path, $obama );
+	
+	$server	= $oSYS->Get('SERVER')||$ENV{'SERVER_NAME'};
+	$server	=~ s|http://||i;
+	$path	= $oSYS->Get('CGIPATH');
+	$path	=~ s|(.+)?/.+$|$1|i;
+	$path	=~ s|/|+|gi;
+	$obama	= "http://aas.ula.cc/u.cgi/".$server.$path."/".$oSYS->Get('BBS')."/".$oSYS->Get('KEY')."/".$n."?guid=ON";
+		
+	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
+	$Page->Print("<hr>[$n]$elem[0]</b>：$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");
 }
 
 #------------------------------------------------------------------------------------------------------------
