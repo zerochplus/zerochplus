@@ -248,7 +248,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 1,										# デバグモード(*)
-		'VERSION'	=> '0ch+ BBS 0.3.3a 10----',				# CGIバージョン
+		'VERSION'	=> '0ch+ BBS 0.4.2b 100919',				# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
@@ -256,7 +256,7 @@ sub InitSystemValue
 		'PM-ADIR'	=> 0770,									# 管理DIRパーミション(*)
 		'PM-BDIR'	=> 0755,									# 板DIRパーミション(*)
 		'PM-LDIR'	=> 0770,									# ログDIRパーミション(*)
-		'PM-STOP'	=> 0100700,									# スレストパーミション(*)
+		'PM-STOP'	=> 0604,									# スレストパーミション(*)
 		'ERRMAX'	=> 500,										# エラーログ最大保持数
 		'SUBMAX'	=> 500,										# subject最大保持数
 		'RESMAX'	=> 1000,									# レス最大書き込み数
