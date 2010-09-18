@@ -263,6 +263,7 @@ sub PrintReadMenu
 	$Page->Print(" <span style=\"float:right;\">\n [PR]");
 	$Page->Print("<a href=\"$PRlink\" target=\"_blank\">$PRtext</a>");
 	$Page->Print("[PR]\n </span>&nbsp;\n");
+	$Page->Print("</div>\n");
 	$Page->Print("</div>\n\n");
 	
 	# ƒŒƒX”ŒÀŠEŒx•\Ž¦
@@ -291,7 +292,7 @@ sub PrintReadMenu
 		my $title	= $Sys->{'DAT'}->GetSubject();
 		my $ttlCol	= $Sys->{'SET'}->Get('BBS_SUBJECT_COLOR');
 		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
-		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
+		$Page->Print("<h1 style=\"color:$ttlCol;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("<dl class=\"thread\">\n");
 	}
 }

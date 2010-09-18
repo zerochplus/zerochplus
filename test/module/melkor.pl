@@ -256,7 +256,7 @@ sub InitSystemValue
 		'PM-ADIR'	=> 0770,									# 管理DIRパーミション(*)
 		'PM-BDIR'	=> 0755,									# 板DIRパーミション(*)
 		'PM-LDIR'	=> 0770,									# ログDIRパーミション(*)
-		'PM-STOP'	=> 0100700,									# スレストパーミション(*)
+		'PM-STOP'	=> 0604,									# スレストパーミション(*)
 		'ERRMAX'	=> 500,										# エラーログ最大保持数
 		'SUBMAX'	=> 500,										# subject最大保持数
 		'RESMAX'	=> 1000,									# レス最大書き込み数
