@@ -133,16 +133,17 @@ sub Initialize
 	# 夢が広がりんぐ
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
 	
+	# ホスト情報設定(DNS逆引き)
+	$ENV{'REMOTE_HOST'} = $Sys->{'CONV'}->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
+	$Sys->{'FORM'}->Set('HOST', $ENV{'REMOTE_HOST'});
+	
 	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
 	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
 	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
 	
-	# ホスト情報設定.携帯の場合は機種情報を設定
-	if (! $Sys->{'SYS'}->Equal('AGENT', 'O') && ! $Sys->{'SYS'}->Equal('AGENT', 'P')) {
-		$Sys->{'FORM'}->Set('HOST', $Sys->{'CONV'}->GetRemoteHost());
-	}
-	else {
+	# 携帯の場合は機種情報を設定
+	if ($Sys->{'SYS'}->Get('AGENT') !~ /^[0P]$/) {
 		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
 		
 		if (! defined  $product) {
@@ -555,16 +556,18 @@ HTML
 sub PrintBBSJump
 {
 	my ($Sys, $Page) = @_;
-	my ($SYS, $bbsPath);
+	my ($SYS, $Form, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
-	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
+	$Form		= $Sys->{'FORM'};
+	$bbsPath	= $SYS->Get('SERVER').$SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10';
+	#$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# 携帯用表示
-	if ($SYS->Equal('AGENT', "O") || $SYS->Equal('AGENT', "i") ) {
+	if ( $Form->Equal('mb', 'on') || $SYS->Equal('AGENT', 'O') ) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
-		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");
+		$Page->Print("<a href=\"$bbsPath\">こちら</a>");
 		$Page->Print("から掲示板へ戻ってください。\n");
 	}
 	# PC用表示
