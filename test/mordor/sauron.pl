@@ -282,7 +282,7 @@ sub PrintList
 	my ($i, $strURL, $strTXT);
 	
 $Page->Print(<<HTML);
-  <td align="center" valign="top" class="Content">
+  <td valign="top" class="Content">
   <table width="95%" cellspacing="0">
    <tr>
     <td class="FunctionList">
