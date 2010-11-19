@@ -382,7 +382,7 @@ sub PrintResponse
 	$path	= $oSYS->Get('CGIPATH');
 	$path	=~ s|(.+)?/.+$|$1|i;
 	$path	=~ s|/|+|gi;
-	$obama	= "http://aas.ula.cc/u.cgi/".$server.$path."/".$oSYS->Get('BBS')."/".$oSYS->Get('KEY')."/".$n."?guid=ON";
+	$obama	= "http://example.ddo.jp/aas/a.i/".$server.$path."/".$oSYS->Get('BBS')."/".$oSYS->Get('KEY')."/".$n."?guid=ON";
 		
 	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
 	$Page->Print("<hr>[$n]$elem[0]</b>ÅF$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");
