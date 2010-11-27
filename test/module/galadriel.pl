@@ -475,29 +475,28 @@ sub MakeID
 	my $this = shift;
 	my ($server, $mode, $remote, $bbs, $column) = @_;
 	my @times = localtime time;
-	my (@nums, $ret, $host, $str, $uid, $ua);
+	my (@nums, $ret, $str, $uid);
 	
 	# 種の生成
 	if ( $mode eq 'O' || $mode eq 'P' ) {
 		# 端末番号 もしくは p2-user-hash の上位3文字を取得
-		$ua = $ENV{'HTTP_USER_AGENT'};
-		$uid = $_ if (defined(($_ = $ENV{'REMOTE_P2'})));
-		$uid = $_ if (defined(($_ = $ENV{'HTTP_X_DCMGUID'})));
-		$uid = $_ if (defined(($_ = $ENV{'HTTP_X_UP_SUBNO'})));
-		$uid = $_ if (defined(($_ = $ENV{'HTTP_X_EM_UID'})));
-		$uid = substr($ua, $_, 18) if (($remote =~ /\.vodafone.ne.jp|\.softbank.ne.jp/) && ($_ = index($ua, "SN")) > 10);
-		$uid = crypt(pack('H8', split(/\./, $ENV{'REMOTE_ADDR'})), $times[4]) if (! defined $uid);
-		$host = substr($uid, -4);
+		$uid = GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $remote);
+		if (length($uid) > 8) {
+			$uid = substr($uid, 0, 2) . substr($uid, -6, 3);
+		}
+		else {
+			$uid = substr($uid, 0, 5);
+		}
 	}
 	else {
 		# IPを分解
 		@nums = split(/\./, $ENV{'REMOTE_ADDR'});
 		# 上位3つの1桁目取得
-		$host = substr($nums[3], -2) . substr($nums[2], -1) . substr($nums[1], -1);
+		$uid = substr($nums[3], -2) . substr($nums[2], -2) . substr($nums[1], -1);
 	}
 	
 	# サーバー名･板名を結合する
-	$str = $host . substr(crypt($server, $times[4]), -2) . substr(crypt($bbs,$times[4]), -2);
+	$str = $uid . substr(crypt($server, $times[4]), 2, 1) . substr(crypt($bbs, $times[4]), 2, 2);
 	# 桁を設定
 	$column = -1 * $column;
 	
