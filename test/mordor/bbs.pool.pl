@@ -610,7 +610,7 @@ sub CreateKAKOLog
 	my ($datPath, $logDir, $logPath, $i, @color, $title, $board, $var);
 	my ($Caption, $cgipath);
 	
-	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
+	$cgipath	= $Sys->Get('CGIPATH');
 	
 	require './module/legolas.pl';
 	$Caption = LEGOLAS->new;
