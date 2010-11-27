@@ -607,7 +607,7 @@ sub FunctionCreateLogs
 sub CreateKAKOLog
 {
 	my ($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key) = @_;
-	my ($datPath, $logDir, $logPath, $i, @color, $title, $board, $var);
+	my ($datPath, $logDir, $logPath, $i, @color, $title, $account, $board, $var);
 	my ($Caption, $cgipath);
 	
 	$cgipath	= $Sys->Get('CGIPATH');
@@ -622,6 +622,7 @@ sub CreateKAKOLog
 	$logPath	= $logDir . '/' . $key . '.html';
 	
 	$title 		= $Dat->GetSubject();
+	$account	= $Sys->Get('COUNTER');
 	$board		= $Sys->Get('SERVER') . '/' . $Sys->Get('BBS');
 	$var		= $Sys->Get('VERSION');
 	
@@ -660,12 +661,15 @@ HTML
 HTML
 
 		# 告知欄出力
-		$Banner->Print($Page, 100, 2, 0);
+		$Banner->Print($Page, 100, 2, 0) if ($Sys->Get('BANNER'));
 		
 		$Page->Print(<<HTML);
-<div style="margin-top:1em;">
- <a href="$board/">■掲示板に戻る■</a>
- <a href="$board/kako/">■過去ログ倉庫へ戻る■</a>
+<div style="margin:0px;">
+ <a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/disp/$account/00813400.gif" alt="無料アクセスカウンターofuda.cc「全世界カウント計画」"></a>
+ <div style="margin-top:1em;">
+  <a href="$board/">■掲示板に戻る■</a>
+  <a href="$board/kako/">■過去ログ倉庫へ戻る■</a>
+ </div>
 </div>
 
 <hr style="background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;">
