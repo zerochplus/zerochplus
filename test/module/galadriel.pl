@@ -480,7 +480,7 @@ sub MakeID
 	# í‚Ì¶¬
 	if ( $mode eq 'O' || $mode eq 'P' ) {
 		# ’[––”Ô† ‚à‚µ‚­‚Í p2-user-hash ‚ÌãˆÊ3•¶š‚ğæ“¾
-		$uid = GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $remote);
+		$uid = main::GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $remote);
 		if (length($uid) > 8) {
 			$uid = substr($uid, 0, 2) . substr($uid, -6, 3);
 		}
