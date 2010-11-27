@@ -622,7 +622,7 @@ sub CreateKAKOLog
 	$logPath	= $logDir . '/' . $key . '.html';
 	
 	$title 		= $Dat->GetSubject();
-	$board		= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	$board		= $Sys->Get('SERVER') . '/' . $Sys->Get('BBS');
 	$var		= $Sys->Get('VERSION');
 	
 	# Fî•ñŽæ“¾
