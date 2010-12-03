@@ -560,6 +560,7 @@ sub PrintBBSJump
 	
 	$SYS		= $Sys->{'SYS'};
 	$Form		= $Sys->{'FORM'};
+	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	
 	# 携帯用表示
 	if ( $Form->Equal('mb', 'on') || $SYS->Equal('AGENT', 'O') ) {
@@ -571,8 +572,6 @@ sub PrintBBSJump
 	}
 	# PC用表示
 	else {
-		$bbsPath = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
-		
 		my $COOKIE = $Sys->{'COOKIE'};
 		my $oSET = $Sys->{'SET'};
 		my $name = $Sys->{'FORM'}->Get('NAME', '');
