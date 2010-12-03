@@ -490,7 +490,7 @@ sub IsRegulation
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			if ($LOG->Search($host, 1)) {
+			if ($LOG->Search($host, 3)) {
 				return 500;
 			}
 		}
