@@ -789,10 +789,10 @@ sub GetIDPart
 	$mode = '';
 	
 	# PC・携帯識別番号付加
-	#if ($Set->Equal('BBS_SLIP', 'checked')) {
+	if ($Set->Equal('BBS_SLIP', 'checked')) {
 		$mode = $agent;
 		$id .= $mode;
-	#}
+	}
 	
 	# ID非表示権限有り
 	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
