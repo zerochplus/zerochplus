@@ -271,7 +271,7 @@ sub Search
 		for ($i = $num - 1 ; $i >= 0 ; $i--) {
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
-			($key, $dat) = (split(/<>/, $dmy))[($kind == 3 ? (5, 7) : (1, 3))];
+			($key, $dat) = (split /<>/, $dmy)[$kind == 3 ? (5, 7) : (1, 3)];
 			if ($data eq $key) {
 				return $dat;
 			}
@@ -283,8 +283,21 @@ sub Search
 		for ($i = $dat - 1;$i >= 0;$i--) {
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
-			$key = (split(/<>/, $dmy))[($kind == 3 ? 5 : 3)];
+			$key = (split /<>/, $dmy)[$kind == 3 ? 5 : 3];
 			if ($data eq $key) {
+				$num++;
+			}
+		}
+		return $num;
+	}
+	if ($f == 3) {												# THR
+		$num = 0;
+		$dat = @{$this->{'LOG'}};
+		for ($i = $dat - 1 ; $i >= 0 ; $i--) {
+			$dmy = $this->{'LOG'}->[$i];
+			chomp $dmy;
+			($key, $dat) = (split /<>/, $dmy)[1, 3];
+			if ($data eq $dat) {
 				$num++;
 			}
 		}

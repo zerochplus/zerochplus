@@ -475,22 +475,28 @@ sub MakeID
 	my $this = shift;
 	my ($server, $mode, $remote, $bbs, $column) = @_;
 	my @times = localtime time;
-	my (@nums, $ret, $host, $str);
+	my (@nums, $ret, $str, $uid);
 	
 	# 種の生成
 	if ( $mode eq 'O' || $mode eq 'P' ) {
 		# 端末番号 もしくは p2-user-hash の上位3文字を取得
-		$host = substr($remote, -3);
+		#$uid = main::GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
+		if (length($remote) > 8) {
+			$uid = substr($remote, 0, 2) . substr($remote, -6, 3);
+		}
+		else {
+			$uid = substr($remote, 0, 5);
+		}
 	}
 	else {
 		# IPを分解
 		@nums = split(/\./, $ENV{'REMOTE_ADDR'});
 		# 上位3つの1桁目取得
-		$host = substr($nums[3], -3) . substr($nums[2], -1) . substr($nums[1], -1);
+		$uid = substr($nums[3], -2) . substr($nums[2], -2) . substr($nums[1], -1);
 	}
 	
 	# サーバー名･板名を結合する
-	$str = $host . substr(crypt($server, $times[4]), -3) . substr(crypt($bbs,$times[4]), -2);
+	$str = $uid . substr(crypt($server, $times[4]), 2, 1) . substr(crypt($bbs, $times[4]), 2, 2);
 	# 桁を設定
 	$column = -1 * $column;
 	
@@ -783,10 +789,10 @@ sub GetIDPart
 	$mode = '';
 	
 	# PC・携帯識別番号付加
-	#if ($Set->Equal('BBS_SLIP', 'checked')) {
+	if ($Set->Equal('BBS_SLIP', 'checked')) {
 		$mode = $agent;
 		$id .= $mode;
-	#}
+	}
 	
 	# ID非表示権限有り
 	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {

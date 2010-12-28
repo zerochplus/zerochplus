@@ -490,7 +490,7 @@ sub IsRegulation
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			if ($LOG->Search($host, 1)) {
+			if ($LOG->Search($host, 3)) {
 				return 500;
 			}
 		}
@@ -525,18 +525,16 @@ sub IsRegulation
 			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
 			$LOGs->Save($oSYS);
 			
-			if ($tm > 0) {
-				if ($houshi && $n > 5) {
-					$oSYS->Set('WAIT', $houshi);
-					$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
-					$LOGh->Save($oSYS);
-					return 507;
-				}
-				else {
-					$oSYS->Set('WAIT', $tm);
-					$oSYS->Set('SAMBA', $n);
-					return ($houshi && $n > 3 ? 506 : 505);
-				}
+			if ($houshi && $n > 5) {
+				$oSYS->Set('WAIT', $houshi);
+				$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+				$LOGh->Save($oSYS);
+				return 507;
+			}
+			elsif ($n) {
+				$oSYS->Set('WAIT', $tm);
+				$oSYS->Set('SAMBA', $n);
+				return ($houshi && $n > 3 ? 506 : 505);
 			}
 		}
 		# ’ZŽžŠÔ“Še

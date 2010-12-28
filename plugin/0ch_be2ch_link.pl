@@ -111,7 +111,7 @@ sub execute
 	# $sys->Get('_DAT_')->[2] =~ s#<BE:(\d+):(\d)>#<a href="javascript:be($1);">LV.$2</a>#;
 	
 	# JavaScriptでやるけど外部スクリプト使わない版
-	$sys->Get('_DAT_')->[2] =~ s#BE:(\d+)-([^(]+\(\d+\)( 株優プチ\([0-9a-zA-Z]+\))?|\#*?)#<a href="javascript:w=window.open('http://be.2ch.net/test/p.php?i=$1&u=d:'+document.URL);w.focus();">?$2</a>#;
+	$sys->Get('_DAT_')->[2] =~ s#BE:(\d+)-([^(]+\(\d+\)( 株優プチ\([0-9a-zA-Z]+\))?|\#*?)#<a href="javascript:w=window.open('http://be.2ch.net/test/p.php?i=$1&amp;u=d:'+document.URL);w.focus();">?$2</a>#;
 	# 旧Be板用
 	# $sys->Get('_DAT_')->[2] =~ s#<BE:(\d+):(\d)>#<a href="javascript:w=window.open('http://be.2ch.net/test/p.php?i=$1&u=d:'+document.URL);w.focus();">LV.$2</a>#;
 	

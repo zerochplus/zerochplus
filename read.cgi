@@ -14,6 +14,8 @@
 
 use strict;
 use warnings;
+use CGI::Carp qw(fatalsToBrowser);
+
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
@@ -159,8 +161,8 @@ sub Initialize
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadHead
 {
-	my ($Sys, $Page) = @_;
-	my ($Caption, $Banner, $code, $title);
+	my ($Sys, $Page, $title) = @_;
+	my ($Caption, $Banner, $code);
 	
 	require './module/legolas.pl';
 	require './module/denethor.pl';
@@ -171,7 +173,7 @@ sub PrintReadHead
 	$Banner->Load($Sys->{'SYS'});
 	
 	$code	= $Sys->{'CODE'};
-	$title	= $Sys->{'DAT'}->GetSubject();
+	$title	= $Sys->{'DAT'}->GetSubject() if($title eq "");
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
@@ -608,7 +610,7 @@ sub PrintReadError
 sub PrintDiscovery
 {
 	my ($Sys, $Page) = @_;
-	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server);
+	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title);
 	
 	$spath		= $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS');
 	$lpath		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS');
@@ -620,7 +622,13 @@ sub PrintDiscovery
 	if (-e "$spath/kako/$kh/$key.html") {
 		
 		# 過去ログにあり
-		PrintReadHead($Sys, $Page);
+		$title = "隊長！過去ログ倉庫に";
+		PrintReadHead($Sys, $Page, $title);
+		$Page->Print("\n<div style=\"margin-top:1em;\">\n");
+		$Page->Print(" <a href=\"$lpath/\">■掲示板に戻る■</a>\n");
+		$Page->Print("</div>\n\n");
+		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
+		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("\n<blockquote>\n");
 		$Page->Print("隊長！過去ログ倉庫に <a href=\"$lpath/kako/$kh/$key.html\">[$key.html]</a>");
 		$Page->Print(" <a href=\"$lpath/kako/$kh/$key.dat\">[dat]</a> を発見しました！");
@@ -630,7 +638,13 @@ sub PrintDiscovery
 	elsif (-e "$spath/pool/$key.cgi") {
 		
 		# poolにあり
-		PrintReadHead($Sys, $Page);
+		$title = "html化待ちです…";
+		PrintReadHead($Sys, $Page, $title);
+		$Page->Print("\n<div style=\"margin-top:1em;\">\n");
+		$Page->Print(" <a href=\"$lpath/\">■掲示板に戻る■</a>\n");
+		$Page->Print("</div>\n\n");
+		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
+		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("\n<blockquote>\n");
 		$Page->Print("$key.datはhtml化を待っています。");
 		$Page->Print('ここは待つしかない・・・。<br>'."\n");
