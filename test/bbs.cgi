@@ -470,7 +470,7 @@ HTML
 sub PrintBBSWriteConfirm
 {
 	my ($Sys, $Page) = @_;
-	my ($Form, $bbs, $key, $tm, $subject, $name, $mail, $msg, $code);
+	my ($Form, $bbs, $key, $tm, $subject, $name, $mail, $msg);
 	
 	$Form		= $Sys->{'FORM'};
 	$bbs		= $Form->Get('bbs');
@@ -479,7 +479,6 @@ sub PrintBBSWriteConfirm
 	$name		= $Form->Get('FROM');
 	$mail		= $Form->Get('mail');
 	$msg		= $Form->Get('MESSAGE');
-	$code		= $Sys->{'SYS'}->Get('ENCODE');
 	
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print(<<HTML);
