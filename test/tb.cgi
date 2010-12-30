@@ -34,7 +34,7 @@ sub TrackBackCGI
 	
 	# postî•ñ‚Ì‰ðÍ
 	require './module/samwise.pl';
-	$form = new SAMWISE;
+	$form = SAMWISE->new(0);
 	$form->DecodeForm(1);
 	
 	require './module/melkor.pl';

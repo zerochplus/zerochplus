@@ -384,8 +384,8 @@ sub PrintLimitterSetting
 sub PrintOtherSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($urlLink, $linkSt, $linkEd, $pathKind, $headText, $headUrl, $FastMode);
-	my ($linkChk, $pathInfo, $pathQuery, $fastMode);
+	my ($urlLink, $linkSt, $linkEd, $pathKind, $headText, $headUrl, $FastMode, $BBSGET);
+	my ($linkChk, $pathInfo, $pathQuery, $fastMode, $bbsget);
 	my ($common);
 	
 	$SYS->Set('_TITLE', 'System Other Setting');
@@ -397,11 +397,13 @@ sub PrintOtherSetting
 	$headText	= $SYS->Get('HEADTEXT');
 	$headUrl	= $SYS->Get('HEADURL');
 	$FastMode	= $SYS->Get('FASTMODE');
+	$BBSGET		= $SYS->Get('BBSGET');
 	
 	$linkChk	= ($urlLink eq 'TRUE' ? 'checked' : '');
 	$fastMode	= ($FastMode == 1 ? 'checked' : '');
 	$pathInfo	= ($pathKind == 0 ? 'checked' : '');
 	$pathQuery	= ($pathKind == 1 ? 'checked' : '');
+	$bbsget		= ($BBSGET == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','OTHER');\"";
 	
@@ -423,18 +425,24 @@ sub PrintOtherSetting
 	$Page->Print("<td><input type=text size=2 name=LINKST value=\"$linkSt\" >時 ～ ");
 	$Page->Print("<input type=text size=2 name=LINKED value=\"$linkEd\" >時</td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">動作モード</td></tr>\n");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">動作モード(read.cgi)</td></tr>\n");
 	$Page->Print("<tr><td>PATH種別</td>");
 	$Page->Print("<td><input type=radio name=PATHKIND value=\"0\" $pathInfo>PATHINFO　");
 	$Page->Print("<input type=radio name=PATHKIND value=\"1\" $pathQuery>QUERYSTRING</td></tr>\n");
 	
 	$Page->Print("<tr><td colpan=2><input type=checkbox name=FASTMODE $fastMode value=on>");
 	$Page->Print("高速書き込みモード</td>");
-	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">bbs.cgiのGETメソッド</td></tr>\n");
+	$Page->Print("<tr><td>bbs.cgiでGETメソ\ッドを使用する</td>");
+	$Page->Print("<td><input type=checkbox name=BBSGET $bbsget value=on></td></tr>\n");
+	
+	
 	$Page->Print("<tr><td colspan=2 align=right>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -522,8 +530,6 @@ sub PrintPlusSecSetting
 	
 	$Kakiko		= $SYS->Get('KAKIKO');
 	$Samba		= $SYS->Get('SAMBATM');
-#	$isSamba	= $SYS->Get('ISSAMBA');
-#	$Houshi		= $SYS->Get('HOUSHI');
 	$Trip12		= $SYS->Get('TRIP12');
 	$BBQ		= $SYS->Get('BBQ');
 	$BBX		= $SYS->Get('BBX');
@@ -531,10 +537,9 @@ sub PrintPlusSecSetting
 
 	$kakiko		= ($Kakiko == 1 ? 'checked' : '');
 	$trip12		= ($Trip12 == 1 ? 'checked' : '');
-#	$issamba	= ($isSamba == 1 ? 'checked' : '');
-	$bbq		= ($BBQ == 1 ? 'checked' : '' );
-	$bbx		= ($BBX == 1 ? 'checked' : '' );
-	$spamch		= ($SpamCh == 1 ? 'checked' : '' );
+	$bbq		= ($BBQ == 1 ? 'checked' : '');
+	$bbx		= ($BBX == 1 ? 'checked' : '');
+	$spamch		= ($SpamCh == 1 ? 'checked' : '');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','SEC');\"";
 	
@@ -830,6 +835,7 @@ sub FunctionOtherSetting
 	$SYSTEM->Set('LINKED', $Form->Get('LINKED'));
 	$SYSTEM->Set('PATHKIND', $Form->Get('PATHKIND'));
 	$SYSTEM->Set('FASTMODE', ($Form->Equal('FASTMODE', 'on') ? 1 : 0));
+	$SYSTEM->Set('BBSGET', ($Form->Equal('BBSGET', 'on') ? 1 : 0));
 	
 	$SYSTEM->Save();
 	
@@ -843,6 +849,7 @@ sub FunctionOtherSetting
 		push @$pLog, '　　　 　終了時間：' . $SYSTEM->Get('LINKED');
 		push @$pLog, '　　　 PATH種別：' . $SYSTEM->Get('PATHKIND');
 		push @$pLog, '　　　 高速モード：' . $SYSTEM->Get('FASTMODE');
+		push @$pLog, '　　　 bbs.cgiのGETメソ\ッド：' . $SYSTEM->Get('BBSGET');
 	}
 	return 0;
 }

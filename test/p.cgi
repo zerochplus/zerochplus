@@ -39,7 +39,7 @@ sub PCGI
 	$Conv		= new GALADRIEL;
 	$Set		= new ISILDUR;
 	$Sys		= new MELKOR;
-	$Form		= new SAMWISE;
+	$Form		= SAMWISE->new(0);
 	$Page		= new THORIN;
 	
 	# url‚©‚çƒpƒX‚ğ‰ğÍ

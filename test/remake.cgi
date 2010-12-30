@@ -90,7 +90,7 @@ sub Initialize
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
 		'CONV'		=> new GALADRIEL,
-		'FORM'		=> new SAMWISE,
+		'FORM'		=> SAMWISE->new(1),
 		'PAGE'		=> $Page,
 	);
 	

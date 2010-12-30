@@ -40,7 +40,7 @@ sub AdminCGI
 	
 	# ƒtƒH[ƒ€î•ñ‚ðŽæ“¾
 	require "./module/samwise.pl";
-	$Form = new SAMWISE;
+	$Form = SAMWISE->new(0);
 	$Form->DecodeForm(0);
 	$Form->Set('FALSE', 0);
 	

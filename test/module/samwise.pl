@@ -25,15 +25,20 @@ use warnings;
 sub new
 {
 	my $this = shift;
+	my ($throughget) = @_;
 	my (%FORM, @SRC, $form, $obj);
 	
-	if ($ENV{'REQUEST_METHOD'} eq 'POST') {			# POSTメソッド
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {					# POSTメソッド
 		read STDIN, $form, $ENV{'CONTENT_LENGTH'};
 	}
-	else {											# GETメソッド
+	elsif ($throughget && defined $ENV{'QUERY_STRING'}) {	# GETメソッド
 		$form = $ENV{'QUERY_STRING'};
 	}
-	@SRC = split(/&/, $form);						# データ分離
+	else {
+		$form = '';
+	}
+	
+	@SRC = split(/&/, $form);								# データ分離
 	
 	$obj = {
 		'FORM'	=> \%FORM,
@@ -59,15 +64,12 @@ sub DecodeForm
 	my ($mode) = @_;
 	my ($var, $val, $code);
 	
-	#require './module/jcode.pl';										# jcode.pl要求
 	undef %{$this->{'FORM'}};
 	
 	foreach (@{$this->{'SRC'}}) {										# 各データごとに処理
 		($var, $val) = split(/=/, $_);									# name/valueで分離
 		$val =~ tr/+/ /;
 		$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
-		#$code = jcode::getcode(*val);									# コード取得
-		#jcode::convert(*val, $code);									# 漢字コードを統一
 		$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
 		$val =~ s/\0//g;												# ぬるぽ
 		$this->{'FORM'}->{$var} = $val;									# データセット
@@ -91,7 +93,6 @@ sub GetAtArray
 	my ($key, $f) = @_;
 	my ($var, $val, $code, @ret);
 	
-	#require './module/jcode.pl';											# jcode.pl要求
 	undef @ret;
 	
 	foreach (@{$this->{'SRC'}}) {											# 各データごとに処理
@@ -99,8 +100,6 @@ sub GetAtArray
 		if ($key eq $var) {													# 指定キー
 			$val =~ tr/+/ /;
 			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
-			#$code = jcode::getcode(*val);									# コード取得
-			#jcode::convert(*val, $code);									# 漢字コードを統一'
 			$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
 			$val =~ s/\0//g;												# ぬるぽ
 			if ($f) {

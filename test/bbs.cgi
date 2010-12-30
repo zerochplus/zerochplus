@@ -120,17 +120,19 @@ sub Initialize
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
 		'CONV'		=> new GALADRIEL,
-		'FORM'		=> new SAMWISE,
 		'PAGE'		=> $Page,
+		'FORM'		=> 0,
 	);
-	
-	# form情報設定
-	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# システム情報設定
 	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
+	
+	$Sys->{'FORM'} = SAMWISE->new($Sys->{'SYS'}->Get('BBSGET')),
+	
+	# form情報設定
+	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# 夢が広がりんぐ
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
@@ -180,7 +182,7 @@ sub Initialize
 	}
 	
 	# cookieの存在チェック(PCのみ)
-	if (!$Sys->{'SYS'}->Equal('AGENT', 'O')) {
+	if (! $Sys->{'SYS'}->Equal('AGENT', 'O')) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
 			return 9001	if (!$Sys->{'COOKIE'}->Init());
