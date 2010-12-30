@@ -584,6 +584,8 @@ sub PrintOriginalSetting
 	$setItem[5]	= $Setting->Get('BBS_READONLY');
 	$setItem[6]	= $Setting->Get('BBS_MESSAGE_HOST');
 	$setItem[7]	= $Setting->Get('BBS_THREADCAPONLY');
+	$setItem[8]	= $Setting->Get('BBS_SAMBATIME');
+	$setItem[9]	= $Setting->Get('BBS_HOUSHITIME');
 	
 	$readOnly[0] = ($setItem[5] eq 'none' ? 'checked' : '');
 	$readOnly[1] = ($setItem[5] eq 'caps' ? 'checked' : '');
@@ -609,6 +611,10 @@ sub PrintOriginalSetting
 	$Page->Print("<input type=radio name=BBS_READONLY value=caps $readOnly[1]>キャップのみ書き込み可<br>");
 	$Page->Print("<input type=radio name=BBS_READONLY value=none $readOnly[0]>書き込み可<br>");
 	$Page->Print("</td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">Samba秒数(0でSamba無効)</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_SAMBATIME value=\"$setItem[8]\"></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">Samba規制時の奉仕活動時間(分)</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_HOUSHITIME value=\"$setItem[9]\"></td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETORIGIN');\"></td></tr></table>");
@@ -962,7 +968,7 @@ sub FunctionOriginalSetting
 	}
 	# 入力チェック
 	{
-		my @inList = ('BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER');
+		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER', 'BBS_SAMBATIME', 'BBS_HOUSHITIME');
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
@@ -981,6 +987,8 @@ sub FunctionOriginalSetting
 	$Setting->Set('BBS_COLUMN_NUMBER', $Form->Get('BBS_COLUMN_NUMBER'));
 	$Setting->Set('BBS_READONLY', $Form->Get('BBS_READONLY'));
 	$Setting->Set('BBS_THREADCAPONLY', ($Form->Equal('BBS_THREADCAPONLY', 'on') ? 'checked' : ''));
+	$Setting->Set('BBS_SAMBATIME', $Form->Get('BBS_SAMBATIME'));
+	$Setting->Set('BBS_HOUSHITIME', $Form->Get('BBS_HOUSHITIME'));
 	
 	$Setting->Save($Sys);
 	

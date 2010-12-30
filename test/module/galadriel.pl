@@ -1003,7 +1003,8 @@ sub IsProxy
 	# DNSBLñ‚Ç¢çáÇÌÇπ
 	$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
 	foreach my $dnsbl (@dnsbls) {
-		if (join('.', unpack('C*', gethostbyname("$addr.$dnsbl"))) eq '127.0.0.2') {
+		$_ = gethostbyname "$addr.$dnsbl";
+		if ($_ && join('.', unpack('C*', $_)) eq '127.0.0.2') {
 			$oForm->Set('FROM', "</b> [Å\\{}\@{}\@{}-] <b>$from");
 			return ( $mode eq "P" ? 0 : 1 );
 		}
