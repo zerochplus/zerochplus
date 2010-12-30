@@ -630,8 +630,8 @@ sub PrintDiscovery
 		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
 		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("\n<blockquote>\n");
-		$Page->Print("隊長！過去ログ倉庫に <a href=\"$lpath/kako/$kh/$key.html\">[$key.html]</a>");
-		$Page->Print(" <a href=\"$lpath/kako/$kh/$key.dat\">[dat]</a> を発見しました！");
+		$Page->Print("隊長! 過去ログ倉庫で、スレッド <a href=\"$lpath/kako/$kh/$key.html\">$lpath/kako/$kh/$key.html</a>");
+		$Page->Print(" <a href=\"$lpath/kako/$kh/$key.dat\">.dat</a> を発見しました。");
 		$Page->Print("</blockquote>\n");
 		
 	}

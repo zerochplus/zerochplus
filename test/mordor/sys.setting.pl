@@ -434,7 +434,7 @@ sub PrintOtherSetting
 	$Page->Print("高速書き込みモード</td>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">bbs.cgiのGETメソッド</td></tr>\n");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">bbs.cgiのGETメソ\ッド</td></tr>\n");
 	$Page->Print("<tr><td>bbs.cgiでGETメソ\ッドを使用する</td>");
 	$Page->Print("<td><input type=checkbox name=BBSGET $bbsget value=on></td></tr>\n");
 	
