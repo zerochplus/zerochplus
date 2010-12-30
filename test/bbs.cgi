@@ -14,6 +14,8 @@ use strict;
 use warnings;
 use CGI::Carp qw(fatalsToBrowser);
 
+push @INC, 'perllib';
+
 # CGIの実行結果を終了コードとする
 exit(BBSCGI());
 
@@ -118,17 +120,19 @@ sub Initialize
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
 		'CONV'		=> new GALADRIEL,
-		'FORM'		=> new SAMWISE,
 		'PAGE'		=> $Page,
+		'FORM'		=> 0,
 	);
-	
-	# form情報設定
-	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# システム情報設定
 	if ($Sys->{'SYS'}->Init()) {
 		return 990;
 	}
+	
+	$Sys->{'FORM'} = SAMWISE->new($Sys->{'SYS'}->Get('BBSGET')),
+	
+	# form情報設定
+	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# 夢が広がりんぐ
 	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
@@ -178,7 +182,7 @@ sub Initialize
 	}
 	
 	# cookieの存在チェック(PCのみ)
-	if (!$Sys->{'SYS'}->Equal('AGENT', 'O')) {
+	if (! $Sys->{'SYS'}->Equal('AGENT', 'O')) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
 			return 9001	if (!$Sys->{'COOKIE'}->Init());
@@ -470,7 +474,7 @@ HTML
 sub PrintBBSWriteConfirm
 {
 	my ($Sys, $Page) = @_;
-	my ($Form, $bbs, $key, $tm, $subject, $name, $mail, $msg, $code);
+	my ($Form, $bbs, $key, $tm, $subject, $name, $mail, $msg);
 	
 	$Form		= $Sys->{'FORM'};
 	$bbs		= $Form->Get('bbs');
@@ -479,7 +483,6 @@ sub PrintBBSWriteConfirm
 	$name		= $Form->Get('FROM');
 	$mail		= $Form->Get('mail');
 	$msg		= $Form->Get('MESSAGE');
-	$code		= $Sys->{'SYS'}->Get('ENCODE');
 	
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print(<<HTML);

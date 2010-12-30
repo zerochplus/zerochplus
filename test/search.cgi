@@ -34,7 +34,7 @@ sub SearchCGI
 	require './module/nazguls.pl';
 	$Sys	= new MELKOR;
 	$Page	= new THORIN;
-	$Form	= new SAMWISE;
+	$Form	= SAMWISE->new(1);
 	$BBS	= new NAZGUL;
 	
 	$Form->DecodeForm(1);

@@ -147,6 +147,8 @@ sub Out
 	my ($oOut, $path, $limit) = @_;
 	my (@gmt, @week, @month, $date, $key, $value);
 	
+	require Jcode;
+	
 	# “ú•tî•ñ‚ÌÝ’è
 	@gmt = gmtime(time + $limit * 60);
 	@week = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
@@ -160,7 +162,9 @@ sub Out
 	# Ý’è‚³‚ê‚Ä‚¢‚écookie‚ð‘S‚Äo—Í‚·‚é
 	foreach $key (keys %{$this->{'COOKIE'}}) {
 		$value = $this->{'COOKIE'}->{$key};
-		$oOut->Print("Set-Cookie: $key=$value; expires=$date; path=$path\n");
+		Jcode::convert(\$value, 'utf8', 'sjis');
+		$value =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
+		$oOut->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");
 	}
 }
 
@@ -181,29 +185,18 @@ sub Print
 <script language="JavaScript" type="text/javascript">
 <!--
 function l(e) {
-	var N = getCookie("NAME"), M = getCookie("MAIL"), i;
-	with(document)
-		for(var i = 0 ; i < forms.length ; i++)
-			if(forms[i].FROM && forms[i].mail)
-				with(forms[i]) {
-					FROM.value = N;
-					mail.value = M;
-				}
+	var N = getCookie("NAME"), M = getCookie("MAIL");
+	for (var i = 0, j = document.forms ; i < j.length ; i++){
+		if (j[i].FROM && j[i].mail) {
+			j[i].FROM.value = N;
+			j[i].mail.value = M;
+		}}
 }
 window.onload = l;
-function getCookie(key, tmp1, tmp2, xx1, xx2, xx3) {
-	tmp1 = " " + document.cookie + ";";
-	xx1 = xx2 = 0;
-	len = tmp1.length;
-	while (xx1 < len) {
-		xx2 = tmp1.indexOf(";", xx1);
-		tmp2 = tmp1.substring(xx1 + 1, xx2);
-		xx3 = tmp2.indexOf("=");
-		if ( tmp2.substring(0, xx3) == key) {
-			return unescape(tmp2.substring(xx3 + 1, xx2 - xx1 - 1));
-		}
-		xx1 = xx2 + 1;
-	}
+function getCookie(key) {
+	var ptrn = '(?:^|;| )' + key + '="(.*?)"';
+	if (document.cookie.match(ptrn))
+		return decodeURIComponent(RegExp.\$1);
 	return "";
 }
 //-->

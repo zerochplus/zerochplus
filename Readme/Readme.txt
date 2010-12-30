@@ -45,6 +45,8 @@ test/
 		*.pl			管理CGIモジュール
 	plugin/
 		*.pl			プラグインスクリプト
+	perllib/
+		*				ぜろちゃんねるプラスに必要なパッケージ
 
 
 ■設置方法概略
@@ -109,8 +111,9 @@ test/
 クリプト使用に関して発生したいかなるトラブルにも責任を負いかねますのでご了承ください。
 
 　またremake.cgiの著作権･ライセンスは別の方にあり、remake.cgiの作者に著作権･ライセンスを
-帰属します
+帰属します。
 
+　perllibに含めてあるパッケージについては後述。
 
 ■バージョンアップについて
 　バージョンアップにあたってはこちら側からは何もアプローチすることはできないので、こまめ
@@ -133,3 +136,23 @@ test/
 
 ■公式WEB
 　http://zerochplus.sourceforge.jp/
+
+■perllibにあるパッケージ
+　これらはぜろちゃんねるプラスの実行に必要なパッケージです。すでにインストールされている
+サーバーもあるかもしれませんが、一応含めておきます。
+　以下はパッケージの詳細です。
+
+Digest-SHA1
+Perl interface to the SHA-1 algorithm
+	Version:	2.13
+	Released:	2010-07-03
+	Author:	Gisle Aas <gisle@ActiveState.com>
+	CPAN:	http://search.cpan.org/dist/Digest-SHA1-2.13/
+
+Jcode
+Japanese Charset Handler
+	Version:	2.07
+	Released:	2008-05-10
+	Author:	Dan Kogai <dankogai@dan.co.jp>
+	CPAN:	http://search.cpan.org/dist/Jcode-2.07/
+

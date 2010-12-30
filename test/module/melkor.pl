@@ -248,7 +248,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 1,										# デバグモード(*)
-		'VERSION'	=> '0ch+ BBS 0.4.5b 101224',				# CGIバージョン
+		'VERSION'	=> '0ch+ BBS 0.4.6b 101230',				# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
@@ -273,8 +273,8 @@ sub InitSystemValue
 		
 		# ここからぜろプラオリジナル
 		'SAMBATM'	=> 10,										# 連続書き込み規制時間(秒)
-		'ISSAMBA'	=> 0,										# Samba規制
-		'HOUSHI'	=> 10,										# Samba規制時間(分)
+	#	'ISSAMBA'	=> 0,										# Samba規制
+	#	'HOUSHI'	=> 10,										# Samba規制時間(分)
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
@@ -282,6 +282,7 @@ sub InitSystemValue
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
 		'TRIP12'	=> 0,										# 12桁トリップを変換するかどうか
 		'MSEC'		=> 0,										# msecまで表示するか
+		'BBSGET'	=> 0,										# bbs.cgiでGETメソッドを使用するかどうか
 		
 		# DNSBL設定
 		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
@@ -295,8 +296,10 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBATM',	'ISSAMBA',	'HOUSHI',	'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',
-		'TRIP12',	'MSEC',		'BBQ',		'BBX',		'SPAMCH',
+		'SAMBATM',	
+	#	'ISSAMBA',	'HOUSHI',	
+		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
+		'BBQ',		'BBX',		'SPAMCH',
 	);
 }
 

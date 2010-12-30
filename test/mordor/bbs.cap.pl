@@ -321,7 +321,7 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_LINECOUNT $authNum[5] value=on>本文1行文字数規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_NONAME $authNum[6] value=on>名無し規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_THREAD $authNum[7] value=on>スレッド作成規制解除<br>");
-	$Page->Print("<input type=checkbox name=C_THREADCAP $authNum[8] value=on>スレッド作成可能(キャップ)<br>");
+	$Page->Print("<input type=checkbox name=C_THREADCAP $authNum[8] value=on>スレッド作成可能\(キャップ)<br>");
 	$Page->Print("<input type=checkbox name=C_CONTINUAS $authNum[9] value=on>連続投稿規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_DUPLICATE $authNum[10] value=on>二重書き込み規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_SHORTWRITE $authNum[11] value=on>短時間投稿規制解除<br>");
