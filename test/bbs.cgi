@@ -14,6 +14,8 @@ use strict;
 use warnings;
 use CGI::Carp qw(fatalsToBrowser);
 
+push @INC, 'perllib';
+
 # CGIの実行結果を終了コードとする
 exit(BBSCGI());
 

@@ -559,7 +559,7 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			require 'Digest/SHA1.pm';
+			require Digest::SHA1;
 			$trip = substr(Digest::SHA1::sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
