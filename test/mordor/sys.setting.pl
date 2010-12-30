@@ -242,7 +242,13 @@ sub PrintBasicSetting
 	$data	= $SYS->Get('DATA');
 	
 	$common = "onclick=\"DoSubmit('sys.setting','FUNC','BASIC');\"";
-	$server = 'http://' . $ENV{'SERVER_NAME'}	if ($server eq '');
+	if ($server eq '') {
+		my ($sname, $path);
+		$sname = $ENV{'SERVER_NAME'};
+		$path = $ENV{'SCRIPT_NAME'};
+		$path =~ s|/[^/]+/[^/]+$||;
+		$server = "http://$sname$path";
+	}
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2>各項目を設定して[設定]ボタンを押してください。</td></tr>\n");
