@@ -246,7 +246,7 @@ sub PrintBasicSetting
 		my $sname = $ENV{'SERVER_NAME'};
 		$server = "http://$sname";
 	}
-	if ($cgi eq '/test') {
+	if ($cgi eq '') {
 		my $path = $ENV{'SCRIPT_NAME'};
 		$path =~ s|/[^/]+/[^/]+$||;
 		$cgi = "$path$cgi";
@@ -261,19 +261,19 @@ sub PrintBasicSetting
 	$Page->Print("<td><input type=text size=60 name=SERVER value=\"$server\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">CGI設置ディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
 	$Page->Print("例: <span class=\"GrayColor\">http://example.jp</span> <span class=\"UnderLine\">/test</span><br>");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.net</span> <span class=\"UnderLine\">/~user/test</span></span></td>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user</span> <span class=\"UnderLine\">/test</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=CGIPATH value=\"$cgi\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">掲示板配置ディレクトリ(相対パス)<br><span class=\"NormalStyle\">");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test /</span> <span class=\"UnderLine\">..</span><br>");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test /</span> <span class=\"UnderLine\">..</span></span></td>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test/</span> <span class=\"UnderLine\">..</span><br>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test/</span> <span class=\"UnderLine\">..</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=BBSPATH value=\"$bbs\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">システム情報ディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test </span><span class=\"UnderLine\">/info</span><br>");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test </span><span class=\"UnderLine\">/info</span></span></td>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test</span> <span class=\"UnderLine\">/info</span><br>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test</span> <span class=\"UnderLine\">/info</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=INFO value=\"$info\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">システムデータディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test </span><span class=\"UnderLine\">/datas</span><br>");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test </span><span class=\"UnderLine\">/datas</span></span></td>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test</span> <span class=\"UnderLine\">/datas</span><br>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user/test</span> <span class=\"UnderLine\">/datas</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=DATA value=\"$data\" ></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");

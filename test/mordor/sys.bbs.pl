@@ -607,6 +607,9 @@ sub FunctionBBSCreate
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
+		if (! $Form->IsBBSDir(['BBS_DIR'])) {
+			return 1002;
+		}
 	}
 	require './module/earendil.pl';
 	

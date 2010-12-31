@@ -248,7 +248,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 1,										# デバグモード(*)
-		'VERSION'	=> '0ch+ BBS 0.4.6b 101230',				# CGIバージョン
+		'VERSION'	=> '0ch+ BBS 0.4.xx xxxxxx',				# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
@@ -301,6 +301,12 @@ sub InitSystemValue
 		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
 		'BBQ',		'BBX',		'SPAMCH',
 	);
+	
+	my $sname = $ENV{'SERVER_NAME'};
+	my $path = $ENV{'SCRIPT_NAME'};
+	$path =~ s|/[^/]+/[^/]+$||;
+	$pSYS->{'SERVER'} = "http://$sname";
+	$pSYS->{'CGIPATH'} = $path . $pSYS->{'CGIPATH'};
 }
 
 #============================================================================================================
