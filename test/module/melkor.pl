@@ -95,6 +95,18 @@ sub Load
 		else {
 			$pSYS->{'LIMTIME'} = 0;
 		}
+		
+		if (defined ($_ = $pSYS->{'SERVER'}) && $_ =~ m|^(http://[^/]+)(/.*)$|) {
+			if ($2 eq '/') {
+				$pSYS->{'SERVER'} = $1;
+			}
+			else {
+				$pSYS->{'SERVER'} = $1;
+				if (defined ($_ = $pSYS->{'CGIPATH'}) && $_ ne '') {
+					$pSYS->{'CGIPATH'} = $2 . $pSYS->{'CGIPATH'};
+				}
+			}
+		}
 	};
 	return 1 if ($@ ne '');
 	return 0;
