@@ -381,7 +381,7 @@ $Page->Print(<<HTML);
 </table>
 
 <div class="MainFoot">
- Copyright 2001 - 2010 0ch BBS : Loggin User - <b>$user</b><br>
+ Copyright 2001 - 2011 0ch+ BBS : Loggin User - <b>$user</b><br>
  Build Version:<b>$ver</b>
 </div>
 
