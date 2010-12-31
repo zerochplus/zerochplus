@@ -132,86 +132,82 @@ sub Write
 	}
 	
 	# データの書き込み
-#	eval
-	{
-		my ($oSys, $oSet, $oForm, $oConv);
-		my (@elem, $date, $data, $data2, $resNum, $datPath, $id);
-		
-		require './module/gondor.pl';
-		$oSys	= $this->{'SYS'};
-		$oSet	= $this->{'SET'};
-		$oForm	= $this->{'FORM'};
-		$oConv	= $this->{'CONV'};
-		
-		# 書き込み直前処理
-		if ($err = ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1)) {
-			return $err;
+	my ($oSys, $oSet, $oForm, $oConv);
+	my (@elem, $date, $data, $data2, $resNum, $datPath, $id);
+	
+	require './module/gondor.pl';
+	$oSys	= $this->{'SYS'};
+	$oSet	= $this->{'SET'};
+	$oForm	= $this->{'FORM'};
+	$oConv	= $this->{'CONV'};
+	
+	# 書き込み直前処理
+	if ($err = ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1)) {
+		return $err;
+	}
+	
+	# レス要素の取得
+	$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
+	
+	$err		= 0;
+	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oForm->Get('HOST'), $oSys->Get('BBS'), 8);
+	$date		= $oConv->GetDate($oSet, $oSys->Get('MSEC'));
+	$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
+	
+	# プラグイン「 BE(HS)っぽいもの 」ver.0.x.x
+	$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
+	
+	$data		= join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
+	$data2		= "$data\n";
+	$datPath	= $oSys->Get('DATPATH');
+	
+	# ログ書き込み
+	if ($oSys->Equal('MODE', 2)) {
+		require './module/peregrin.pl';
+		my $LOG = PEREGRIN->new;
+		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
+		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT', 0));
+		$LOG->Save($oSys);
+	}
+	
+	# リモートホスト保存(SETTING.TXT変更により、常に保存)
+	SaveHost($oSys, $oForm);
+	
+	# datファイルへ直接書き込み
+	if (($err = ARAGORN::DirectAppend($oSys, $datPath, $data2)) == 0) {
+		# レス数が最大数を超えたらover設定をする
+		if (($resNum = ARAGORN::GetNumFromFile($datPath)) >= $oSys->Get('RESMAX')) {
+			# datにOVERスレッドレスを書き込む
+			Get1001Data($oSys, \$data2);
+			ARAGORN::DirectAppend($oSys, $datPath, $data2);
+			$resNum++;
 		}
-		
-		# レス要素の取得
-		$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
-		
-		$err		= 0;
-		$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oForm->Get('HOST'), $oSys->Get('BBS'), 8);
-		$date		= $oConv->GetDate($oSet, $oSys->Get('MSEC'));
-		$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
-		
-		# プラグイン「 BE(HS)っぽいもの 」ver.0.x.x
-		$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
-		
-		$data		= join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
-		$data2		= "$data\n";
-		$datPath	= $oSys->Get('DATPATH');
-		
-		# ログ書き込み
-		if ($oSys->Equal('MODE', 2)) {
-			require './module/peregrin.pl';
-			my $LOG = PEREGRIN->new;
-			$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-			$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT', 0));
-			$LOG->Save($oSys);
+		# 履歴保存
+		SaveHistory($oSys, $oForm, ARAGORN::GetNumFromFile($datPath));
+	}
+	# datファイル追記失敗
+	else {
+		$err = 999 if ($err == 1);
+		$err = 200 if ($err == 2);
+	}
+	
+	if ($err == 0 && $@ eq '') {
+		# subject.txtの更新
+		# スレッド作成モードなら新規に追加する
+		if ($oSys->Equal('MODE', 1)) {
+			$this->{'THREADS'}->Add($oSys->Get('KEY'), $elem[0], 1);
 		}
-		
-		# リモートホスト保存(SETTING.TXT変更により、常に保存)
-		SaveHost($oSys, $oForm);
-		
-		# datファイルへ直接書き込み
-#		eval
-		{
-			if (($err = ARAGORN::DirectAppend($oSys, $datPath, $data2)) == 0) {
-				# レス数が最大数を超えたらover設定をする
-				if (($resNum = ARAGORN::GetNumFromFile($datPath)) >= $oSys->Get('RESMAX')) {
-					# datにOVERスレッドレスを書き込む
-					Get1001Data($oSys, \$data2);
-					ARAGORN::DirectAppend($oSys, $datPath, $data2);
-					$resNum++;
-				}
-				# 履歴保存
-				SaveHistory($oSys, $oForm, ARAGORN::GetNumFromFile($datPath));
+		# 書き込みモードならレス数の更新
+		else {
+			$this->{'THREADS'}->Set($oSys->Get('KEY'), 'RES', $resNum);
+			# sageが入っていなかったらageる
+			if (!$oForm->Contain('mail', 'sage')) {
+				$this->{'THREADS'}->AGE($oSys->Get('KEY'));
 			}
-			# datファイル追記失敗
-			else {
-				$err = 999 if ($err == 1);
-				$err = 200 if ($err == 2);
-			}
-		};
-		if ($err == 0 && $@ eq '') {
-			# subject.txtの更新
-			# スレッド作成モードなら新規に追加する
-			if ($oSys->Equal('MODE', 1)) {
-				$this->{'THREADS'}->Add($oSys->Get('KEY'), $elem[0], 1);
-			}
-			# 書き込みモードならレス数の更新
-			else {
-				$this->{'THREADS'}->Set($oSys->Get('KEY'), 'RES', $resNum);
-				# sageが入っていなかったらageる
-				if (!$oForm->Contain('mail', 'sage')) {
-					$this->{'THREADS'}->AGE($oSys->Get('KEY'));
-				}
-			}
-			$this->{'THREADS'}->Save($oSys);
 		}
-	};
+		$this->{'THREADS'}->Save($oSys);
+	}
+	
 	return $err;
 }
 

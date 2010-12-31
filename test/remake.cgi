@@ -37,21 +37,15 @@ sub REMAKECGI
 		my $Sys = $SYS{'SYS'};
 		
 		# subject.txt
-#		eval
-		{
-			#$Threads->Load($Sys);
-			$Threads->UpdateAll($Sys);
-			$Threads->Save($Sys);
-		};
+		#$Threads->Load($Sys);
+		$Threads->UpdateAll($Sys);
+		$Threads->Save($Sys);
 		
 		# index.html
-#		eval
-		{
-			$BBSAid->Init($Sys, $SYS{'SET'});
-			$BBSAid->CreateIndex();
-			$BBSAid->CreateIIndex();
-			$BBSAid->CreateSubback();
-		};
+		$BBSAid->Init($Sys, $SYS{'SET'});
+		$BBSAid->CreateIndex();
+		$BBSAid->CreateIIndex();
+		$BBSAid->CreateSubback();
 		
 		PrintBBSJump(\%SYS, $Page);
 	}

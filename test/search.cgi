@@ -247,11 +247,9 @@ sub Search
 	$Type = ($types[0] || 0) | ($types[1] || 0) | ($types[2] || 0);
 	
 	# 検索オブジェクトの設定と検索の実行
-#	eval
-	{
-		$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS', ''), $Form->Get('KEY', ''));
-		$Search->Run($Form->Get('WORD'));
-	};
+	$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS', ''), $Form->Get('KEY', ''));
+	$Search->Run($Form->Get('WORD'));
+	
 	if ($@ ne '') {
 		PrintSystemError($Page, $@);
 		return;

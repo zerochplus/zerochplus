@@ -46,7 +46,6 @@ sub Init
 	my $this = shift;
 	my (@pairs, $name, $value, $gCode);
 	
-	#require './module/jcode.pl';
 	undef $this->{'COOKIE'};
 	
 	if ($ENV{'HTTP_COOKIE'}) {

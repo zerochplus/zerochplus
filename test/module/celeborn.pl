@@ -311,34 +311,31 @@ sub UpdateIndex
 	@dirs = keys %PATHES;
 	unshift @dirs, '';
 	
-#	eval
-	{
-		# パスごとにindexを生成する
-		foreach $path (@dirs) {
-			# 1階層下のサブフォルダを取得する
-			GetSubFolders($path, \@dirs, \@subDirs);
-			foreach $dir (sort @subDirs) {
-				push @info, "0<>0<>0<>$dir";
-			}
-			
-			# ログデータがあれば情報配列に追加する
-			foreach $id (keys(%{$this->{'KEY'}})) {
-				if ($path eq $this->{'PATH'}->{$id} && $this->{'KEY'}->{$id} ne '0') {
-					$key = $this->{'KEY'}->{$id};
-					$subj = $this->{'SUBJECT'}->{$id};
-					$date = $this->{'DATE'}->{$id};
-					push @info, "$key<>$subj<>$date<>$path";
-				}
-			}
-			
-			# indexファイルを出力する
-			$Page->Clear();
-			OutputIndex($Sys, $Page, $Banner, \@info, $basePath, $path);
-			
-			undef @info;
-			undef @subDirs;
+	# パスごとにindexを生成する
+	foreach $path (@dirs) {
+		# 1階層下のサブフォルダを取得する
+		GetSubFolders($path, \@dirs, \@subDirs);
+		foreach $dir (sort @subDirs) {
+			push @info, "0<>0<>0<>$dir";
 		}
-	};
+		
+		# ログデータがあれば情報配列に追加する
+		foreach $id (keys(%{$this->{'KEY'}})) {
+			if ($path eq $this->{'PATH'}->{$id} && $this->{'KEY'}->{$id} ne '0') {
+				$key = $this->{'KEY'}->{$id};
+				$subj = $this->{'SUBJECT'}->{$id};
+				$date = $this->{'DATE'}->{$id};
+				push @info, "$key<>$subj<>$date<>$path";
+			}
+		}
+		
+		# indexファイルを出力する
+		$Page->Clear();
+		OutputIndex($Sys, $Page, $Banner, \@info, $basePath, $path);
+		
+		undef @info;
+		undef @subDirs;
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------

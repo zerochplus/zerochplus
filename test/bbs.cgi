@@ -46,13 +46,10 @@ sub BBSCGI
 				require './module/varda.pl';
 				my $BBSAid = new VARDA;
 				
-#				eval
-				{
-					$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
-					$BBSAid->CreateIndex();
-					$BBSAid->CreateIIndex();
-					$BBSAid->CreateSubback();
-				};
+				$BBSAid->Init($SYS{'SYS'}, $SYS{'SET'});
+				$BBSAid->CreateIndex();
+				$BBSAid->CreateIIndex();
+				$BBSAid->CreateSubback();
 			}
 			PrintBBSJump(\%SYS, $Page);
 		}
