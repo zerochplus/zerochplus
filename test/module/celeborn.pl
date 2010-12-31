@@ -418,7 +418,7 @@ sub OutputIndex
 	$Caption->Load($Sys, 'META');
 	
 	$version = $Sys->Get('VERSION');
-	$bbsRoot = $Sys->Get('SERVER') . '/' . $Sys->Get('BBS');
+	$bbsRoot = $Sys->Get('CGIPATH') . '/' . $Sys->Get('BBSPATH') . '/'. $Sys->Get('BBS');
 	$board = $Sys->Get('BBS');
 	
 	$Page->Print(<<HTML);

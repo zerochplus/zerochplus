@@ -274,8 +274,8 @@ sub PrintReadFoot
 	$ver		= $oSYS->Get('VERSION');
 	$rmax		= $oSYS->Get('RESMAX');
 	
-	$baseBBS	= $oSYS->Get('SERVER') . '/' . $bbs;
-	$pathBBS	= $baseBBS . '/i/index.html';
+	$baseBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
+	$pathBBS	= "$baseBBS/i/index.html";
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
 	$resNum		= $Sys->{'DAT'}->Size();

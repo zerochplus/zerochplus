@@ -173,7 +173,7 @@ sub PrintReadHead
 	$Banner->Load($Sys->{'SYS'});
 	
 	$code	= $Sys->{'CODE'};
-	$title	= $Sys->{'DAT'}->GetSubject() if($title eq "");
+	$title	= $Sys->{'DAT'}->GetSubject() if(! defined $title || $title eq '');
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
@@ -228,7 +228,7 @@ sub PrintReadMenu
 	$oSYS		= $Sys->{'SYS'};
 	$bbs		= $oSYS->Get('BBS');
 	$key		= $oSYS->Get('KEY');
-	$baseBBS	= $oSYS->Get('SERVER') . "/$bbs";
+	$baseBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
 	$baseCGI	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 	$account	= $oSYS->Get('COUNTER');
 	$PRtext		= $oSYS->Get('PRTEXT');
@@ -520,8 +520,8 @@ sub PrintReadSearch
 	$oSys		= $Sys->{'SYS'};
 	$oDat		= $Sys->{'DAT'};
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
-	$var		= $Sys->{'SYS'}->Get('VERSION');
-	$bbs		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS') . '/';
+	$var		= $oSys->Get('VERSION');
+	$bbs		= $oSys->Get('CGIPATH') . '/' . $oSys->Get('BBSPATH') . '/'. $oSys->Get('BBS') . '/' ;
 	$server		= $oSys->Get('SERVER');
 	
 	# エラー用datの読み込み
@@ -613,7 +613,7 @@ sub PrintDiscovery
 	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title);
 	
 	$spath		= $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS');
-	$lpath		= $Sys->{'SYS'}->Get('SERVER') . '/' . $Sys->{'SYS'}->Get('BBS');
+	$lpath		= $Sys->{'SYS'}->Get('CGIPATH') . '/' . $spath;
 	$key		= $Sys->{'SYS'}->Get('KEY');
 	$kh			= substr($key, 0, 4) . '/' . substr($key, 0, 5);
 	$ver		= $Sys->{'SYS'}->Get('VERSION');
@@ -630,7 +630,7 @@ sub PrintDiscovery
 		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
 		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("\n<blockquote>\n");
-		$Page->Print("隊長! 過去ログ倉庫で、スレッド <a href=\"$lpath/kako/$kh/$key.html\">$lpath/kako/$kh/$key.html</a>");
+		$Page->Print("隊長! 過去ログ倉庫で、スレッド <a href=\"$lpath/kako/$kh/$key.html\">$server$lpath/kako/$kh/$key.html</a>");
 		$Page->Print(" <a href=\"$lpath/kako/$kh/$key.dat\">.dat</a> を発見しました。");
 		$Page->Print("</blockquote>\n");
 		

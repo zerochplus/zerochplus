@@ -623,7 +623,7 @@ sub CreateKAKOLog
 	
 	$title 		= $Dat->GetSubject();
 	$account	= $Sys->Get('COUNTER');
-	$board		= $Sys->Get('SERVER') . '/' . $Sys->Get('BBS');
+	$board		= $Sys->Get('CGIPATH') . '/' . $Sys->Get('BBSPATH') . '/'. $Sys->Get('BBS');
 	$var		= $Sys->Get('VERSION');
 	
 	# Fî•ñŽæ“¾
