@@ -316,9 +316,9 @@ sub InitSystemValue
 	
 	my $sname = $ENV{'SERVER_NAME'};
 	my $path = $ENV{'SCRIPT_NAME'};
-	$path =~ s|/[^/]+/[^/]+$||;
+	$path =~ s|/[^/]+$||;
 	$pSYS->{'SERVER'} = "http://$sname";
-	$pSYS->{'CGIPATH'} = $path . $pSYS->{'CGIPATH'};
+	$pSYS->{'CGIPATH'} = $path;
 }
 
 #============================================================================================================
