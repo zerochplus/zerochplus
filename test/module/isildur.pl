@@ -333,8 +333,8 @@ sub InitSettingData
 		'BBS_TRIPCOLUMN'		=> 10,
 		'BBS_SUBTITLE'			=> '‚Ü‚½[‚èŽG’k',
 		'BBS_COLUMN_NUMBER'		=> 256,
-		'BBS_SAMBATIME'			=> 0,
-		'BBS_HOUSHITIME'		=> 60,
+		'BBS_SAMBATIME'			=> '',
+		'BBS_HOUSHITIME'		=> '',
 	);
 }
 
