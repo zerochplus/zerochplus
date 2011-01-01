@@ -314,10 +314,9 @@ sub InitSystemValue
 		'BBQ',		'BBX',		'SPAMCH',
 	);
 	
-	my $sname = $ENV{'SERVER_NAME'};
 	my $path = $ENV{'SCRIPT_NAME'};
-	$path =~ s|/[^/]+$||;
-	$pSYS->{'SERVER'} = "http://$sname";
+	$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
+	$pSYS->{'SERVER'} = 'http://' . $ENV{'SERVER_NAME'};
 	$pSYS->{'CGIPATH'} = $path;
 }
 
