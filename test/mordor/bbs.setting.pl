@@ -611,10 +611,12 @@ sub PrintOriginalSetting
 	$Page->Print("<input type=radio name=BBS_READONLY value=caps $readOnly[1]>キャップのみ書き込み可<br>");
 	$Page->Print("<input type=radio name=BBS_READONLY value=none $readOnly[0]>書き込み可<br>");
 	$Page->Print("</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">Samba秒数(0でSamba無効)</td><td colspan=3>");
-	$Page->Print("<input type=text size=8 name=BBS_SAMBATIME value=\"$setItem[8]\"></td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">Samba規制時の奉仕活動時間(分)</td><td colspan=3>");
-	$Page->Print("<input type=text size=8 name=BBS_HOUSHITIME value=\"$setItem[9]\"></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">Samba待機秒数</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_SAMBATIME value=\"$setItem[8]\">");
+	$Page->Print("(0でSamba無効、無記入でデフォルト値)</td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">Samba奉仕時間(分)</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_HOUSHITIME value=\"$setItem[9]\">");
+	$Page->Print("(無記入でデフォルト値)</td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETORIGIN');\"></td></tr></table>");
@@ -968,7 +970,7 @@ sub FunctionOriginalSetting
 	}
 	# 入力チェック
 	{
-		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER', 'BBS_SAMBATIME', 'BBS_HOUSHITIME');
+		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER');
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}

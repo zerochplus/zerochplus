@@ -505,9 +505,9 @@ sub IsRegulation
 		
 		
 		my ($n, $tm) = (0, 0);
-		$Samba = int $oSET->Get('BBS_SAMBATIME');
+		$Samba = int ($oSET->Get('BBS_SAMBATIME', '') eq '' ? $oSYS->Get('DEFSAMBA') : $oSET->Get('BBS_SAMBATIME'));
+		$Houshi = int ($oSET->Get('BBS_HOUSHITIME', '') eq '' ? $oSYS->Get('DEFHOUSHI') : $oSET->Get('BBS_HOUSHITIME'));
 		$Holdtm = int $oSYS->Get('SAMBATM');
-		$Houshi = int $oSET->Get('BBS_HOUSHITIME');
 		
 		# Samba
 		if ($Samba && ! $oSEC->IsAuthority($capID, 18, $bbs)) {

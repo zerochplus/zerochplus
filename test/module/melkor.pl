@@ -285,8 +285,8 @@ sub InitSystemValue
 		
 		# ここからぜろプラオリジナル
 		'SAMBATM'	=> 10,										# 連続書き込み規制時間(秒)
-	#	'ISSAMBA'	=> 0,										# Samba規制
-	#	'HOUSHI'	=> 10,										# Samba規制時間(分)
+		'DEFSAMBA'	=> 10,										# Samba規制
+		'DEFHOUSHI'	=> 60,										# Samba規制時間(分)
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
@@ -308,8 +308,7 @@ sub InitSystemValue
 		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
 		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBATM',	
-	#	'ISSAMBA',	'HOUSHI',	
+		'SAMBATM',	'DEFSAMBA',	'DEFHOUSHI',
 		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
 		'BBQ',		'BBX',		'SPAMCH',
 	);

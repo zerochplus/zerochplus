@@ -540,14 +540,16 @@ sub PrintPlusSecSetting
 {
 	
 	my ($Page, $SYS, $Form) = @_;
-	my ($Kakiko, $Samba, $isSamba, $Houshi, $Trip12, $BBQ, $BBX, $SpamCh);
-	my ($kakiko, $trip12, $issamba, $bbq, $bbx, $spamch);
+	my ($Kakiko, $Samba, $DefSamba, $DefHoushi, $Trip12, $BBQ, $BBX, $SpamCh);
+	my ($kakiko, $trip12, $bbq, $bbx, $spamch);
 	my ($common);
 	
 	$SYS->Set('_TITLE', 'System Regulation Setting');
 	
 	$Kakiko		= $SYS->Get('KAKIKO');
 	$Samba		= $SYS->Get('SAMBATM');
+	$DefSamba	= $SYS->Get('DEFSAMBA');
+	$DefHoushi	= $SYS->Get('DEFHOUSHI');
 	$Trip12		= $SYS->Get('TRIP12');
 	$BBQ		= $SYS->Get('BBQ');
 	$BBX		= $SYS->Get('BBX');
@@ -572,11 +574,13 @@ sub PrintPlusSecSetting
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">連続投稿規制</td></tr>\n");
 	$Page->Print("<tr><td>連続投稿規制秒数を入力(0で規制無効)</td>");
 	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
-	$Page->Print("<tr><td>※Sambaの設定が優先されます。Sambaの設定は板別です</td>");
-#	$Page->Print("<tr><td>Sambaにする</td>");
-#	$Page->Print("<td><input type=checkbox name=ISSAMBA $issamba value=on></td></tr>\n");
-#	$Page->Print("<tr><td>Samba規制分数を入力(0で規制無効)</td>");
-#	$Page->Print("<td><input type=text size=60 name=HOUSHI value=\"$Houshi\"></td></tr>\n");
+	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">Samba規制</td></tr>\n");
+	$Page->Print("<tr><td>Samba待機秒数デフォルト値を入力(0で規制無効)<br>");
+	$Page->Print("<small>Sambaの設定は掲示板ごとに設定できます</small></td>");
+	$Page->Print("<td><input type=text size=60  name=DEFSAMBA value=\"$DefSamba\"></td></tr>\n");
+	$Page->Print("<tr><td>Samba奉仕時間(分)デフォルト値を入力</td>");
+	$Page->Print("<td><input type=text size=60 name=DEFHOUSHI value=\"$DefHoushi\"></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">新仕様トリップ</td></tr>\n");
 	$Page->Print("<tr><td>新仕様トリップ(12桁 =SHA-1)を有効にする<br><small>要Digest::SHA1モジュール</small></td>");
@@ -955,8 +959,8 @@ sub FunctionPlusSecSetting
 	
 	$SYSTEM->Set('KAKIKO', ($Form->Equal('KAKIKO', 'on') ? 1 : 0));
 	$SYSTEM->Set('SAMBATM', $Form->Get('SAMBATM'));
-#	$SYSTEM->Set('ISSAMBA', ($Form->Equal('ISSAMBA', 'on') ? 1 : 0));
-#	$SYSTEM->Set('HOUSHI', $Form->Get('HOUSHI'));
+	$SYSTEM->Set('DEFSAMBA', $Form->Get('DEFSAMBA'));
+	$SYSTEM->Set('DEFHOUSHI', $Form->Get('DEFHOUSHI'));
 	$SYSTEM->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	$SYSTEM->Set('BBQ', ($Form->Equal('BBQ', 'on') ? 1 : 0));
 	$SYSTEM->Set('BBX', ($Form->Equal('BBX', 'on') ? 1 : 0));
@@ -967,8 +971,8 @@ sub FunctionPlusSecSetting
 	{
 		push @$pLog, '　　　 2重カキコ規制：' . $SYSTEM->Get('KAKIKO');
 		push @$pLog, '　　　 連続投稿規制秒数：' . $SYSTEM->Get('SAMBATM');
-#		push @$pLog, '　　　 Samba規制：' . $SYSTEM->Get('ISSAMBA');
-#		push @$pLog, '　　　 Samba規制分数：' . $SYSTEM->Get('HOUSHI');
+		push @$pLog, '　　　 Samba待機秒数：' . $SYSTEM->Get('DEFSAMBA');
+		push @$pLog, '　　　 Samba奉仕時間：' . $SYSTEM->Get('DEFHOUSHI');
 		push @$pLog, '　　　 12桁トリップ：' . $SYSTEM->Get('TRIP12');
 		push @$pLog, '　　　 BBQ：' . $SYSTEM->Get('BBQ');
 		push @$pLog, '　　　 BBX：' . $SYSTEM->Get('BBX');
