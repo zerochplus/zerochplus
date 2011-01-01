@@ -496,60 +496,60 @@ sub IsRegulation
 	}
 	# ƒŒƒX‘‚«‚İƒ‚[ƒh
 	else {
-		my ($LOGs, $LOGh, $Samba, $Houshi, $Holdtm);
 		require './module/peregrin.pl';
 		
-		$LOGs = PEREGRIN->new;
-		$LOGs->Load($oSYS, 'SMB');
-		
-		$LOGh = PEREGRIN->new;
-		$LOGh->Load($oSYS, 'SBH');
-		
-		
-		my ($n, $tm) = (0, 0);
-		$Samba = int ($oSET->Get('BBS_SAMBATIME', '') eq '' ? $oSYS->Get('DEFSAMBA') : $oSET->Get('BBS_SAMBATIME'));
-		$Houshi = int ($oSET->Get('BBS_HOUSHITIME', '') eq '' ? $oSYS->Get('DEFHOUSHI') : $oSET->Get('BBS_HOUSHITIME'));
-		$Holdtm = int $oSYS->Get('SAMBATM');
-		
-		# Samba
-		if ($Samba && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
-			if ($Houshi) {
-				my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $koyuu);
-				if ($ishoushi) {
-					$oSYS->Set('WAIT', $htm);
-					#$oSYS->Set('WAIT', $Houshi);
-					return 507;
+		if (! $oSEC->IsAuthority($capID, 18, $bbs) || ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+			my ($LOGs, $LOGh, $Samba, $Houshi, $Holdtm);
+			$LOGs = PEREGRIN->new;
+			$LOGs->Load($oSYS, 'SMB');
+			
+			$LOGh = PEREGRIN->new;
+			$LOGh->Load($oSYS, 'SBH');
+			
+			my ($n, $tm) = (0, 0);
+			$Samba = int ($oSET->Get('BBS_SAMBATIME', '') eq '' ? $oSYS->Get('DEFSAMBA') : $oSET->Get('BBS_SAMBATIME'));
+			$Houshi = int ($oSET->Get('BBS_HOUSHITIME', '') eq '' ? $oSYS->Get('DEFHOUSHI') : $oSET->Get('BBS_HOUSHITIME'));
+			$Holdtm = int $oSYS->Get('SAMBATM');
+			
+			# Samba
+			if ($Samba && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
+				if ($Houshi) {
+					my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $koyuu);
+					if ($ishoushi) {
+						$oSYS->Set('WAIT', $htm);
+						#$oSYS->Set('WAIT', $Houshi);
+						return 507;
+					}
 				}
+				
+				($n, $tm) = $LOGs->IsSamba($Samba, $koyuu);
+			}
+				
+			# ’ZŠÔ“Še (Samba—Dæ)
+			if (! $n && $Holdtm && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+				$tm = $LOGs->IsTime($Holdtm, $koyuu);
 			}
 			
-			($n, $tm) = $LOGs->IsSamba($Samba, $koyuu);
-		}
+			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
+			$LOGs->Save($oSYS);
 			
-		# ’ZŠÔ“Še (Samba—Dæ)
-		if (! $n && $Holdtm && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
-			$tm = $LOGs->IsTime($Holdtm, $koyuu);
+			if ($n >= 6 && $Houshi) {
+				$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
+				$LOGh->Save($oSYS);
+				$oSYS->Set('WAIT', $Houshi);
+				return 507;
+			}
+			elsif ($n) {
+				$oSYS->Set('SAMBATIME', $Samba);
+				$oSYS->Set('WAIT', $tm);
+				$oSYS->Set('SAMBA', $n);
+				return ($n > 3 && $Houshi ? 506 : 505);
+			}
+			elsif ($tm > 0) {
+				$oSYS->Set('WAIT', $tm);
+				return 503;
+			}
 		}
-			
-		$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
-		$LOGs->Save($oSYS);
-		
-		if ($n >= 6 && $Houshi) {
-			$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
-			$LOGh->Save($oSYS);
-			$oSYS->Set('WAIT', $Houshi);
-			return 507;
-		}
-		elsif ($n) {
-			$oSYS->Set('SAMBATIME', $Samba);
-			$oSYS->Set('WAIT', $tm);
-			$oSYS->Set('SAMBA', $n);
-			return ($n > 3 && $Houshi ? 506 : 505);
-		}
-		elsif ($tm > 0) {
-			$oSYS->Set('WAIT', $tm);
-			return 503;
-		}
-		
 		
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
