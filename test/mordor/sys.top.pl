@@ -179,8 +179,8 @@ sub PrintNoticeList
 	
 	# ï\é¶êîÇÃê›íË
 	$listNum	= @noticeSet;
-	$dispNum	= $Form->Get('DISPNUM_NOTICE', 5);
-	$dispSt		= $Form->Get('DISPST_NOTICE', 0);
+	$dispNum	= $Form->Get('DISPNUM_NOTICE', 5) || 5;
+	$dispSt		= $Form->Get('DISPST_NOTICE', 0) || 0;
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
 	
@@ -476,11 +476,10 @@ sub FunctionNoticeCreate
 	$date = time;
 	$subject = $Form->Get('NOTICE_TITLE');
 	$content = $Form->Get('NOTICE_CONTENT');
-	require ('./module/galadriel.pl');
+	
+	require './module/galadriel.pl';
 	GALADRIEL::ConvertCharacter1(undef, \$subject, 0);
 	GALADRIEL::ConvertCharacter1(undef, \$content, 2);
-	# â¸çsïœä∑
-	$content =~ s/\r\n|\r|\n/<br>/g;
 	
 	if ($Form->Equal('NOTICE_KIND', 'ALL')) {
 		$users = '*';
