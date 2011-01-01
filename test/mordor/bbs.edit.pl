@@ -531,11 +531,19 @@ sub PrintLastEdit
 {
 	my ($Page, $SYS, $Form) = @_;
 	my ($common, $isAuth, $data, $isLast, @elem, $path);
+	my ($resmax, $resmax1, $resmaxz, $resmaxz1);
 	
 	$SYS->Set('_TITLE', 'BBS 1001 Edit');
 	$Form->DecodeForm(1);
 	
-	$data = '１００１<><>Over 1000 Thread<>このスレッドは１０００を超えました。<br>';
+	$resmax		= $SYS->Get('RESMAX');
+	$resmax1	= $resmax + 1;
+	$resmaxz	= $resmax;
+	$resmaxz1	= $resmax1;
+	$resmaxz	=~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
+	$resmaxz1	=~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
+	
+	$data = "$resmaxz1<><>Over $resmax Thread<>このスレッドは$resmaxzを超えました。<br>";
 	$data .= 'もう書けないので、新しいスレッドを立ててくださいです。。。<>';
 	if (! $Form->IsExist('LAST_FROM')) {
 		# 1000.txtの読み込み
@@ -554,18 +562,19 @@ sub PrintLastEdit
 		}
 		@elem = split(/<>/, $data);
 		$elem[3] = substr $elem[3], 1 if (substr($elem[3], 0, 1) eq ' ');
-		$elem[3] = substr $elem[3], 0, -2 if (substr($elem[3], -1) eq ' ');
+		$elem[3] = substr $elem[3], 0, -1 if (substr($elem[3], -1) eq ' ');
 	}
 	else {
-		my $formLast = join('<>',
+		my @formLast = (
 			$Form->Get('LAST_FROM', ''),
 			$Form->Get('LAST_mail', ''),
 			$Form->Get('LAST_date', ''),
 			$Form->Get('LAST_MESSAGE', ''),
 			''
 		);
-		if ($formLast ne '<><><><>'){
-			$data = $formLast;
+		$formLast[$_] =~ s/<>/&lt;>/ for (0 .. 4);
+		if (join('<>', @formLast) ne '<><><><>'){
+			$data = join('<>', @formLast);
 			$isLast = 1;
 		}
 		@elem = split(/<>/, $data);
@@ -584,8 +593,8 @@ sub PrintLastEdit
 	$Page->Print("<tr><td>");
 	
 	# プレビュー表示
-	$Page->Print("<dt>1001 名前：<b><font color=green>$elem[0]</font></b>")			if ($elem[1] eq '');
-	$Page->Print("<dt>1001 名前：<b><a href=\"mailto:$elem[1]\">$elem[0]</a></b>")	if ($elem[1] ne '');
+	$Page->Print("<dt>$resmax1 名前：<b><font color=green>$elem[0]</font></b>")			if ($elem[1] eq '');
+	$Page->Print("<dt>$resmax1 名前：<b><a href=\"mailto:$elem[1]\">$elem[0]</a></b>")	if ($elem[1] ne '');
 	$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd>");
 	@elem = ('', '', '', '', '') if (! $isLast);
 	
