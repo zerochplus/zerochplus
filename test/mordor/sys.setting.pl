@@ -571,8 +571,8 @@ sub PrintPlusSecSetting
 	$Page->Print("<tr><td>“¯‚¶IP‚©‚ç‚Ì‘‚«‚İ‚Ì•¶š”‚ª•Ï‰»‚µ‚È‚¢ê‡‹K§‚·‚é</td>");
 	$Page->Print("<td><input type=checkbox name=KAKIKO $kakiko value=on></td></tr>\n");
 	
-	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">˜A‘±“Še‹K§</td></tr>\n");
-	$Page->Print("<tr><td>˜A‘±“Še‹K§•b”‚ğ“ü—Í(0‚Å‹K§–³Œø)</td>");
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">’ZŠÔ“Še‹K§</td></tr>\n");
+	$Page->Print("<tr><td>’ZŠÔ“Še‹K§•b”‚ğ“ü—Í(0‚Å‹K§–³Œø)</td>");
 	$Page->Print("<td><input type=text size=60 name=SAMBATM value=\"$Samba\"></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">Samba‹K§</td></tr>\n");

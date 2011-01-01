@@ -284,9 +284,9 @@ sub InitSystemValue
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
-		'SAMBATM'	=> 10,										# 連続書き込み規制時間(秒)
-		'DEFSAMBA'	=> 10,										# Samba規制
-		'DEFHOUSHI'	=> 60,										# Samba規制時間(分)
+		'SAMBATM'	=> 10,										# 短時間投稿規制秒数
+		'DEFSAMBA'	=> 10,										# Samba待機秒数デフォルト値
+		'DEFHOUSHI'	=> 60,										# Samba奉仕時間(分)デフォルト値
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
