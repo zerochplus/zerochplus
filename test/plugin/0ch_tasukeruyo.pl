@@ -81,19 +81,19 @@ sub execute
 	my	($sys, $form, $type) = @_;
 	
 	if ( $type & 16 ) {
-		my	($from, $host, $agent, $tasuke, $mes, $ua);
+		my	($from, $koyuu, $agent, $tasuke, $mes, $ua);
 		$from	= $form->Get('FROM');
-		$host	= $form->Get('HOST');
+		$koyuu	= $sys->Get('KOYUU');
 		$agent	= $sys->Get('AGENT');
 		$mes	= $form->Get('MESSAGE');
 		$ua		= $ENV{'HTTP_USER_AGENT'};
 		
 		if ( $from =~ /tasukeruyo/ ) {
-			if ( $agent eq "O" || $agent eq "P" || $agent eq "i" ) {
-				$tasuke = "$ENV{'REMOTE_HOST'}($host)";
+			if ( $agent eq 'O' || $agent eq 'P' || $agent eq 'i' ) {
+				$tasuke = "$ENV{'REMOTE_HOST'}($koyuu)";
 			}
 			else {
-				$tasuke = "$host($ENV{'REMOTE_ADDR'})";
+				$tasuke = "$ENV{'REMOTE_HOST'}($ENV{'REMOTE_ADDR'})";
 			}
 			
 			$from =~ s#([\x81-\x9f\xe0-\xfc][\x40-\x7e\x80-\xfc]|[^\xa1-\xdf]|^)tasukeruyo#$1</b>$tasuke<b>#g;

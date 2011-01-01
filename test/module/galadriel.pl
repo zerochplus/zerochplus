@@ -473,7 +473,7 @@ sub GetRemoteHost
 sub MakeID
 {
 	my $this = shift;
-	my ($server, $mode, $remote, $bbs, $column) = @_;
+	my ($server, $mode, $koyuu, $bbs, $column) = @_;
 	my @times = localtime time;
 	my (@nums, $ret, $str, $uid);
 	
@@ -481,11 +481,11 @@ sub MakeID
 	if ( $mode eq 'O' || $mode eq 'P' ) {
 		# 端末番号 もしくは p2-user-hash の上位3文字を取得
 		#$uid = main::GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
-		if (length($remote) > 8) {
-			$uid = substr($remote, 0, 2) . substr($remote, -6, 3);
+		if (length($koyuu) > 8) {
+			$uid = substr($koyuu, 0, 2) . substr($koyuu, -6, 3);
 		}
 		else {
-			$uid = substr($remote, 0, 5);
+			$uid = substr($koyuu, 0, 5);
 		}
 	}
 	else {
@@ -771,6 +771,7 @@ sub GetDateFromSerial
 #
 #	ID部分文字列生成
 #	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
 #	@param	$Set	ISILDUR
 #	@param	$Form	SAMWISE
 #	@param	$Sec	
@@ -782,10 +783,9 @@ sub GetDateFromSerial
 sub GetIDPart
 {
 	my $this = shift;
-	my ($Set, $Form, $Sec, $id, $capID, $agent) = @_;
-	my ($host, $mode, @mail);
+	my ($Set, $Form, $Sec, $id, $capID, $koyuu, $agent) = @_;
+	my ($mode, @mail);
 	
-	$host = $Form->Get('HOST');
 	$mode = '';
 	
 	# PC・携帯識別番号付加
@@ -803,35 +803,35 @@ sub GetIDPart
 	}
 	# ホスト表示
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
-		if ( $mode eq "O" ) {
-			return " HOST:$host $ENV{'REMOTE_HOST'}".( $mode ne "" ? " $mode" : "" );
+		if ( $mode eq 'O' ) {
+			return " HOST:$koyuu $ENV{'REMOTE_HOST'}".( $mode ne '' ? " $mode" : '' );
 		}
-		elsif ( $mode eq "P" ) {
-			return " HOST:$host $ENV{'REMOTE_HOST'} ($ENV{'REMOTE_ADDR'})".( $mode ne "" ? " $mode" : "" );
+		elsif ( $mode eq 'P' ) {
+			return " HOST:$koyuu $ENV{'REMOTE_HOST'} ($ENV{'REMOTE_ADDR'})".( $mode ne '' ? " $mode" : '' );
 		}
 		else {
-			return " HOST:$host".( $mode ne "" ? " $mode" : "" );
+			return " HOST:$koyuu".( $mode ne '' ? " $mode" : '' );
 		}
 	}
 	# IP表示 Ver.Siberia
 	if ($Set->Equal('BBS_DISP_IP', 'siberia')){
-		if ( $mode eq "P" ) {
-			return " 発信元:$ENV{'REMOTE_P2'}".( $mode ne "" ? " $mode" : "" );
+		if ( $mode eq 'P' ) {
+			return " 発信元:$ENV{'REMOTE_P2'}".( $mode ne '' ? " $mode" : '' );
 		}
 		else {
-			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne "" ? " $mode" : "" );
+			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne '' ? " $mode" : '' );
 		}
 	}
 	# IP表示 Ver.Sakhalin
 	if ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
-		if ( $mode eq "P" ) {
-			return " 発信元:$ENV{'REMOTE_P2'} ($host)".( $mode ne "" ? " $mode" : "" );
+		if ( $mode eq 'P' ) {
+			return " 発信元:$ENV{'REMOTE_P2'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
 		}
-		elsif ( $mode eq "O" ) {
-			return " 発信元:$ENV{'REMOTE_ADDR'} ($host)".( $mode ne "" ? " $mode" : "" );
+		elsif ( $mode eq 'O' ) {
+			return " 発信元:$ENV{'REMOTE_ADDR'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
 		}
 		else {
-			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne "" ? " $mode" : "" );
+			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne '' ? " $mode" : '' );
 		}
 	}
 	
@@ -845,9 +845,10 @@ sub GetIDPart
 	}
 	# 任意IDの場合
 	@mail = ('mail');
-	if (!$Form->IsInput(\@mail)) {
+	if (! $Form->IsInput(\@mail)) {
 		return " ID:$id";
 	}
+	
 	return " ID:???$mode";
 }
 

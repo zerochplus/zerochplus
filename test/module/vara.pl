@@ -150,9 +150,9 @@ sub Write
 	$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 	
 	$err		= 0;
-	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oForm->Get('HOST'), $oSys->Get('BBS'), 8);
+	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
 	$date		= $oConv->GetDate($oSet, $oSys->Get('MSEC'));
-	$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('AGENT'));
+	$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('KOYUU'), $oSys->Get('AGENT'));
 	
 	# プラグイン「 BE(HS)っぽいもの 」ver.0.x.x
 	$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
@@ -166,7 +166,7 @@ sub Write
 		require './module/peregrin.pl';
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('HOST'), $data, $oSys->Get('AGENT', 0));
+		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('KOYUU'), $data, $oSys->Get('AGENT', 0));
 		$LOG->Save($oSys);
 	}
 	
@@ -274,12 +274,13 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet, $text, $host, $from);
+	my ($Sys, $Form, @pluginSet, $text, $host, $koyuu, $from);
 	
 	$Sys	= $this->{'SYS'};
 	$Form	= $this->{'FORM'};
-	$host	= $Form->Get('HOST');
 	$from	= $Form->Get('FROM');
+	$host	= $ENV{'REMOTE_HOST'};
+	$koyuu	= $Sys->Get('KOYUU');
 	
 	# 規制ユーザ・NGワードチェック
 	{
@@ -397,17 +398,18 @@ sub IsRegulation
 {
 	my ($this) = @_;
 	my ($oSYS, $oSET, $oSEC);
-	my ($err, $host, $bbs, $datPath, $capID, $from, $mode);
+	my ($err, $host, $koyuu, $bbs, $datPath, $capID, $from, $mode);
 	
 	$oSYS		= $this->{'SYS'};
 	$oSET		= $this->{'SET'};
 	$oSEC		= $this->{'SECURITY'};
-	$host		= $this->{'FORM'}->Get('HOST');
 	$bbs		= $this->{'FORM'}->Get('bbs');
 	$from		= $this->{'FORM'}->Get('FROM');
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
 	$mode		= $oSYS->Get('AGENT');
+	$host		= $ENV{'REMOTE_HOST'};
+	$koyuu		= $oSYS->Get('KOYUU');
 	
 	# レス書き込みモード時のみ
 	if ($oSYS->Equal('MODE', 2)) {
@@ -485,11 +487,11 @@ sub IsRegulation
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			if ($LOG->Search($host, 3)) {
+			if ($LOG->Search($koyuu, 3)) {
 				return 500;
 			}
 		}
-		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
 		$LOG->Save($oSYS);
 	}
 	# レス書き込みモード
@@ -512,7 +514,7 @@ sub IsRegulation
 		# Samba
 		if ($Samba && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
 			if ($Houshi) {
-				my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $host);
+				my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $koyuu);
 				if ($ishoushi) {
 					$oSYS->Set('WAIT', $htm);
 					#$oSYS->Set('WAIT', $Houshi);
@@ -520,19 +522,19 @@ sub IsRegulation
 				}
 			}
 			
-			($n, $tm) = $LOGs->IsSamba($Samba, $host);
+			($n, $tm) = $LOGs->IsSamba($Samba, $koyuu);
 		}
 			
 		# 短時間投稿 (Samba優先)
 		if (! $n && $Holdtm && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
-			$tm = $LOGs->IsTime($Holdtm, $host);
+			$tm = $LOGs->IsTime($Holdtm, $koyuu);
 		}
 			
-		$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+		$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
 		$LOGs->Save($oSYS);
 		
 		if ($n >= 6 && $Houshi) {
-			$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $host);
+			$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
 			$LOGh->Save($oSYS);
 			$oSYS->Set('WAIT', $Houshi);
 			return 507;
@@ -555,7 +557,7 @@ sub IsRegulation
 		# レス書き込み(連続投稿)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
 			if ($oSET->Get('timeclose') ne "" && $oSET->Get('timecount') ne "" ) {
-				if ($LOG->Search($host, 2) >= $oSET->Get('timeclose')) {
+				if ($LOG->Search($koyuu, 2) >= $oSET->Get('timeclose')) {
 					return 501;
 				}
 			}
@@ -563,13 +565,13 @@ sub IsRegulation
 		# レス書き込み(二重投稿)
 		if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
 			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
-				if ($LOG->Search($host, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
+				if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
 					return 502;
 				}
 			}
 		}
 		
-		#$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $host, $datas, $mode);
+		#$LOG->Set($oSET, length($this->{'FORM'}->Get('MESSAGE')), $oSYS->Get('VERSION'), $koyuu, $datas, $mode);
 		#$LOG->Save($oSYS);
 	}
 	
@@ -610,7 +612,7 @@ sub NormalizationNameMail
 	$mail		= $Form->Get('mail');
 	$subject	= $Form->Get('subject');
 	$bbs		= $Form->Get('bbs');
-	$host		= $Form->Get('HOST');
+	$host		= $ENV{'REMOTE_HOST'};
 	
 	# キャップ情報取得
 	$capID = $Sys->Get('CAPID');
@@ -829,7 +831,7 @@ sub SaveHost
 	$Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/log/HOST", 500, 2 | 4) == 0) {
-		$Logger->Put($Form->Get('HOST'), $Sys->Get('KEY'), $Sys->Get('MODE'));
+		$Logger->Put($Sys->Get('KOYUU'), $Sys->Get('KEY'), $Sys->Get('MODE'));
 		$Logger->Write();
 	}
 }

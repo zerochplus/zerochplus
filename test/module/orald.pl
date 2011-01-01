@@ -108,7 +108,7 @@ sub Print
 {
 	my $this = shift;
 	my ($Sys, $Page, $err, $mode) = @_;
-	my ($Form, $SYS, $version, $bbsPath, $message, $host);
+	my ($Form, $SYS, $version, $bbsPath, $message, $koyuu);
 	
 	$Form		= $Sys->{'FORM'};
 	$SYS		= $Sys->{'SYS'};
@@ -125,17 +125,14 @@ sub Print
 	}
 	
 	# リモートホストの取得
-	$host = $Form->Get('HOST');
-	if ($host eq '') {
-		$host = $Sys->{'CONV'}->GetRemoteHost();
-	}
+	$koyuu = $SYS->Get('KOYUU');
 	
 	# エラーログを保存
 	{
 		require './module/peregrin.pl';
 		my $P = PEREGRIN->new;
 		$P->Load($SYS, 'ERR', '');
-		$P->Set('', $err, $version, $host, $mode);
+		$P->Set('', $err, $version, $koyuu, $mode);
 		$P->Save($SYS);
 	}
 	
@@ -180,7 +177,7 @@ sub Print
 </div>
 
 <blockquote>
-ホスト<b>$host</b><br>
+ホスト<b>$koyuu</b><br>
 <br>
 名前： <b>$name</b><br>
 E-mail： $mail<br>

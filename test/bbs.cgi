@@ -142,6 +142,7 @@ sub Initialize
 	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
 	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
+	$Sys->{'SYS'}->Set('KOYUU', $ENV{'REMOTE_HOST'});
 	
 	# Œg‘Ñ‚Ìê‡‚Í‹@Žíî•ñ‚ðÝ’è
 	if ($Sys->{'SYS'}->Get('AGENT') !~ /^[0P]$/) {
@@ -151,7 +152,7 @@ sub Initialize
 			return 950;
 		}
 		else {
-			$Sys->{'FORM'}->Set('HOST', $product);
+			$Sys->{'SYS'}->Set('KOYUU', $product);
 		}
 	}
 	
