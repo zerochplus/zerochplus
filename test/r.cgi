@@ -264,7 +264,7 @@ sub PrintReadFoot
 {
 	my ($Sys, $Page) = @_;
 	my ($oSYS, $Conv, $bbs, $key, $ver, $rmax, $pathNext, $pathPrev);
-	my ($baseBBS, $pathBBS, $pathAll, $pathLast, $resNum);
+	my ($baseBBS, $pathBBS, $pathAll, $pathLast, $resNum, $cgipath);
 	
 	# 前準備
 	$oSYS		= $Sys->{'SYS'};
@@ -274,7 +274,8 @@ sub PrintReadFoot
 	$ver		= $oSYS->Get('VERSION');
 	$rmax		= $oSYS->Get('RESMAX');
 	
-	$baseBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
+	$cgipath	= $oSYS->Get('CGIPATH');
+	$baseBBS	= "$cgipath/" . $oSYS->Get('BBSPATH') . "/$bbs";
 	$pathBBS	= "$baseBBS/i/index.html";
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
@@ -307,18 +308,12 @@ sub PrintReadFoot
 	# 投稿フォームの表示
 	# レス最大数を超えている場合はフォーム表示しない
 	if ($rmax > $Sys->{'DAT'}->Size()) {
-		my ($tm, $cgiPath);
-		
-		$tm			= time;
-		$cgiPath	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
-		
 $Page->Print(<<HTML);
 <hr>
 <a name=res></a>
-<form method="POST" action="$cgiPath/bbs.cgi?guid=ON" utn>
+<form method="POST" action="$cgipath/bbs.cgi?guid=ON" utn>
 <input type="hidden" name="bbs" value="$bbs">
 <input type="hidden" name="key" value="$key">
-<input type="hidden" name="time" value="$tm">
 <input type="hidden" name="mb" value="on">
 名前<br><input type="text" name="FROM"><br>
 E-mail<br><input type="text" name="mail"><br>

@@ -116,7 +116,8 @@ sub Print
 	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
 	$message	= $this->{'MESSAGE'}->{$err};
 	$message	=~ s/\x5cn/\n/g;
-	$mode = '0' if (! defined $mode);
+	$mode		= '0' if (! defined $mode);
+	$mode		= 'O' if ($Form->Equal('mb', 'on'));
 	
 	# エラーメッセージの置換
 	while ($message =~ /{!(.*?)!}/) {

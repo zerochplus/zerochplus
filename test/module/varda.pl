@@ -144,7 +144,7 @@ sub CreateIIndex
 	$bbsSetting	= $this->{'SET'};
 	$oConv		= $this->{'CONV'};
 	
-	$cgiPath	= $Sys->Get('SERVER') . $Sys->Get('CGIPATH');
+	$cgiPath	= $Sys->Get('CGIPATH');
 	$title		= $bbsSetting->Get('BBS_TITLE');
 	$menuNum	= $bbsSetting->Get('BBS_MAX_MENU_THREAD');
 	$code		= $this->{'CODE'};
@@ -178,8 +178,13 @@ sub CreateIIndex
 	
 	# フッタ部分の出力
 	$path = "$cgiPath/p.cgi?bbs=$bbs&st=$i";
-	$Page->Print("<hr><a href=\"$cgiPath/bbs.cgi?bbs=$bbs&mobile=true\">");
-	$Page->Print("スレッド作成</a> <a href=\"$path\">続き</a><hr></body></html>\n");
+	$Page->Print("<hr>");
+	$Page->Print("<a href=\"$path\">続き</a>\n");
+	$Page->Print("<form action=\"$cgiPath/bbs.cgi\" method=\"POST\" utn>");
+	$Page->Print("<input type=hidden name=bbs value=$bbs>");
+	$Page->Print("<input type=hidden name=mb value=on>");
+	$Page->Print("<input type=submit value=\"スレッド作成\">");
+	$Page->Print("</form><hr></body></html>\n");
 	
 	# i/index.htmlに書き込み
 	$path = $Sys->Get('BBSPATH') . "/$bbs";

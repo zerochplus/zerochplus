@@ -162,7 +162,8 @@ sub Initialize
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
-	if ($Sys->{'SYS'}->Equal('AGENT', 'O') && $Sys->{'FORM'}->IsExist('mobile')) {
+	# $Sys->{'SYS'}->Equal('AGENT', 'O') && 
+	if ($Sys->{'FORM'}->Equal('mb', 'on') && ! $Sys->{'FORM'}->IsExist('time')) {
 		return 9003;
 	}
 	
@@ -347,6 +348,7 @@ sub PrintBBSMobileThreadCreate
 	$Page->Print("<textarea name=MESSAGE></textarea><br>");
 	$Page->Print("<input type=hidden name=bbs value=$bbs>");
 	$Page->Print("<input type=hidden name=time value=$tm>");
+	$Page->Print("<input type=hidden name=mb value=on>");
 	$Page->Print("<input type=submit value=\"スレッド作成\">");
 	$Page->Print("</form></body></html>");
 }
@@ -565,7 +567,7 @@ sub PrintBBSJump
 	
 	# 携帯用表示
 	if ( $Form->Equal('mb', 'on') || $SYS->Equal('AGENT', 'O') ) {
-		$bbsPath = $SYS->Get('SERVER').$SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10';
+		$bbsPath = $SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10';
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
 		$Page->Print("<a href=\"$bbsPath\">こちら</a>");
