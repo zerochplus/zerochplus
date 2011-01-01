@@ -476,10 +476,9 @@ sub FunctionNoticeCreate
 	$date = time;
 	$subject = $Form->Get('NOTICE_TITLE');
 	$content = $Form->Get('NOTICE_CONTENT');
-	# XSS‘Îô
-	$content =~ s/&/&amp;/g;
-	$content =~ s/</&lt;/g;
-	$content =~ s/>/&gt;/g;
+	require ('./module/galadriel.pl');
+	GALADRIEL::ConvertCharacter1(undef, \$subject, 0);
+	GALADRIEL::ConvertCharacter1(undef, \$content, 2);
 	# ‰üs•ÏŠ·
 	$content =~ s/\r\n|\r|\n/<br>/g;
 	
