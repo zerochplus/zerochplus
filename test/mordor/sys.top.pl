@@ -476,6 +476,11 @@ sub FunctionNoticeCreate
 	$date = time;
 	$subject = $Form->Get('NOTICE_TITLE');
 	$content = $Form->Get('NOTICE_CONTENT');
+	# XSS‘Îô
+	$content =~ s/&/&amp;/g;
+	$content =~ s/</&lt;/g;
+	$content =~ s/>/&gt;/g;
+	# ‰üs•ÏŠ·
 	$content =~ s/\r\n|\r|\n/<br>/g;
 	
 	if ($Form->Equal('NOTICE_KIND', 'ALL')) {
