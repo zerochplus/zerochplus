@@ -244,7 +244,7 @@ sub PrintReadContents
 	
 	# 1表示フラグがTRUEで開始が1でなければ1を表示する
 	if ($elem[3] == 0 && $elem[1] != 1) {
-		PrintResponse($Sys, $Page, 1);
+		PrintResponse($Sys, $Page, 1, 0);
 	}
 	# 残りのレスを表示する
 	for ($i = $elem[1] ; $i <= $elem[2] ; $i++) {
@@ -377,12 +377,13 @@ sub PrintResponse
 	# AASリンク取得
 	my ( $server, $path, $obama );
 	
-	$server	= $oSYS->Get('SERVER')||$ENV{'SERVER_NAME'};
+	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oSYS->Get('CGIPATH');
-	$path	=~ s|(.+)?/.+$|$1|i;
+	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBS') . '/';
+	$path	=~ s|/\./|/|g while ($path =~ m|/\./|);
+	$path	=~ s|/[^/\.]+/\.\./|/|g while ($path =~ m|/[^/\.]+/\.\./|);
 	$path	=~ s|/|+|gi;
-	$obama	= "http://example.ddo.jp/aas/a.i/".$server.$path."/".$oSYS->Get('BBS')."/".$oSYS->Get('KEY')."/".$n."?guid=ON";
+	$obama	= "http://example.ddo.jp/aas/a.i/$server$path/" . $oSYS->Get('KEY') . "/$n?guid=ON";
 		
 	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
 	$Page->Print("<hr>[$n]$elem[0]</b>：$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");
