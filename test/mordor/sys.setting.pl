@@ -261,7 +261,7 @@ sub PrintBasicSetting
 	$Page->Print("<td><input type=text size=60 name=SERVER value=\"$server\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">CGI設置ディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
 	$Page->Print("例: <span class=\"GrayColor\">http://example.jp</span> <span class=\"UnderLine\">/test</span><br>");
-	$Page->Print("例: <span class=\"GrayColor\">http://example.net/~user</span> <span class=\"UnderLine\">/test</span></span></td>");
+	$Page->Print("例: <span class=\"GrayColor\">http://example.net</span> <span class=\"UnderLine\">/~user/test</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=CGIPATH value=\"$cgi\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">掲示板配置ディレクトリ(相対パス)<br><span class=\"NormalStyle\">");
 	$Page->Print("例: <span class=\"GrayColor\">http://example.jp/test/</span> <span class=\"UnderLine\">..</span><br>");
