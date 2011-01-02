@@ -275,11 +275,9 @@ sub PrintBasicSetting
 	$Page->Print("<td><input type=text size=60 name=BBSPATH value=\"$bbs\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">システム情報ディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
 	$Page->Print("　例1: .jp/test/info → <span class=\"UnderLine\">/info</span><br>");
-	$Page->Print("　例2: .net/~user/test/info → <span class=\"UnderLine\">/info</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=INFO value=\"$info\" ></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">システムデータディレクトリ(/ から始める)<br><span class=\"NormalStyle\">");
 	$Page->Print("　例1: .jp/test/info → <span class=\"UnderLine\">/datas</span><br>");
-	$Page->Print("　例2: .net/test/datas → <span class=\"UnderLine\">/datas</span></span></td>");
 	$Page->Print("<td><input type=text size=60 name=DATA value=\"$data\" ></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=2 align=right>");
