@@ -134,6 +134,8 @@ sub Save
 		{ chmod 0666, "$path/$file"; };				# パーミッション設定
 		if (open LOG, "> $path/$file") {
 			flock LOG, 2;
+			truncate LOG, 0;
+			seek LOG, 0, 0;
 			print LOG @{$this->{'LOG'}};
 			close LOG;
 		}
