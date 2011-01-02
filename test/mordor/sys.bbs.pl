@@ -778,7 +778,8 @@ sub FunctionBBSUpdate
 	@bbsSet = $Form->GetAtArray('BBSS');
 	
 	foreach $id (@bbsSet) {
-		$bbs = $BBS->Get('DIR', $id);
+		$bbs = $BBS->Get('DIR', $id, '');
+		next if ($bbs eq '');
 		$name = $BBS->Get('NAME', $id);
 		$Sys->Set('BBS', $bbs);
 #		eval
