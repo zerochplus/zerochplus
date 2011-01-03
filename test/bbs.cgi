@@ -163,7 +163,7 @@ sub Initialize
 	
 	# 携帯からのスレッド作成フォーム表示
 	# $Sys->{'SYS'}->Equal('AGENT', 'O') && 
-	if ($Sys->{'FORM'}->Equal('mb', 'on') && ! $Sys->{'FORM'}->IsExist('time')) {
+	if ($Sys->{'FORM'}->Equal('mb', 'on') && $Sys->{'FORM'}->Equal('thread', 'on')) {
 		return 9003;
 	}
 	

@@ -183,6 +183,7 @@ sub CreateIIndex
 	$Page->Print("<form action=\"$cgiPath/bbs.cgi\" method=\"POST\" utn>");
 	$Page->Print("<input type=hidden name=bbs value=$bbs>");
 	$Page->Print("<input type=hidden name=mb value=on>");
+	$Page->Print("<input type=hidden name=thread value=on>");
 	$Page->Print("<input type=submit value=\"ƒXƒŒƒbƒhì¬\">");
 	$Page->Print("</form><hr></body></html>\n");
 	
