@@ -203,6 +203,7 @@ sub Check
 	
 	$flag = 0;
 	foreach (@{$this->{'USER'}}) {
+		next if ($_ eq '' || $_ =~ /^[#;]/);
 		if ($host =~ /$_/) {
 			$flag = 1;
 			$sys->Set('HITS', $_);
