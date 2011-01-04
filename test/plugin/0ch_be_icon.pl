@@ -87,7 +87,7 @@ sub execute
 	my $this = shift;
 	my ($sys, $form) = @_;
 	
-	$sys->Get('_DAT_')->[3] =~ s|sssp://img.2ch.net/(.+) ?<br>|<img src="http://img.2ch.net/$1" alt="beicon"> <br>|gi;
+	$sys->Get('_DAT_')->[3] =~ s|sssp://img.2ch.net/([^ <"]+)|<img src="http://img.2ch.net/$1" alt="beicon">|gi;
 	
 }
 

@@ -84,6 +84,7 @@ sub execute
 		my	($from, $koyuu, $agent, $tasuke, $mes, $ua);
 		$from	= $form->Get('FROM');
 		$koyuu	= $sys->Get('KOYUU');
+		$koyuu	= $sys->Get('HOST') if (! defined $koyuu);
 		$agent	= $sys->Get('AGENT');
 		$mes	= $form->Get('MESSAGE');
 		$ua		= $ENV{'HTTP_USER_AGENT'};

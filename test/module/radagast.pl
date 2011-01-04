@@ -11,6 +11,7 @@ package RADAGAST;
 
 use strict;
 use warnings;
+use Jcode;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -53,8 +54,9 @@ sub Init
 		foreach (@pairs) {
 			($name, $value) = split(/=/, $_);
 			$name =~ s/ //g;
-			#$gCode = jcode::getcode(*value);
-			#jcode::convert(*value, $gCode);
+			$value =~ s/^"|"$//g;
+			$value =~ s/%([0-9A-Fa-f][0-9A-Fa-f])/pack('H2', $1)/eg;
+			Jcode::convert(\$value, 'sjis', 'utf8');
 			$this->{'COOKIE'}->{$name} = $value;
 		}
 		return 1;
@@ -145,8 +147,6 @@ sub Out
 	my $this = shift;
 	my ($oOut, $path, $limit) = @_;
 	my (@gmt, @week, @month, $date, $key, $value);
-	
-	require Jcode;
 	
 	# “ú•tî•ñ‚Ìİ’è
 	@gmt = gmtime(time + $limit * 60);
