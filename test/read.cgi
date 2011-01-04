@@ -279,12 +279,12 @@ sub PrintReadMenu
 		}
 		elsif ($resNum >= $rmax - int($rmax / 20)) {
 			$Page->Print('<div style="background-color:red;color:white;margin:1px;padding:1px;">'."\n");
-			$Page->Print("レス数が".($rmax-int($rmax/20))."を超えています。$rmaxを超えると表\示できなくなるよ。\n");
+			$Page->Print("レス数が$resNumを超えています。$rmaxを超えると表\示できなくなるよ。\n");
 			$Page->Print('</div>'."\n\n");
 		}
 		elsif ($resNum >= $rmax - int($rmax / 10)) {
 			$Page->Print('<div style="background-color:yellow;margin:1px;padding:1px;">'."\n");
-			$Page->Print("レス数が".($rmax-int($rmax/10))."を超えています。$rmaxを超えると表\示できなくなるよ。\n");
+			$Page->Print("レス数が$resNumを超えています。$rmaxを超えると表\示できなくなるよ。\n");
 			$Page->Print('</div>'."\n\n");
 		}
 	}
