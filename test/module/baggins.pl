@@ -99,6 +99,7 @@ sub Load
 	if (-e $path) {
 		open(SUBJ, "< $path");
 		while (<SUBJ>) {
+			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
 			$elem[1] =~ s/ ?\((\d+)\)\n//;
@@ -138,6 +139,7 @@ sub Save
 		#seek SUBJ, 0, 0;
 		binmode SUBJ;
 		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{'SUBJECT'}->{$_});
 			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
 			
 			print SUBJ "$data\n";

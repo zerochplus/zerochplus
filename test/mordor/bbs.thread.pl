@@ -652,6 +652,7 @@ sub FunctionThreadDelete
 	$path		= $Sys->Get('BBSPATH') . "/$bbs/dat";
 	
 	foreach $id (@threadList) {
+		next if (! defined $Threads->Get('SUBJECT', $id));
 		push @$pLog, 'スレッド「' . $Threads->Get('SUBJECT', $id) . '」を削除';
 		$Threads->Delete($id);
 		unlink "$path/$id.dat";

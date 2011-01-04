@@ -212,9 +212,9 @@ sub PrintGroupList
 	
 	# グループ一覧を出力
 	foreach $id (@groupSet) {
-		$name = $Group->Get('NAME', $id);
-		$expl = $Group->Get('EXPL', $id);
-		@user = split(/\, /, $Group->Get('USERS', $id));
+		$name = $Group->Get('NAME', $id, '');
+		$expl = $Group->Get('EXPL', $id, '');
+		@user = split(/\, /, $Group->Get('USERS', $id, ''));
 		$n = @user;
 		
 		$common = "\"javascript:SetOption('SELECT_GROUP','$id');";
@@ -273,10 +273,10 @@ sub PrintGroupSetting
 	
 	# 編集モードならユーザ情報を取得する
 	if ($mode) {
-		$name = $Group->Get('NAME', $Form->Get('SELECT_GROUP'));
-		$expl = $Group->Get('EXPL', $Form->Get('SELECT_GROUP'));
-		@auth = split(/\, /, $Group->Get('AUTH', $Form->Get('SELECT_GROUP')));
-		@user = split(/\, /, $Group->Get('USERS', $Form->Get('SELECT_GROUP')));
+		$name = $Group->Get('NAME', $Form->Get('SELECT_GROUP', ''), '');
+		$expl = $Group->Get('EXPL', $Form->Get('SELECT_GROUP', ''), '');
+		@auth = split(/\, ?/, $Group->Get('AUTH', $Form->Get('SELECT_GROUP', ''), ''));
+		@user = split(/\, ?/, $Group->Get('USERS', $Form->Get('SELECT_GROUP', ''), ''));
 		
 		# 権限番号マッピング配列を作成
 		for ($i = 0 ; $i < 15 ; $i++) {
@@ -287,7 +287,14 @@ sub PrintGroupSetting
 		}
 	}
 	else {
+		$name = '';
+		$expl = '';
+		@auth = ();
+		@user = ();
 		$Form->Set('SELECT_GROUP', '');
+		for ($i = 0 ; $i < 15 ; $i++) {
+			$authNum[$i] = '';
+		}
 	}
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
@@ -589,9 +596,10 @@ sub FunctionGroupDelete
 	@groupSet = $Form->GetAtArray('GROUPS');
 	
 	foreach $id (@groupSet) {
+		next if (! defined $Group->Get('NAME', $id));
 		if ($Group->GetBelong($Sys->Get('ADMIN')->{'USER'}) eq $id) {
 			push(@$pLog,
-				'※自分の所属グループのため「' . $Group->Get('NAME',$id) . '」を削除できませんでした。');
+				'※自分の所属グループのため「' . $Group->Get('NAME', $id) . '」を削除できませんでした。');
 		}
 		else {
 			push @$pLog, $Group->Get('NAME', $id) . '(' . $Group->Get('EXPL', $id) . ')';
@@ -631,8 +639,10 @@ sub FunctionGroupImport
 	}
 	require './module/earendil.pl';
 	
-	$src = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $Form->Get('IMPORT_BBS')) . '/info/groups.cgi';
+	$src = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $Form->Get('IMPORT_BBS', ''), '') . '/info/groups.cgi';
 	$dst = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/groups.cgi';
+	
+	return 0 if ($src eq $dst);
 	
 	# グループ設定をコピー
 #	eval

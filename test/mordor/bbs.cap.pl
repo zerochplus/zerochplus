@@ -600,7 +600,8 @@ sub FunctionGroupDelete
 	@groupSet = $Form->GetAtArray('CAP_GROUPS');
 	
 	foreach $id (@groupSet) {
-		push @$pLog, $Group->Get('NAME', $id) . '(' . $Group->Get('EXPL', $id) . ')';
+		next if (! defined $Group->Get('NAME', $id));
+		push @$pLog, $Group->Get('NAME', $id, '') . '(' . $Group->Get('EXPL', $id, '') . ')';
 		$Group->Delete($id);
 	}
 	

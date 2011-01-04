@@ -360,7 +360,7 @@ sub FunctionLogDelete
 		
 		# グループ内のログがすべて削除された場合はディレクトリを削除する
 		if ($Logs->GetKeySet('PATH', $logPath, \@pathList) == 1) {
-			if ($Logs->Get('PATH', $pathList[0]) == 0) {
+			if ($Logs->Get('PATH', $pathList[0], '') eq '') {
 				EARENDIL::DeleteDirectory($removePath);
 				$Logs->Delete($pathList[0]);
 			}

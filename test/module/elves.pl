@@ -541,6 +541,7 @@ sub GetBelong
 	my (@users, $group, $user);
 	
 	foreach $group (keys %{$this->{'USERS'}}) {
+		next if (! defined $this->{'USERS'}->{$group});
 		@users = split(/\,/, $this->{'USERS'}->{$group});
 		foreach $user (@users) {
 			if ($id eq $user) {

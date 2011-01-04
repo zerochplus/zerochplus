@@ -388,6 +388,7 @@ sub FunctionThreadRepare
 	$path		= $Sys->Get('BBSPATH') . "/$bbs";
 	
 	foreach $id (@threadList) {
+		next if (! defined $Pools->Get('SUBJECT', $id));
 		push @$pLog, '"POOLスレッド「' . $Pools->Get('SUBJECT', $id) . '」を復帰';
 		$Threads->Add($id, $Pools->Get('SUBJECT', $id), $Pools->Get('RES', $id));
 		$Pools->Delete($id);
@@ -434,6 +435,7 @@ sub FunctionThreadDelete
 	$path		= $Sys->Get('BBSPATH') . "/$bbs/dat";
 	
 	foreach $id (@threadList) {
+		next if (! defined $Pools->Get('SUBJECT', $id));
 		push @$pLog, 'POOLスレッド「' . $Pools->Get('SUBJECT', $id) . '」を削除';
 		$Pools->Delete($id);
 		unlink "$path/$id.dat";
