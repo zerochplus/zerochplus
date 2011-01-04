@@ -202,6 +202,7 @@ sub Check
 	my ($word, $key, $work);
 	
 	foreach $word (@{$this->{'NGWORD'}}) {
+		next if ($word eq '');
 		foreach $key (@$pList) {
 			$work = $Form->Get($key);
 			if ($work =~ /$word/) {
@@ -245,6 +246,7 @@ sub Method
 	}
 	
 	foreach $word (@{$this->{'NGWORD'}}) {
+		next if ($word eq '');
 		foreach $key (@$pList) {
 			$work = $Form->Get($key);
 			if ($work =~ /$word/) {
