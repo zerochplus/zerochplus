@@ -468,6 +468,7 @@ sub FuncCapDelete
 	
 	# 選択キャップを全削除
 	foreach (@userSet) {
+		next if (! defined $Cap->Get('NAME', $_));
 		# Administratorは削除不可
 		if ($_ eq '0000000001') {
 			push @$pLog, '□ キャップ [ Administrator ] は削除できませんでした。';

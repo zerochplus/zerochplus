@@ -476,6 +476,7 @@ sub FuncUserDelete
 	
 	# 選択ユーザを全削除
 	foreach (@userSet) {
+		next if (! defined $User->Get('NAME', $_));
 		# Administratorは削除不可
 		if ($_ eq '0000000001') {
 			push @$pLog, '□ ユーザ [ Administrator ] は削除できませんでした。';

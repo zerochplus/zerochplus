@@ -532,6 +532,7 @@ sub FunctionNoticeDelete
 	$curUser = $Sys->Get('ADMIN')->{'USER'};
 	
 	foreach $id	(@noticeSet) {
+		next if (! defined $Notice->Get('SUBJECT', $id));
 		if ($Notice->Get('TO', $id) eq '*') {
 			my $subj = $Notice->Get('SUBJECT', $id);
 			push @$pLog, "通知「$subj」は全体通知なので削除できませんでした。";
