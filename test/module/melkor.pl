@@ -260,7 +260,7 @@ sub InitSystemValue
 		'DATA'		=> '/datas',								# 初期データ設置パス(*)
 		'BBSPATH'	=> '..',									# 掲示板設置パス(*)
 		'DEBUG'		=> 0,										# デバグモード(*)
-		'VERSION'	=> '0ch+ BBS 0.5.2 110104',					# CGIバージョン
+		'VERSION'	=> '0ch+ BBS 0.5.3 1101xx',					# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
 		'PM-LOG'	=> 0770,									# LOGパーミション(*)
