@@ -26,7 +26,7 @@ sub PCGI
 {
 	my ($Sys, $Threads, $Set, $Page, $Form, $Conv);
 	my (%pPath, @tList);
-	my ($base, $max);
+	my ($base, $max, $err);
 	
 	require './module/baggins.pl';
 	require './module/isildur.pl';
@@ -42,6 +42,9 @@ sub PCGI
 	$Form		= SAMWISE->new(0);
 	$Page		= new THORIN;
 	
+	$max = 0;
+	$err = 1;
+	
 	# urlからパスを解析
 	GetPathData(\%pPath);
 	
@@ -49,26 +52,25 @@ sub PCGI
 	$Form->DecodeForm(1);
 	$Sys->Init();
 	$Sys->Set('BBS', $pPath{'bbs'});
-	$Set->Load($Sys);
-	$Threads->Load($Sys);
+	$err = $Set->Load($Sys);
 	
-	# r.cgiベースパスの設定
-	$base = $Sys->Get('SERVER') . $Sys->Get('CGIPATH');
-	$base .= "/r.cgi/$pPath{'bbs'}/";
-	
-	# スレッドリストの作成
-	if ($Form->Equal('method', '')) {
-		# 検索無し
-		$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, '');
-	}
-	else {
-		# 検索あり
-		$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, $Form->Get('word', ''));
+	if ($err == 1) {
+		$Threads->Load($Sys);
+		
+		# スレッドリストの作成
+		if ($Form->Equal('method', '')) {
+			# 検索無し
+			$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, '');
+		}
+		else {
+			# 検索あり
+			$max = CreateThreadList($Threads, $Set, \@tList, \%pPath, $Form->Get('word', ''));
+		}
 	}
 	
 	# ページの出力
 	PrintHead($Page, $Sys, $Set, $pPath{'st'}, $max);
-	PrintThreadList($Page, $Sys, $Conv, \@tList, $base);
+	PrintThreadList($Page, $Sys, $Conv, \@tList) if ($err == 1);
 	PrintFoot($Page, $Sys, $Set, $pPath{'st'}, $max);
 	
 	# 画面へ出力
@@ -130,7 +132,7 @@ sub PrintHead
 #------------------------------------------------------------------------------------------------------------
 sub PrintThreadList
 {
-	my ($Page, $Sys, $Conv, $pList, $bpath) = @_;
+	my ($Page, $Sys, $Conv, $pList) = @_;
 	my (@elem, $path);
 	
 	foreach (@{$pList}) {
@@ -189,10 +191,13 @@ sub GetPathData
 	my ($pHash) = @_;
 	my (@plist, $var, $val);
 	
+	$pHash->{'bbs'} = '';
+	$pHash->{'st'} = 0;
+	
 	if ($ENV{'PATH_INFO'}) {
 		use CGI;
 		@plist = split(/\//, CGI::escapeHTML($ENV{'PATH_INFO'}));
-		$pHash->{'bbs'} = $plist[1];
+		$pHash->{'bbs'} = $plist[1] if (defined $plist[1]);
 		$pHash->{'st'} = int($plist[2] || 0);
 	}
 	else {

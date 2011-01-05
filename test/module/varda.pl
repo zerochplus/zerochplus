@@ -177,7 +177,12 @@ sub CreateIIndex
 	}
 	
 	# フッタ部分の出力
-	$path = "$cgiPath/p.cgi?bbs=$bbs&st=$i";
+	if ($Sys->Get('PATHKIND')) {
+		$path = "$cgiPath/p.cgi?bbs=$bbs&st=$i";
+	}
+	else {
+		$path = "$cgiPath/p.cgi/$bbs/$i";
+	}
 	$Page->Print("<hr>");
 	$Page->Print("<a href=\"$path\">続き</a>\n");
 	$Page->Print("<form action=\"$cgiPath/bbs.cgi\" method=\"POST\" utn>");
