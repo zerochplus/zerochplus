@@ -1,6 +1,6 @@
 
 
-ぜろちゃんねるプラス Ver.0.5.x - Readme.txt
+ぜろちゃんねるプラス Ver.{=0ch+ver=} - Readme.txt
 
 公式WEB : http://zerochplus.sourceforge.jp/
 
