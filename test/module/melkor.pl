@@ -284,7 +284,7 @@ sub InitSystemValue
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
-		'SAMBATM'	=> 10,										# 短時間投稿規制秒数
+		'SAMBATM'	=> 0,										# 短時間投稿規制秒数
 		'DEFSAMBA'	=> 10,										# Samba待機秒数デフォルト値
 		'DEFHOUSHI'	=> 60,										# Samba奉仕時間(分)デフォルト値
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
@@ -292,7 +292,7 @@ sub InitSystemValue
 		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
 		'PRTEXT'	=> 'ぜろちゃんねるプラス',					# PR欄の表示文字列
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
-		'TRIP12'	=> 0,										# 12桁トリップを変換するかどうか
+		'TRIP12'	=> 1,										# 12桁トリップを変換するかどうか
 		'MSEC'		=> 0,										# msecまで表示するか
 		'BBSGET'	=> 0,										# bbs.cgiでGETメソッドを使用するかどうか
 		
@@ -317,6 +317,18 @@ sub InitSystemValue
 	$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
 	$pSYS->{'SERVER'} = 'http://' . $ENV{'SERVER_NAME'};
 	$pSYS->{'CGIPATH'} = $path;
+	
+	{
+		my $buf = (int rand 900000) + 100000;
+		$buf++ while (-e "$buf.dat");
+		open PM, "> $buf.dat";
+		close PM;
+		chmod 0604, "$buf.dat";
+		if (((stat "$buf.dat")[2] & 0777) != 0604) {
+			$pSYS->{'PM-STOP'} = 0444;
+		}
+		unlink "$buf.dat";
+	}
 }
 
 #============================================================================================================

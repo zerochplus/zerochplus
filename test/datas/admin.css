@@ -13,10 +13,12 @@ body			{
 
 td				{
 					font-size: 12px;
+					text-align: left;
 				}
 
 th				{
 					font-size: 12px;
+					text-align: left;
 				}
 
 a				{

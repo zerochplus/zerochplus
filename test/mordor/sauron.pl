@@ -260,8 +260,8 @@ $Page->Print(<<HTML);
  
 <div class="MainHead" align="right">0ch+ BBS System Manager</div>
 
-<table cellspacing="0" width="100%">
- <tr style="height:400px">
+<table cellspacing="0" width="100%" height="400">
+ <tr>
 HTML
 	
 }
