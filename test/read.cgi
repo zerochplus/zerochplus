@@ -279,12 +279,12 @@ sub PrintReadMenu
 		}
 		elsif ($resNum >= $rmax - int($rmax / 20)) {
 			$Page->Print('<div style="background-color:red;color:white;margin:1px;padding:1px;">'."\n");
-			$Page->Print("レス数が$resNumを超えています。$rmaxを超えると表\示できなくなるよ。\n");
+			$Page->Print("レス数が".($rmax-int($rmax/20))."を超えています。$rmaxを超えると表\示できなくなるよ。\n");
 			$Page->Print('</div>'."\n\n");
 		}
 		elsif ($resNum >= $rmax - int($rmax / 10)) {
 			$Page->Print('<div style="background-color:yellow;margin:1px;padding:1px;">'."\n");
-			$Page->Print("レス数が$resNumを超えています。$rmaxを超えると表\示できなくなるよ。\n");
+			$Page->Print("レス数が".($rmax-int($rmax/10))."を超えています。$rmaxを超えると表\示できなくなるよ。\n");
 			$Page->Print('</div>'."\n\n");
 		}
 	}
@@ -402,7 +402,7 @@ sub PrintReadFoot
 		}
 		
 		# パスの設定
-		$pathBBS	= $oSYS->Get('SERVER') . "/$bbs";
+		$pathBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
 		$pathAll	= $Conv->CreatePath($oSYS, 0, $bbs, $key, '');
 		$pathPrev	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$prv-$prs");
 		$pathNext	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$nxs-$nxt");
@@ -515,13 +515,14 @@ sub PrintReadSearch
 	my ($Sys, $Page) = @_;
 	if (PrintDiscovery($Sys, $Page)) { return; }
 	my ($oSys, $oDat, $size, $i, $nameCol);
-	my (@elem, $pDat, $var, $bbs, $server);
+	my (@elem, $pDat, $var, $cgipath, $bbs, $server);
 	
 	$oSys		= $Sys->{'SYS'};
 	$oDat		= $Sys->{'DAT'};
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
 	$var		= $oSys->Get('VERSION');
-	$bbs		= $oSys->Get('CGIPATH') . '/' . $oSys->Get('BBSPATH') . '/'. $oSys->Get('BBS') . '/' ;
+	$cgipath	= $oSys->Get('CGIPATH');
+	$bbs		= "$cgipath/" . $oSys->Get('BBSPATH') . '/'. $oSys->Get('BBS') . '/' ;
 	$server		= $oSys->Get('SERVER');
 	
 	# エラー用datの読み込み
@@ -562,7 +563,7 @@ sub PrintReadSearch
 	
 	$Page->Print(<<HTML);
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $var<br>
 <a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
@@ -610,14 +611,18 @@ sub PrintReadError
 sub PrintDiscovery
 {
 	my ($Sys, $Page) = @_;
-	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title);
+	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title, $cgipath);
 	
+	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
 	$spath		= $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS');
-	$lpath		= $Sys->{'SYS'}->Get('CGIPATH') . '/' . $spath;
+	$lpath		= "$cgipath/$spath";
 	$key		= $Sys->{'SYS'}->Get('KEY');
 	$kh			= substr($key, 0, 4) . '/' . substr($key, 0, 5);
 	$ver		= $Sys->{'SYS'}->Get('VERSION');
 	$server		= $Sys->{'SYS'}->Get('SERVER');
+	
+	$lpath	=~ s|/\./|/|g while ($lpath =~ m|/\./|);
+	$lpath	=~ s|/[^/\.]+/\.\./|/|g while ($lpath =~ m|/[^/\.]+/\.\./|);
 	
 	if (-e "$spath/kako/$kh/$key.html") {
 		
@@ -663,7 +668,7 @@ sub PrintDiscovery
 <hr>
 
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$server/test/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $ver<br>
 <a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
