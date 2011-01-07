@@ -417,7 +417,7 @@ MENU
 		$path = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
 		
 		# プレビュースレッドの場合はプレビューへのリンクを貼る
-		if ($i < $prevNum) {
+		if ($i <= $prevNum) {
 			$Page->Print("  <a href=\"$path\" target=\"body\">$i:</a> ");
 			$Page->Print("<a href=\"#$i\">$name($res)</a>　\n");
 		}

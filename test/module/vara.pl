@@ -493,6 +493,14 @@ sub IsRegulation
 		}
 		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
 		$LOG->Save($oSYS);
+		
+		# Sambaログ
+		if (! $oSEC->IsAuthority($capID, 18, $bbs) || ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+			my $LOGs = PEREGRIN->new;
+			$LOGs->Load($oSYS, 'SMB');
+			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
+			$LOGs->Save($oSYS);
+		}
 	}
 	# レス書き込みモード
 	else {
