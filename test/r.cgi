@@ -374,7 +374,7 @@ sub PrintResponse
 	
 	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBS') . '/';
+	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . '/' . $oSYS->Get('BBS');
 	$path	=~ s|/\./|/|g while ($path =~ m|/\./|);
 	$path	=~ s|/[^/\.]+/\.\./|/|g while ($path =~ m|/[^/\.]+/\.\./|);
 	$path	=~ s|/|+|gi;
