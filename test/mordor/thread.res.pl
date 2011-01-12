@@ -7,9 +7,9 @@
 #
 #============================================================================================================
 package	MODULE;
-
+use CGI::Carp qw(fatalsToBrowser);
 use strict;
-use warnings;
+#use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -46,7 +46,7 @@ sub DoPrint
 {
 	my $this = shift;
 	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $BASE, $BBS, $DAT, $Page);
+	my ($subMode, $BASE, $BBS, $DAT, $Page,$Logger);
 	
 	require './mordor/sauron.pl';
 	$BASE = SAURON->new;
@@ -73,6 +73,12 @@ sub DoPrint
 		$DAT->Load($Sys, $datPath, 1);
 	}
 	
+	#logの読み込み
+	require './module/imrahil.pl';
+	$Logger = IMRAHIL->new;
+	my $logPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/' . $Sys->Get('KEY');
+	$Logger->Open($logPath, 0, 1 | 2) == -1 and die;
+	
 	# 管理マスタオブジェクトの生成
 	$Page		= $BASE->Create($Sys, $Form);
 	$subMode	= $Form->Get('MODE_SUB');
@@ -81,7 +87,7 @@ sub DoPrint
 	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
 	if ($subMode eq 'LIST') {														# レス一覧画面
-		PrintResList($Page, $Sys, $Form, $DAT);
+		PrintResList($Page, $Sys, $Form, $DAT,$Logger);
 	}
 	elsif ($subMode eq 'EDIT') {													# レス編集画面
 		PrintResEdit($Page, $Sys, $Form, $DAT);
@@ -220,9 +226,10 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintResList
 {
-	my ($Page, $Sys, $Form, $Dat) = @_;
+	my ($Page, $Sys, $Form, $Dat,$Logger) = @_;
 	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
 	my ($pRes, $isAbone, $isEdit, $format);
+	my ($log,@logs);
 	
 	$Sys->Set('_TITLE', 'Res List');
 	
@@ -246,7 +253,9 @@ sub PrintResList
 	# レス一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$pRes	= $Dat->Get($i);
+		$log = $Logger->Get($i-1);
 		@elem	= split(/<>/, $$pRes);
+		@logs	= split(/<>/,$log);
 		
 		$Page->Print("<tr><td class=\"Response\" valign=top>");
 		
@@ -269,7 +278,7 @@ sub PrintResList
 			$Page->Print('' . ($i + 1));
 		}
 		$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
-		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br></dd></td></tr>\n");
+		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br><hr>IP:$logs[6]<br>UA:$logs[8]</dd></td></tr>\n");
 	}
 	$Page->HTMLInput('hidden', 'SELECT_RES', '');
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
