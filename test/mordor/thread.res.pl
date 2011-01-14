@@ -9,7 +9,7 @@
 package	MODULE;
 use CGI::Carp qw(fatalsToBrowser);
 use strict;
-#use warnings;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -77,7 +77,7 @@ sub DoPrint
 	require './module/imrahil.pl';
 	$Logger = IMRAHIL->new;
 	my $logPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/' . $Sys->Get('KEY');
-	$Logger->Open($logPath, 0, 1 | 2) == -1 and die;
+	$Logger->Open($logPath, 0, 1 | 2);
 	
 	# 管理マスタオブジェクトの生成
 	$Page		= $BASE->Create($Sys, $Form);
@@ -253,7 +253,7 @@ sub PrintResList
 	# レス一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$pRes	= $Dat->Get($i);
-		$log = $Logger->Get($i-1);
+		$log = $Logger->Get($i);
 		@elem	= split(/<>/, $$pRes);
 		@logs	= split(/<>/,$log);
 		
