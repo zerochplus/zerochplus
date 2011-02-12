@@ -533,7 +533,7 @@ sub FunctionGroupSetting
 	
 	# Š‘®ƒ†[ƒUî•ñ‚Ì¶¬
 	@belongUser = $Form->GetAtArray('BELONGUSER_CAP');
-	$user = join(', ', @belongUser);
+	$user = join(',', @belongUser);
 	
 	# İ’èî•ñ‚Ì“o˜^
 	if ($mode){
