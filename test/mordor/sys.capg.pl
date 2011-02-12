@@ -301,7 +301,7 @@ sub PrintGroupSetting
 	
 	# 所属ユーザ一覧表示
 	foreach $id (@userSet) {
-		my $groupid = $Group->GetBelong($id));
+		my $groupid = $Group->GetBelong($id);
 		# システム共通キャップ、他のグループに所属しているキャップは非表示
 		if (0 == $User->Get('SYSAD', $id) &&
 			( $groupid eq '' || $groupid eq $Form->Get('SELECT_CAPGROUP') )) {
