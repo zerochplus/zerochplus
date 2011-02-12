@@ -19,6 +19,7 @@ package	GALADRIEL;
 
 use strict;
 use warnings;
+use Digest::SHA1 qw(sha1_base64);
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -559,8 +560,7 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			require Digest::SHA1;
-			$trip = substr(Digest::SHA1::sha1_base64($$key), 0, 12);
+			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
@@ -1014,80 +1014,6 @@ sub IsProxy
 	
 	return 0;
 	
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	パス正規化 - MakePath
-#	-------------------------------------------
-#	引　数：$path1   : パス
-#			[$path2] : パス(任意)
-#	戻り値：正規化パス
-#	備　考：
-#
-#	2010.12.31 色々
-#
-#------------------------------------------------------------------------------------------------------------
-sub MakePath {
-	my $this = shift;
-	my ($path1, $path2) = @_;
-	my (@dir1, @dir2, @dir3, $path3, $absflg, $depth);
-	
-	$path1 = '.' if (! defined $path1 || $path1 eq '');
-	$path2 = '.' if (! defined $path2 || $path2 eq '');
-	
-	@dir1 = ($path1 =~ m[^/|[^/]+]g);
-	@dir2 = ($path2 =~ m[^/|[^/]+]g);
-	
-	if ($dir2[0] eq '/') {
-		$absflg = 1;
-		@dir1 = @dir2;
-	}
-	else {
-		$absflg = 0;
-		push @dir1, @dir2;
-	}
-	
-	@dir3 = ();
-	
-	$depth = 0;
-	for my $i (0 .. $#dir1) {
-		if ($i == 0 && $dir1[$i] eq '/') {
-			$absflg = 1;
-		}
-		elsif ($dir1[$i] eq '.' || $dir1[$i] eq '') {
-		}
-		elsif ($dir1[$i] eq '..') {
-			if ($depth >= 1) {
-				pop @dir3;
-			}
-			else {
-				if ($absflg) {
-					last;
-				}
-				if ($#dir3 == -1 || $dir3[$#dir3] eq '..') {
-					push @dir3, '..';
-				}
-				else {
-					pop @dir3;
-				}
-			}
-			$depth--;
-		}
-		else {
-			push @dir3, $dir1[$i];
-			$depth++;
-		}
-	}
-	
-	if ($#dir3 == -1) {
-		$path3 = ($absflg ? '/' : '.');
-	}
-	else {
-		$path3 = ($absflg ? '/' : '') . join('/', @dir3);
-	}
-	
-	return $path3;
 }
 
 #============================================================================================================
