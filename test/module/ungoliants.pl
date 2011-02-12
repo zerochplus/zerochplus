@@ -310,13 +310,14 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj, %NAME, %EXPLAN, %RANGE, %AUTHOR, %CAPS);
+	my ($obj, %NAME, %EXPLAN, %RANGE, %AUTHOR, %CAPS, %ISCOMMON);
 	
 	$obj = {
 		'NAME'	=> \%NAME,
 		'EXPL'	=> \%EXPLAN,
 		'AUTH'	=> \%AUTHOR,
-		'CAPS'	=> \%CAPS
+		'CAPS'	=> \%CAPS,
+		'ISCOMMON'	=> \%ISCOMMON,
 	};
 	bless $obj, $this;
 	
@@ -334,7 +335,7 @@ sub new
 sub Load
 {
 	my $this = shift;
-	my ($Sys) = @_;
+	my ($Sys, $sysgroup) = @_;
 	my ($path, @elem, @auth);
 	
 	# ƒnƒbƒVƒ…‰Šú‰»
@@ -342,9 +343,9 @@ sub Load
 	undef $this->{'EXPL'};
 	undef $this->{'AUTH'};
 	undef $this->{'CAPS'};
+	undef $this->{'ISCOMMON'};
 	
-	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
-	
+	$path = '.' . $Sys->Get('INFO') . '/capgroups.cgi';
 	if (-e $path) {
 		open GROUPS, $path;
 		while (<GROUPS>) {
@@ -354,8 +355,26 @@ sub Load
 			$this->{'EXPL'}->{$elem[0]}	= $elem[2];
 			$this->{'AUTH'}->{$elem[0]}	= $elem[3];
 			$this->{'CAPS'}->{$elem[0]}	= $elem[4];
+			$this->{'ISCOMMON'}->{$elem[0]}	= 1;
 		}
 		close GROUPS;
+	}
+	
+	unless (defined $sysgroup && $sysgroup) {
+		$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
+		if (-e $path) {
+			open GROUPS, $path;
+			while (<GROUPS>) {
+				chomp $_;
+				@elem = split(/<>/, $_);
+				$this->{'NAME'}->{$elem[0]}	= $elem[1];
+				$this->{'EXPL'}->{$elem[0]}	= $elem[2];
+				$this->{'AUTH'}->{$elem[0]}	= $elem[3];
+				$this->{'CAPS'}->{$elem[0]}	= $elem[4];
+				$this->{'ISCOMMON'}->{$elem[0]}	= 0;
+			}
+			close GROUPS;
+		}
 	}
 }
 
@@ -370,10 +389,18 @@ sub Load
 sub Save
 {
 	my $this = shift;
-	my ($Sys) = @_;
-	my ($path, $data);
+	my ($Sys, $sysgroup) = @_;
+	my ($path, $data, $commflg);
 	
-	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
+	$commflg = (defined $sysgroup && $sysgroup ? 1 : 0);
+	
+	if ($commflg) {
+		$path = '.' . $Sys->Get('INFO') . '/capgroups.cgi';
+	}
+	else {
+		$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
+	}
+	
 	
 #	eval
 	{
@@ -383,6 +410,8 @@ sub Save
 		#truncate GROUPS, 0;
 		#seek GROUPS, 0, 0;
 		foreach (keys %{$this->{'NAME'}}) {
+			next if ($this->{ISCOMMON}->{$_} ne $commflg);
+			
 			$data = join('<>',
 				$_,
 				$this->{NAME}->{$_},
@@ -409,12 +438,14 @@ sub Save
 sub GetKeySet
 {
 	my $this = shift;
-	my ($pBuf) = @_;
-	my ($n);
+	my ($pBuf, $sysgroup) = @_;
+	my ($n, $commflg);
 	
 	$n = 0;
+	$commflg = (defined $sysgroup && $sysgroup ? 1 : 0);
 	
 	foreach (keys %{$this->{NAME}}) {
+		next if ($this->{ISCOMMON}->{$_} ne $commflg);
 		push @$pBuf, $_;
 		$n++;
 	}
@@ -456,7 +487,7 @@ sub Get
 sub Add
 {
 	my $this = shift;
-	my ($name, $explan, $authors, $caps) = @_;
+	my ($name, $explan, $authors, $caps, $sysgroup) = @_;
 	my ($id);
 	
 	$id = time;
@@ -464,6 +495,7 @@ sub Add
 	$this->{'EXPL'}->{$id}	= $explan;
 	$this->{'AUTH'}->{$id}	= $authors;
 	$this->{'CAPS'}->{$id}	= $caps;
+	$this->{'ISCOMMON'}->{$id}	= (defined $sysgroup && $sysgroup ? 1 : 0);
 	
 	return $id;
 }
@@ -530,6 +562,7 @@ sub Delete
 	delete $this->{'EXPL'}->{$id};
 	delete $this->{'AUTH'}->{$id};
 	delete $this->{'CAPS'}->{$id};
+	delete $this->{'ISCOMMON'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -544,17 +577,21 @@ sub GetBelong
 {
 	my $this = shift;
 	my ($id) = @_;
-	my (@users, $group, $user);
+	my (@users, $group, $user, $ret);
 	
+	$ret = '';
+	
+	GRPS:
 	foreach $group (keys %{$this->{'CAPS'}}) {
 		@users = split(/\,/, $this->{'CAPS'}->{$group});
 		foreach $user (@users) {
 			if ($id eq $user) {
-				return $group;
+				$ret = $group;
+				last GRPS if ($this->{'ISCOMMON'}->{$group});
 			}
 		}
 	}
-	return '';
+	return $ret;
 }
 
 
