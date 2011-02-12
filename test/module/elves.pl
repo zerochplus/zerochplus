@@ -271,8 +271,17 @@ sub GetStrictPass
 {
 	my $this = shift;
 	my ($pass, $key) = @_;
+	my ($hash);
 	
-	return substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
+	if (length($pass) >= 10) {
+		$hash = substr(crypt($key, 'ZC'), -2);
+		$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
+	}
+	else {
+		$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
+	}
+	
+	return $hash;
 }
 
 
