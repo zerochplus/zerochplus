@@ -15,7 +15,7 @@
 use strict;
 use warnings;
 use CGI::Carp qw(fatalsToBrowser);
-
+no warnings 'once';
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
@@ -430,7 +430,7 @@ sub PrintReadFoot
 		$cookMail = '';
 		
 		# cookie設定ON時はcookieを取得する
-		if ($oSYS->Equal('AGENT', 0) && $Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
+		if (($oSYS->Get('CLIENT') & $ZP::C_PC) && $Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			require './module/radagast.pl';
 			$Cookie = new RADAGAST;
 			$Cookie->Init();

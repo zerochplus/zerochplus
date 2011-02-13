@@ -575,6 +575,67 @@ sub CIDRHIT {
 
 #------------------------------------------------------------------------------------------------------------
 #
+#	携帯機種情報取得
+#	-------------------------------------------------------------------------------------
+#	@return	個体識別番号
+#
+#	2010.08.14 windyakin ★
+#	 -> 主要3キャリア+公式p2を取れるように変更
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetProductInfo
+{
+	my $this = shift;
+	my ($client) = @_;
+	my $product = undef;
+	
+	# docomo
+	if ( $client & $ZP::C_DOCOMO ) {
+		# $ENV{'HTTP_X_DCMGUID'} - 端末製造番号, 個体識別情報, ユーザID, iモードID
+		$product = $ENV{'HTTP_X_DCMGUID'};
+		$product =~ s/^X-DCMGUID: ([a-zA-Z0-9]+)$/$1/i;
+	}
+	# SoftBank
+	elsif ( $client & $ZP::C_SOFTBANK ) {
+		# USERAGENTに含まれる15桁の数字 - 端末シリアル番号
+		$product = $ENV{'HTTP_USER_AGENT'};
+		$product =~ s/.+\/SN([A-Za-z0-9]+)\ .+/$1/;
+	}
+	# au
+	elsif ( $client & $ZP::C_AU ) {
+		# $ENV{'HTTP_X_UP_SUBNO'} - サブスクライバID, EZ番号
+		$product = $ENV{'HTTP_X_UP_SUBNO'};
+		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
+	}
+	# e-mobile(音声端末)
+	elsif ( $client & $ZP::C_EMOBILE ) {
+		# $ENV{'X-EM-UID'} - 
+		$product = $ENV{'X-EM-UID'};
+		$product =~ s/x-em-uid: (.+)/$1/i;
+	}
+	# 公式p2
+	elsif ( $client & $ZP::C_P2 ) {
+		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (発言者のホスト)
+		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (発言者のIP)
+		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (発言者の固体識別番号)
+		$ENV{'REMOTE_P2'} = $ENV{'REMOTE_ADDR'};
+		$ENV{'REMOTE_ADDR'} = $ENV{'HTTP_X_P2_CLIENT_IP'};
+		if( $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} ne "" ) {
+			$product = $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'};
+		}
+		else {
+			$product = $ENV{'HTTP_USER_AGENT'};
+			$product =~ s/.+p2-user-hash: (.+)\)/$1/i;
+		}
+	}
+	else {
+		$product = $ENV{'REMOTE_HOST'};
+	}
+	return $product;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
 #	リモートホスト(IP)取得関数 - GetRemoteHost
 #	---------------------------------------------
 #	引　数：なし
@@ -622,12 +683,12 @@ sub GetRemoteHost
 sub MakeID
 {
 	my $this = shift;
-	my ($server, $mode, $koyuu, $bbs, $column) = @_;
+	my ($server, $client, $koyuu, $bbs, $column) = @_;
 	my @times = localtime time;
 	my (@nums, $ret, $str, $uid);
 	
 	# 種の生成
-	if ( $mode eq 'O' || $mode eq 'P' ) {
+	if ( $client & ($ZP::C_P2 | $ZP::C_MOBILE) ) {
 		# 端末番号 もしくは p2-user-hash の上位3文字を取得
 		#$uid = main::GetProductInfo($this, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
 		if (length($koyuu) > 8) {
@@ -947,7 +1008,7 @@ sub GetIDPart
 		if ($Set->Equal('BBS_NO_ID', 'checked')) {
 			return '';
 		}
-		return " ID:???$mode";
+		return " ID:??? $mode";
 	}
 	# ホスト表示
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
@@ -997,7 +1058,7 @@ sub GetIDPart
 		return " ID:$id";
 	}
 	
-	return " ID:???$mode";
+	return " ID:??? $mode";
 }
 
 #------------------------------------------------------------------------------------------------------------

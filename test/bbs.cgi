@@ -153,7 +153,7 @@ sub Initialize
 	
 	# 携帯の場合は機種情報を設定
 	if ($client & $ZP::C_MOBILE) {
-		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
+		my $product = $Sys->{'CONV'}->GetProductInfo($client);
 		
 		if (! defined  $product) {
 			return 950;
@@ -573,7 +573,7 @@ sub PrintBBSJump
 	$Conv		= $Sys->{'CONV'};
 	
 	# 携帯用表示
-	if ( $Form->Equal('mb', 'on') || $SYS->Equal('AGENT', 'O') ) {
+	if ( $Form->Equal('mb', 'on') || ($SYS->Get('CLIENT') & $ZP::C_MOBILEBROWSER) ) {
 		$bbsPath = $Conv->MakePath($SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10');
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
@@ -650,67 +650,5 @@ sub PrintBBSError
 	$ERROR->Load($Sys->{'SYS'});
 	
 	$ERROR->Print($Sys, $Page, $err, $Sys->{'SYS'}->Get('AGENT'));
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	携帯機種情報取得
-#	-------------------------------------------------------------------------------------
-#	@param	$oConv	GARADRIEL
-#	@param	$agent	HTTP_USER_AGENT値
-#	@return	個体識別番号
-#
-#	2010.08.14 windyakin ★
-#	 -> 主要3キャリア+公式p2を取れるように変更
-#
-#------------------------------------------------------------------------------------------------------------
-sub GetProductInfo
-{
-	my ($oConv, $agent, $host) = @_;
-	my $product = undef;
-	
-	# docomo
-	if ( $host =~ /\.docomo.ne.jp$/ ) {
-		# $ENV{'HTTP_X_DCMGUID'} - 端末製造番号, 個体識別情報, ユーザID, iモードID
-		$product = $ENV{'HTTP_X_DCMGUID'};
-		$product =~ s/^X-DCMGUID: ([a-zA-Z0-9]+)$/$1/i;
-	}
-	# SoftBank
-	elsif ( $host =~ /\.(?:jp-.|vodafone|softbank).ne.jp$/ ) {
-		# USERAGENTに含まれる15桁の数字 - 端末シリアル番号
-		$product = $agent;
-		$product =~ s/.+\/SN([A-Za-z0-9]+)\ .+/$1/;
-	}
-	# au
-	elsif ( $host =~ /\.ezweb.ne.jp$/ ) {
-		# $ENV{'HTTP_X_UP_SUBNO'} - サブスクライバID, EZ番号
-		$product = $ENV{'HTTP_X_UP_SUBNO'};
-		$product =~ s/([A-Za-z0-9_]+).ezweb.ne.jp/$1/i;
-	}
-	# e-mobile(音声端末)
-	elsif ( $host =~ /\.emobile.ad.jp$/ ) {
-		# $ENV{'X-EM-UID'} - 
-		$product = $ENV{'X-EM-UID'};
-		$product =~ s/x-em-uid: (.+)/$1/i;
-	}
-	# 公式p2
-	elsif ( $host =~ /(?:cw43|p202).razil.jp$/ ) {
-		# $ENV{'HTTP_X_P2_CLIENT_HOST'} - (発言者のホスト)
-		# $ENV{'HTTP_X_P2_CLIENT_IP'} - (発言者のIP)
-		# $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} - (発言者の固体識別番号)
-		$ENV{'REMOTE_P2'} = $ENV{'REMOTE_ADDR'};
-		$ENV{'REMOTE_ADDR'} = $ENV{'HTTP_X_P2_CLIENT_IP'};
-		if( $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'} ne "" ) {
-			$product = $ENV{'HTTP_X_P2_MOBILE_SERIAL_BBM'};
-		}
-		else {
-			$product = $agent;
-			$product =~ s/.+p2-user-hash: (.+)\)/$1/i;
-		}
-	}
-	else {
-		$product = $oConv->GetRemoteHost();
-	}
-	return $product;
 }
 

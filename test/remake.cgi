@@ -10,6 +10,7 @@
 
 use strict;
 use warnings;
+no warnings 'once';
 
 # CGIの実行結果を終了コードとする
 exit(REMAKECGI());
@@ -135,7 +136,7 @@ sub PrintBBSJump
 	$bbsPath	= $Sys->{'CONV'}->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
 	
 	# 携帯用表示
-	if (!$SYS->Equal('AGENT', 0)) {
+	if (! ($SYS->Get('CLIENT') & $ZP::C_MOBILEBROWSER)) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>indexを更新しました。<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");

@@ -150,7 +150,7 @@ sub Write
 	$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 	
 	$err		= 0;
-	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('AGENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
+	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('CLIENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
 	$date		= $oConv->GetDate($oSet, $oSys->Get('MSEC'));
 	$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('KOYUU'), $oSys->Get('AGENT'));
 	
@@ -398,7 +398,7 @@ sub IsRegulation
 {
 	my ($this) = @_;
 	my ($oSYS, $oSET, $oSEC);
-	my ($err, $host, $koyuu, $bbs, $datPath, $capID, $from, $mode);
+	my ($err, $host, $koyuu, $bbs, $datPath, $capID, $from, $client, $mode);
 	
 	$oSYS		= $this->{'SYS'};
 	$oSET		= $this->{'SET'};
@@ -407,6 +407,7 @@ sub IsRegulation
 	$from		= $this->{'FORM'}->Get('FROM');
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
+	$client		= $oSYS->Get('CLIENT');
 	$mode		= $oSYS->Get('AGENT');
 	$host		= $ENV{'REMOTE_HOST'};
 	$koyuu		= $oSYS->Get('KOYUU');
@@ -471,7 +472,7 @@ sub IsRegulation
 		$datPath = "$tPath$key.dat";
 		
 		# ƒXƒŒƒbƒhì¬(Œg‘Ñ‚©‚ç)
-		if ($oSYS->Equal('AGENT', 'O')) {
+		if ($client & $ZP::C_MOBILE) {
 			if (! $oSEC->IsAuthority($capID, 16, $bbs)) {
 				return 204;
 			}
