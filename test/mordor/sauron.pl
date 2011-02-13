@@ -154,7 +154,7 @@ sub PrintHTML
 <html lang="ja">
 <head>
  
- <title>‚º‚ë‚¿‚á‚ñ‚Ë‚éŠÇ— - [ $ttl ]</title>
+ <title>‚º‚ë‚¿‚á‚ñ‚Ë‚éƒvƒ‰ƒXŠÇ— - [ $ttl ]</title>
  
 HTML
 	
