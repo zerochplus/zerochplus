@@ -26,6 +26,8 @@ sub REMAKECGI
 {
 	my (%SYS, $Page, $err);
 	
+	require './module/constant.pl';
+	
 	require './module/thorin.pl';
 	$Page = new THORIN;
 	
@@ -136,7 +138,7 @@ sub PrintBBSJump
 	$bbsPath	= $Sys->{'CONV'}->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
 	
 	# 携帯用表示
-	if (! ($SYS->Get('CLIENT') & $ZP::C_MOBILEBROWSER)) {
+	if ($SYS->Get('CLIENT') & $ZP::C_MOBILEBROWSER) {
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>indexを更新しました。<br>');
 		$Page->Print("<a href=\"$bbsPath/i/\">こちら</a>");
