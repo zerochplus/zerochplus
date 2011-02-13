@@ -278,7 +278,7 @@ HTML
 </div>
 
 <div align="right" style="margin-top:1em;">
-<small><a href="./kako/index.html" target="_blank"><b>過去ログ倉庫はこちら</b></a></small>
+<small><a href="./kako/" target="_blank"><b>過去ログ倉庫はこちら</b></a></small>
 </div>
 
 <hr>
@@ -535,7 +535,7 @@ THREAD
      <a href="$lastPath">最新50</a>
      <a href="$numPath">1-100</a>
      <a href="#top">板のトップ</a>
-     <a href="./index.html">リロード</a>
+     <a href="./">リロード</a>
     </div>
     </blockquote>
    </blockquote>
@@ -603,7 +603,6 @@ FORM
 <form method="POST" action="$cgipath/bbs.cgi">
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="#CCFFCC" style="margin-bottom:1.2em;" align="center">
  <tr>
-  <td></td>
   <td nowrap>
   タイトル：<input type="text" name="subject" size="40"><input type="submit" value="新規スレッド作成"><br>
   名前：<input type="text" name="FROM" size="19"> E-mail：<input type="text" name="mail" size="19"><br>

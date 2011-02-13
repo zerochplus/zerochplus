@@ -142,7 +142,7 @@ sub Print
 		$Page->Print("Content-type: text/html\n\n<html><head><title>");
 		$Page->Print("‚d‚q‚q‚n‚qI</title></head><!--nobanner-->\n");
 		$Page->Print("<body><font color=red>ERROR:$subject</font><hr>");
-		$Page->Print("$message<hr><a href=\"$bbsPath/i/index.html\">‚±‚¿‚ç</a>");
+		$Page->Print("$message<hr><a href=\"$bbsPath/i/\">‚±‚¿‚ç</a>");
 		$Page->Print("‚©‚ç–ß‚Á‚Ä‚­‚¾‚³‚¢</body></html>");
 	}
 	else {

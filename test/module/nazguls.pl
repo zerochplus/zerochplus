@@ -348,7 +348,7 @@ sub CreateContents
 			$name = $this->{'NAME'}->{$id};
 			$dir = $this->{'DIR'}->{$id};
 			
-			$Page->Print("　<a href=\"./$dir/index.html\" target=MAIN>");	# 掲示板リンク出力
+			$Page->Print("　<a href=\"./$dir/\" target=MAIN>");	# 掲示板リンク出力
 			$Page->Print("$name</a><br>\n");
 		}
 		$Page->Print('<br>');

@@ -749,7 +749,7 @@ sub FunctionBBSCreate
 	push @$pLog, "　　　　サブジェクト：$bbsExplanation";
 	push @$pLog, "　　　　カテゴリ：$bbsCategory";
 	push @$pLog, '<hr>以下のURLに掲示板を作成しました。';
-	push @$pLog, "<a href=\"$createPath/index.html\" target=_blank>$createPath/index.html</a>";
+	push @$pLog, "<a href=\"$createPath/\" target=_blank>$createPath/</a>";
 	
 	return 0;
 }

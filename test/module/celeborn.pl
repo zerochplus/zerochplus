@@ -458,7 +458,7 @@ HTML
 		
 		# サブフォルダ情報
 		if ($elem[0] eq '0') {
-			$Page->Print(" <tr>\n  <td>Directory</td>\n  <td><a href=\"$elem[3]/index.html\">");
+			$Page->Print(" <tr>\n  <td>Directory</td>\n  <td><a href=\"$elem[3]/\">");
 			$Page->Print("$elem[3]</a></td>\n  <td>-</td>\n </tr>\n");
 		}
 		# 過去ログ情報

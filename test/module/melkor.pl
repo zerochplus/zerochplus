@@ -275,7 +275,7 @@ sub InitSystemValue
 		'LINKED'	=> 2,										# リンク禁止終了時間
 		'PATHKIND'	=> 0,										# 生成パスの種類
 		'HEADTEXT'	=> '<small>■<b>掲示板一覧</b>■</small>',	# ヘッダ下部の表示文字列
-		'HEADURL'	=> '../index.html',							# ヘッダ下部のURL
+		'HEADURL'	=> '../',									# ヘッダ下部のURL
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
