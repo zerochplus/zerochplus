@@ -336,18 +336,23 @@ sub PrintGroupSetting
 	
 	# 所属ユーザ一覧表示
 	foreach $id (@userSet) {
+		my $groupid = $Group->GetBelong($id);
 		# システム共通キャップ、他のグループに所属しているキャップは非表示
 		if (0 == $User->Get('SYSAD', $id) &&
-			($Group->GetBelong($id) eq '' || $Group->GetBelong($id) eq $Form->Get('SELECT_CAPGROUP'))) {
+			($groupid eq '' || $groupid eq $Form->Get('SELECT_CAPGROUP') || $Group->Get('ISCOMMON', $groupid, ''))) {
 			my $userName = $User->Get('NAME', $id);
 			my $fullName = $User->Get('FULL', $id);
 			my $check = '';
+			my $disabled = '';
 			foreach (@user) {
 				if ($_ eq $id) {
 					$check = 'checked'
 				}
 			}
-			$Page->Print("<input type=checkbox name=BELONGUSER_CAP value=$id $check>$userName($fullName)<br>");
+			if ($Group->Get('ISCOMMON', $groupid, '') eq 1) {
+				$disabled = ' disabled'
+			}
+			$Page->Print("<input type=checkbox name=BELONGUSER_CAP value=$id $check$disabled>$userName($fullName)<br>");
 		}
 	}
 	

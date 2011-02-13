@@ -308,16 +308,12 @@ sub PrintGroupSetting
 			my $userName = $User->Get('NAME', $id);
 			my $fullName = $User->Get('FULL', $id);
 			my $check = '';
-			my $disabled = '';
 			foreach (@user) {
 				if ($_ eq $id) {
 					$check = 'checked'
 				}
 			}
-			if ($Group->Get('ISCOMMON', $groupid, '') eq 1) {
-				$disabled = ' disabled'
-			}
-			$Page->Print("<input type=checkbox name=BELONGUSER_CAP value=$id $check$disabled>$userName($fullName)<br>");
+			$Page->Print("<input type=checkbox name=BELONGUSER_CAP value=$id $check>$userName($fullName)<br>");
 		}
 	}
 	
