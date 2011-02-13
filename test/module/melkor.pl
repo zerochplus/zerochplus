@@ -96,16 +96,9 @@ sub Load
 			$pSYS->{'LIMTIME'} = 0;
 		}
 		
-		if (defined ($_ = $pSYS->{'SERVER'}) && $_ =~ m|^(http://[^/]+)(/.*)$|) {
-			if ($2 eq '/') {
-				$pSYS->{'SERVER'} = $1;
-			}
-			else {
-				$pSYS->{'SERVER'} = $1;
-				if (defined ($_ = $pSYS->{'CGIPATH'}) && $_ ne '') {
-					$pSYS->{'CGIPATH'} = $2 . $pSYS->{'CGIPATH'};
-				}
-			}
+		if ($this->Get('CONFVER', '') ne $pSYS->{'VERSION'}) {
+			$this->NormalizeConf();
+			$this->Save();
 		}
 	};
 	return 1 if ($@ ne '');
@@ -124,6 +117,8 @@ sub Save
 {
 	my $this = shift;
 	my ($val);
+	
+	$this->NormalizeConf();
 	
 #	eval
 	{
@@ -280,7 +275,7 @@ sub InitSystemValue
 		'LINKED'	=> 2,										# リンク禁止終了時間
 		'PATHKIND'	=> 0,										# 生成パスの種類
 		'HEADTEXT'	=> '<small>■<b>掲示板一覧</b>■</small>',	# ヘッダ下部の表示文字列
-		'HEADURL'	=> '../index.html',							# ヘッダ下部のURL
+		'HEADURL'	=> '../',									# ヘッダ下部のURL
 		'FASTMODE'	=> 0,										# 高速モード
 		
 		# ここからぜろプラオリジナル
@@ -295,6 +290,7 @@ sub InitSystemValue
 		'TRIP12'	=> 1,										# 12桁トリップを変換するかどうか
 		'MSEC'		=> 0,										# msecまで表示するか
 		'BBSGET'	=> 0,										# bbs.cgiでGETメソッドを使用するかどうか
+		'CONFVER'	=> '',										# システム設定ファイルのバージョン
 		
 		# DNSBL設定
 		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
@@ -310,24 +306,60 @@ sub InitSystemValue
 		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
 		'SAMBATM',	'DEFSAMBA',	'DEFHOUSHI',
 		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
+		'CONFVER',
 		'BBQ',		'BBX',		'SPAMCH',
 	);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	システム変数正規化 - NormalizeConf
+#	-------------------------------------------
+#	引　数：
+#	戻り値：なし
+#
+#	2011.02.12 色々
+#
+#------------------------------------------------------------------------------------------------------------
+sub NormalizeConf
+{
+	my $this = shift;
+	my ($path, $buf, $perm, $server, $cgipath);
 	
-	my $path = $ENV{'SCRIPT_NAME'};
-	$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
-	$pSYS->{'SERVER'} = 'http://' . $ENV{'SERVER_NAME'};
-	$pSYS->{'CGIPATH'} = $path;
+	$this->Set('CONFVER', $this->Get('VERSION'));
+	
+	if ($this->Get('SERVER', '') eq '') {
+		$path = $ENV{'SCRIPT_NAME'};
+		$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
+		$this->Set('SERVER', 'http://' . $ENV{'SERVER_NAME'});
+		$this->Set('CGIPATH', $path);
+	}
 	
 	{
-		my $buf = (int rand 900000) + 100000;
+		$buf = (int rand 900000) + 100000;
 		$buf++ while (-e "$buf.dat");
 		open PM, "> $buf.dat";
 		close PM;
-		chmod 0604, "$buf.dat";
-		if (((stat "$buf.dat")[2] & 0777) != 0604) {
-			$pSYS->{'PM-STOP'} = 0444;
+		
+		$perm = $this->Get('PM-STOP', 0604);
+		chmod $perm, "$buf.dat";
+		if (((stat "$buf.dat")[2] & 0777) != $perm) {
+			$this->Set('PM-STOP', 0444);
 		}
+		
 		unlink "$buf.dat";
+	}
+	
+	{
+		$server = $this->Get('SERVER', '');
+		$cgipath = $this->Get('CGIPATH', '');
+		$server =~ s|/+$||;
+		if ($server =~ m|^(http://[^/]+)(/.+)$|) {
+			$server = $1;
+			$cgipath = $2 . $cgipath;
+		}
+		$this->Set('SERVER', $server);
+		$this->Set('CGIPATH', $cgipath);
 	}
 }
 

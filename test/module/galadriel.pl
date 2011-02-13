@@ -19,6 +19,7 @@ package	GALADRIEL;
 
 use strict;
 use warnings;
+use Digest::SHA1 qw(sha1_base64);
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -559,8 +560,7 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			require Digest::SHA1;
-			$trip = substr(Digest::SHA1::sha1_base64($$key), 0, 12);
+			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}
@@ -799,7 +799,7 @@ sub GetIDPart
 		if ($Set->Equal('BBS_NO_ID', 'checked')) {
 			return '';
 		}
-		return " ID:???$mode";
+		return " ID:??? $mode";
 	}
 	# ホスト表示
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
@@ -849,7 +849,7 @@ sub GetIDPart
 		return " ID:$id";
 	}
 	
-	return " ID:???$mode";
+	return " ID:??? $mode";
 }
 
 #------------------------------------------------------------------------------------------------------------
