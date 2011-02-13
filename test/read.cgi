@@ -132,7 +132,7 @@ sub Initialize
 		return 1004;
 	}
 	
-	$path = $pSYS->{'SYS'}->Get('BBSPATH') . "/$elem[0]/dat/$elem[1].dat";
+	$path = $pSYS->{'CONV'}->MakePath($pSYS->{'SYS'}->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
 	
 	# datファイルの読み込みに失敗
 	if ($pSYS->{'DAT'}->Load($pSYS->{'SYS'}, $path, 1) == 0) {
@@ -174,6 +174,7 @@ sub PrintReadHead
 	
 	$code	= $Sys->{'CODE'};
 	$title	= $Sys->{'DAT'}->GetSubject() if(! defined $title || $title eq '');
+	$title	= '' if(! defined $title);
 	
 	# HTMLヘッダの出力
 	$Page->Print("Content-type: text/html\n\n");
@@ -228,7 +229,7 @@ sub PrintReadMenu
 	$oSYS		= $Sys->{'SYS'};
 	$bbs		= $oSYS->Get('BBS');
 	$key		= $oSYS->Get('KEY');
-	$baseBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
+	$baseBBS	= $Sys->{'CONV'}->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH')."/$bbs");
 	$baseCGI	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 	$account	= $oSYS->Get('COUNTER');
 	$PRtext		= $oSYS->Get('PRTEXT');
@@ -368,9 +369,9 @@ sub PrintReadFoot
 	$key		= $oSYS->Get('KEY');
 	$ver		= $oSYS->Get('VERSION');
 	$rmax		= $oSYS->Get('RESMAX');
-	$datPath	= $oSYS->Get('BBSPATH') . "/$bbs/dat/$key.dat";
+	$datPath	= $Conv->MakePath($oSYS->Get('BBSPATH')."/$bbs/dat/$key.dat");
 	$datSize	= int((stat $datPath)[7] / 1024);
-	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
+	$cgipath	= $oSYS->Get('CGIPATH');
 	
 	# datファイルのサイズ表示
 	$Page->Print("</dl>\n\n<font color=\"red\" face=\"Arial\"><b>${datSize}KB</b></font>\n\n");
@@ -402,7 +403,7 @@ sub PrintReadFoot
 		}
 		
 		# パスの設定
-		$pathBBS	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . "/$bbs";
+		$pathBBS	= $Conv->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH')."/$bbs");
 		$pathAll	= $Conv->CreatePath($oSYS, 0, $bbs, $key, '');
 		$pathPrev	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$prv-$prs");
 		$pathNext	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$nxs-$nxt");
@@ -514,19 +515,20 @@ sub PrintReadSearch
 {
 	my ($Sys, $Page) = @_;
 	if (PrintDiscovery($Sys, $Page)) { return; }
-	my ($oSys, $oDat, $size, $i, $nameCol);
+	my ($oSys, $oDat, $oConv, $size, $i, $nameCol);
 	my (@elem, $pDat, $var, $cgipath, $bbs, $server);
 	
 	$oSys		= $Sys->{'SYS'};
 	$oDat		= $Sys->{'DAT'};
+	$oConv		= $Sys->{'CONV'};
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
 	$var		= $oSys->Get('VERSION');
 	$cgipath	= $oSys->Get('CGIPATH');
-	$bbs		= "$cgipath/" . $oSys->Get('BBSPATH') . '/'. $oSys->Get('BBS') . '/' ;
+	$bbs		= $oConv->MakePath("$cgipath/".$oSys->Get('BBSPATH').'/'.$oSys->Get('BBS')) . '/';
 	$server		= $oSys->Get('SERVER');
 	
 	# エラー用datの読み込み
-	$oDat->Load($oSys, '.' . $oSys->Get('DATA') . '/2000000000.dat', 1);
+	$oDat->Load($oSys, $oConv->MakePath('.'.$oSys->Get('DATA').'/2000000000.dat'), 1);
 	$size = $oDat->Size();
 	
 	# 存在しないので404を返す。
@@ -611,20 +613,19 @@ sub PrintReadError
 sub PrintDiscovery
 {
 	my ($Sys, $Page) = @_;
-	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title, $cgipath);
+	my ($spath, $lpath, $key, $kh, $pathBBS, $ver, $server, $title, $cgipath, $Conv);
 	
+	$Conv		= $Sys->{'CONV'};
 	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
-	$spath		= $Sys->{'SYS'}->Get('BBSPATH') . '/' . $Sys->{'SYS'}->Get('BBS');
-	$lpath		= "$cgipath/$spath";
+	$spath		= $Conv->MakePath($Sys->{'SYS'}->Get('BBSPATH').'/'.$Sys->{'SYS'}->Get('BBS'));
+	$lpath		= $Conv->MakePath("$cgipath/$spath");
 	$key		= $Sys->{'SYS'}->Get('KEY');
 	$kh			= substr($key, 0, 4) . '/' . substr($key, 0, 5);
 	$ver		= $Sys->{'SYS'}->Get('VERSION');
 	$server		= $Sys->{'SYS'}->Get('SERVER');
 	
-	$lpath	=~ s|/\./|/|g while ($lpath =~ m|/\./|);
-	$lpath	=~ s|/[^/\.]+/\.\./|/|g while ($lpath =~ m|/[^/\.]+/\.\./|);
-	
-	if (-e "$spath/kako/$kh/$key.html") {
+	if (-e $Conv->MakePath("$spath/kako/$kh/$key.html")) {
+		my $path = $Conv->MakePath("$lpath/kako/$kh/$key");
 		
 		# 過去ログにあり
 		$title = "隊長！過去ログ倉庫に";
@@ -635,12 +636,12 @@ sub PrintDiscovery
 		$Page->Print("<hr style=\"background-color:#888;color:#888;border-width:0;height:1px;position:relative;top:-.4em;\">\n\n");
 		$Page->Print("<h1 style=\"color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;\">$title</h1>\n\n");
 		$Page->Print("\n<blockquote>\n");
-		$Page->Print("隊長! 過去ログ倉庫で、スレッド <a href=\"$lpath/kako/$kh/$key.html\">$server$lpath/kako/$kh/$key.html</a>");
-		$Page->Print(" <a href=\"$lpath/kako/$kh/$key.dat\">.dat</a> を発見しました。");
+		$Page->Print("隊長! 過去ログ倉庫で、スレッド <a href=\"$path.html\">$server$path.html</a>");
+		$Page->Print(" <a href=\"$path.dat\">.dat</a> を発見しました。");
 		$Page->Print("</blockquote>\n");
 		
 	}
-	elsif (-e "$spath/pool/$key.cgi") {
+	elsif (-e $Conv->MakePath("$spath/pool/$key.cgi")) {
 		
 		# poolにあり
 		$title = "html化待ちです…";

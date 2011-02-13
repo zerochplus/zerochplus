@@ -121,7 +121,7 @@ sub Initialize
 	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
 	$pSYS->{'SYS'}->Set('AGENT', $elem[7]);
 	
-	$path = $pSYS->{'SYS'}->Get('BBSPATH') . "/$elem[0]/dat/$elem[1].dat";
+	$path = $pSYS->{'CONV'}->MakePath($pSYS->{'SYS'}->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
 	
 	# datファイルの読み込みに失敗
 	if ($pSYS->{'DAT'}->Load($pSYS->{'SYS'}, $path, 1) == 0) {
@@ -275,8 +275,8 @@ sub PrintReadFoot
 	$rmax		= $oSYS->Get('RESMAX');
 	
 	$cgipath	= $oSYS->Get('CGIPATH');
-	$baseBBS	= "$cgipath/" . $oSYS->Get('BBSPATH') . "/$bbs";
-	$pathBBS	= "$baseBBS/i/index.html";
+	$baseBBS	= $Conv->MakePath("$cgipath/".$oSYS->Get('BBSPATH')."/$bbs");
+	$pathBBS	= $Conv->MakePath("$baseBBS/i/index.html");
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
 	$resNum		= $Sys->{'DAT'}->Size();
@@ -374,11 +374,9 @@ sub PrintResponse
 	
 	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . '/' . $oSYS->Get('BBS');
-	$path	=~ s|/\./|/|g while ($path =~ m|/\./|);
-	$path	=~ s|/[^/\.]+/\.\./|/|g while ($path =~ m|/[^/\.]+/\.\./|);
+	$path	= $oConv->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH').'/'.$oSYS->Get('BBS'));
 	$path	=~ s|/|+|gi;
-	$obama	= "http://example.ddo.jp/aas/a.i/$server$path/" . $oSYS->Get('KEY') . "/$n?guid=ON";
+	$obama	= 'http://example.ddo.jp' . $oConv->MakePath("/aas/a.i/$server$path/".$oSYS->Get('KEY')."/$n?guid=ON");
 		
 	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
 	$Page->Print("<hr>[$n]$elem[0]</b>：$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");

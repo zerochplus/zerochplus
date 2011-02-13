@@ -101,7 +101,7 @@ sub Initialize
 	
 	$bbs = $Sys->{'FORM'}->Get('bbs', '');
 	$Sys->{'SYS'}->Set('BBS', $bbs);
-	if ($bbs eq '' || $bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'SYS'}->Get('BBSPATH') . "/$bbs") {
+	if ($bbs eq '' || $bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'CONV'}->MakePath($Sys->{'SYS'}->Get('BBSPATH')."/$bbs")) {
 		return 999;
 	}
 	
@@ -131,7 +131,7 @@ sub PrintBBSJump
 	my ($SYS, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
-	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
+	$bbsPath	= $Sys->{'CONV'}->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
 	
 	# Œg‘Ñ—p•\Ž¦
 	if (!$SYS->Equal('AGENT', 0)) {

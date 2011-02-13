@@ -559,15 +559,15 @@ HTML
 sub PrintBBSJump
 {
 	my ($Sys, $Page) = @_;
-	my ($SYS, $Form, $bbsPath);
+	my ($SYS, $Form, $Conv, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
 	$Form		= $Sys->{'FORM'};
-	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
+	$Conv		= $Sys->{'CONV'};
 	
 	# 携帯用表示
 	if ( $Form->Equal('mb', 'on') || $SYS->Equal('AGENT', 'O') ) {
-		$bbsPath = $SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10';
+		$bbsPath = $Conv->MakePath($SYS->Get('CGIPATH').'/r.cgi/'.$Form->Get('bbs').'/'.$Form->Get('key').'/l10');
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print('<!--nobanner--><html><body>書き込み完了です<br>');
 		$Page->Print("<a href=\"$bbsPath\">こちら</a>");
@@ -575,6 +575,7 @@ sub PrintBBSJump
 	}
 	# PC用表示
 	else {
+		$bbsPath = $Conv->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
 		my $COOKIE = $Sys->{'COOKIE'};
 		my $oSET = $Sys->{'SET'};
 		my $name = $Sys->{'FORM'}->Get('NAME', '');
