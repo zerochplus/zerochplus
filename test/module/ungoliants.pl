@@ -351,6 +351,7 @@ sub Load
 		while (<GROUPS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
+			$elem[4] = '' if (! defined $elem[4]);
 			$this->{'NAME'}->{$elem[0]}	= $elem[1];
 			$this->{'EXPL'}->{$elem[0]}	= $elem[2];
 			$this->{'AUTH'}->{$elem[0]}	= $elem[3];
@@ -367,6 +368,7 @@ sub Load
 			while (<GROUPS>) {
 				chomp $_;
 				@elem = split(/<>/, $_);
+				$elem[4] = '' if (! defined $elem[4]);
 				$this->{'NAME'}->{$elem[0]}	= $elem[1];
 				$this->{'EXPL'}->{$elem[0]}	= $elem[2];
 				$this->{'AUTH'}->{$elem[0]}	= $elem[3];
