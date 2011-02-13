@@ -27,6 +27,8 @@ sub ReadCGI
 {
 	my (%SYS, $Page, $err);
 	
+	require './module/constant.pl';
+	
 	require './module/thorin.pl';
 	$Page = new THORIN;
 	
@@ -119,7 +121,8 @@ sub Initialize
 	$pSYS->{'SYS'}->Set('MODE', 0);
 	$pSYS->{'SYS'}->Set('BBS', $elem[0]);
 	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
-	$pSYS->{'SYS'}->Set('AGENT', $elem[7]);
+	$pSYS->{'SYS'}->Set('CLIENT', $pSYS->{'CONV'}->GetClient());
+	$pSYS->{'SYS'}->Set('AGENT', $pSYS->{'CONV'}->GetAgentMode($pSYS->{'SYS'}->Get('CLIENT')));
 	
 	$path = $pSYS->{'CONV'}->MakePath($pSYS->{'SYS'}->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
 	
@@ -374,9 +377,10 @@ sub PrintResponse
 	
 	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oConv->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH').'/'.$oSYS->Get('BBS'));
+	$path	= $oConv->MakePath($server.$oSYS->Get('CGIPATH'), $oSYS->Get('BBSPATH'));
 	$path	=~ s|/|+|gi;
-	$obama	= 'http://example.ddo.jp' . $oConv->MakePath("/aas/a.i/$server$path/".$oSYS->Get('KEY')."/$n?guid=ON");
+	$path	= $oConv->MakePath($path, $oSYS->Get('BBS'));
+	$obama	= 'http://example.ddo.jp' . $oConv->MakePath("/aas/a.i/$path/".$oSYS->Get('KEY')."/$n?guid=ON");
 		
 	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
 	$Page->Print("<hr>[$n]$elem[0]</b>ÅF$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");

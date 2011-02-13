@@ -13,6 +13,7 @@
 use strict;
 use warnings;
 use CGI::Carp qw(fatalsToBrowser);
+no warnings 'once';
 
 push @INC, 'perllib';
 
@@ -30,6 +31,8 @@ exit(BBSCGI());
 sub BBSCGI
 {
 	my (%SYS, $Page, $err);
+	
+	require './module/constant.pl';
 	
 	require './module/thorin.pl';
 	$Page = new THORIN;
@@ -104,6 +107,7 @@ sub BBSCGI
 sub Initialize
 {
 	my ($Sys, $Page) = @_;
+	my ($client);
 	
 	# 使用モジュールの初期化
 	require './module/melkor.pl';
@@ -138,14 +142,17 @@ sub Initialize
 	$ENV{'REMOTE_HOST'} = $Sys->{'CONV'}->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
 	$Sys->{'FORM'}->Set('HOST', $ENV{'REMOTE_HOST'});
 	
+	$client = $Sys->{'CONV'}->GetClient();
+	
 	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
 	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
 	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
-	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
+	$Sys->{'SYS'}->Set('CLIENT', $client);
+	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($client));
 	$Sys->{'SYS'}->Set('KOYUU', $ENV{'REMOTE_HOST'});
 	
 	# 携帯の場合は機種情報を設定
-	if ($Sys->{'SYS'}->Get('AGENT') !~ /^[0P]$/) {
+	if ($client & $ZP::C_MOBILE) {
 		my $product = GetProductInfo($Sys->{'CONV'}, $ENV{'HTTP_USER_AGENT'}, $ENV{'REMOTE_HOST'});
 		
 		if (! defined  $product) {
@@ -181,10 +188,10 @@ sub Initialize
 	}
 	
 	# cookieの存在チェック(PCのみ)
-	if (! $Sys->{'SYS'}->Equal('AGENT', 'O')) {
+	if ($client & $ZP::C_PC) {
 		if ($Sys->{'SET'}->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
-			return 9001	if (!$Sys->{'COOKIE'}->Init());
+			return 9001	if (! $Sys->{'COOKIE'}->Init());
 			
 			# 名前欄cookie
 			if ($Sys->{'SET'}->Equal('BBS_NAMECOOKIE_CHECK', 'checked')

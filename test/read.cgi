@@ -32,6 +32,8 @@ sub ReadCGI
 {
 	my (%SYS, $Page, $err);
 	
+	require './module/constant.pl';
+	
 	require './module/thorin.pl';
 	$Page = new THORIN;
 	
@@ -125,7 +127,8 @@ sub Initialize
 	$pSYS->{'SYS'}->Set('MODE', 0);
 	$pSYS->{'SYS'}->Set('BBS', $elem[0]);
 	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
-	$pSYS->{'SYS'}->Set('AGENT', $elem[7]);
+	$pSYS->{'SYS'}->Set('CLIENT', $pSYS->{'CONV'}->GetClient());
+	$pSYS->{'SYS'}->Set('AGENT', $pSYS->{'CONV'}->GetAgentMode($pSYS->{'SYS'}->Get('CLIENT')));
 	
 	# Ý’èƒtƒ@ƒCƒ‹‚Ì“Ç‚Ýž‚Ý‚ÉŽ¸”s
 	if ($pSYS->{'SET'}->Load($pSYS->{'SYS'}) == 0) {

@@ -105,7 +105,8 @@ sub Initialize
 		return 999;
 	}
 	
-	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($ENV{'HTTP_USER_AGENT'}));
+	$Sys->{'SYS'}->Set('CLIENT', $Sys->{'CONV'}->GetClient());
+	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($Sys->{'SYS'}->Get('CLIENT')));
 	$Sys->{'SYS'}->Set('MODE', 'CREATE');
 	
 	# SETTING.TXT‚Ì“Ç‚Ýž‚Ý

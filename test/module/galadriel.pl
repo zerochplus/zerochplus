@@ -85,8 +85,6 @@ sub GetArgument
 			$retArg[6] = 1;
 		}
 	}
-	# ユーザーエージェント取得
-	$retArg[7] = GetAgentMode($this, $pENV->{'HTTP_USER_AGENT'});
 	
 	return @retArg;
 }
@@ -383,10 +381,38 @@ sub GetTextInfo
 #	2010.08.30 windyakin ★
 #	 -> フルブラウザ, AirH"の対応
 #
+#	2011.02.13 色々
+#	 -> 仮
+#
 #------------------------------------------------------------------------------------------------------------
 sub GetAgentMode
 {
 	my $this = shift;
+	my ($client) = @_;
+	my ($agent);
+	
+	$agent = '0';
+	
+	if ($client & $ZP::C_MOBILEBROWSER) {
+		$agent = 'O';
+	}
+	elsif ($client & $ZP::C_FULLBROWSER) {
+		$agent = 'Q';
+	}
+	elsif ($client & $ZP::C_P2) {
+		$agent = 'P';
+	}
+	elsif ($client & $ZP::C_IPHONE_F) {
+		$agent = 'i';
+	}
+	elsif ($client & $ZP::C_IPHONEWIFI) {
+		$agent = 'I';
+	}
+	else {
+		$agent = '0';
+	}
+	
+=for
 	my ($UA) = @_;
 	my ($host);
 	
@@ -423,6 +449,128 @@ sub GetAgentMode
 	if ( $UA =~ /Debug Mobile Phone/ ) {				return "S"; }			# デバッグ用
 	
 	return "0";
+=cut
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	クライアント(機種)取得 - GetClient
+#	--------------------------------------------
+#	引　数：
+#	戻り値：
+#
+#	2011.02.13 色々
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetClient
+{
+	my $this = shift;
+	my ($ua, $host, $addr, $client, $cidr);
+	
+	$ua = $ENV{'HTTP_USER_AGENT'};
+	$host = $ENV{'REMOTE_HOST'};
+	$addr = $ENV{'REMOTE_ADDR'};
+	$client = 0;
+	
+	require './module/cidr_list.pl';
+	
+	$cidr = $ZP_CIDR::cidr;
+	
+	if (CIDRHIT($cidr->{'docomo'}, $addr)) {
+		$client = $ZP::C_DOCOMO_M;
+	}
+	elsif (CIDRHIT($cidr->{'docomo_pc'}, $addr)) {
+		$client = $ZP::C_DOCOMO_F;
+	}
+	elsif (CIDRHIT($cidr->{'vodafone'}, $addr)) {
+		$client = $ZP::C_SOFTBANK_M;
+	}
+	elsif (CIDRHIT($cidr->{'vodafone_pc'}, $addr)) {
+		$client = $ZP::C_SOFTBANK_F;
+	}
+	elsif (CIDRHIT($cidr->{'ezweb'}, $addr)) {
+		$client = $ZP::C_AU_M;
+	}
+	elsif (CIDRHIT($cidr->{'ezweb_pc'}, $addr)) {
+		$client = $ZP::C_AU_F;
+	}
+	elsif (CIDRHIT($cidr->{'emobile'}, $addr)) {
+		if ($ua =~ m|^emobile/1\.0\.0|) {
+			$client = $ZP::C_EMOBILE_M;
+		}
+		else {
+			$client = $ZP::C_EMOBILE_F;
+		}
+	}
+	elsif (CIDRHIT($cidr->{'willcom'}, $addr)) {
+		if ($ua =~ m|^Mozilla/3\.0|) {
+			$client = $ZP::C_WILLCOM_M;
+		}
+		elsif ($ua =~ m|^Mozilla/4\.0| && $ua =~ m/IEMobile|PPC/) {
+			$client = $ZP::C_WILLCOM_M;
+		}
+		else {
+			$client = $ZP::C_WILLCOM_F;
+		}
+	}
+	elsif (CIDRHIT($cidr->{'ibis'}, $addr)) {
+		$client = $ZP::C_IBIS;
+	}
+	elsif (CIDRHIT($cidr->{'jig'}, $addr)) {
+		$client = $ZP::C_JIG;
+	}
+	elsif (CIDRHIT($cidr->{'iphone'}, $addr)) {
+		$client = $ZP::C_IPHONE_F;
+	}
+	elsif (CIDRHIT($cidr->{'p2'}, $addr)) {
+		$client = $ZP::C_P2;
+	}
+	elsif ($host =~ m|\.opera-mini\.net$|) {
+		$client = $ZP::C_OPERAMINI;
+	}
+	elsif ($ua =~ / iPhone| iPad/) {
+		$client = $ZP::C_IPHONEWIFI;
+	}
+	else {
+		$client = $ZP::C_PC;
+	}
+	
+	return $client;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	IPチェック(CIDR対応) by (-Ac)
+#	-------------------------------------------------------------------------------------
+#	@param	$orz  : CIDRリスト(配列)
+#			$ho   : チェック文字
+#	@return	ヒットした場合1 それ以外は0
+#
+#------------------------------------------------------------------------------------------------------------
+
+sub CIDRHIT {
+	
+	my ( $orz, $ho ) = @_;
+	
+	foreach ( @{$orz} ) {
+		
+		# CIDR形式でなければ普通に完全一致チェック
+		return ( $_ eq $ho ? 1 : 0 ) if ( $_ !~ m|/| );
+		
+		# 以下CIDR形式
+		{
+			my ( $target, $length ) = split( '/', $_ );
+			
+			my $ipaddr = unpack("B$length", pack('C*', split(/\./, $ho)));
+			$target = unpack("B$length", pack('C*', split(/\./, $target)));
+			
+			return 1 if ( $target eq $ipaddr );
+		}
+		
+	}
+	
+	return 0;
+	
 }
 
 #------------------------------------------------------------------------------------------------------------
