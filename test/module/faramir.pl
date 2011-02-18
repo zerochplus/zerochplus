@@ -196,26 +196,59 @@ sub Set
 sub Check
 {
 	my $this = shift;
-	my ($host) = @_;
-	my ($flag, $sys);
+	my ($host, $addr) = @_;
+	my ($flag, $sys, $addrb, $adex);
 	
 	$sys = $this->{'SYS'};
-	
+	$addrb = unpack('B32', pack('C*', split(/\./, $addr)));
 	$flag = 0;
-	foreach (@{$this->{'USER'}}) {
-		next if ($_ eq '' || $_ =~ /^[#;]/);
-		if ($host =~ /$_/) {
+	$adex = '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}';
+	
+	foreach my $line (@{$this->{'USER'}}) {
+		next if ($line eq '' || $line =~ /^[#;]/);
+		
+		if ($line =~ m|^($adex)(?:/([0-9]+))?$|) {
+			my ($leng, $a);
+			$leng = 32;
+			$leng = $2 if ($2);
+			$a = unpack("B$leng", pack('C*', split(/\./, $1)));
+			if (substr($addrb, 0, $leng) eq $a) {
+				$flag = 1;
+				$sys->Set('HITS', $line);
+				last;
+			}
+		}
+		elsif ($line =~ m|^($adex)-($adex)$|) {
+			my ($a, $b);
+			$a = unpack('B32', pack('C*', split(/\./, $1)));
+			$b = unpack('B32', pack('C*', split(/\./, $2)));
+			if ($a gt $b) {
+				$_ = $a;
+				$a = $b;
+				$b = $_;
+			}
+			if ($addrb ge $a && $addrb le $b) {
+				$flag = 1;
+				$sys->Set('HITS', $line);
+				last;
+			}
+		}
+		elsif ($host =~ /$line/) {
 			$flag = 1;
-			$sys->Set('HITS', $_);
+			$sys->Set('HITS', $line);
 			last;
 		}
 	}
+	
 	if ($flag && $this->{'TYPE'} eq 'disable') {		# 規制ユーザ
 		if ($this->{'METHOD'} eq 'disable') {			# 処理：書き込み不可
 			return 4;
 		}
 		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
 			return 2;
+		}
+		else {
+			return 4;
 		}
 	}
 	elsif (! $flag && $this->{'TYPE'} eq 'enable') {	# 限定ユーザ以外
@@ -224,6 +257,9 @@ sub Check
 		}
 		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
 			return 2;
+		}
+		else {
+			return 4;
 		}
 	}
 	return 0;
