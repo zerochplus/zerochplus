@@ -77,14 +77,13 @@ sub Initialize
 {
 	my ($pSYS, $Page) = @_;
 	my (@elem, @regs, $path);
+	my ($oSYS, $oSET, $oCONV, $oDAT);
 	
 	# 各使用モジュールの生成と初期化
 	require './module/melkor.pl';
 	require './module/isildur.pl';
 	require './module/gondor.pl';
 	require './module/galadriel.pl';
-	
-	my ($oSYS, $oSET, $oCONV, $oDAT);
 	
 	$oSYS	= new MELKOR;
 	$oSET	= new ISILDUR;
@@ -101,47 +100,51 @@ sub Initialize
 	);
 	
 	# システム初期化
-	$pSYS->{'SYS'}->Init();
+	$oSYS->Init();
 	
 	# 夢が広がりんぐ
-	$pSYS->{'SYS'}->{'MainCGI'} = $pSYS;
+	$oSYS->{'MainCGI'} = $pSYS;
 	
 	# 起動パラメータの解析
-	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
+	@elem = $oCONV->GetArgument(\%ENV);
 	
 	# BBS指定がおかしい
-	if ($elem[0] eq '') {
+	if (! defined $elem[0] || $elem[0] eq '') {
 		return 1001;
 	}
 	# スレッドキー指定がおかしい
-	elsif ($elem[1] eq '' || $elem[1] =~ /[^0-9]/ || length($elem[1]) != 10) {
+	elsif (! defined $elem[1] || $elem[1] eq '' || ($elem[1] =~ /[^0-9]/) ||
+			(length($elem[1]) != 10 && length($elem[1]) != 9)) {
 		return 1002;
 	}
 	
 	# システム変数設定
-	$pSYS->{'SYS'}->Set('MODE', 0);
-	$pSYS->{'SYS'}->Set('BBS', $elem[0]);
-	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
-	$pSYS->{'SYS'}->Set('CLIENT', $pSYS->{'CONV'}->GetClient());
-	$pSYS->{'SYS'}->Set('AGENT', $pSYS->{'CONV'}->GetAgentMode($pSYS->{'SYS'}->Get('CLIENT')));
+	$oSYS->Set('MODE', 0);
+	$oSYS->Set('BBS', $elem[0]);
+	$oSYS->Set('KEY', $elem[1]);
+	$oSYS->Set('CLIENT', $oCONV->GetClient());
+	$oSYS->Set('AGENT', $oCONV->GetAgentMode($oSYS->Get('CLIENT')));
+	$oSYS->Set('BBSPATH_ABS', $oCONV->MakePath($oSYS->Get('CGIPATH'), $oSYS->Get('BBSPATH')));
+	$oSYS->Set('BBS_ABS', $oCONV->MakePath($oSYS->Get('BBSPATH_ABS'), $oSYS->Get('BBS')));
+	$oSYS->Set('BBS_REL', $oCONV->MakePath($oSYS->Get('BBSPATH'), $oSYS->Get('BBS')));
 	
-	$path = $pSYS->{'CONV'}->MakePath($pSYS->{'SYS'}->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
+	$path = $oCONV->MakePath($oSYS->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
 	
 	# datファイルの読み込みに失敗
-	if ($pSYS->{'DAT'}->Load($pSYS->{'SYS'}, $path, 1) == 0) {
+	if ($oDAT->Load($oSYS, $path, 1) == 0) {
 		return 1003;
 	}
-	$pSYS->{'DAT'}->Close();
+	$oDAT->Close();
 	
 	# 設定ファイルの読み込みに失敗
-	if ($pSYS->{'SET'}->Load($pSYS->{'SYS'}) == 0) {
+	if ($oSET->Load($oSYS) == 0) {
 		return 1004;
 	}
 	
 	# 表示開始終了位置の設定
-	@regs = $pSYS->{'CONV'}->RegularDispNum(
-				$pSYS->{'SYS'}, $pSYS->{'DAT'}, $elem[2], $elem[3], $elem[4]);
-	$pSYS->{'SYS'}->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
+	@regs = $oCONV->RegularDispNum(
+				$oSYS, $oDAT, $elem[2], $elem[3], $elem[4]);
+	$oSYS->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
 	
 	return 0;
 }
@@ -279,7 +282,7 @@ sub PrintReadFoot
 	$rmax		= $oSYS->Get('RESMAX');
 	
 	$cgipath	= $oSYS->Get('CGIPATH');
-	$baseBBS	= $Conv->MakePath("$cgipath/".$oSYS->Get('BBSPATH')."/$bbs");
+	$baseBBS	= $oSYS->Get('BBS_ABS');
 	$pathBBS	= $Conv->MakePath("$baseBBS/i/index.html");
 	$pathAll	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, '1-10n');
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 1, $bbs, $key, 'l10');
@@ -378,7 +381,7 @@ sub PrintResponse
 	
 	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oConv->MakePath($server.$oSYS->Get('CGIPATH'), $oSYS->Get('BBSPATH'));
+	$path	= $oConv->MakePath($server.$oSYS->Get('BBSPATH_ABS'));
 	$path	=~ s|/|+|gi;
 	$path	= $oConv->MakePath($path, $oSYS->Get('BBS'));
 	$obama	= 'http://example.ddo.jp' . $oConv->MakePath("/aas/a.i/$path/".$oSYS->Get('KEY')."/$n?guid=ON");

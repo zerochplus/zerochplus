@@ -104,13 +104,16 @@ sub Initialize
 	
 	$bbs = $Sys->{'FORM'}->Get('bbs', '');
 	$Sys->{'SYS'}->Set('BBS', $bbs);
-	if ($bbs eq '' || $bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'CONV'}->MakePath($Sys->{'SYS'}->Get('BBSPATH')."/$bbs")) {
+	if ($bbs eq '' || $bbs =~ /[^A-Za-z0-9_\-\.]/ || ! -d $Sys->{'SYS'}->Get('BBS_REL')) {
 		return 999;
 	}
 	
 	$Sys->{'SYS'}->Set('CLIENT', $Sys->{'CONV'}->GetClient());
 	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($Sys->{'SYS'}->Get('CLIENT')));
 	$Sys->{'SYS'}->Set('MODE', 'CREATE');
+	$Sys->{'SYS'}->Set('BBSPATH_ABS', $Sys->{'CONV'}->MakePath($Sys->{'SYS'}->Get('CGIPATH'), $Sys->{'SYS'}->Get('BBSPATH')));
+	$Sys->{'SYS'}->Set('BBS_ABS', $Sys->{'CONV'}->MakePath($Sys->{'SYS'}->Get('BBSPATH_ABS'), $Sys->{'SYS'}->Get('BBS')));
+	$Sys->{'SYS'}->Set('BBS_REL', $Sys->{'CONV'}->MakePath($Sys->{'SYS'}->Get('BBSPATH'), $Sys->{'SYS'}->Get('BBS')));
 	
 	# SETTING.TXT‚Ì“Ç‚Ýž‚Ý
 	if (! $Sys->{'SET'}->Load($Sys->{'SYS'})) {
@@ -135,7 +138,7 @@ sub PrintBBSJump
 	my ($SYS, $bbsPath);
 	
 	$SYS		= $Sys->{'SYS'};
-	$bbsPath	= $Sys->{'CONV'}->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
+	$bbsPath	= $SYS->Get('BBS_REL');
 	
 	# Œg‘Ñ—p•\Ž¦
 	if ($SYS->Get('CLIENT') & $ZP::C_MOBILEBROWSER) {

@@ -81,14 +81,13 @@ sub Initialize
 {
 	my ($pSYS, $Page) = @_;
 	my (@elem, @regs, $path);
+	my ($oSYS, $oSET, $oCONV, $oDAT);
 	
 	# 各使用モジュールの生成と初期化
 	require './module/melkor.pl';
 	require './module/isildur.pl';
 	require './module/gondor.pl';
 	require './module/galadriel.pl';
-	
-	my ($oSYS, $oSET, $oCONV, $oDAT);
 	
 	$oSYS	= new MELKOR;
 	$oSET	= new ISILDUR;
@@ -105,13 +104,13 @@ sub Initialize
 	);
 	
 	# システム初期化
-	$pSYS->{'SYS'}->Init();
+	$oSYS->Init();
 	
 	# 夢が広がりんぐ
-	$pSYS->{'SYS'}->{'MainCGI'} = $pSYS;
+	$oSYS->{'MainCGI'} = $pSYS;
 	
 	# 起動パラメータの解析
-	@elem = $pSYS->{'CONV'}->GetArgument(\%ENV);
+	@elem = $oCONV->GetArgument(\%ENV);
 	
 	# BBS指定がおかしい
 	if (! defined $elem[0] || $elem[0] eq '') {
@@ -124,29 +123,32 @@ sub Initialize
 	}
 	
 	# システム変数設定
-	$pSYS->{'SYS'}->Set('MODE', 0);
-	$pSYS->{'SYS'}->Set('BBS', $elem[0]);
-	$pSYS->{'SYS'}->Set('KEY', $elem[1]);
-	$pSYS->{'SYS'}->Set('CLIENT', $pSYS->{'CONV'}->GetClient());
-	$pSYS->{'SYS'}->Set('AGENT', $pSYS->{'CONV'}->GetAgentMode($pSYS->{'SYS'}->Get('CLIENT')));
+	$oSYS->Set('MODE', 0);
+	$oSYS->Set('BBS', $elem[0]);
+	$oSYS->Set('KEY', $elem[1]);
+	$oSYS->Set('CLIENT', $oCONV->GetClient());
+	$oSYS->Set('AGENT', $oCONV->GetAgentMode($oSYS->Get('CLIENT')));
+	$oSYS->Set('BBSPATH_ABS', $oCONV->MakePath($oSYS->Get('CGIPATH'), $oSYS->Get('BBSPATH')));
+	$oSYS->Set('BBS_ABS', $oCONV->MakePath($oSYS->Get('BBSPATH_ABS'), $oSYS->Get('BBS')));
+	$oSYS->Set('BBS_REL', $oCONV->MakePath($oSYS->Get('BBSPATH'), $oSYS->Get('BBS')));
 	
 	# 設定ファイルの読み込みに失敗
-	if ($pSYS->{'SET'}->Load($pSYS->{'SYS'}) == 0) {
+	if ($oSET->Load($oSYS) == 0) {
 		return 1004;
 	}
 	
-	$path = $pSYS->{'CONV'}->MakePath($pSYS->{'SYS'}->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
+	$path = $oCONV->MakePath($oSYS->Get('BBSPATH')."/$elem[0]/dat/$elem[1].dat");
 	
 	# datファイルの読み込みに失敗
-	if ($pSYS->{'DAT'}->Load($pSYS->{'SYS'}, $path, 1) == 0) {
+	if ($oDAT->Load($oSYS, $path, 1) == 0) {
 		return 1003;
 	}
-	$pSYS->{'DAT'}->Close();
+	$oDAT->Close();
 	
 	# 表示開始終了位置の設定
-	@regs = $pSYS->{'CONV'}->RegularDispNum(
-				$pSYS->{'SYS'}, $pSYS->{'DAT'}, $elem[2], $elem[3], $elem[4]);
-	$pSYS->{'SYS'}->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
+	@regs = $oCONV->RegularDispNum(
+				$oSYS, $oDAT, $elem[2], $elem[3], $elem[4]);
+	$oSYS->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
 	
 	return 0;
 }
@@ -232,7 +234,7 @@ sub PrintReadMenu
 	$oSYS		= $Sys->{'SYS'};
 	$bbs		= $oSYS->Get('BBS');
 	$key		= $oSYS->Get('KEY');
-	$baseBBS	= $Sys->{'CONV'}->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH')."/$bbs");
+	$baseBBS	= $oSYS->Get('BBS_ABS');
 	$baseCGI	= $oSYS->Get('SERVER') . $oSYS->Get('CGIPATH');
 	$account	= $oSYS->Get('COUNTER');
 	$PRtext		= $oSYS->Get('PRTEXT');
@@ -372,7 +374,7 @@ sub PrintReadFoot
 	$key		= $oSYS->Get('KEY');
 	$ver		= $oSYS->Get('VERSION');
 	$rmax		= $oSYS->Get('RESMAX');
-	$datPath	= $Conv->MakePath($oSYS->Get('BBSPATH')."/$bbs/dat/$key.dat");
+	$datPath	= $Conv->MakePath($oSYS->Get('BBS_REL')."/dat/$key.dat");
 	$datSize	= int((stat $datPath)[7] / 1024);
 	$cgipath	= $oSYS->Get('CGIPATH');
 	
@@ -406,7 +408,7 @@ sub PrintReadFoot
 		}
 		
 		# パスの設定
-		$pathBBS	= $Conv->MakePath($oSYS->Get('CGIPATH').'/'.$oSYS->Get('BBSPATH')."/$bbs");
+		$pathBBS	= $oSYS->Get('BBS_ABS');
 		$pathAll	= $Conv->CreatePath($oSYS, 0, $bbs, $key, '');
 		$pathPrev	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$prv-$prs");
 		$pathNext	= $Conv->CreatePath($oSYS, 0, $bbs, $key, "$nxs-$nxt");
@@ -527,7 +529,7 @@ sub PrintReadSearch
 	$nameCol	= $Sys->{'SET'}->Get('BBS_NAME_COLOR');
 	$var		= $oSys->Get('VERSION');
 	$cgipath	= $oSys->Get('CGIPATH');
-	$bbs		= $oConv->MakePath("$cgipath/".$oSys->Get('BBSPATH').'/'.$oSys->Get('BBS')) . '/';
+	$bbs		= $oSys->Get('BBS_ABS') . '/';
 	$server		= $oSys->Get('SERVER');
 	
 	# エラー用datの読み込み
@@ -620,8 +622,8 @@ sub PrintDiscovery
 	
 	$Conv		= $Sys->{'CONV'};
 	$cgipath	= $Sys->{'SYS'}->Get('CGIPATH');
-	$spath		= $Conv->MakePath($Sys->{'SYS'}->Get('BBSPATH').'/'.$Sys->{'SYS'}->Get('BBS'));
-	$lpath		= $Conv->MakePath("$cgipath/$spath");
+	$spath		= $Sys->{'SYS'}->Get('BBS_REL');
+	$lpath		= $Sys->{'SYS'}->Get('BBS_ABS');
 	$key		= $Sys->{'SYS'}->Get('KEY');
 	$kh			= substr($key, 0, 4) . '/' . substr($key, 0, 5);
 	$ver		= $Sys->{'SYS'}->Get('VERSION');

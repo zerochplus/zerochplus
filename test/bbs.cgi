@@ -32,6 +32,7 @@ sub BBSCGI
 {
 	my (%SYS, $Page, $err);
 	
+	require '../0chp_iroiro.pl';
 	require './module/constant.pl';
 	
 	require './module/thorin.pl';
@@ -107,7 +108,7 @@ sub BBSCGI
 sub Initialize
 {
 	my ($Sys, $Page) = @_;
-	my ($client);
+	my ($client, $S, $C);
 	
 	# 使用モジュールの初期化
 	require './module/melkor.pl';
@@ -116,75 +117,81 @@ sub Initialize
 	require './module/galadriel.pl';
 	require './module/samwise.pl';
 	
+	$S = new MELKOR;
+	$C = new GALADRIEL;
+	
 	%$Sys = (
-		'SYS'		=> new MELKOR,
+		'SYS'		=> $S,
 		'SET'		=> new ISILDUR,
 		'COOKIE'	=> new RADAGAST,
-		'CONV'		=> new GALADRIEL,
+		'CONV'		=> $C,
 		'PAGE'		=> $Page,
 		'FORM'		=> 0,
 	);
 	
 	# システム情報設定
-	if ($Sys->{'SYS'}->Init()) {
+	if ($S->Init()) {
 		return 990;
 	}
 	
-	$Sys->{'FORM'} = SAMWISE->new($Sys->{'SYS'}->Get('BBSGET')),
+	$Sys->{'FORM'} = SAMWISE->new($S->Get('BBSGET')),
 	
 	# form情報設定
 	$Sys->{'FORM'}->DecodeForm(1);
 	
 	# 夢が広がりんぐ
-	$Sys->{'SYS'}->{'MainCGI'} = $Sys;
+	$S->{'MainCGI'} = $Sys;
 	
 	# ホスト情報設定(DNS逆引き)
-	$ENV{'REMOTE_HOST'} = $Sys->{'CONV'}->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
+	$ENV{'REMOTE_HOST'} = $C->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
 	$Sys->{'FORM'}->Set('HOST', $ENV{'REMOTE_HOST'});
 	
 	$client = $Sys->{'CONV'}->GetClient();
 	
-	$Sys->{'SYS'}->Set('ENCODE', 'Shift_JIS');
-	$Sys->{'SYS'}->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
-	$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
-	$Sys->{'SYS'}->Set('CLIENT', $client);
-	$Sys->{'SYS'}->Set('AGENT', $Sys->{'CONV'}->GetAgentMode($client));
-	$Sys->{'SYS'}->Set('KOYUU', $ENV{'REMOTE_HOST'});
+	$S->Set('ENCODE', 'Shift_JIS');
+	$S->Set('BBS', $Sys->{'FORM'}->Get('bbs', ''));
+	$S->Set('KEY', $Sys->{'FORM'}->Get('key', ''));
+	$S->Set('CLIENT', $client);
+	$S->Set('AGENT', $C->GetAgentMode($client));
+	$S->Set('KOYUU', $ENV{'REMOTE_HOST'});
+	$S->Set('BBSPATH_ABS', $C->MakePath($S->Get('CGIPATH'), $S->Get('BBSPATH')));
+	$S->Set('BBS_ABS', $C->MakePath($S->Get('BBSPATH_ABS'), $S->Get('BBS')));
+	$S->Set('BBS_REL', $C->MakePath($S->Get('BBSPATH'), $S->Get('BBS')));
 	
 	# 携帯の場合は機種情報を設定
 	if ($client & $ZP::C_MOBILE) {
-		my $product = $Sys->{'CONV'}->GetProductInfo($client);
+		my $product = $C->GetProductInfo($client);
 		
 		if (! defined  $product) {
 			return 950;
 		}
 		else {
-			$Sys->{'SYS'}->Set('KOYUU', $product);
+			$S->Set('KOYUU', $product);
 		}
 	}
 	
 	# SETTING.TXTの読み込み
-	if (! $Sys->{'SET'}->Load($Sys->{'SYS'})) {
+	if (! $Sys->{'SET'}->Load($S)) {
 		return 999;
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
-	# $Sys->{'SYS'}->Equal('AGENT', 'O') && 
+	# $S->Equal('AGENT', 'O') && 
 	if ($Sys->{'FORM'}->Equal('mb', 'on') && $Sys->{'FORM'}->Equal('thread', 'on')) {
 		return 9003;
 	}
 	
 	# form情報にkeyが存在したらレス書き込み
-	if ($Sys->{'FORM'}->IsExist('key'))	{ $Sys->{'SYS'}->Set('MODE', 2); }
-	else								{ $Sys->{'SYS'}->Set('MODE', 1); }
+	if ($Sys->{'FORM'}->IsExist('key'))	{ $S->Set('MODE', 2); }
+	else								{ $S->Set('MODE', 1); }
 	
 	# スレッド作成モードでMESSAGEが無い：スレッド作成画面
-	if ($Sys->{'SYS'}->Equal('MODE', 1)) {
+	if ($S->Equal('MODE', 1)) {
 		if (! $Sys->{'FORM'}->IsExist('MESSAGE')) {
 			return 9000;
 		}
 		$Sys->{'FORM'}->Set('key', time);
-		$Sys->{'SYS'}->Set('KEY', $Sys->{'FORM'}->Get('key'));
+		$S->Set('KEY', $Sys->{'FORM'}->Get('key'));
 	}
 	
 	# cookieの存在チェック(PCのみ)
@@ -582,7 +589,7 @@ sub PrintBBSJump
 	}
 	# PC用表示
 	else {
-		$bbsPath = $Conv->MakePath($SYS->Get('BBSPATH').'/'.$SYS->Get('BBS'));
+		$bbsPath = $Conv->MakePath($SYS->Get('BBS_REL'));
 		my $COOKIE = $Sys->{'COOKIE'};
 		my $oSET = $Sys->{'SET'};
 		my $name = $Sys->{'FORM'}->Get('NAME', '');
