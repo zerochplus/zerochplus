@@ -398,7 +398,7 @@ sub IsRegulation
 {
 	my ($this) = @_;
 	my ($oSYS, $oSET, $oSEC);
-	my ($err, $host, $koyuu, $bbs, $datPath, $capID, $from, $mode);
+	my ($islocalip, $host, $addr, $koyuu, $bbs, $datPath, $capID, $from, $mode);
 	
 	$oSYS		= $this->{'SYS'};
 	$oSET		= $this->{'SET'};
@@ -408,8 +408,12 @@ sub IsRegulation
 	$capID		= $oSYS->Get('CAPID');
 	$datPath	= $oSYS->Get('DATPATH');
 	$mode		= $oSYS->Get('AGENT');
-	$host		= $ENV{'REMOTE_HOST'};
 	$koyuu		= $oSYS->Get('KOYUU');
+	$host		= $ENV{'REMOTE_HOST'};
+	$addr		= $ENV{'REMOTE_ADDR'};
+	$islocalip	= 0;
+	
+	$islocalip = 1 if ($addr =~ /^(127|172|192)\./);
 	
 	# レス書き込みモード時のみ
 	if ($oSYS->Equal('MODE', 2)) {
@@ -438,7 +442,7 @@ sub IsRegulation
 		}
 	}
 	# PROXYチェック
-	if (! $oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
+	if (! $islocalip && ! $oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			if (! $oSEC->IsAuthority($capID, 19, $bbs)){
@@ -453,7 +457,7 @@ sub IsRegulation
 		}
 	}
 	# JPホスト以外規制
-	if ($oSET->Equal('BBS_JP_CHECK', 'checked')) {
+	if (! $islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
 		unless ($host =~ /\.(jp|JP)$/) {
 			return 207;
 		}
