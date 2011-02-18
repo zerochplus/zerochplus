@@ -374,12 +374,15 @@ sub PrintResponse
 	
 	$server	= $oSYS->Get('SERVER') || $ENV{'SERVER_NAME'};
 	$server	=~ s|http://||i;
-	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH') . '/' . $oSYS->Get('BBS');
+	$path	= $oSYS->Get('CGIPATH') . '/' . $oSYS->Get('BBSPATH');
 	$path	=~ s|/\./|/|g while ($path =~ m|/\./|);
-	$path	=~ s|/[^/\.]+/\.\./|/|g while ($path =~ m|/[^/\.]+/\.\./|);
+	while ($path =~ m{/(?!\.\.(?:/|$))[^/]+/\.\.(?:/|$)}) {
+		$path =~ s{/(?!\.\.(?:/|$))[^/]+/\.\.(/|$)}{\1}g;
+	}
 	$path	=~ s|/|+|gi;
+	$path	= $path . '/' . $oSYS->Get('BBS');
 	$obama	= "http://example.ddo.jp/aas/a.i/$server$path/" . $oSYS->Get('KEY') . "/$n?guid=ON";
-		
+	
 	$Page->Print("<a name=\"down\"></a>") if ( $n == $last );
 	$Page->Print("<hr>[$n]$elem[0]</b>ÅF$elem[2]<br><a href=\"$obama\">AAS</a><br>$elem[3]<br>\n");
 }
