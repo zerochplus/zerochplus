@@ -89,7 +89,7 @@ sub Load
 	if ($log eq 'ERR')		{ $file = 'errs.cgi';	$kind = 1; }	# エラーログ
 	elsif ($log eq 'THR')	{ $file = 'IP.cgi';		$kind = 2; }	# スレッド作成ログ
 	elsif ($log eq 'WRT')	{ $file = "$key.cgi";	$kind = 3; }	# 書き込みログ
-	elsif ($log eq 'HST')	{ $file = "HOSTs.cgi";	$kind = 5; }	# ホストログ
+	elsif ($log eq 'HST')	{ $file = "HOST.cgi";	$kind = 5; }	# ホストログ
 	elsif ($log eq 'SMB')	{ $file = "samba.cgi";	$kind = 6; }	# Sambaログ
 	elsif ($log eq 'SBH')	{ $file = "houshi.cgi";	$kind = 7; }	# Samba規制ログ
 	else {															# 異常
@@ -166,21 +166,21 @@ sub Save
 sub Set
 {
 	my $this = shift;
-	my ($I, $data1, $data2, $host, $data, $mode) = @_;
-	my ($work, $nm, $tm, $bf, $kind, $tsw, @logdat);
+	my ($I, $data1, $data2, $koyuu, $data, $mode) = @_;
+	my ($work, $nm, $tm, $bf, $kind, $host, @logdat);
 	
 	$bf		= 0;
 	$nm		= $this->{'NUM'};														# ログ数取得
 	$kind	= $this->{'KIND'};
-	$tsw	= $ENV{'REMOTE_HOST'};
+	$host	= $ENV{'REMOTE_HOST'};
 	$mode	= '0' if (! defined $mode);
 	
 	if ($mode ne '0') {
 		if ($mode eq 'P') {
-			$host = "$tsw($host)$ENV{'REMOTE_ADDR'}";
+			$host = "$host($koyuu)$ENV{'REMOTE_ADDR'}";
 		}
 		else {
-			$host = "$tsw($host)";
+			$host = "$host($koyuu)";
 		}
 	}
 	
@@ -191,7 +191,7 @@ sub Set
 		
 		$tm = time;
 		
-		if ($kind eq 3) {
+		if ($kind == 3) {
 			
 			@logdat = split(/<>/, $data, 5);
 			
@@ -263,7 +263,7 @@ sub Get
 sub Search
 {
 	my $this = shift;
-	my ($data, $f) = @_;
+	my ($data, $f, $mode, $host, $count) = @_;
 	my ($key, $dmy, $num, $i, $dat, $kind);
 	
 	$kind = $this->{'KIND'};
@@ -274,36 +274,52 @@ sub Search
 			$dmy = $this->{'LOG'}->[$i];
 			chomp $dmy;
 			($key, $dat) = (split /<>/, $dmy)[$kind == 3 ? (5, 7) : (1, 3)];
+			$key =~ s/^.*?(\(.*\)).*?$/$1/;
 			if ($data eq $key) {
 				return $dat;
 			}
 		}
 	}
-	elsif ($f == 2) {											# host出現数
-		$num = 0;
-		$dat = @{$this->{'LOG'}};
-		for ($i = $dat - 1;$i >= 0;$i--) {
-			$dmy = $this->{'LOG'}->[$i];
-			chomp $dmy;
-			$key = (split /<>/, $dmy)[$kind == 3 ? 5 : 3];
-			if ($data eq $key) {
-				$num++;
+	else {
+		if ($mode ne '0') {
+			if ($mode eq 'P') {
+				$host = "$host($data)$ENV{'REMOTE_ADDR'}";
+			}
+			else {
+				$host = "$host($data)";
 			}
 		}
-		return $num;
-	}
-	if ($f == 3) {												# THR
-		$num = 0;
-		$dat = @{$this->{'LOG'}};
-		for ($i = $dat - 1 ; $i >= 0 ; $i--) {
-			$dmy = $this->{'LOG'}->[$i];
-			chomp $dmy;
-			($key, $dat) = (split /<>/, $dmy)[1, 3];
-			if ($data eq $dat) {
-				$num++;
+		
+		if ($f == 2) {											# host出現数
+			$num = 0;
+			$dat = @{$this->{'LOG'}};
+			$count = $dat if (! defined $count);
+			for ($i = $dat - 1 ; $i >= $dat - $count ; $i--) {
+				$dmy = $this->{'LOG'}->[$i];
+				chomp $dmy;
+				$key = (split /<>/, $dmy)[$kind == 3 ? 5 : $kind == 5 ? 1 : 3];
+				$key =~ s/^.*?\((.*)\).*?$/$1/;
+				if ($data eq $key) {
+					$num++;
+				}
 			}
+			return $num;
 		}
-		return $num;
+		elsif ($f == 3) {											# THR
+			$num = 0;
+			$dat = @{$this->{'LOG'}};
+			$count = $dat if (! defined $count);
+			for ($i = $dat - 1 ; $i >= $dat - $count ; $i--) {
+				$dmy = $this->{'LOG'}->[$i];
+				chomp $dmy;
+				($key, $dat) = (split /<>/, $dmy)[1, 3];
+				$key =~ s/^.*?(\(.*\)).*?$/$1/;
+				if ($data eq $dat) {
+					$num++;
+				}
+			}
+			return $num;
+		}
 	}
 	return 0;
 }

@@ -166,7 +166,7 @@ sub Write
 		require './module/peregrin.pl';
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oForm->Get('KOYUU'), $data, $oSys->Get('AGENT', 0));
+		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oSys->Get('KOYUU'), $data, $oSys->Get('AGENT', 0));
 		$LOG->Save($oSys);
 	}
 	
@@ -274,13 +274,14 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet, $text, $host, $koyuu, $from);
+	my ($Sys, $Form, @pluginSet, $text, $host, $addr, $koyuu, $from);
 	
 	$Sys	= $this->{'SYS'};
 	$Form	= $this->{'FORM'};
 	$from	= $Form->Get('FROM');
-	$host	= $ENV{'REMOTE_HOST'};
 	$koyuu	= $Sys->Get('KOYUU');
+	$host	= $ENV{'REMOTE_HOST'};
+	$addr	= $ENV{'REMOTE_ADDR'};
 	
 	# 規制ユーザ・NGワードチェック
 	{
@@ -289,7 +290,7 @@ sub ReadyBeforeWrite
 		require './module/faramir.pl';
 		$vUser = FARAMIR->new;
 		$vUser->Load($Sys);
-		$check = $vUser->Check($host);
+		$check = $vUser->Check($host, $addr);
 		if ($check == 4) {
 			return 601;
 		}
@@ -492,11 +493,11 @@ sub IsRegulation
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			if ($LOG->Search($koyuu, 3)) {
+			if ($LOG->Search($koyuu, 3, $mode, $host)) {
 				return 500;
 			}
 		}
-		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
+		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu, undef, $mode);
 		$LOG->Save($oSYS);
 		
 		# Sambaログ
@@ -564,13 +565,12 @@ sub IsRegulation
 			}
 		}
 		
-		my $LOG = PEREGRIN->new;
-		$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
-		
 		# レス書き込み(連続投稿)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
-			if ($oSET->Get('timeclose') ne "" && $oSET->Get('timecount') ne "" ) {
-				if ($LOG->Search($koyuu, 2) >= $oSET->Get('timeclose')) {
+			if ($oSET->Get('timeclose') ne '' && $oSET->Get('timecount') ne '' ) {
+				my $LOG = PEREGRIN->new;
+				$LOG->Load($oSYS, 'HST');
+				if ($LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount')) >= $oSET->Get('timeclose')) {
 					return 501;
 				}
 			}
@@ -578,6 +578,8 @@ sub IsRegulation
 		# レス書き込み(二重投稿)
 		if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
 			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
+				my $LOG = PEREGRIN->new;
+				$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
 				if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
 					return 502;
 				}
@@ -844,15 +846,28 @@ sub Get1001Data
 sub SaveHost
 {
 	my ($Sys, $Form) = @_;
-	my ($Logger, $bbs);
+	my ($Logger, $bbs, $host, $agent, $koyuu);
 	
 	$bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	
+	$host = $ENV{'REMOTE_HOST'};
+	$agent = $Sys->Get('AGENT');
+	$koyuu = $Sys->Get('KOYUU');
+	
+	if ($agent ne '0') {
+		if ($agent eq 'P') {
+			$host = "$host($koyuu)$ENV{'REMOTE_ADDR'}";
+		}
+		else {
+			$host = "$host($koyuu)";
+		}
+	}
 	
 	require './module/imrahil.pl';
 	$Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/log/HOST", 500, 2 | 4) == 0) {
-		$Logger->Put($Sys->Get('KOYUU'), $Sys->Get('KEY'), $Sys->Get('MODE'));
+		$Logger->Put($host, $Sys->Get('KEY'), $Sys->Get('MODE'));
 		$Logger->Write();
 	}
 }
