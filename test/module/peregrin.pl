@@ -266,7 +266,7 @@ sub Search
 {
 	my $this = shift;
 	my ($data, $f, $mode, $host, $count) = @_;
-	my ($key, $dmy, $num, $i, $dat, $kind);
+	my ($key, $dmy, $num, $i, $dat, $kind, $data2);
 	
 	$kind = $this->{'KIND'};
 	
@@ -314,9 +314,9 @@ sub Search
 			for ($i = $dat - 1 ; $i >= $dat - $count ; $i--) {
 				$dmy = $this->{'LOG'}->[$i];
 				chomp $dmy;
-				($key, $dat) = (split /<>/, $dmy)[1, 3];
+				($key, $data2) = (split /<>/, $dmy)[1, 3];
 				$key =~ s/^.*?(\(.*\)).*?$/$1/;
-				if ($data eq $dat) {
+				if ($data eq $data2) {
 					$num++;
 				}
 			}
