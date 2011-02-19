@@ -40,6 +40,8 @@ sub AdminCGI
 	$Sys->Set('ADMIN', \%SYS);
 	$SYS{'SECINFO'}->Init($Sys);
 	
+	$Sys->Set('BBS', '');
+	
 	# ƒtƒH[ƒ€î•ñ‚ðŽæ“¾
 	require "./module/samwise.pl";
 	$Form = SAMWISE->new(0);
