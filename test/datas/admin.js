@@ -1,3 +1,5 @@
+var postflag = false;
+
 //----------------------------------------------------------------------------------------
 //	submit処理
 //----------------------------------------------------------------------------------------
@@ -7,6 +9,8 @@ function DoSubmit(modName, mode, subMode)
 	document.ADMIN.MODULE.value		= modName;				// モジュール名
 	document.ADMIN.MODE.value		= mode;					// メインモード
 	document.ADMIN.MODE_SUB.value	= subMode;				// サブモード
+	
+	postflag = true;
 	
 	// POST送信
 	document.ADMIN.submit();
@@ -18,4 +22,9 @@ function DoSubmit(modName, mode, subMode)
 function SetOption(key, val)
 {
 	document.ADMIN.elements[key].value = val;
+}
+
+function Submitted()
+{
+	return postflag;
 }

@@ -211,7 +211,7 @@ sub PrintHead
 $Page->Print(<<HTML);
 <body>
 
-<form name="ADMIN" action="./admin.cgi" method="POST">
+<form name="ADMIN" action="./admin.cgi" method="POST" onsubmit="return Submitted();">
 
 <div class="MainMenu" align="right">
 HTML
