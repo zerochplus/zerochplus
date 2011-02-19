@@ -32,7 +32,6 @@ sub BBSCGI
 {
 	my (%SYS, $Page, $err);
 	
-	require '../0chp_iroiro.pl';
 	require './module/constant.pl';
 	
 	require './module/thorin.pl';
