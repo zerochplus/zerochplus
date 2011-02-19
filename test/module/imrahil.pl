@@ -223,7 +223,7 @@ sub Get
 	my $this = shift;
 	my ($line) = @_;
 	
-	if ($line < $this->{'SIZE'}) {
+	if ($line >= 0 && $line < $this->{'SIZE'}) {
 		return $this->{'LOGS'}->[$line];
 	}
 	return undef;

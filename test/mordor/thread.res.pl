@@ -229,7 +229,7 @@ sub PrintResList
 	my ($Page, $Sys, $Form, $Dat,$Logger) = @_;
 	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
 	my ($pRes, $isAbone, $isEdit, $format);
-	my ($log,@logs);
+	my ($log, @logs, $lastnum, $logsize);
 	
 	$Sys->Set('_TITLE', 'Res List');
 	
@@ -250,12 +250,17 @@ sub PrintResList
 	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
 	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 13, $Sys->Get('BBS'));
 	
+	$lastnum = $Dat->Size() - 1;
+	$logsize = $Logger->Size();
+	
+	$lastnum -= 1 if ($Dat->IsStopped($Sys));
+	
 	# レス一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$pRes	= $Dat->Get($i);
-		$log = $Logger->Get($i);
 		@elem	= split(/<>/, $$pRes);
-		@logs	= split(/<>/,$log);
+		$log = $Logger->Get($logsize - 1 + $i - $lastnum);
+		@logs	= split(/<>/,$log) if (defined $log);
 		
 		$Page->Print("<tr><td class=\"Response\" valign=top>");
 		
@@ -278,7 +283,9 @@ sub PrintResList
 			$Page->Print('' . ($i + 1));
 		}
 		$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
-		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br><hr>IP:$logs[6]<br>UA:$logs[8]</dd></td></tr>\n");
+		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br>");
+		$Page->Print("<hr>HOST:$logs[5]<br>IP:$logs[6]<br>UA:$logs[8]") if (defined $log);
+		$Page->Print("</dd></td></tr>\n");
 	}
 	$Page->HTMLInput('hidden', 'SELECT_RES', '');
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
