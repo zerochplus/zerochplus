@@ -184,8 +184,8 @@ sub PrintKakoLogList
 	
 	# •\Ž¦”‚ÌÝ’è
 	$logNum		= @logSet;
-	$dispNum	= $Form->Get('DISPNUM_KAKO', 10);
-	$dispSt		= $Form->Get('DISPST_KAKO', 0);
+	$dispNum	= $Form->Get('DISPNUM_KAKO', 10) || 0;
+	$dispSt		= $Form->Get('DISPST_KAKO', 0) || 0;
 	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
 	$dispEd		= (($dispSt + $dispNum) > $logNum ? $logNum : ($dispSt + $dispNum));
 	

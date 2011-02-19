@@ -649,13 +649,15 @@ sub FunctionThreadDelete
 	
 	@threadList = $Form->GetAtArray('THREADS');
 	$bbs		= $Sys->Get('BBS');
-	$path		= $Sys->Get('BBSPATH') . "/$bbs/dat";
+	$path		= $Sys->Get('BBSPATH') . "/$bbs";
 	
 	foreach $id (@threadList) {
 		next if (! defined $Threads->Get('SUBJECT', $id));
 		push @$pLog, 'スレッド「' . $Threads->Get('SUBJECT', $id) . '」を削除';
 		$Threads->Delete($id);
-		unlink "$path/$id.dat";
+		unlink "$path/dat/$id.dat";
+		unlink "$path/log/$id.cgi";
+		unlink "$path/log/del_$id.cgi";
 	}
 	$Threads->Save($Sys);
 	

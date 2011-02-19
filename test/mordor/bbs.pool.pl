@@ -432,13 +432,15 @@ sub FunctionThreadDelete
 	
 	@threadList = $Form->GetAtArray('THREADS');
 	$bbs		= $Sys->Get('BBS');
-	$path		= $Sys->Get('BBSPATH') . "/$bbs/pool";
+	$path		= $Sys->Get('BBSPATH') . "/$bbs";
 	
 	foreach $id (@threadList) {
 		next if (! defined $Pools->Get('SUBJECT', $id));
 		push @$pLog, 'POOLスレッド「' . $Pools->Get('SUBJECT', $id) . '」を削除';
 		$Pools->Delete($id);
-		unlink "$path/$id.cgi";
+		unlink "$path/pool/$id.cgi";
+		unlink "$path/log/$id.cgi";
+		unlink "$path/log/del_$id.cgi";
 	}
 	$Pools->Save($Sys);
 	
