@@ -543,7 +543,7 @@ sub FunctionResEdit
 sub FunctionResDelete
 {
 	my ($Sys, $Form, $Dat, $pLog, $mode) = @_;
-	my (@resSet, $pRes, $abone, $path, $tm, $user, $delCnt, $num, $datPath);
+	my (@resSet, $pRes, $abone, $path, $tm, $user, $delCnt, $num, $datPath, $LOG, $logsize, $lastnum);
 	
 	# 権限チェック
 	{
@@ -562,6 +562,13 @@ sub FunctionResDelete
 		$Setting = ISILDUR->new;
 		$Setting->Load($Sys);
 		$abone	= $Setting->Get('BBS_DELETE_NAME');
+	}
+	else {
+		require './module/peregrin.pl';
+		$LOG = PEREGRIN->new;
+		$LOG->Load($Sys, 'WRT', $Sys->Get('KEY'));
+		$logsize = $LOG->Size();
+		$lastnum = $Dat->Size() - 1;
 	}
 	
 	# 各値を設定
@@ -583,6 +590,7 @@ sub FunctionResDelete
 		flock DELLOG, 2;
 		binmode DELLOG;
 		foreach $num (@resSet) {
+			next if ($num == 0);
 			$pRes = $Dat->Get($num - $delCnt);
 			print DELLOG "$tm<>$user<>$num<>$mode<>$$pRes";
 			if ($mode) {
@@ -590,7 +598,10 @@ sub FunctionResDelete
 			}
 			else {
 				$Dat->Delete($num - $delCnt);
+				$LOG->Delete($logsize - 1 + ($num - $delCnt) - $lastnum);
 				$delCnt ++;
+				$logsize --;
+				$lastnum --;
 			}
 		}
 		close DELLOG;
@@ -599,12 +610,14 @@ sub FunctionResDelete
 	
 	# 保存
 	$Dat->Save($Sys);
+	$LOG->Save($Sys) if (! $mode);
 	
 	# ログの設定
 	$delCnt = 0;
 	$abone	= '';
 	push @$pLog, '以下のレスを' . ($mode ? 'あぼ～ん' : '削除') . 'しました。';
 	foreach (@resSet) {
+		next if ($_ == 0);
 		if ($delCnt > 5) {
 			push @$pLog, $abone;
 			$abone = '';
