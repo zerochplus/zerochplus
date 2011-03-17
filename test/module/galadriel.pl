@@ -1003,15 +1003,14 @@ sub GetIDPart
 		$id .= $mode;
 	}
 	
-	# ID非表示権限有り
-	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
-		if ($Set->Equal('BBS_NO_ID', 'checked')) {
-			return '';
-		}
-		return " ID:??? $mode";
-	}
 	# ホスト表示
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
+		
+		# ID非表示権限有り
+		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+			return " ID:???$mode";
+		}
+		
 		if ( $mode eq 'O' ) {
 			return " HOST:$koyuu $ENV{'REMOTE_HOST'}".( $mode ne '' ? " $mode" : '' );
 		}
@@ -1024,6 +1023,12 @@ sub GetIDPart
 	}
 	# IP表示 Ver.Siberia
 	if ($Set->Equal('BBS_DISP_IP', 'siberia')){
+		
+		# ID非表示権限有り
+		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+			return " 発信元:???$mode";
+		}
+		
 		if ( $mode eq 'P' ) {
 			return " 発信元:$ENV{'REMOTE_P2'}".( $mode ne '' ? " $mode" : '' );
 		}
@@ -1033,8 +1038,14 @@ sub GetIDPart
 	}
 	# IP表示 Ver.Sakhalin
 	if ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
+		
+		# ID非表示権限有り
+		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+			return " 発信元:???".( $mode ne '' ? " $mode" : '' );
+		}
+		
 		if ( $mode eq 'P' ) {
-			return " 発信元:$ENV{'REMOTE_P2'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
+			return " 発信元:$ENV{'HTTP_X_P2_CLIENT_IP'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
 		}
 		elsif ( $mode eq 'O' ) {
 			return " 発信元:$ENV{'REMOTE_ADDR'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
@@ -1046,7 +1057,11 @@ sub GetIDPart
 	
 	# ID表示無しならそのままリターン
 	if ($Set->Equal('BBS_NO_ID', 'checked')) {
-		return '';
+		return ( $mode ne '' ? " $mode" : '' );
+	}
+	# ID非表示権限有り
+	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+		return " ID:???$mode";
 	}
 	# 強制IDの場合
 	if ($Set->Equal('BBS_FORCE_ID', 'checked')) {
@@ -1058,7 +1073,7 @@ sub GetIDPart
 		return " ID:$id";
 	}
 	
-	return " ID:??? $mode";
+	return " ID:???$mode";
 }
 
 #------------------------------------------------------------------------------------------------------------
