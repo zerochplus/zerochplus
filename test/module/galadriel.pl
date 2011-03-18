@@ -180,21 +180,25 @@ sub ConvertURL
 	}
 	else {																				# PCから
 		if ($cushion) {																	# クッションあり
-			$server =~ m{$reg1};
+			$server =~ m|$reg1|;
 			$server = $2;
-			$$text =~ s{$reg1}{<$1::$2>}g;												# URL1次変換
-			while ($$text =~ m{$reg2}) {												# 2次変換
-				if ($2 =~ m{$server}) {													# 自鯖リンク
-					$$text =~ s{$reg2}{<a href="$1://$2" target="_blank">$1://$2</a>};	# クッションなし
+			$$text =~ s|$reg1|<$1::$2>|g;												# URL1次変換
+			while ($$text =~ m|$reg2|) {												# 2次変換
+				if ($2 =~ m|^$server/|) {													# 自鯖リンク
+					$$text =~ s|$reg2|<a href="$1://$2" target="_blank">$1://$2</a>|;	# クッションなし
 				}
 				else {																	# 自鯖以外
-					$$text =~ s{$reg2}
-							{<a href="$1://$cushion$2" target="_blank">$1://$2</a>};	# クッション付加
+					if( $1 eq "http" ) {
+						$$text =~ s|$reg2|<a href="$1://$cushion$2" target="_blank">$1://$2</a>|;
+					}
+					elsif ( $cushion =~ /(?:jump.x0.to|nun.nu)/ ) {
+						$$text =~ s|$reg2|<a href="http://$cushion$1://$2" target="_blank">$1://$2</a>|;
+					}
 				}
 			}
 		}
 		else {																			# クッション無し
-			$$text =~ s{$reg1}{<a href="$1://$2" target="_blank">$1://$2</a>}g;			# 通常URL変換
+			$$text =~ s|$reg1|<a href="$1://$2" target="_blank">$1://$2</a>|g;			# 通常URL変換
 		}
 	}
 	return $text;
