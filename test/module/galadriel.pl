@@ -176,7 +176,7 @@ sub ConvertURL
 		$$text	=~ s/ <br> /<br>/g;														# 改行
 		$$text	=~ s/\s*<br>/<br>/g;													# 空白改行
 		$$text	=~ s/(?:<br>){2}/<br>/g;												# 空改行
-		$$text	=~ s/(?:<br>){3,}/<br><br>/g;												# 空改行
+		$$text	=~ s/(?:<br>){3,}/<br><br>/g;											# 空改行
 	}
 	else {																				# PCから
 		if ($cushion) {																	# クッションあり
@@ -184,7 +184,7 @@ sub ConvertURL
 			$server = $2;
 			$$text =~ s|$reg1|<$1::$2>|g;												# URL1次変換
 			while ($$text =~ m|$reg2|) {												# 2次変換
-				if ($2 =~ m|^$server/|) {													# 自鯖リンク
+				if ($2 =~ m{^$server(?:/|$)}) {											# 自鯖リンク
 					$$text =~ s|$reg2|<a href="$1://$2" target="_blank">$1://$2</a>|;	# クッションなし
 				}
 				else {																	# 自鯖以外

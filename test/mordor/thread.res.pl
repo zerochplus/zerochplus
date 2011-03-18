@@ -46,7 +46,7 @@ sub DoPrint
 {
 	my $this = shift;
 	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $BASE, $BBS, $DAT, $Page,$Logger,$permit);
+	my ($subMode, $BASE, $BBS, $DAT, $Page,$Logger);
 	
 	require './mordor/sauron.pl';
 	$BASE = SAURON->new;
@@ -78,7 +78,6 @@ sub DoPrint
 	$Logger = IMRAHIL->new;
 	my $logPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/' . $Sys->Get('KEY');
 	$Logger->Open($logPath, 0, 1 | 2);
-	$permit = ARAGORN::GetPermission($logPath);
 	
 	# 管理マスタオブジェクトの生成
 	$Page		= $BASE->Create($Sys, $Form);
@@ -88,7 +87,7 @@ sub DoPrint
 	SetMenuList($BASE, $pSys, $Sys->Get('BBS'));
 	
 	if ($subMode eq 'LIST') {														# レス一覧画面
-		PrintResList($Page, $Sys, $Form, $DAT,$Logger,$permit);
+		PrintResList($Page, $Sys, $Form, $DAT,$Logger);
 	}
 	elsif ($subMode eq 'EDIT') {													# レス編集画面
 		PrintResEdit($Page, $Sys, $Form, $DAT);
@@ -227,7 +226,7 @@ sub SetMenuList
 #------------------------------------------------------------------------------------------------------------
 sub PrintResList
 {
-	my ($Page, $Sys, $Form, $Dat,$Logger,$permit) = @_;
+	my ($Page, $Sys, $Form, $Dat,$Logger) = @_;
 	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
 	my ($pRes, $isAbone, $isEdit, $format);
 	my ($log, @logs, $lastnum, $logsize);
@@ -254,7 +253,7 @@ sub PrintResList
 	$lastnum = $Dat->Size() - 1;
 	$logsize = $Logger->Size();
 	
-	$lastnum -= 1 if ($permit eq $Sys->Get('PM-STOP'));
+	$lastnum -= 1 if ($Dat->IsStopped($Sys));
 	
 	# レス一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
