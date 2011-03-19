@@ -634,25 +634,28 @@ sub PrintPluginSetting
 		my ($id, $file, $class, $name, $expl, $valid);
 		
 		$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-		$Page->Print("<tr><td colspan=4>有効にする機能\にチェックを入れてください。</td></tr>\n");
-		$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+		$Page->Print("<tr><td colspan=5>有効にする機能\にチェックを入れてください。</td></tr>\n");
+		$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
 		$Page->Print("<tr>");
+		$Page->Print("<td class=\"DetailTitle\">Order</td>");
 		$Page->Print("<td class=\"DetailTitle\">Function Name</td>");
 		$Page->Print("<td class=\"DetailTitle\">Explanation</td>");
 		$Page->Print("<td class=\"DetailTitle\">File</td>");
 		$Page->Print("<td class=\"DetailTitle\">Class Name</td></tr>\n");
 		
-		foreach $id (@pluginSet) {
+		for my $i (0 .. $#pluginSet) {
+			$id = $pluginSet[$i];
 			$file = $Plugin->Get('FILE', $id);
 			$class = $Plugin->Get('CLASS', $id);
 			$name = $Plugin->Get('NAME', $id);
 			$expl = $Plugin->Get('EXPL', $id);
 			$valid = $Plugin->Get('VALID', $id) == 1 ? 'checked' : '';
-			$Page->Print("<tr><td><input type=checkbox name=PLUGIN_VALID value=$id $valid>");
+			$Page->Print("<tr><td><input type=text name=PLUGIN_${id}_ORDER value=@{[$i+1]} size=3></td>");
+			$Page->Print("<td><input type=checkbox name=PLUGIN_VALID value=$id $valid>");
 			$Page->Print(" $name</td><td>$expl</td><td>$file</td><td>$class</td></tr>\n");
 		}
-		$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-		$Page->Print("<tr><td colspan=4 align=right>");
+		$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
+		$Page->Print("<tr><td colspan=5 align=right>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'SET_PLUGIN');\"> ");
 	}
 	else {
@@ -1013,13 +1016,14 @@ sub FunctionPluginSetting
 	$Plugin = ATHELAS->new;
 	$Plugin->Load($Sys);
 	
-	my (@pluginSet, @validSet, $id, $valid);
+	my (@pluginSet, @validSet, %order);
 	
 	$Plugin->GetKeySet('ALL', '', \@pluginSet);
 	@validSet = $Form->GetAtArray('PLUGIN_VALID');
 	
-	foreach $id (@pluginSet) {
-		$valid = 0;
+	for my $i (0 .. $#pluginSet) {
+		my $id = $pluginSet[$i];
+		my $valid = 0;
 		foreach (@validSet) {
 			if ($_ eq $id) {
 				$valid = 1;
@@ -1028,7 +1032,15 @@ sub FunctionPluginSetting
 		}
 		push @$pLog, $Plugin->Get('NAME', $id) . ' を' . ($valid ? '有効' : '無効') . 'に設定しました。';
 		$Plugin->Set($id, 'VALID', $valid);
+		
+		$_ = $Form->Get("PLUGIN_${id}_ORDER", $i + 1);
+		$_ = $i + 1 if ($_ ne ($_ - 0));
+		$_ -= 0;
+		$order{$_} = [] if (! exists $order{$_});
+		push @{$order{$_}}, $id;
 	}
+	$Plugin->{'ORDER'} = [];
+	push @{$Plugin->{'ORDER'}}, @{$order{$_}} foreach (sort {$a <=> $b} keys %order);
 	$Plugin->Save($Sys);
 	
 	return 0;

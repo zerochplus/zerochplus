@@ -22,7 +22,7 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS, %CONFIGS, %CONFTYPES);
+	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS, %CONFIGS, %CONFTYPES, @ORDER);
 	
 	$obj = {
 		'FILE'		=> \%FILES,
@@ -32,7 +32,8 @@ sub new
 		'TYPE'		=> \%TYPES,
 		'VALID'		=> \%VALIDS,
 		'CONFIG'	=> \%CONFIGS,
-		'CONFTYPE'	=> \%CONFTYPES
+		'CONFTYPE'	=> \%CONFTYPES,
+		'ORDER'		=> \@ORDER,
 	};
 	bless $obj, $this;
 	return $obj;
@@ -64,11 +65,13 @@ sub Load
 	undef $this->{'VALID'};
 	undef $this->{'CONFIG'};
 	undef $this->{'CONFTYPE'};
+	undef $this->{'ORDER'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
 	if	(-e $path) {
 		open PLUGINS, "< $path";
+		my $i = 0;
 		while (<PLUGINS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -81,6 +84,7 @@ sub Load
 				$this->{'VALID'}->{$elem[0]}	= $elem[6];
 				$this->{'CONFIG'}->{$elem[0]}	= {};
 				$this->{'CONFTYPE'}->{$elem[0]}	= {};
+				$this->{'ORDER'}->[$i++]		= $elem[0];
 				$this->LoadConfig($elem[0]);
 			}
 		}
@@ -230,7 +234,7 @@ sub Save
 		binmode PLUGINS;
 		#truncate PLUGINS, 0;
 		#seek PLUGINS, 0, 0;
-		foreach my $id (keys %{$this->{'FILE'}}) {
+		foreach my $id (@{$this->{'ORDER'}}) {
 			$data = join('<>',
 				$id,
 				$this->{'FILE'}->{$id},
@@ -267,13 +271,13 @@ sub GetKeySet
 	$n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach	$key (keys %{$this->{NAME}}) {
+		foreach $key (@{$this->{'ORDER'}}) {
 			push @$pBuf, $key;
 			$n++;
 		}
 	}
 	else {
-		foreach	$key (keys %{$this->{$kind}}) {
+		foreach $key (@{$this->{'ORDER'}}) {
 			if ($this->{$kind}->{$key} eq $name || $name eq 'ALL') {
 				push @$pBuf, $key;
 				$n++;
@@ -350,8 +354,11 @@ sub Add
 			my $className = "ZPL_$1";
 #			eval
 			{
-				require("./plugin/$file");
+				require "./plugin/$file";
 				my $plugin = new $className;
+				if (! exists $this->{'FILE'}->{$id}) {
+					push @{$this->{'ORDER'}}, $id;
+				}
 				$this->{'FILE'}->{$id}		= $file;
 				$this->{'CLASS'}->{$id}		= $className;
 				$this->{'NAME'}->{$id}		= $plugin->getName();
@@ -391,6 +398,11 @@ sub Delete
 	delete $this->{'VALID'}->{$id};
 	delete $this->{'CONFIG'}->{$id};
 	delete $this->{'CONFTYPE'}->{$id};
+	
+	$_ = $this->{'ORDER'};
+	for (my $i = 0 ; $i < $#{$_} ; $i++) {
+		splice(@$_, $i--, 1) if ($_->[$i] eq $id);
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -457,6 +469,7 @@ sub Update
 		undef $this->{'VALID'};
 		undef $this->{'CONFIG'};
 		undef $this->{'CONFTYPE'};
+		undef $this->{'ORDER'};
 	}
 }
 
