@@ -184,13 +184,7 @@ sub Set
 		}
 	}
 	
-	if ($kind) {																	# 読み込み済み
-		if ($kind == 1 && $nm >= $this->{'MAX'}) { $bf = 1; }						# エラーログ
-		elsif ($kind == 2 && $nm >= $I->Get('BBS_THREAD_TATESUGI')) { $bf = 1; }	# スレッドログ
-	#	elsif ($kind == 3 && $nm >= $I->Get('timecount')) { $bf = 1; }				# 書き込みログ
-		elsif ($kind == 6 && $nm >= $this->{'MAX'}) { $bf = 1; }					# samba
-		elsif ($kind == 7 && $nm >= $this->{'MAX'}) { $bf = 1; }					# houshi
-		
+	if ($kind) {																# 読み込み済み
 		$tm = time;
 		
 		if ($kind == 3) {
@@ -220,9 +214,15 @@ sub Set
 		}
 		
 		push @{$this->{'LOG'}}, $work;												# 末尾へ追加
-		$this->{'NUM'}++;
+		$nm = ++$this->{'NUM'};
 		
-		if ($bf) {																	# ログ最大値を越えた
+		   if ($kind == 1) { $bf = $nm - $this->{'MAX'}; }							# エラーログ
+		elsif ($kind == 2) { $bf = $nm - $I->Get('BBS_THREAD_TATESUGI'); }			# スレッドログ
+	#	elsif ($kind == 3) { $bf = $nm - $I->Get('timecount'); }					# 書き込みログ
+		elsif ($kind == 6) { $bf = $nm - $this->{'MAX'}; }							# samba
+		elsif ($kind == 7) { $bf = $nm - $this->{'MAX'}; }							# houshi
+		
+		foreach (1 .. $bf) {														# ログ最大値を越えた
 			shift @{$this->{'LOG'}};												# 先頭ログの削除
 			$this->{'NUM'}--;
 		}
