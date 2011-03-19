@@ -93,6 +93,9 @@ sub DoPrint
 	elsif ($subMode eq 'PLUGIN') {													# 拡張機能設定画面
 		PrintPluginSetting($Page, $Sys, $Form);
 	}
+	elsif ($subMode eq 'PLUGINCONF') {												# 拡張機能個別設定設定画面
+		PrintPluginOptionSetting($Page, $Sys, $Form);
+	}
 	elsif ($subMode eq 'COMPLETE') {												# システム設定完了画面
 		$Sys->Set('_TITLE', 'Process Complete');
 		$BASE->PrintComplete('システム設定処理', $this->{'LOG'});
@@ -155,6 +158,9 @@ sub DoFunction
 	}
 	elsif ($subMode eq 'UPDATE_PLUGIN') {											# 拡張機能情報更新
 		$err = FunctionPluginUpdate($Sys, $Form, $this->{'LOG'});
+	}
+	elsif ($subMode eq 'SET_PLUGINCONF') {											# 拡張機能個別設定設定
+		$err = FunctionPluginOptionSetting($Sys, $Form, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
@@ -641,7 +647,7 @@ sub PrintPluginSetting
 		$Page->Print("<td class=\"DetailTitle\">Function Name</td>");
 		$Page->Print("<td class=\"DetailTitle\">Explanation</td>");
 		$Page->Print("<td class=\"DetailTitle\">File</td>");
-		$Page->Print("<td class=\"DetailTitle\">Class Name</td></tr>\n");
+		$Page->Print("<td class=\"DetailTitle\">Options</td></tr>\n");
 		
 		for my $i (0 .. $#pluginSet) {
 			$id = $pluginSet[$i];
@@ -651,8 +657,10 @@ sub PrintPluginSetting
 			$expl = $Plugin->Get('EXPL', $id);
 			$valid = $Plugin->Get('VALID', $id) == 1 ? 'checked' : '';
 			$Page->Print("<tr><td><input type=text name=PLUGIN_${id}_ORDER value=@{[$i+1]} size=3></td>");
-			$Page->Print("<td><input type=checkbox name=PLUGIN_VALID value=$id $valid>");
-			$Page->Print(" $name</td><td>$expl</td><td>$file</td><td>$class</td></tr>\n");
+			$Page->Print("<td><input type=checkbox name=PLUGIN_VALID value=$id $valid> $name</td>");
+			$Page->Print("<td>$expl</td><td>$file</td>");
+			$Page->Print("<td><a href=\"javascript:SetOption('PLGID','$id');");
+			$Page->Print("DoSubmit('sys.setting','DISP','PLUGINCONF');\">個別設定</a></td></tr>\n");
 		}
 		$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
 		$Page->Print("<tr><td colspan=5 align=right>");
@@ -665,9 +673,144 @@ sub PrintPluginSetting
 		$Page->Print("<tr><td><hr></td></tr>\n");
 		$Page->Print("<tr><td align=right>");
 	}
+	$Page->Print("<input type=hidden name=PLGID value=\"\">");
 	$Page->Print("<input type=button value=\"　更新　\" $common,'UPDATE_PLUGIN');\">");
 	$Page->Print("</td></tr>");
 	$Page->Print("</table>");
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	拡張機能個別設定設定画面の表示
+#	-------------------------------------------------------------------------------------
+#	@param	$Page	ページコンテキスト
+#	@param	$SYS	システム変数
+#	@param	$Form	フォーム変数
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintPluginOptionSetting
+{
+	my ($Page, $SYS, $Form) = @_;
+	my ($common, $Plugin, $Config, %conftype);
+	my ($id, $file, $className, $plugin, $conf);
+	
+	$id = $Form->Get('PLGID');
+	
+	require './module/athelas.pl';
+	$Plugin = ATHELAS->new;
+	$Plugin->Load($SYS);
+	$Config = PLUGINCONF->new($Plugin, $id);
+	
+	$SYS->Set('_TITLE', 'System Plugin Option Setting - ' . $Plugin->Get('NAME', $id));
+	$common = "onclick=\"DoSubmit('sys.setting','FUNC'";
+	
+	$file = $Plugin->Get('FILE', $id);
+	require "./plugin/$file";
+	$file =~ /^0ch_(.*)\.pl$/;
+	$className = "ZPL_$1";
+	$plugin = new $className;
+	if ($className->can('getConfig')) {
+		$conf = $plugin->getConfig();
+	}
+	
+	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=4>個別設定</td></tr>\n");
+	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+	$Page->Print("<tr>");
+	$Page->Print("<td class=\"DetailTitle\">Name</td>");
+	$Page->Print("<td class=\"DetailTitle\">Value</td>");
+	$Page->Print("<td class=\"DetailTitle\" width=50%>Explanation</td>");
+	$Page->Print("<td class=\"DetailTitle\">Type</td></tr>\n");
+	
+	%conftype = (
+		1	=>	'数値',
+		2	=>	'文字列',
+		3	=>	'真偽値',
+	);
+	
+	if (defined $conf) {
+		foreach my $key (sort keys %$conf) {
+			my ($val, $type, $desc);
+			$val = $Config->GetConfig($key);
+			$type = $conf->{$key}->{'valuetype'};
+			$desc = $conf->{$key}->{'description'};
+			
+			$val =~ s/([\"<>\x5c])/\x5c$1/g if ($type eq 2);
+			
+			$Page->Print("<tr><td>$key</td>");
+			if ($type eq 3) {
+				$Page->Print("<td><input type=checkbox name=PLUGIN_OPT_@{[unpack('H*', $key)]}@{[$val ? ' checked' : '']}></td>");
+			}
+			else {
+				$Page->Print("<td><input type=text name=PLUGIN_OPT_@{[unpack('H*', $key)]} value=\"$val\" size=30></td>");
+			}
+			$Page->Print("<td>$desc</td><td>$conftype{$type}</td></tr>\n");
+		}
+	}
+	
+	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<input type=hidden name=PLGID value=\"$id\">");
+	$Page->Print("<input type=button value=\"　設定　\" $common,'SET_PLUGINCONF');\">");
+	
+	$Page->Print("</td></tr>");
+	$Page->Print("</table>");
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	拡張機能個別設定設定
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	システム変数
+#	@param	$Form	フォーム変数
+#	@param	$pLog	ログ用
+#	@return	エラーコード
+#
+#------------------------------------------------------------------------------------------------------------
+sub FunctionPluginOptionSetting
+{
+	my ($Sys, $Form, $pLog) = @_;
+	my ($common, $Plugin, $Config, %conftype);
+	my ($id, $file, $className, $plugin, $conf);
+	
+	# 権限チェック
+	{
+		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		
+		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+			return 1000;
+		}
+	}
+	
+	$id = $Form->Get('PLGID');
+	
+	require './module/athelas.pl';
+	$Plugin = ATHELAS->new;
+	$Plugin->Load($Sys);
+	$Config = PLUGINCONF->new($Plugin, $id);
+	
+	$file = $Plugin->Get('FILE', $id);
+	require "./plugin/$file";
+	$file =~ /^0ch_(.*)\.pl$/;
+	$className = "ZPL_$1";
+	$plugin = new $className;
+	if ($className->can('getConfig')) {
+		$conf = $plugin->getConfig();
+	}
+	
+	if (defined $conf) {
+		push @$pLog, "$className";
+		foreach my $key (sort keys %$conf) {
+			my ($val);
+			$val = $Form->Get('PLUGIN_OPT_' . unpack('H*', $key));
+			$Config->SetConfig($key, $val);
+			push @$pLog, "$key を設定しました。";
+		}
+	}
+	
+	return 0;
 }
 
 #------------------------------------------------------------------------------------------------------------

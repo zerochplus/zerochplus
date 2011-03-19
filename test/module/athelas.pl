@@ -151,25 +151,30 @@ sub SaveConfig
 	
 	$file =~ /^(0ch_.*)\.pl$/;
 	$path = "./plugin_conf/$1.cgi";
-	if (open CONF, "> $path") {
-		my ($key, $val, $type);
-		foreach $key (sort keys %$CONFIG) {
-			next unless (defined $CONFIG->{$key});
-			$val = $CONFIG->{$key};
-			$type = $CONFTYPE->{$key};
-			if ($type == 1) {
-				$val -= 0;
+	if (($_ = keys %$CONFIG) > 0) {
+		if (open CONF, "> $path") {
+			my ($key, $val, $type);
+			foreach $key (sort keys %$CONFIG) {
+				next unless (defined $CONFIG->{$key});
+				$val = $CONFIG->{$key};
+				$type = $CONFTYPE->{$key};
+				if ($type == 1) {
+					$val -= 0;
+				}
+				elsif ($type == 2) {
+					$val =~ s/\r\n|[\r\n]/<br>/g;
+					$val =~ s/<>/&lt;&gt;/g;
+				}
+				elsif ($type == 3) {
+					$val = ($val ? 1 : 0);
+				}
+				print CONF "$type<>$key<>$val\n";
 			}
-			elsif ($type == 2) {
-				$val =~ s/\r\n|[\r\n]/<br>/g;
-				$val =~ s/<>/&lt;&gt;/g;
-			}
-			elsif ($type == 3) {
-				$val = ($val ? 1 : 0);
-			}
-			print CONF "$type<>$key<>$val\n";
+			close CONF;
 		}
-		close CONF;
+	}
+	else {
+		unlink $path;
 	}
 }
 
