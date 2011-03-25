@@ -353,6 +353,7 @@ sub Load
 			while (<GROUPS>) {
 				chomp $_;
 				@elem = split(/<>/, $_);
+				$elem[4] =~ s/ //g;
 				$this->{'NAME'}->{$elem[0]}		= $elem[1];
 				$this->{'EXPL'}->{$elem[0]}		= $elem[2];
 				$this->{'AUTH'}->{$elem[0]}		= $elem[3];

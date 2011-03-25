@@ -214,7 +214,7 @@ sub PrintGroupList
 	foreach $id (@groupSet) {
 		$name = $Group->Get('NAME', $id, '');
 		$expl = $Group->Get('EXPL', $id, '');
-		@user = split(/\, /, $Group->Get('USERS', $id, ''));
+		@user = split(/\, ?/, $Group->Get('USERS', $id, ''));
 		$n = @user;
 		
 		$common = "\"javascript:SetOption('SELECT_GROUP','$id');";
@@ -522,14 +522,14 @@ sub FunctionGroupSetting
 	
 	for ($i = 1 ; $i < 16 ; $i++) {
 		if ($authNum[$i - 1]) {
-			$auth .= "$i, ";
+			$auth .= "$i,";
 		}
 	}
 	$auth = substr($auth, 0, length($auth) - 1);
 	
 	# èäëÆÉÜÅ[ÉUèÓïÒÇÃê∂ê¨
 	@belongUser = $Form->GetAtArray('BELONGUSER');
-	$user = join(', ', @belongUser);
+	$user = join(',', @belongUser);
 	
 	# ê›íËèÓïÒÇÃìoò^
 	if ($mode) {
