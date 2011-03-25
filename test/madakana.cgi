@@ -21,6 +21,10 @@ use warnings;
 # デバッグ用
 #use CGI::Carp qw(fatalsToBrowser);
 
+# IP / リモートホスト 取得
+my $ADDR = $ENV{'REMOTE_ADDR'};
+my $HOST = GetRemoteHost($ADDR);
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	ヘッダー
@@ -48,7 +52,7 @@ print <<"HEAD";
 まだかな、まだかな、まなかな
 </p>
 <p>
-あなたのリモホ[<span style="color:red;font-weight:bold;">$ENV{'REMOTE_HOST'}</span>]
+あなたのリモホ[<span style="color:red;font-weight:bold;">$HOST($ADDR)</span>]
 </p>
 <p>
 by <font color="green">windyakin ★</font>
@@ -79,7 +83,6 @@ if ( open( FILE, "< ./info/bbss.cgi" ) ) {
 	close FILE;
 }
 
-
 foreach my $key ( keys %bbss ) {
 	
 	print '<p>'."\n";
@@ -93,7 +96,7 @@ foreach my $key ( keys %bbss ) {
 		while ( <SEC> ) {
 			next if( $_ =~ /(?:disable|enable)<>(?:disable|host)\n/ );
 			chomp;
-			if ( $ENV{"REMOTE_HOST"} =~ /$_/ ) {
+			if ( $HOST =~ /$_/ || $ADDR =~ /$_/ ) {
 				$_ = '<font color="red"><b>'.$_.'</b></font>';
 			}
 			$_ .= "\n";
@@ -104,7 +107,7 @@ foreach my $key ( keys %bbss ) {
 		close SEC;
 	}
 	else {
-		print '<span style="color:#aaaaaa">Cannot open access.cgi.<br>'."\n";
+		print '<span style="color:#AAA">Cannot open access.cgi.<br>'."\n";
 	}
 	
 	print '</p>'."\n";
@@ -124,6 +127,25 @@ FOOT
 
 
 exit;
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	リモートホスト取得(わざわざIPから逆引き)
+#	-------------------------------------------------------------------------------------
+#	@param	IPアドレス
+#	@return	リモートホスト 逆引きできない場合はIPアドレス
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetRemoteHost
+{
+	
+	my $ADDR = shift;
+	
+	my $HOST = gethostbyaddr(pack("C4", split(/\./,$ADDR)), 2);
+	
+	return ( defined($HOST) ? $HOST : $ADDR );
+	
+}
 
 __END__
 
