@@ -361,7 +361,7 @@ sub GetTextInfo
 	my (@lines, $ln, $mx);
 	
 	@lines = split(/ ?<br> ?/, $$text);
-	$ln = @lines;
+	$ln = $$text =~ s/<br>/<br>/g;
 	$mx = 0;
 	
 	foreach (@lines) {
