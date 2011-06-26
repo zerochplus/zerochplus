@@ -10,9 +10,13 @@
 
 use strict;
 use warnings;
-use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser);
 
-push @INC, 'perllib';
+BEGIN {
+	use Cwd qw(getcwd);
+	use lib getcwd . '/perllib';
+	#push @INC, getcwd . '/perllib';
+}
 
 # CGIの実行結果を終了コードとする
 exit(AdminCGI());
