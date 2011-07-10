@@ -95,7 +95,7 @@ sub Save
 		'BBS_THREAD_TATESUGI', 'BBS_AD2', 'SUBBBS_CGI_ON', 'NANASHI_CHECK', 'timecount', 'timeclose',
 		'BBS_PROXY_CHECK', 'BBS_OVERSEA_THREAD', 'BBS_OVERSEA_PROXY', 'BBS_RAWIP_CHECK', 'BBS_SLIP',
 		'BBS_DISP_IP', 'BBS_FORCE_ID', 'BBS_BE_ID', 'BBS_BE_TYPE2', 'BBS_NO_ID', 'BBS_JP_CHECK',
-		'BBS_VIP931', 'BBS_4WORLD', 'BBS_YMD_WEEKS'
+		'BBS_VIP931', 'BBS_4WORLD', 'BBS_YMD_WEEKS', 'BBS_NINJA'
 	);
 	
 	%orz = %{$this->{'SETTING'}};
@@ -323,6 +323,7 @@ sub InitSettingData
 		'BBS_NO_ID'				=> '',
 		'BBS_JP_CHECK'			=> '',
 		'BBS_YMD_WEEKS'			=> '“ú/ŒŽ/‰Î/…/–Ø/‹à/“y',
+		'BBS_NINJA'				=> '',
 		
 		# ˆÈ‰º0chƒIƒŠƒWƒiƒ‹Ý’è€–Ú
 		'BBS_DATMAX'			=> 512,
