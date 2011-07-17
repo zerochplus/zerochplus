@@ -89,7 +89,7 @@ sub execute
 		$mes	= $form->Get('MESSAGE');
 		$ua		= $ENV{'HTTP_USER_AGENT'};
 		
-		if ( $from =~ /tasukeruyo/ ) {
+		if ( $from =~ /^(?:[\x00-\x7f\xa1-\xdf]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])*?tasukeruyo/ ) {
 			if ( $agent eq 'O' || $agent eq 'P' || $agent eq 'i' ) {
 				$tasuke = "$ENV{'REMOTE_HOST'}($koyuu)";
 			}
@@ -97,7 +97,7 @@ sub execute
 				$tasuke = "$ENV{'REMOTE_HOST'}($ENV{'REMOTE_ADDR'})";
 			}
 			
-			$from =~ s#([\x81-\x9f\xe0-\xfc][\x40-\x7e\x80-\xfc]|[^\xa1-\xdf]|^)tasukeruyo#$1</b>$tasuke<b>#g;
+			$from =~ s#^((?:[\x00-\x7f\xa1-\xdf]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])*?)tasukeruyo#$1</b>$tasuke<b>#g;
 			$form->Set('FROM', $from);
 			
 			$ua =~ s/</&lt;/g;

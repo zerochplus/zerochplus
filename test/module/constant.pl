@@ -47,6 +47,9 @@ our $C_MOBILEBROWSER	= $C_DOCOMO_M | $C_AU_M | $C_SOFTBANK_M | $C_WILLCOM_M | $C
 our $C_FULLBROWSER		= $C_DOCOMO_F | $C_AU_F | $C_SOFTBANK_F | $C_WILLCOM_F | $C_EMOBILE_F | $C_IPHONE | $C_FBSERVICE;
 our $C_MOBILE			= $C_MOBILEBROWSER | $C_FULLBROWSER;
 
+
+our $RE_SJIS			= '(?:[\x00-\x7f\xa1-\xdf]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])';
+
 #============================================================================================================
 #	モジュール終端
 #============================================================================================================

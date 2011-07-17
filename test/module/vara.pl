@@ -635,8 +635,11 @@ sub NormalizationNameMail
 		$capName = $oSEC->Get($capID, 'NAME', 1, '');
 	}
 	
+	# ＃ -> #
+	$this->{'CONV'}->ConvertCharacter0(\$name);
+	
 	# トリップキーを切り離す
-	if ($name =~ /#(.+)$/) {
+	if ($name =~ /#(.*)$/) {
 		$key = $1;
 		
 		# トリップ変換
@@ -673,12 +676,10 @@ sub NormalizationNameMail
 	$this->{'CONV'}->ConvertCharacter2(\$subject, 3);
 	
 	# トリップと名前を結合する
-	$name =~ s|#.+$| </b>◆$key <b>|;
+	$name =~ s|#.*$| </b>◆$key <b>|;
 	
 	# fusiana変換 2ch互換
-	$name =~ s/山崎渉/fusianasan/g;
-	$name =~ s|fusianasan|</b>$host<b>|g;
-	$name =~ s|fusianasan| </b>$host<b>|g;
+	$this->{'CONV'}->ConvertFusianasan(\$name, $host);
 	
 	# キャップ名結合
 	if (defined $capName && $capName ne '') {
