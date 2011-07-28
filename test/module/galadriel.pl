@@ -19,7 +19,6 @@ package	GALADRIEL;
 
 use strict;
 use warnings;
-use Digest::SHA1 qw(sha1_base64);
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -775,7 +774,15 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			$trip = substr(sha1_base64($$key), 0, 12);
+			eval {
+				require Digest::SHA1;
+				Digest::SHA1->import( qw(sha1_base64) );
+				$trip = substr(sha1_base64($$key), 0, 12);
+			};
+			if ( $@ ) {
+				# Digest::SHA1できない場合は???(e)を表示させる
+				$trip = "???(e)";
+			}
 			$trip =~ tr/+/./;
 		}
 	}
