@@ -12,7 +12,7 @@
 use strict;
 use warnings;
 
-#use CGI::Carp qw(fatalsToBrowser);
+use CGI::Carp qw(fatalsToBrowser);
 no warnings 'once';
 
 # CGIの実行結果を終了コードとする
@@ -104,7 +104,7 @@ sub Initialize
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	read.cgiヘッダ出力
+#	madakana.cgiヘッダ出力
 #	-------------------------------------------------------------------------------------
 #	@param	なし
 #	@return	なし
@@ -166,7 +166,7 @@ HTML
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	read.cgi内容出力
+#	madakana.cgi内容出力
 #	-------------------------------------------------------------------------------------
 #	@param	なし
 #	@return	なし
@@ -175,16 +175,20 @@ HTML
 sub PrintMadaCont
 {
 	my ($Sys, $Page) = @_;
-	my ($BBS, $HOST, $ADDR, $BBSpath, @BBSkey, %BBSs, $path);
+	my ($BBS, $vUser, $HOST, $ADDR, $BBSpath, @BBSkey, %BBSs, $path, $check );
 	
 	require './module/nazguls.pl';
 	$BBS	= new NAZGUL;
 	$BBS->Load($Sys->{'SYS'});
 	
+	require './module/faramir.pl';
+	$vUser = FARAMIR->new;
+	
 	$HOST	= $Sys->{'FORM'}->Get('HOST');
 	$ADDR	= $ENV{'REMOTE_ADDR'};
 	$BBSpath	= $Sys->{'SYS'}->Get('BBSPATH');
 	
+	#$sys->Set('HITS', $line);
 	# BBSセットの取得
 	$BBS->GetKeySet('ALL', '', \@BBSkey);
 	
@@ -194,6 +198,11 @@ sub PrintMadaCont
 	}
 	
 	foreach my $dir ( keys %BBSs ) {
+		
+		$Sys->{'SYS'}->Set('BBS', $dir);
+		$vUser->Load($Sys->{'SYS'});
+		$check = $vUser->Check($HOST, $ADDR);
+		
 		$Page->Print('<p>'."\n");
 		$Page->Print('#-----------------------------------------------------------------------------<br>'."\n");
 		$Page->Print("# <a href=\"$BBSpath/$dir/\">$BBSs{$dir}</a> [ $dir ]<br>\n");
@@ -205,7 +214,7 @@ sub PrintMadaCont
 			while ( <SEC> ) {
 				next if( $_ =~ /(?:disable|enable)<>(?:disable|host)\n/ );
 				chomp;
-				if ( $HOST =~ /$_/ || $ADDR =~ /$_/ ) {
+				if ( $Sys->{'SYS'}->Get('HITS') eq $_ ) {
 					$_ = '<font color="red"><b>'.$_.'</b></font>';
 				}
 				$_ .= "\n";
@@ -280,4 +289,5 @@ sub PrintMadaError
 	$Page->Print("<b>$err</b>");
 	$Page->Print('</body></html>');
 }
+
 
