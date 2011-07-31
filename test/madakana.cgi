@@ -175,7 +175,7 @@ HTML
 sub PrintMadaCont
 {
 	my ($Sys, $Page) = @_;
-	my ($BBS, $vUser, $HOST, $ADDR, $BBSpath, @BBSkey, %BBSs, $path, $check );
+	my ($BBS, $vUser, $HOST, $ADDR, $BBSpath, @BBSkey, %BBSs, $path, $check, $line, $color );
 	
 	require './module/nazguls.pl';
 	$BBS	= new NAZGUL;
@@ -203,6 +203,8 @@ sub PrintMadaCont
 		$vUser->Load($Sys->{'SYS'});
 		$check = $vUser->Check($HOST, $ADDR);
 		
+		$color = "red";
+		
 		$Page->Print('<p>'."\n");
 		$Page->Print('#-----------------------------------------------------------------------------<br>'."\n");
 		$Page->Print("# <a href=\"$BBSpath/$dir/\">$BBSs{$dir}</a> [ $dir ]<br>\n");
@@ -211,11 +213,21 @@ sub PrintMadaCont
 		$path = "$BBSpath/$dir/info/access.cgi";
 		
 		if ( -e $path && open( SEC, "< $path") ) {
+			
+			$line = <SEC>;
+			chomp $line;
+			my ( $type, $method ) = split(/<>/, $line, 2);
+			
+			if ( $type eq 'enable' ) {
+				$Page->Print('<font color="red">※この板は以下のユーザーのみ書き込みを行うことができます。</font><br>'."\n");
+				$color = "blue";
+			}
+			
 			while ( <SEC> ) {
 				next if( $_ =~ /(?:disable|enable)<>(?:disable|host)\n/ );
 				chomp;
 				if ( $Sys->{'SYS'}->Get('HITS') eq $_ ) {
-					$_ = '<font color="red"><b>'.$_.'</b></font>';
+					$_ = '<font color="'.$color.'"><b>'.$_.'</b></font>';
 				}
 				$_ .= "\n";
 				s/\n/<br>/g;
