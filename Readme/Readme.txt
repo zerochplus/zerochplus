@@ -142,12 +142,12 @@ test/
 サーバーもあるかもしれませんが、一応含めておきます。
 　以下はパッケージの詳細です。
 
-Digest-SHA1
-Perl interface to the SHA-1 algorithm
-	Version:	2.13
-	Released:	2010-07-03
-	Author:	Gisle Aas <gisle@ActiveState.com>
-	CPAN:	http://search.cpan.org/dist/Digest-SHA1-2.13/
+Digest-SHA-PurePerl
+Perl implementation of SHA-1/224/256/384/512
+	Version:	5.62
+	Released:	2011-05-09
+	Author:	Mark Shelor <mshelor@cpan.org>
+	CPAN:	http://search.cpan.org/dist/Digest-SHA-PurePerl-5.62/
 
 Jcode
 Japanese Charset Handler
