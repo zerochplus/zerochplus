@@ -26,7 +26,6 @@ package	UNGOLIANT;
 
 use strict;
 use warnings;
-use Digest::SHA1 qw(sha1_base64);
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -275,8 +274,17 @@ sub GetStrictPass
 	my ($hash);
 	
 	if (length($pass) >= 9) {
-		$hash = substr(crypt($key, 'ZC'), -2);
-		$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
+		#$hash = substr(crypt($key, 'ZC'), -2);
+		#$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
+		eval {
+			require Digest::SHA::PurePerl;
+			Digest::SHA::PurePerl->import( qw(sha1_base64) );
+			$hash = substr(crypt($key, 'ZC'), -2);
+			$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
+		};
+		if ( $@ ) {
+			$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
+		}
 	}
 	else {
 		$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
