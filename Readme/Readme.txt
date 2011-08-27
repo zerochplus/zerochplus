@@ -24,9 +24,12 @@
 
 
 ■動作環境
-　OS			: Perl5以上が動作するOS(Linux推奨)
-　ソフトウェア	: CGI動作が可能なHTTPD(Apache2推奨)
-
+　★必須環境
+　　OS			: Perl5以上が動作するOS
+　　ソフトウェア: CGI動作が可能なHTTPD
+　★推奨環境
+　　OS			: Perl5.8以上が動作するLinuxOS
+　　ソフトウェア: suEXECでCGI動作が可能なHTTPD
 
 ■配布ファイル構成
 Readme/
@@ -57,7 +60,7 @@ test/
 	　
 	※以下のようになっている場所を変更します。
 	
-		#!/usr/local/bin/perl
+		#!/usr/bin/perl
 
 2.スクリプトアップロード
 
@@ -121,13 +124,17 @@ test/
 　皆様にはお手数をお掛けしますが、よろしくおねがいします。
 
 
-■その他
-　さらに詳しい内容をお求めの方はWikiを参照してください。
-　ぜろちゃんねるプラスWiki -> http://sourceforge.jp/projects/zerochplus/wiki/
-　求めている情報がない場合や不具合報告などしていただける場合は以下の掲示板の windyakinさ
-ん家スレ へお願いします。
-　windyakinさん家＠３８ちゃんねる -> http://yakin.38-ch.net/windyakin/
+■ヘルプ・サポート
+　さらに詳しい内容をお求めの方は以下のページを参照してください。
+　・ヘルプ - ぜろちゃんねるプラス
+　　http://zerochplus.sourceforge.jp/help/
+　・ぜろちゃんねるプラスWiki
+　　http://sourceforge.jp/projects/zerochplus/wiki/
 
+　以上のページに求めている情報がない場合や不具合報告などしていただける場合は以下からお問
+い合わせください。
+　・サポート - ぜろちゃんねるプラス
+　　http://zerochplus.sourceforge.jp/support/
 
 ■謝辞
 　ぜろちゃんねるプラスを作成するにあたって支援していただいたすべての皆様に感謝します。
