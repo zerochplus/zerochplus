@@ -787,7 +787,7 @@ sub FunctionThreadAutoPooling
 		# スレッド位置による判定
 		if ($Form->Equal('CONDITION_BYPOS', 'on') && $bPool == 0) {
 			my ($pos) = $Threads->GetPosition($id);
-			if (($pos != -1) && ($pos > $Form->Get('POOLPOS'))) {
+			if (($pos != -1) && ($pos + 1 >= $Form->Get('POOLPOS'))) {
 				$bPool = 1;
 			}
 		}
