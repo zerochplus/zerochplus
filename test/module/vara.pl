@@ -132,14 +132,15 @@ sub Write
 	}
 	
 	# データの書き込み
-	my ($oSys, $oSet, $oForm, $oConv);
+	my ($oSys, $oSet, $oForm, $oConv, $oThread);
 	my (@elem, $date, $data, $data2, $resNum, $datPath, $id);
 	
 	require './module/gondor.pl';
-	$oSys	= $this->{'SYS'};
-	$oSet	= $this->{'SET'};
-	$oForm	= $this->{'FORM'};
-	$oConv	= $this->{'CONV'};
+	$oSys		= $this->{'SYS'};
+	$oSet		= $this->{'SET'};
+	$oForm		= $this->{'FORM'};
+	$oConv		= $this->{'CONV'};
+	$oThread	= $this->{'THREADS'};
 	
 	# 書き込み直前処理
 	if ($err = ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1)) {
@@ -195,7 +196,19 @@ sub Write
 		# subject.txtの更新
 		# スレッド作成モードなら新規に追加する
 		if ($oSys->Equal('MODE', 1)) {
-			$this->{'THREADS'}->Add($oSys->Get('KEY'), $elem[0], 1);
+			require './module/earendil.pl';
+			my $path = $oSys->Get('BBSPATH') . '/' . $oSys->Get('BBS');
+			my $oPools = FRODO->new;
+			$oPools->Load($oSys);
+			$oThread->Add($oSys->Get('KEY'), $elem[0], 1);
+			while ($oThread->GetNum() > $oSys->Get('SUBMAX')) {
+				my $lid = $oThread->GetLastID();
+				$oPools->Add($lid, $oThread->Get('SUBJECT', $lid), $oThread->Get('RES', $lid));
+				$oThread->Delete($lid);
+				EARENDIL::Copy("$path/dat/$lid.dat", "$path/pool/$lid.cgi");
+				unlink "$path/dat/$lid.dat";
+			}
+			$oPools->Save($oSys);
 		}
 		# 書き込みモードならレス数の更新
 		else {

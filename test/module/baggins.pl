@@ -55,26 +55,6 @@ sub new
 	return $obj;
 }
 
-sub DESTROY
-{
-	my $this = shift;
-	
-	if (0) {
-		open DBG, ">> dbg_BILBO.log";
-		print DBG ">>SUBJECTS\n";
-		foreach (@{$this->{'SORT'}}) {
-			if (exists $this->{'SUBJECT'}->{$_}) {
-				print DBG "$_ : " . $this->{'SUBJECT'}->{$_} . " : " . $this->{'RES'}->{$_} . "\n";
-			}
-			else {
-				print DBG "### missing\n";
-			}
-		}
-		print DBG "--- End\n\n";
-		close DBG;
-	}
-}
-
 #------------------------------------------------------------------------------------------------------------
 #
 #	スレッド情報読み込み
@@ -222,6 +202,7 @@ sub Add
 	$this->{'SUBJECT'}->{$id}	= $subject;
 	$this->{'RES'}->{$id}		= $res;
 	unshift @{$this->{'SORT'}}, $id;
+	$this->{'NUM'}++;
 	
 	return $id;
 }
@@ -267,6 +248,7 @@ sub Delete
 	foreach $lid (@{$this->{'SORT'}}) {
 		if ($id eq $lid) {
 			splice @{$this->{'SORT'}}, $n, 1;
+			$this->{'NUM'}--;
 			last;
 		}
 		$n++;
@@ -286,6 +268,21 @@ sub GetNum
 	my $this = shift;
 	
 	return $this->{'NUM'};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	最後のスレッドID取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	スレッドID
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetLastID
+{
+	my $this = shift;
+	
+	return ${$this->{'SORT'}}[$#{$this->{'SORT'}}];
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -625,6 +622,7 @@ sub Add
 	$this->{'SUBJECT'}->{$id}	= $subject;
 	$this->{'RES'}->{$id}		= $res;
 	unshift @{$this->{'SORT'}}, $id;
+	$this->{'NUM'}++;
 	
 	return $id;
 }
@@ -670,6 +668,7 @@ sub Delete
 	foreach $lid (@{$this->{'SORT'}}) {
 		if ($id eq $lid) {
 			splice @{$this->{'SORT'}}, $n, 1;
+			$this->{'NUM'}--;
 			last;
 		}
 		$n++;
