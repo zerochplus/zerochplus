@@ -12,6 +12,12 @@ use strict;
 use warnings;
 no warnings 'once';
 
+BEGIN {
+	use Cwd qw(getcwd);
+	use lib getcwd . '/perllib';
+	#push @INC, getcwd . '/perllib';
+}
+
 # CGIの実行結果を終了コードとする
 exit(REMAKECGI());
 #------------------------------------------------------------------------------------------------------------
