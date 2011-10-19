@@ -10,7 +10,7 @@
 
 use strict;
 use warnings;
-#use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 
 BEGIN {
 	use Cwd qw(getcwd);

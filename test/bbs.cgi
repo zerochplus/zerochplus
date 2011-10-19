@@ -12,7 +12,7 @@
 
 use strict;
 use warnings;
-#use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 no warnings 'once';
 
 BEGIN {
@@ -146,7 +146,8 @@ sub Initialize
 	$S->{'MainCGI'} = $Sys;
 	
 	# ホスト情報設定(DNS逆引き)
-	$ENV{'REMOTE_HOST'} = $C->GetRemoteHost() unless ($ENV{'REMOTE_HOST'});
+	#変数初期化チェックを挿入。
+	$ENV{'REMOTE_HOST'} = $C->GetRemoteHost() if((!defined($ENV{'REMOTE_HOST'})) || ($ENV{REMOTE_HOST}eq''));
 	$Sys->{'FORM'}->Set('HOST', $ENV{'REMOTE_HOST'});
 	
 	$client = $Sys->{'CONV'}->GetClient();

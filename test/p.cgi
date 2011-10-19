@@ -11,6 +11,8 @@
 use strict;
 use warnings;
 
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
+
 # CGIの実行結果を終了コードとする
 exit(PCGI());
 
