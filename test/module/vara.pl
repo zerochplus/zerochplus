@@ -209,16 +209,22 @@ sub Write
 				unlink "$path/dat/$lid.dat";
 			}
 			$oPools->Save($oSys);
+			$oThread->Save($oSys);
 		}
 		# 書き込みモードならレス数の更新
 		else {
+=for
 			$this->{'THREADS'}->Set($oSys->Get('KEY'), 'RES', $resNum);
 			# sageが入っていなかったらageる
 			if (!$oForm->Contain('mail', 'sage')) {
 				$this->{'THREADS'}->AGE($oSys->Get('KEY'));
 			}
+=cut
+			$oThread->OnDemand( $oSys, $oSys->Get('KEY'), $resNum,
+				!$oForm->Contain( 'mail', 'sage' ) ? 1 : 0
+			);
 		}
-		$this->{'THREADS'}->Save($oSys);
+		# $this->{'THREADS'}->Save($oSys);
 	}
 	
 	return $err;

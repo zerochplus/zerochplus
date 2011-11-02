@@ -9,6 +9,7 @@
 #
 #	ぜろちゃんねるプラス
 #	2010.08.14 subject.txtの2ch完全互換
+#	2011.11.03 設計変更…のつもりだったけど、間に合わせのぶっこわれ対策^^;
 #	-------------------------------------------------------------------------------------
 #	このモジュールはスレッド情報を管理します。
 #	以下の3つのパッケージによって構成されます
@@ -21,7 +22,7 @@
 #============================================================================================================
 #
 #	スレッド情報管理パッケージ
-#	NAZGUL
+#	BILBO
 #	-------------------------------------------------------------------------------------
 #	2004.02.18 start
 #
@@ -78,6 +79,7 @@ sub Load
 	
 	if (-e $path) {
 		open(SUBJ, "< $path");
+		flock SUBJ, 1;
 		while (<SUBJ>) {
 			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
@@ -127,6 +129,82 @@ sub Save
 		close SUBJ;
 		chmod $Sys->Get('PM-TXT'), $path;
 	};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	オンデマンド式レス数更新
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
+#	@param	$id	スレッドID
+#	@param	$val	レス数
+#	@param	$age	ageるなら1
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub OnDemand
+{
+	my $this = shift;
+	my ($Sys, $id, $val, $age) = @_;
+	my ($path, @elem, $num, $data);
+	
+	undef($this->{'SUBJECT'});
+	undef($this->{'RES'});
+	undef($this->{'SORT'});
+	
+	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	$num	= 0;
+	
+	if (-e $path) {
+		# subject読み込み
+		open SUBJ, "+< $path" or return;
+		flock SUBJ, 2;
+		seek SUBJ, 0, 0;
+		while (<SUBJ>) {
+			next if ($_ !~ /<>/);
+			@elem = split(/<>/, $_);
+			($elem[0], undef) = split(/\./, $elem[0]);
+			$elem[1] =~ s/ ?\((\d+)\)\n//;
+			$elem[2] = $1;
+			
+			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
+			$this->{'RES'}->{$elem[0]}	= $elem[2];
+			push @{$this->{'SORT'}}, $elem[0];
+			$num++;
+		}
+		$this->{'NUM'} = $num;
+
+		# レス数更新
+		if ( exists($this->{'RES'}->{$id}) ) {
+			$this->{'RES'}->{$id}	= $val;
+		}
+
+		if ( $age eq 1 ) {
+			$num = 0;
+			foreach my $lid (@{$this->{'SORT'}}) {
+				if ($id eq $lid) {
+					splice @{$this->{'SORT'}}, $num, 1;
+					unshift @{$this->{'SORT'}}, $lid;
+					last;
+				}
+				$num++;
+			}
+		}
+
+		# subject書き込み
+		seek SUBJ, 0, 0 ;
+		binmode SUBJ;
+		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{'SUBJECT'}->{$_});
+			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
+			
+			print SUBJ "$data\n";
+		}
+		truncate ( SUBJ, tell ( SUBJ ) );
+		close SUBJ;
+		chmod $Sys->Get('PM-TXT'), $path;
+	}
+
 }
 
 #------------------------------------------------------------------------------------------------------------
