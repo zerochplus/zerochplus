@@ -163,7 +163,7 @@ sub Initialize
 	$S->Set('BBS_REL', $C->MakePath($S->Get('BBSPATH'), $S->Get('BBS')));
 	
 	# Œg‘Ñ‚Ìê‡‚Í‹@Žíî•ñ‚ðÝ’è
-	if ($client & $ZP::C_MOBILE) {
+	if ($client & $ZP::C_MOBILE || $client & $ZP::C_P2) {
 		my $product = $C->GetProductInfo($client);
 		
 		if (! defined  $product) {
