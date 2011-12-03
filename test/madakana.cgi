@@ -199,6 +199,9 @@ sub PrintMadaCont
 	
 	foreach my $dir ( keys %BBSs ) {
 		
+		# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
+		next if ( -e "$BBSpath/$dir/.0ch_hidden" );
+		
 		$Sys->{'SYS'}->Set('BBS', $dir);
 		$vUser->Load($Sys->{'SYS'});
 		$check = $vUser->Check($HOST, $ADDR);
