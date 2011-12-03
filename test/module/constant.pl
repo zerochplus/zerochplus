@@ -9,6 +9,8 @@
 #	---------------------------------------------
 #
 #	2011.01.02 start
+#	2011.12.03 iPhoneがフルブラウザになっていたのを修正
+#	           固有IDが取れそうなC_MOBILE_IDGETを新規設定
 #
 #============================================================================================================
 package	ZP;
@@ -46,6 +48,7 @@ our $C_FBSERVICE		= $C_IBIS | $C_JIG | $C_OPERAMINI;
 our $C_MOBILEBROWSER	= $C_DOCOMO_M | $C_AU_M | $C_SOFTBANK_M | $C_WILLCOM_M | $C_EMOBILE_M;
 our $C_FULLBROWSER		= $C_DOCOMO_F | $C_AU_F | $C_SOFTBANK_F | $C_WILLCOM_F | $C_EMOBILE_F | $C_FBSERVICE;
 our $C_MOBILE			= $C_MOBILEBROWSER | $C_FULLBROWSER;
+our $C_MOBILE_IDGET		= $C_DOCOMO_M | $C_AU_M | $C_SOFTBANK_M | $C_EMOBILE_M | $C_P2;
 
 
 our $RE_SJIS			= '(?:[\x00-\x7f\xa1-\xdf]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])';
