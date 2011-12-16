@@ -205,7 +205,7 @@ sub Check
 		next if ($word eq '');
 		foreach $key (@$pList) {
 			$work = $Form->Get($key);
-			if ($work =~ /$word/) {
+			if ($work =~ /\Q$word\E/) {
 				return 2 if ($this->{'METHOD'} eq 'host');
 				return 3 if ($this->{'METHOD'} eq 'disable');
 				return 1;
@@ -249,8 +249,8 @@ sub Method
 		next if ($word eq '');
 		foreach $key (@$pList) {
 			$work = $Form->Get($key);
-			if ($work =~ /$word/) {
-				$work =~ s/$word/$substitute/g;
+			if ($work =~ /\Q$word\E/) {
+				$work =~ s/\Q$word\E/$substitute/g;
 				$Form->Set($key, $work);
 			}
 		}
