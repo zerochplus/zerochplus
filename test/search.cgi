@@ -12,6 +12,7 @@
 
 use strict;
 use warnings;
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 
 # CGIの実行結果を終了コードとする
 exit(SearchCGI());
@@ -62,7 +63,7 @@ sub PrintHead
 {
 	my ($Sys, $Page, $BBS, $Form) = @_;
 	my ($pBBS, $bbs, $name, $dir, $Banner);
-	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types, @bbsSet, $id);
+	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types, $BBSpath, @bbsSet, $id);
 	
 	$sMODE	= $Form->Get('MODE', '');
 	$sBBS	= $Form->Get('BBS', '');
@@ -74,6 +75,8 @@ sub PrintHead
 	$cTYPE[0] = ($types & 1 ? 'checked' : '');
 	$cTYPE[1] = ($types & 2 ? 'checked' : '');
 	$cTYPE[2] = ($types & 4 ? 'checked' : '');
+	
+	$BBSpath = $Sys->Get('BBSPATH');
 	
 	# バナーの読み込み
 	require './module/denethor.pl';
@@ -148,6 +151,10 @@ HTML
 	foreach $id (@bbsSet) {
 		$name = $BBS->Get('NAME', $id);
 		$dir = $BBS->Get('DIR', $id);
+		
+		# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
+		next if ( -e "$BBSpath/$dir/.0ch_hidden" );
+		
 		if ($sBBS eq $dir) {
 			$Page->Print("     <option value=\"$dir\" selected>$name</option>\n");
 		}
