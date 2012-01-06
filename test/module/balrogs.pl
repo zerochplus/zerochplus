@@ -66,13 +66,18 @@ sub Create
 		require './module/nazguls.pl';
 		my $BBSs = NAZGUL->new;
 		my $Threads = BILBO->new;
-		my (@bbsSet, @threadSet, $bbsID, $threadID, $set);
+		my (@bbsSet, @threadSet, $bbsID, $threadID, $set, $BBSpath);
 		
 		$BBSs->Load($SYS);
 		$BBSs->GetKeySet('ALL', '', \@bbsSet);
 		
+		$BBSpath = $SYS->Get('BBSPATH');
+		
 		foreach $bbsID (@bbsSet) {
 			$dir = $BBSs->Get('DIR', $bbsID);
+			
+			# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
+			next if ( -e "$BBSpath/$dir/.0ch_hidden" );
 			
 			$SYS->Set('BBS', $dir);
 			$Threads->Load($SYS);
@@ -187,21 +192,21 @@ sub Search
 			# 名前検索
 			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 1) {
 				if (index($elem[0], $word) > -1) {
-					$elem[0] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
+					$elem[0] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
 					$bFind = 1;
 				}
 			}
 			# 本文検索
 			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 2) {
 				if (index($elem[3], $word) > -1) {
-					$elem[3] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
+					$elem[3] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
 					$bFind = 1;
 				}
 			}
 			# ID or 日付検索
 			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 4) {
 				if (index($elem[2], $word) > -1) {
-					$elem[2] =~ s/(\Q$word\E)/<span class=res>$word<\/span>/g;
+					$elem[2] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
 					$bFind = 1;
 				}
 			}

@@ -153,7 +153,7 @@ HTML
 		$dir = $BBS->Get('DIR', $id);
 		
 		# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
-		next if ( -e "$BBSpath/$dir/.0ch_hidden" );
+		next if ( -e "$BBSpath/$dir/.0ch_hidden" && $sBBS ne $dir );
 		
 		if ($sBBS eq $dir) {
 			$Page->Print("     <option value=\"$dir\" selected>$name</option>\n");
