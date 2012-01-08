@@ -1250,15 +1250,50 @@ sub IsProxy
 	# DNSBL問い合わせ
 	$addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
 	foreach my $dnsbl (@dnsbls) {
-		$_ = gethostbyname "$addr.$dnsbl";
-		if ($_ && join('.', unpack('C*', $_)) eq '127.0.0.2') {
+		if ( CheckDNSBL("$addr.$dnsbl") eq '127.0.0.2' ) {
 			$oForm->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			return ( $mode eq "P" ? 0 : 1 );
 		}
-		
 	}
 	
 	return 0;
+	
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	DNSBL正引き(timeout付き) - CheckDNSBL
+#	--------------------------------------
+#	引　数：$host : 正引きするHOST
+#	戻り値：プロキシであれば127.0.0.2
+#
+#------------------------------------------------------------------------------------------------------------
+sub CheckDNSBL
+{
+	
+	my ( $host ) = @_;
+	my ( $res, $query, @ans );
+	
+	require Net::DNS;
+	
+	$res = Net::DNS::Resolver->new;
+	$res->tcp_timeout(1);
+	$res->udp_timeout(1);
+	$res->retry(1);
+	
+	if ( ($query = $res->query($host)) ) {
+		
+		@ans = $query->answer;
+		
+		foreach ( @ans ) {
+			return $_->address;
+		}
+	}
+	if ( $res->errorstring eq 'query timed out' ) {
+		return "127.0.0.0";
+	}
+	
+	return "127.0.0.1";
 	
 }
 
