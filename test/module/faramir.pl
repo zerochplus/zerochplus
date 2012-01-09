@@ -233,7 +233,7 @@ sub Check
 				last;
 			}
 		}
-		elsif ($host =~ /$line/) {
+		elsif ($host =~ /$line/) { # $line‚Í³‹K•\Œ»
 			$flag = 1;
 			$sys->Set('HITS', $line);
 			last;

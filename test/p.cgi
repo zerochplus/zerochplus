@@ -10,8 +10,10 @@
 
 use strict;
 use warnings;
-
 #use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
+no warnings 'once';
+
+BEGIN { use lib './perllib'; }
 
 # CGIの実行結果を終了コードとする
 exit(PCGI());
@@ -256,7 +258,7 @@ sub CreateThreadList
 		for ($i = $start;$i < $max + 1;$i++) {
 			$key		= $threadSet[$i - 1];
 			$subject	= $Threads->Get('SUBJECT', $key);
-			if ($subject =~ /$keyWord/) {
+			if ($subject =~ /\Q$keyWord\E/) {
 				$res	= $Threads->Get('RES', $key);
 				$data	= "$i<>$key<>$subject<>$res";
 				push @{$pList}, $data;

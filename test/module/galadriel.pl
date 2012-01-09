@@ -184,7 +184,7 @@ sub ConvertURL
 			$server = $2;
 			$$text =~ s|$reg1|<$1::$2>|g;												# URL1次変換
 			while ($$text =~ m|$reg2|) {												# 2次変換
-				if ($2 =~ m{^$server(?:/|$)}) {											# 自鯖リンク
+				if ($2 =~ m{^\Q$server\E(?:/|$)}) {										# 自鯖リンク
 					$$text =~ s|$reg2|<a href="$1://$2" target="_blank">$1://$2</a>|;	# クッションなし
 				}
 				else {																	# 自鯖以外
@@ -1208,7 +1208,7 @@ sub IsReferer
 	my ($svr);
 	
 	$svr = $M->Get('SERVER');
-	if ($pENV->{'HTTP_REFERER'} =~ /$svr/) {			# 自鯖からならOK
+	if ($pENV->{'HTTP_REFERER'} =~ /\Q$svr\E/) {		# 自鯖からならOK
 		return 0;
 	}
 	if ($pENV->{'HTTP_USER_AGENT'} =~ /Monazilla/) {	# ２ちゃんツールもOK

@@ -314,7 +314,7 @@ sub ReadyBeforeWrite
 			return 601;
 		}
 		if ($check == 2) {
-			if ($from =~ /$host/i) {
+			if ($from =~ /$host/i) { # $hostÇÕê≥ãKï\åª
 				$Form->Set('FROM', "</b>[ÅL•É÷•ÅM] <b>$from");
 			}
 			else {

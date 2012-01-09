@@ -167,7 +167,7 @@ sub GetFileList
 	foreach $file (@files) {
 		# ディレクトリじゃなく抽出条件が一致したら配列にプッシュする
 		if (! -d "$path/$file") {
-			if ($file =~ /$opt/) {
+			if ($file =~ /$opt/) { # $optは正規表現
 				push @$pList, $file;
 				$num++;
 			}

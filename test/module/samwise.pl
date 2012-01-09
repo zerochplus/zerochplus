@@ -243,7 +243,7 @@ sub Contain
 	my $this = shift;
 	my ($key, $string) = @_;
 	
-	if ($this->{'FORM'}->{$key} =~ /$string/) {
+	if ($this->{'FORM'}->{$key} =~ /\Q$string\E/) {
 		return 1;
 	}
 	return 0;

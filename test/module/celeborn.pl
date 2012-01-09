@@ -356,7 +356,7 @@ sub GetSubFolders
 	$base .= '/';
 	foreach $dir (@$pDirs) {
 		$old = $dir;
-		$old =~ s/^$base//;
+		$old =~ s/^\Q$base\E//;
 		if ($old ne $dir && $old !~ /\//) {
 			push @$pList, $old;
 		}

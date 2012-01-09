@@ -10,10 +10,10 @@
 
 use strict;
 use warnings;
-#use CGI::Carp qw(fatalsToBrowser);
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 no warnings 'once';
 
-#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
+BEGIN { use lib './perllib'; }
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());

@@ -11,7 +11,7 @@ package RADAGAST;
 
 use strict;
 use warnings;
-use Jcode;
+use Encode;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -56,7 +56,7 @@ sub Init
 			$name =~ s/ //g;
 			$value =~ s/^"|"$//g;
 			$value =~ s/%([0-9A-Fa-f][0-9A-Fa-f])/pack('H2', $1)/eg;
-			Jcode::convert(\$value, 'sjis', 'utf8');
+			Encode::from_to($value, 'utf8', 'sjis');
 			$this->{'COOKIE'}->{$name} = $value;
 		}
 		return 1;
@@ -161,7 +161,7 @@ sub Out
 	# Ý’è‚³‚ê‚Ä‚¢‚écookie‚ð‘S‚Äo—Í‚·‚é
 	foreach $key (keys %{$this->{'COOKIE'}}) {
 		$value = $this->{'COOKIE'}->{$key};
-		Jcode::convert(\$value, 'utf8', 'sjis');
+		Encode::from_to($value, 'sjis', 'utf8');
 		$value =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
 		$oOut->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");
 	}
