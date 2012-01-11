@@ -246,10 +246,13 @@ sub PrintReadMenu
 	$pathLast	= $Sys->{'CONV'}->CreatePath($oSYS, 0, $bbs, $key, 'l50');
 	$resNum		= $Sys->{'DAT'}->Size();
 	
-	# カウンター表示
 	$Page->Print("<div style=\"margin:0px;\">\n");
-	$Page->Print('<a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/');
-	$Page->Print("disp/$account/00813400.gif\" alt=\"無料アクセスカウンターofuda.cc「全世界カウント計画」\"></a>\n");
+	
+	# カウンター表示
+	if ( $account ne "" ) {
+		$Page->Print('<a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/');
+		$Page->Print("disp/$account/00813400.gif\" alt=\"無料アクセスカウンターofuda.cc「全世界カウント計画」\"></a>\n");
+	}
 	
 	$Page->Print("<div style=\"margin-top:1em;\">\n");
 	$Page->Print(" <span style=\"float:left;\">\n");
@@ -270,9 +273,14 @@ sub PrintReadMenu
 	}
 	$Page->Print(" <a href=\"$pathLast\">最新50</a>\n");
 	$Page->Print(" </span>\n");
-	$Page->Print(" <span style=\"float:right;\">\n [PR]");
-	$Page->Print("<a href=\"$PRlink\" target=\"_blank\">$PRtext</a>");
-	$Page->Print("[PR]\n </span>&nbsp;\n");
+	$Page->Print(" <span style=\"float:right;\">\n");
+	if ( $PRtext ne "" ) {
+		$Page->Print(" [PR]<a href=\"$PRlink\" target=\"_blank\">$PRtext</a>[PR]\n");
+	}
+	else {
+		$Page->Print(" &nbsp;\n");
+	}
+	$Page->Print(" </span>&nbsp;\n");
 	$Page->Print("</div>\n");
 	$Page->Print("</div>\n\n");
 	
