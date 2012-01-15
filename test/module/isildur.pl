@@ -329,7 +329,7 @@ sub InitSettingData
 		'BBS_DATMAX'			=> 512,
 		'BBS_COOKIEPATH'		=> '/',
 		'BBS_READONLY'			=> 'caps',
-		'BBS_REFERER_CUSHION'	=> 'ime.nu/',
+		'BBS_REFERER_CUSHION'	=> 'jump.x0.to/',
 		'BBS_THREADCAPONLY'		=> '',
 		'BBS_TRIPCOLUMN'		=> 10,
 		'BBS_SUBTITLE'			=> '‚Ü‚½[‚èŽG’k',
