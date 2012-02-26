@@ -4,14 +4,15 @@
 #	httpservice.pl
 #	-------------------------------------------------------------------------------------
 #	2005.11.09 start
+#	2012.02.25 大幅に改造 互換性？ナニソレ？
 #
 #============================================================================================================
 package HTTPSERVICE;
 
-use Socket;
 use strict;
 use warnings;
 
+use Socket;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -29,18 +30,25 @@ sub new
 	$obj = {
 		'METHOD'		=> 'GET',
 		'URI'			=> undef,
-		'PORT'			=> 80,
 		'PARAMETER'		=> \%PARAMETER,
-		'AGENT'			=> 'Monazilla/1.00 0ch.4.00 (1000)',
+		'AGENT'			=> 'Mozilla/5.0 Zero-Channel BBS Plus Project',
 		'CONTENT_TYPE'	=> 'application/x-www-form-urlencoded',
 		'CONNECTION'	=> 'close',
-		'REFERER'		=> '0ch.mine.nu',
-		'RESPONSE'		=> undef
+		'REFERER'		=> undef,
+		'LANGUAGE'		=> 'ja,en-us;q=0.7,en;q=0.3',
+		'PROXY_HOST'	=> undef,
+		'PROXY_PORT'	=> undef,
+		
+		'TIMEOUT'		=> 3,
+		'HEADER'		=> undef,
+		'CODE'			=> 500,
+		'CONTENT'		=> undef
 	};
 	bless $obj, $this;
 	return $obj;
 }
 
+=for
 #------------------------------------------------------------------------------------------------------------
 #
 #	初期化(コンストラクタで初期化されない場合用)
@@ -53,12 +61,13 @@ sub init
 {
 	my $this = shift;
 	
-	$this->{'PORT'} = 80;
-	$this->{'AGENT'} = '0ch/Monazilla';
-	$this->{'METHOD'} = 'GET';
-	$this->{'CONTENT_TYPE'} = 'application/x-www-form-urlencoded';
-	$this->{'CONNECTION'} = 'Keep-Alive';
+	$this->{'AGENT'}		= 'Mozilla/5.0 Zero-Channel BBS Plus Project';
+	$this->{'METHOD'}		= 'GET';
+	$this->{'CONTENT_TYPE'}	= 'application/x-www-form-urlencoded';
+	$this->{'CONNECTION'}	= 'close';
+	$this->{'TIMEOUT'}		= 3;
 }
+=cut
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -68,48 +77,101 @@ sub init
 #	@return	エラーコード
 #			1:正常終了
 #			-1:URIエラー
-#			-100:socketエラー
+#			-2:socketエラー
 #
 #------------------------------------------------------------------------------------------------------------
 sub request
 {
 	my $this = shift;
-	my (@uris, $host, $uri, $request);
+	my ($uri, $host, $port, $target, $request);
 	
-	# httpリクエスト文字列の生成
-	@uris = split(/\//, $this->{'URI'});
-	if (! defined ($host = getTargetAddress($uris[2]))) {
+	# URIを分解
+	$uri = $this->{'URI'};
+	( $host, $port, $target ) = decompositionURI($uri);
+	
+	if ( !defined $host ) {
 		return -1;
 	}
-	$uri = $this->{'URI'};
-	$request = createRequestString($this, $host, $uri);
 	
-#	eval
+	# プロキシを使用する
+	if ( defined $this->{'PROXY_HOST'} ) {
+		$host	= $this->{'PROXY_HOST'};
+		$port	= $this->{'PROXY_PORT'} || 80;
+		$target	= $uri;
+	}
+	
+	# リクエストクエリの作成
+	$request = createRequestString($this, $host, $target);
+	
+	eval
 	{
-		my ($sockaddr, $response, $uri);
+		my ($sockaddr, $header, $streamflag, $content, $contflag, $code, $uri);
+		local $SIG{ALRM} = sub{ die "connect time out. $!" };
+		
+		alarm($this->{'TIMEOUT'});
 		
 		# ソケットの作成
-		socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname('tcp')) || die('ERROR');
-		select SOCK;
+		$sockaddr = pack_sockaddr_in( $port, inet_aton($host) );
+		socket ( SOCKET, PF_INET, SOCK_STREAM, 0 );
+		select SOCKET;
 		$| =1;
 		select STDOUT;
-		$sockaddr = sockaddr_in($this->{'PORT'}, inet_aton($host));
-		connect(SOCK, $sockaddr) || die('ERROR');
+		connect ( SOCKET, $sockaddr );
+		#autoflush SOCKET (1);
 		
 		# リクエスト送信
-		print SOCK $request;
+		print SOCKET $request;
 		
-		# レスポンス受信
-		while (<SOCK>) {
-		    $response .= $_;
+		$streamflag = 0;
+		$contflag = 0;
+		
+		while ( <SOCKET> ) {
+			
+			chomp;
+			
+			# HTTPステータス
+			if ( $_ =~ m!HTTP/1.1 (\d+) .+$! ) {
+				$code = $1;
+			}
+			
+			# レスポンスヘッダーの取得
+			if ( $contflag == 0 ) {
+				$header .= $_."\n";
+				
+				# ストリームらしい
+				if ( $_ =~ m/^Transfer\-Encoding: chunked/i ) {
+					$streamflag = 1;
+				}
+				
+			}
+			
+			# 本文の取得
+			if ( $_ =~ m!^(\r)?(\n)?$! && $contflag == 0 ) {
+				$contflag = 1;
+			}
+			elsif ( $contflag == 1 ) {
+				
+				# ストリームは無視する
+				next if ( $_ =~ /^([0-9a-fA-F]+)?(\x20+)?([\r|\n]+)$/ && $streamflag );
+				
+				$content .= $_."\n";
+				
+			}
+			
 		}
-		close SOCK;
 		
-		$this->{'RESPONSE'} = $response;
+		close(SOCKET);
+		
+		$this->{'CODE'}		= $code;
+		$this->{'HEADER'}	= $header;
+		$this->{'CONTENT'}	= $content;
+		
+		alarm(0);
+		
 	};
-	if ($@ ne '') {
-		$this->{'RESPONSE'} = $@;
-		return -100;
+	if ($@) {
+		$this->{'CONTENT'} = $@;
+		return -2;
 	}
 	
 	return 1;
@@ -117,16 +179,130 @@ sub request
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	http応答取得
+#	URI分解
 #	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	http応答.http要求でsocketエラーが起きた場合はエラーメッセージ
+#	@param	$uri	URI
+#	@return	$host	ホスト
+#			$port	ポート番号
 #
 #------------------------------------------------------------------------------------------------------------
-sub getResponse
+sub decompositionURI
+{
+	my $uri = shift;
+	my ($host, $port, $path);
+	
+	$uri =~ m!(http:)?(//)?([^:/]*)?(:(\d+)?)?(/.*)?!;
+	if ($3) { $host = $3; }
+	if ($5) { $port = $5; }
+	else	{ $port = 80; }
+	if ($6) { $path = $6; }
+	
+	return ( $host, $port, $path );
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	http要求文字列の生成
+#	-------------------------------------------------------------------------------------
+#	@param	$host	http要求先アドレス
+#			$target	http要求先URI
+#	@return	http要求ヘッダ文字列
+#
+#------------------------------------------------------------------------------------------------------------
+sub createRequestString
 {
 	my $this = shift;
-	return $this->{'RESPONSE'};
+	my ($host, $target) = @_;
+	my ($request, $params, $len);
+	
+	# httpボディ(パラメータ)の作成
+	foreach (keys %{$this->{'PARAMETER'}}) {
+		$params .= "$_=" . encode($this->{'PARAMETER'}->{$_}) . '&';
+	}
+	if (defined $params) {
+		$params = substr($params, 0, length($params) - 1);
+		$len = length $params;
+	}
+	
+	$request  = $this->{'METHOD'}." ".$target." HTTP/1.1\n";
+	$request .= "Host: ".$host."\n";
+	$request .= "User-Agent: ".$this->{'AGENT'}."\n";
+	$request .= "Accept-Language: ".$this->{'LANGUAGE'}."\n";
+	$request .= 'Content-Type: ' . $this->{'CONTENT_TYPE'} . "\n";
+	$request .= 'Keep-Alive: 115'."\n";
+	if ( $this->{'REFERER'} ) {
+		$request .= "Referer: ".$this->{'REFERER'}."\n";
+	}
+	$request .= "Connection: ".$this->{'CONNECTION'}."\n";
+	if ( $this->{'METHOD'} eq "POST" ) {
+		$request .= "Content-Length: ".$len."\n";
+	}
+	$request .= "\n";
+	
+	if ( $this->{'METHOD'} eq "POST" ) {
+		$request .= $params."\n";
+	}
+	
+	return $request;
+	
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	URLエンコード
+#	-------------------------------------------------------------------------------------
+#	@param	$text	エンコード文字列
+#	@return	URLエンコードした文字列
+#
+#------------------------------------------------------------------------------------------------------------
+sub encode
+{
+	my $str = shift;
+	$str =~ s/([^\w ])/'%'.unpack('H2', $1)/eg;
+	$str =~ tr/ /+/;
+	return $str;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	http応答ヘッダー取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	http応答ヘッダー
+#
+#------------------------------------------------------------------------------------------------------------
+sub getHeader
+{
+	my $this = shift;
+	return $this->{'HEADER'};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	http応答HTTPステータス取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	httpステータス
+#
+#------------------------------------------------------------------------------------------------------------
+sub getStatus
+{
+	my $this = shift;
+	return $this->{'CODE'};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	http応答コンテンツ取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	http取得先コンテンツ http要求でsocketエラーが起きた場合はエラーメッセージ
+#
+#------------------------------------------------------------------------------------------------------------
+sub getContent
+{
+	my $this = shift;
+	return $this->{'CONTENT'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -192,18 +368,17 @@ sub setAgent
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	http要求パラメータ設定
+#	タイムアウト設定
 #	-------------------------------------------------------------------------------------
-#	@param	$key	パラメータキー
-#	@param	$value	パラメータ値
+#	@param	$time	タイムアウト時間(秒)
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub setParameter
+sub setTimeout
 {
 	my $this = shift;
-	my ($key, $value) = @_;
-	$this->{'PARAMETER'}->{$key} = $value;
+	my ($time) = @_;
+	$this->{'TUMEOUT'} = $time;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -253,121 +428,50 @@ sub setReferer
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	http要求先アドレス取得
+#	プロキシ設定
 #	-------------------------------------------------------------------------------------
-#	@param	$host	http要求先ホスト
-#	@return	http要求先アドレス
-#
-#------------------------------------------------------------------------------------------------------------
-sub getTargetAddress
-{
-	my ($host) = @_;
-	my (@addrs, $addr);
-	
-	@addrs = unpack('C4', (gethostbyname $host)[4]);
-	if ($addrs[0] !~ /^[0-9]+$/ || $addrs[0] < 0 || $addrs[0] > 256 ||
-	    $addrs[1] !~ /^[0-9]+$/ || $addrs[1] < 0 || $addrs[1] > 256 ||
-	    $addrs[2] !~ /^[0-9]+$/ || $addrs[2] < 0 || $addrs[2] > 256 ||
-	    $addrs[3] !~ /^[0-9]+$/ || $addrs[3] < 0 || $addrs[3] > 256) {
-		return undef;
-	}
-	$addr = join('.', @addrs);
-	
-	return $addr;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	http要求先URI(ホストからの相対URI)取得
-#	-------------------------------------------------------------------------------------
-#	@param	$uriList	http要求URIを'/'で分割したリスト
-#	@return	http要求先URI
-#
-#------------------------------------------------------------------------------------------------------------
-sub getRelativeURI
-{
-	my ($uriList) = @_;
-	my ($i, $count, $uri);
-	
-	$count = @$uriList;
-	$uri = '';
-	for($i = 3;$i < $count;$i++) {
-		$uri .= '/' . $uriList->[$i];
-	}
-	
-	if ($uri eq '') {
-		$uri = '/';
-	}
-	return $uri;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	http要求文字列の生成
-#	-------------------------------------------------------------------------------------
-#	@param	$host	http要求先アドレス
-#	@param	$uri	http要求先相対URI
-#	@return	http要求ヘッダ文字列
-#
-#------------------------------------------------------------------------------------------------------------
-sub createRequestString
-{
-	my $this = shift;
-	my ($host, $uri) = @_;
-	my ($request, $params, $len);
-	
-	# httpボディ(パラメータ)の作成
-	foreach (keys %{$this->{'PARAMETER'}}) {
-		$params .= "$_=" . encode($this->{'PARAMETER'}->{$_}) . '&';
-	}
-	if ($params ne '') {
-		$params = substr($params, 0, length($params) - 1);
-		$len = length $params;
-	}
-	
-	# httpリクエストヘッダの作成
-	$request .= $this->{'METHOD'} . " $uri HTTP/1.0\r\n";
-	$request .= 'User-Agent: ' . $this->{'AGENT'} . "\r\n";
-	$request .= "Host: $host\r\n";
-	$request .= 'Connection: ' . $this->{'CONNECTION'} . "\r\n";
-	$request .= 'Content-Type: ' . $this->{'CONTENT_TYPE'} . "\r\n";
-	$request .= "Content-Length: $len\r\n";
-	$request .= "\r\n";
-	
-	# httpボディを連結
-	if ($len > 0) {
-		$request .= $params;
-	}
-	
-	return $request;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	URLエンコード
-#	-------------------------------------------------------------------------------------
-#	@param	$text	エンコード文字列
-#	@return	URLエンコードした文字列
-#
-#------------------------------------------------------------------------------------------------------------
-sub encode
-{
-	my ($text) = @_;
-	$text =~ s/(\W)/sprintf('%%%02X', unpack('C', $1))/eg;
-	return($text);
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	http要求タイムアウトハンドラ
-#	-------------------------------------------------------------------------------------
-#	@param	なし
+#	@param	$proxy	プロキシ ( [host]:[port]形式で )
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub onTimeout
+sub setProxy
 {
-	die 'ERRROR';
+	my $this = shift;
+	my ($proxy) = @_;
+	my ($host, $port) = split( /:/, $proxy );
+	$this->{'PROXY_HOST'} = $host;
+	$this->{'PROXY_PORT'} = $port;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	言語設定
+#	-------------------------------------------------------------------------------------
+#	@param	$lang	言語
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub setLanguage
+{
+	my $this = shift;
+	my ($lang) = @_;
+	$this->{'LANGUAGE'} = $lang;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	http要求パラメータ設定
+#	-------------------------------------------------------------------------------------
+#	@param	$key	パラメータキー
+#	@param	$value	パラメータ値
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub setParameter
+{
+	my $this = shift;
+	my ($key, $value) = @_;
+	$this->{'PARAMETER'}->{$key} = $value;
 }
 
 #============================================================================================================
