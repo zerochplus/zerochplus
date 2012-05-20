@@ -611,27 +611,12 @@ sub GetProductInfo
 sub GetRemoteHost
 {
 	my $this = shift;
-	my ($HOST, $HOST2);
+	my ($HOST);
 	
 	$HOST = $ENV{'REMOTE_ADDR'};
-	$HOST2 = '';
 	
 	if ($HOST =~ /\d$/) {
 		$HOST = gethostbyaddr(pack('c4', split(/\./, $HOST)), 2) || $HOST;
-	}
-	if (defined $ENV{'HTTP_VIA'} && $ENV{'HTTP_VIA'} =~ /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$/) {
-		$HOST2 = $1;
-	}
-	if (defined $ENV{'HTTP_X_FORWARDED_FOR'} && $ENV{'HTTP_X_FORWARDED_FOR'} =~ /^([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/) {
-		$HOST2 = $1;
-	}
-	if (defined $ENV{'HTTP_FORWARDED'} && $ENV{'HTTP_FORWARDED'} =~ /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)$/) {
-		$HOST2 = $1;
-	}
-	
-	if ($HOST2) {
-		$HOST2 = gethostbyaddr(pack('c4', split(/\./, $HOST2)), 2);
-		$HOST .= "&lt;$HOST2&gt;";
 	}
 	
 	return $HOST;
