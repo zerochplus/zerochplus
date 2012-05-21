@@ -521,7 +521,9 @@ sub CIDRHIT {
 	foreach ( @{$orz} ) {
 		
 		# CIDR形式でなければ普通に完全一致チェック
-		return ( $_ eq $ho ? 1 : 0 ) if ( $_ !~ m|/| );
+		# return ( $_ eq $ho ? 1 : 0 ) if ( $_ !~ m|/| );
+		# というよりは、完全一致すればCIDR形式じゃないんだろうという手抜き^^;
+		return 1 if ( $_ eq $ho );
 		
 		# 以下CIDR形式
 		{
