@@ -103,11 +103,9 @@ sub execute
 	# 名前欄を取得
 	my $name = $form->Get('FROM');
 	
-	# 本文取得
-	my $mes  = $form->Get('MESSAGE');
-	
 	# 悪さ対策でとりあえず空にする
 	$form->Set('BEID', '');
+	$form->Set('BEBASE', '0');
 	$form->Set('BERANK', '0');
 	
 	if ( $name =~ /!BE.+!HS/ ) {
@@ -162,7 +160,9 @@ sub execute
 		
 		# HTML解析
 		if ( $code ne 200 ) {
-			$form->Set('BEID', "BE:取得エラー($code)");
+			#$form->Set('BEID', "BE:取得エラー($code)");
+			$sys->Set('CODE', $code);
+			PrintBBSError( $sys, $form, 891 );
 			return 0;
 		}
 		
@@ -189,65 +189,39 @@ sub execute
 					$point = '2BP(0)';
 				}
 				
+				# 基礎BE番号取得+セット
+				$form->Set('BEBASE', ID2BASE($beid) );
+				
+				# BEポイントセット
 				$form->Set('BEID', "BE:$beid-$point");
 				
 				# アイコンとってくるよ！
-				if ( $be_icon ) {
+				if ( $be_icon && $form->Get('MESSAGE') ne "" ) {
 					
-					# sssp://をhttp://に変換する作業
-					$mes =~ s|sssp://|http://|gi;
-					
-					if ( $content =~ m|<img src="http://img.2ch.net/(.+)" />\n\n|i ) {
-						my $sssp = "sssp://img.2ch.net/$1";
-						$mes = "$sssp<br>$mes";
+					if ( $content =~ m|<img .+ alt="icon:([^\"]+)" />\n\n|i ) {
+						$form->Set('MESSAGE', "sssp://img.2ch.net/ico/$1<br>".$form->Get('MESSAGE'));
 					}
-					
-					$form->Set('MESSAGE', "$mes");
 					
 				}
 				
 			}
 			else {
 				#$form->Set('BEID', "BE:認証エラー($trip:$name)");
+				$sys->Set('CHK', "◆".$trip);
+				PrintBBSError( $sys, $form, 892 );
 				return 0;
 			}
 			
 		}
 		else {
-			$form->Set('BEID', '取得エラー(-1)');
+			#$form->Set('BEID', '取得エラー(-1)');
+			PrintBBSError( $sys, $form, 890 );
 			return 0;
 		}
 		
 	}
 	
 	return 0;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	旧トリップ作成関数
-#	-------------------------------------------------------------------------------------
-#	@param	$key	トリップキー
-#	@return	$trip	トリップ
-#
-#------------------------------------------------------------------------------------------------------------
-sub ConvertTrip1
-{
-	
-	my ( $key ) = @_;
-	
-	# 従来のトリップ生成方式
-	my $salt = substr($key . 'H.', 1, 2);
-	$salt =~ s/[^\.-z]/\./go;
-	$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
-	
-	# 0x80問題再現
-	$key =~ s/\x80[\x00-\xff]*$//;
-	
-	my $trip = substr(crypt($key, $salt), -10);
-	
-	return $trip;
-	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -259,20 +233,23 @@ sub ConvertTrip1
 #	@return $cont	BeプロフHTML
 #
 #------------------------------------------------------------------------------------------------------------
-sub BeGet {
+sub BeGet
+{
 	
 	my ( $url ) = @_;
 	
-	require LWP::UserAgent;
-	my $ua   = new LWP::UserAgent;
-	$ua->agent('Mozilla/5.0 (Windows; U; Windows NT 5.1; ja; rv:1.9.2.8) Gecko/20100722 Firefox/3.6.8');
-	$ua->timeout(5);
+	require('./module/httpservice.pl');
+	
+	my $proxy = HTTPSERVICE->new;
+	$proxy->setURI($url);
+	$proxy->setAgent('Mozilla/5.0 Plugin for 0ch+; 0ch_BE_HS.pl http://zerochplus.sourceforge.jp/');
+	$proxy->setTimeout(3);
 	
 	# とってくるよ
-	my $req  = HTTP::Request->new(GET => $url);
-	my $res  = $ua->request($req);
-	my $cont = $res->content;
-	my $code = $res->code;
+	$proxy->request();
+	
+	my $cont = $proxy->getContent();
+	my $code = $proxy->getStatus();
 	
 	return ( $code, $cont );
 	
@@ -287,7 +264,8 @@ sub BeGet {
 #	@return	ランク表示形式 2BP(0)
 #
 #------------------------------------------------------------------------------------------------------------
-sub BeRank {
+sub BeRank
+{
 	
 	my ( $form, $point ) = @_;
 	
@@ -320,9 +298,104 @@ sub BeRank {
 	
 }
 
+#------------------------------------------------------------------------------------------------------------
+#
+#	BEID->基礎BE番号取得
+#	-------------------------------------------------------------------------------------
+#	@param	$id		BEID
+#	@return	基礎BE番号
+#
+#------------------------------------------------------------------------------------------------------------
+sub ID2BASE
+{
+	
+	my ($id) = @_;
+	my ($base, $a, $b, $c, $d);
+	
+	$base = 0;
+	
+	if (($b = $id % 10) && ($a = ($id % 100 - $b) / 10) &&
+		! (($c = ($id - $id % 100) / 100 + $a - $b - 5) % ($d = $a * $b * 3))) {
+		$base = $c / $d;
+	}
+	
+	return $base;
+	
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	基礎BE番号->BEID取得
+#	-------------------------------------------------------------------------------------
+#	@param	$base	基礎BE番号
+#	@return	BEID配列
+#
+#------------------------------------------------------------------------------------------------------------
+sub BASE2ID
+{
+	
+	my ($base) = @_;
+	my @id = ();
+	
+	for my $a (1 .. 9) {
+		for my $b (1 .. 9) {
+			push @id, ($base * $a * $b * 3 - $a + $b + 5) * 100 + $a * 10 + $b;
+		}
+	}
+	
+	return sort { $a <=> $b } @id;
+	
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	なんちゃってbbs.cgiエラーページ表示
+#	-------------------------------------------------------------------------------------
+#	@param	$sys	MELKOR
+#	@param	$form	SAMWISE
+#	@param	$err	エラー番号
+#	@return	なし
+#	exit	エラー番号
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintBBSError
+{
+	my ($sys,$form,$err) = @_;
+	my $SYS;
+	
+	require('./module/radagast.pl');
+	require('./module/isildur.pl');
+	require('./module/thorin.pl');
+	
+	$SYS->{'SYS'}		= $sys;
+	$SYS->{'FORM'}		= $form;
+	$SYS->{'COOKIE'}	= new RADAGAST;
+	$SYS->{'COOKIE'}->Init();
+	$SYS->{'SET'}		= new ISILDUR;
+	$SYS->{'SET'}->Load($sys);
+	my $Page = new THORIN;
+	
+	require('./module/orald.pl');
+	$ERROR = new ORALD;
+	$ERROR->Load($sys);
+	
+	$ERROR->Print($SYS,$Page,$err,$sys->Get('AGENT'));
+	
+	$Page->Flush('',0,0);
+	
+	exit($err);
+}
 
 #============================================================================================================
 #	Module END
 #============================================================================================================
 1;
 __END__
+=pod
+# 890～ BEシステムエラー系
+890<>Be情報取得失敗<>Beユーザー情報の取得に失敗しました。
+890<>Beログイン失敗<>Beログインに失敗しました。
+891<>Beログイン必須<><a href="http://be.2ch.net/">be.2ch.net</a>でログインしてないと書けません。
+892<>BE_TYPE2規制<>Beログインしてください(t)。<a href="http://be.2ch.net/">be.2ch.net</a>
+=cut
+
