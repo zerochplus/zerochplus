@@ -336,6 +336,7 @@ sub InitSettingData
 		'BBS_COLUMN_NUMBER'		=> 256,
 		'BBS_SAMBATIME'			=> '',
 		'BBS_HOUSHITIME'		=> '',
+		'BBS_CAP_COLOR'			=> '',
 	);
 }
 

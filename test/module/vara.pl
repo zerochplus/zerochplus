@@ -635,7 +635,7 @@ sub NormalizationNameMail
 {
 	my ($this) = @_;
 	my ($Form, $oSEC, $oSET, $Sys);
-	my ($name, $mail, $subject, $bbs, $capName, $capID, $key, $host);
+	my ($name, $mail, $subject, $bbs, $capName, $capID, $capColor, $key, $host);
 	
 	$Sys		= $this->{'SYS'};
 	$Form		= $this->{'FORM'};
@@ -652,6 +652,10 @@ sub NormalizationNameMail
 	$capID = $Sys->Get('CAPID');
 	if ($capID && $oSEC->IsAuthority($capID, 17, $bbs)) {
 		$capName = $oSEC->Get($capID, 'NAME', 1, '');
+		$capColor = $oSEC->Get($oSEC->{'GROUP'}->GetBelong($capID), 'COLOR', 0, '');
+		if ($capColor eq '') {
+			$capColor = $oSET->Get('BBS_CAP_COLOR', '');
+		}
 	}
 	
 	# ” -> #
@@ -702,7 +706,13 @@ sub NormalizationNameMail
 	
 	# ƒLƒƒƒbƒv–¼Œ‹‡
 	if (defined $capName && $capName ne '') {
-		$name = ($name ne '' ? "$name—" : '') . "$capName š";
+		$name = ($name ne '' ? "$name—" : '');
+		if ($capColor eq '') {
+			$name .= "$capName š";
+		}
+		else {
+			$name .= "<font color=\"$capColor\">$capName š</font>";
+		}
 	}
 	
 	

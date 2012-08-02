@@ -318,11 +318,12 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj, %NAME, %EXPLAN, %RANGE, %AUTHOR, %CAPS, %ISCOMMON);
+	my ($obj, %NAME, %EXPLAN, %COLOR, %RANGE, %AUTHOR, %CAPS, %ISCOMMON);
 	
 	$obj = {
 		'NAME'	=> \%NAME,
 		'EXPL'	=> \%EXPLAN,
+		'COLOR'	=> \%COLOR,
 		'AUTH'	=> \%AUTHOR,
 		'CAPS'	=> \%CAPS,
 		'ISCOMMON'	=> \%ISCOMMON,
@@ -349,6 +350,7 @@ sub Load
 	# ƒnƒbƒVƒ…‰Šú‰»
 	undef $this->{'NAME'};
 	undef $this->{'EXPL'};
+	undef $this->{'COLOR'};
 	undef $this->{'AUTH'};
 	undef $this->{'CAPS'};
 	undef $this->{'ISCOMMON'};
@@ -360,10 +362,12 @@ sub Load
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$elem[4] = '' if (! defined $elem[4]);
+			$elem[5] = '' if (! defined $elem[5]);
 			$this->{'NAME'}->{$elem[0]}	= $elem[1];
 			$this->{'EXPL'}->{$elem[0]}	= $elem[2];
 			$this->{'AUTH'}->{$elem[0]}	= $elem[3];
 			$this->{'CAPS'}->{$elem[0]}	= $elem[4];
+			$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 			$this->{'ISCOMMON'}->{$elem[0]}	= 1;
 		}
 		close GROUPS;
@@ -377,10 +381,12 @@ sub Load
 				chomp $_;
 				@elem = split(/<>/, $_);
 				$elem[4] = '' if (! defined $elem[4]);
+				$elem[5] = '' if (! defined $elem[5]);
 				$this->{'NAME'}->{$elem[0]}	= $elem[1];
 				$this->{'EXPL'}->{$elem[0]}	= $elem[2];
 				$this->{'AUTH'}->{$elem[0]}	= $elem[3];
 				$this->{'CAPS'}->{$elem[0]}	= $elem[4];
+				$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 				$this->{'ISCOMMON'}->{$elem[0]}	= 0;
 			}
 			close GROUPS;
@@ -427,7 +433,8 @@ sub Save
 				$this->{NAME}->{$_},
 				$this->{EXPL}->{$_},
 				$this->{AUTH}->{$_},
-				$this->{CAPS}->{$_}
+				$this->{CAPS}->{$_},
+				$this->{COLOR}->{$_},
 			);
 			
 			print GROUPS "$data\n";
@@ -497,12 +504,13 @@ sub Get
 sub Add
 {
 	my $this = shift;
-	my ($name, $explan, $authors, $caps, $sysgroup) = @_;
+	my ($name, $explan, $color, $authors, $caps, $sysgroup) = @_;
 	my ($id);
 	
 	$id = time;
 	$this->{'NAME'}->{$id}	= $name;
 	$this->{'EXPL'}->{$id}	= $explan;
+	$this->{'COLOR'}->{$id}	= $color;
 	$this->{'AUTH'}->{$id}	= $authors;
 	$this->{'CAPS'}->{$id}	= $caps;
 	$this->{'ISCOMMON'}->{$id}	= (defined $sysgroup && $sysgroup ? 1 : 0);
@@ -570,6 +578,7 @@ sub Delete
 	
 	delete $this->{'NAME'}->{$id};
 	delete $this->{'EXPL'}->{$id};
+	delete $this->{'COLOR'}->{$id};
 	delete $this->{'AUTH'}->{$id};
 	delete $this->{'CAPS'}->{$id};
 	delete $this->{'ISCOMMON'}->{$id};

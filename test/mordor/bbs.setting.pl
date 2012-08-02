@@ -303,7 +303,7 @@ sub PrintColorSetting
 	my ($Page, $SYS, $Form, $flg) = @_;
 	my ($Setting);
 	my ($setIndexTitle, $setThreadTitle, $setIndexBG, $setThreadBG, $setCreateBG);
-	my ($setMenuBG, $setText, $setLink, $setLinkA, $setLinkV, $setName);
+	my ($setMenuBG, $setText, $setLink, $setLinkA, $setLinkV, $setName, $setCap);
 	
 	$SYS->Set('_TITLE', 'BBS Color Setting');
 	
@@ -330,6 +330,7 @@ sub PrintColorSetting
 	$setLinkA		= $Setting->Get('BBS_ALINK_COLOR');
 	$setLinkV		= $Setting->Get('BBS_VLINK_COLOR');
 	$setName		= $Setting->Get('BBS_NAME_COLOR');
+	$setCap			= $Setting->Get('BBS_CAP_COLOR');
 	
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=6>各設定色を入力して[設定]ボタンを押してください。</td></tr>");
@@ -346,6 +347,9 @@ sub PrintColorSetting
 	$Page->Print("<td class=\"DetailTitle\">名前色</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_NAME_COLOR value=\"$setName\">");
 	$Page->Print("</td><td><font color=$setName>名前</font></td></tr>\n");
+	$Page->Print("<td class=\"DetailTitle\">キャップ色</td><td>");
+	$Page->Print("<input type=text size=10 name=BBS_CAP_COLOR value=\"$setCap\">");
+	$Page->Print("</td><td><font color=$setCap>名前</font></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成背景色</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_MAKETHREAD_COLOR value=\"$setCreateBG\">");
 	$Page->Print("</td><td bgcolor=$setCreateBG></td>");
@@ -383,7 +387,7 @@ sub PrintColorSetting
 		$Page->Print("<table width=100% cellspacing=7 bgcolor=$setCreateBG border><td>スレッド作成</td>");
 		$Page->Print("</table><br></center></td>");
 		$Page->Print("<td colspan=3 bgcolor=$setThreadBG valign=top><font color=$setThreadTitle>");
-		$Page->Print("スレッドタイトル</font><br><br>1 <font color=$setName>名前</font><br>");
+		$Page->Print("スレッドタイトル</font><br><br>1 <font color=$setName>名前＠<font color=$setCap>キャップ ★</font></font><br>");
 		$Page->Print("　<font color=$setLink><u>http://---</u></font><br>");
 		$Page->Print("　<font color=$setLinkV><u>http://---</u></font><br>");
 		$Page->Print("</td></tr>");
@@ -727,7 +731,7 @@ sub FunctionBaseSetting
 sub FunctionColorSetting
 {
 	my ($Sys, $Form, $pLog) = @_;
-	my ($Setting);
+	my ($Setting, $capColor);
 	
 	# 権限チェック
 	{
@@ -746,7 +750,7 @@ sub FunctionColorSetting
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
-		foreach (@inList) {
+		foreach (@inList, 'BBS_CAP_COLOR') {
 			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
@@ -765,6 +769,9 @@ sub FunctionColorSetting
 	$Setting->Set('BBS_ALINK_COLOR', $Form->Get('BBS_ALINK_COLOR'));
 	$Setting->Set('BBS_VLINK_COLOR', $Form->Get('BBS_VLINK_COLOR'));
 	$Setting->Set('BBS_NAME_COLOR', $Form->Get('BBS_NAME_COLOR'));
+	$capColor = $Form->Get('BBS_CAP_COLOR');
+	$capColor =~ s/[^\w\d\#]//ig;
+	$Setting->Set('BBS_CAP_COLOR', $capColor);
 	
 	$Setting->Save($Sys);
 	

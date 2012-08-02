@@ -157,7 +157,7 @@ sub SetMenuList
 sub PrintGroupList
 {
 	my ($Page, $Sys, $Form) = @_;
-	my ($Group, @groupSet, @user, $name, $expl, $id, $common, $isAuth, $n);
+	my ($Group, @groupSet, @user, $name, $expl, $color, $id, $common, $isAuth, $n);
 	
 	$Sys->Set('_TITLE', 'Common CAP Group List');
 	
@@ -169,10 +169,11 @@ sub PrintGroupList
 	$Group->GetKeySet(\@groupSet, 1);
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
 	$Page->Print("<tr><td style=\"width:30\">　</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:150\">Group Name</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:200\">Subscription</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Cap Color</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Caps</td></tr>\n");
 	
 	# 権限取得
@@ -182,6 +183,7 @@ sub PrintGroupList
 	foreach $id (@groupSet) {
 		$name = $Group->Get('NAME', $id);
 		$expl = $Group->Get('EXPL', $id);
+		$color = $Group->Get('COLOR', $id);
 		@user = split(/\,/, (defined ($_ = $Group->Get('CAPS', $id)) ? $_ : ''));
 		$n = @user;
 		
@@ -191,20 +193,20 @@ sub PrintGroupList
 		# 権限によって表示を抑制
 		$Page->Print("<tr><td><input type=checkbox name=CAP_GROUPS value=$id></td>");
 		if ($isAuth) {
-			$Page->Print("<td><a href=$common>$name</a></td><td>$expl</td><td>$n</td></tr>\n");
+			$Page->Print("<td><a href=$common>$name</a></td><td>$expl</td><td>$color</td><td>$n</td></tr>\n");
 		}
 		else {
-			$Page->Print("<td>$name</td><td>$expl</td><td>$n</td></tr>\n");
+			$Page->Print("<td>$name</td><td>$expl</td><td>$color</td><td>$n</td></tr>\n");
 		}
 	}
 	$common = "onclick=\"DoSubmit('sys.capg', 'DISP'";
 	
 	$Page->HTMLInput('hidden', 'SELECT_CAPGROUP', '');
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
 	
 	# 権限によって表示を抑制
 	if ($isAuth) {
-		$Page->Print("<tr><td colspan=4 align=right>");
+		$Page->Print("<tr><td colspan=5 align=right>");
 		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
 		$Page->Print("</td></tr>\n");
 	}
@@ -226,7 +228,7 @@ sub PrintGroupSetting
 {
 	my ($Page, $Sys, $Form, $mode) = @_;
 	my ($Group, $User, @userSet, @authNum, $i, $num, $id);
-	my ($name, $expl, @auth, @user, $common);
+	my ($name, $expl, $color, @auth, @user, $common);
 	
 	$Sys->Set('_TITLE', 'Common CAP Group Edit')	if ($mode == 1);
 	$Sys->Set('_TITLE', 'Common CAP Group Create')	if ($mode == 0);
@@ -244,6 +246,7 @@ sub PrintGroupSetting
 	if ($mode) {
 		$name = $Group->Get('NAME', $Form->Get('SELECT_CAPGROUP'));
 		$expl = $Group->Get('EXPL', $Form->Get('SELECT_CAPGROUP'));
+		$color = $Group->Get('COLOR', $Form->Get('SELECT_CAPGROUP'));
 		@auth = split(/\,/, (defined ($_ = $Group->Get('AUTH', $Form->Get('SELECT_CAPGROUP'))) ? $_ : ''));
 		@user = split(/\,/, (defined ($_ = $Group->Get('CAPS', $Form->Get('SELECT_CAPGROUP'))) ? $_ : ''));
 		
@@ -259,6 +262,7 @@ sub PrintGroupSetting
 		$Form->Set('SELECT_CAPGROUP', '');
 		$name = '';
 		$expl = '';
+		$color = '';
 		for ($i = 0 ; $i < 19 ; $i++) {
 			$authNum[$i] = '';
 		}
@@ -273,6 +277,8 @@ sub PrintGroupSetting
 	$Page->Print("<input name=GROUPNAME_CAP type=text size=50 value=\"$name\"></td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">説明</td><td>");
 	$Page->Print("<input name=GROUPSUBS_CAP type=text size=50 value=\"$expl\"></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">キャップの色(無記入でデフォルト)</td><td>");
+	$Page->Print("<input name=GROUPCOLOR_CAP type=text size=50 value=\"$color\"></td></tr>");
 	$Page->Print("</table><br></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\" width=40%>権限情報</td>");
 	$Page->Print("<td class=\"DetailTitle\">所属キャップ</td></tr><tr><td valign=top>");
@@ -366,8 +372,7 @@ sub PrintGroupDelete
 		$name = $Group->Get('NAME', $id);
 		$expl = $Group->Get('EXPL', $id);
 		
-		$Page->Print("<tr><td>$name</a></td>");
-		$Page->Print("<td>$expl</td></tr>\n");
+		$Page->Print("<tr><td>$name</td><td>$expl</td></tr>\n");
 		$Page->HTMLInput('hidden', 'CAP_GROUPS', $id);
 	}
 	
@@ -399,7 +404,7 @@ sub FunctionGroupSetting
 {
 	my ($Sys, $Form, $mode, $pLog) = @_;
 	my ($Group, $User, @userSet, @authNum, @belongUser);
-	my ($name, $expl, $auth, $user, $i);
+	my ($name, $expl, $color, $auth, $user, $i);
 	
 	# 権限チェック
 	{
@@ -428,6 +433,8 @@ sub FunctionGroupSetting
 	# 基本情報の設定
 	$name = $Form->Get('GROUPNAME_CAP');
 	$expl = $Form->Get('GROUPSUBS_CAP');
+	$color = $Form->Get('GROUPCOLOR_CAP');
+	$color =~ s/[^\w\d\#]//ig;
 	
 	# 権限情報の生成
 	$auth = '';
@@ -467,12 +474,13 @@ sub FunctionGroupSetting
 		my $groupID = $Form->Get('SELECT_CAPGROUP');
 		$Group->Set($groupID, 'NAME', $name);
 		$Group->Set($groupID, 'EXPL', $expl);
+		$Group->Set($groupID, 'COLOR', $color);
 		$Group->Set($groupID, 'AUTH', $auth);
 		$Group->Set($groupID, 'CAPS', $user);
 		$Group->Set($groupID, 'ISCOMMON', 1);
 	}
 	else {
-		$Group->Add($name, $expl, $auth, $user, 1);
+		$Group->Add($name, $expl, $color, $auth, $user, 1);
 	}
 	
 	# 設定を保存
@@ -484,6 +492,7 @@ sub FunctionGroupSetting
 		push @$pLog, '■以下のキャップグループを登録しました。';
 		push @$pLog, "グループ名称：$name";
 		push @$pLog, "説明：$expl";
+		push @$pLog, "色：$color";
 		push @$pLog, "権限：$auth";
 		push @$pLog, '所属キャップ：';
 		foreach	$id (@belongUser){
