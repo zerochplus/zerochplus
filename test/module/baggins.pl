@@ -454,11 +454,13 @@ sub UpdateAll
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el);
+	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el, $psort, %idhash);
 	
 	undef $this->{'SUBJECT'};
 	undef $this->{'RES'};
-	undef $this->{'SORT'};
+	$psort = $this->{'SORT'};
+	$this->{'SORT'} = [];
+	%idhash = ();
 	
 	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
 	$num	= 0;
@@ -484,11 +486,21 @@ sub UpdateAll
 			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;
-			unshift @{$this->{'SORT'}}, $id;
+			$idhash{$id} = 1;
 			$num++;
 		}
 	}
 	$this->{'NUM'} = $num;
+	
+	foreach $id (@$psort) {
+		if (defined $idhash{$id}) {
+			push @{$this->{'SORT'}}, $id;
+			delete $idhash{$id};
+		}
+	}
+	foreach $id (sort keys %idhash) {
+		unshift @{$this->{'SORT'}}, $id;
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
