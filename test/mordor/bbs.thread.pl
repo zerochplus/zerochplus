@@ -475,10 +475,10 @@ sub PrintThreadAutoPooling
 	$SYS->Set('_TITLE', 'Thread Auto Pooling');
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2>以下の条件に当てはまるスレッドをdat落ちします。</td></tr>");
+	$Page->Print("<tr><td colspan=2>以下の各条件に当てはまるスレッドをdat落ちします。</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
 	$Page->Print("<tr>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:150\">条件</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:150\">条件(OR)</td>");
 	$Page->Print("<td class=\"DetailTitle\">条件設定値</td></tr>\n");
 	
 	$Page->Print("<tr><td><input type=checkbox name=CONDITION_BYDATE value=on>");
@@ -490,6 +490,9 @@ sub PrintThreadAutoPooling
 	$Page->Print("<tr><td><input type=checkbox name=CONDITION_BYRES value=on>");
 	$Page->Print("<b>レス数</b></td><td>レス数が");
 	$Page->Print("<input type=text size=4 name=POOLRES value=1000>を超えたもの</td></tr>\n");
+	$Page->Print("<tr><td><input type=checkbox name=CONDITION_BYTITLE value=on>");
+	$Page->Print("<b>タイトル</b></td><td>タイトルが");
+	$Page->Print("<input type=text size=15 name=POOLTITLE value=>にマッチするもの(正規表\現)</td></tr>\n");
 	$Page->Print("<tr><td><input type=checkbox name=CONDITION_BYSTOP value=on>");
 	$Page->Print("<b>停止スレッド</b></td><td>スレッドが停止・または移転されているもの</td></tr>");
 	
@@ -795,6 +798,14 @@ sub FunctionThreadAutoPooling
 		if ($Form->Equal('CONDITION_BYRES', 'on') && $bPool == 0) {
 			my ($res) = $Threads->Get('RES', $id);
 			if ($res > $Form->Get('POOLRES')) {
+				$bPool = 1;
+			}
+		}
+		# タイトルによる判定
+		if ($Form->Equal('CONDITION_BYTITLE', 'on') && $bPool == 0) {
+			my ($subject) = $Threads->Get('SUBJECT', $id);
+			my $reg = $Form->Get('POOLTITLE');
+			if ($subject =~ /$reg/) {
 				$bPool = 1;
 			}
 		}
