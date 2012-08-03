@@ -30,7 +30,7 @@ use strict;
 sub new
 {
 	my $this = shift;
-	my (@LOG, $PATH, $FILE, $MAX, $MAXA, $MAXH, $KIND, $obj);
+	my (@LOG, $PATH, $FILE, $MAX, $MAXA, $MAXH, $MAXS, $KIND, $obj);
 	
 	$obj = {
 		'LOG'	=> \@LOG,
@@ -39,6 +39,7 @@ sub new
 		'MAX'	=> $MAX,
 		'MAXA'	=> $MAXA,
 		'MAXH'	=> $MAXH,
+		'MAXS'	=> $MAXS,
 		'KIND'	=> $KIND,
 		'NUM'	=> 0
 	};
@@ -83,6 +84,7 @@ sub Load
 	$this->{'MAX'}	= $M->Get('ERRMAX');
 	$this->{'MAXA'}	= $M->Get('ADMMAX');
 	$this->{'MAXH'}	= $M->Get('HISMAX');
+	$this->{'MAXS'}	= $M->Get('SUBMAX');
 	$this->{'NUM'}	= 0;
 	
 	$path = $M->Get('BBSPATH') . '/' . $M->Get('BBS') . '/log';		# 掲示板パス
@@ -218,7 +220,7 @@ sub Set
 		$nm = ++$this->{'NUM'};
 		
 		   if ($kind == 1) { $bf = $nm - $this->{'MAX'}; }							# エラーログ
-		elsif ($kind == 2) { $bf = $nm - $I->Get('BBS_THREAD_TATESUGI'); }			# スレッドログ
+		elsif ($kind == 2) { $bf = $nm - $this->{'MAXS'}; }							# スレッドログ
 	#	elsif ($kind == 3) { $bf = $nm - $I->Get('timecount'); }					# 書き込みログ
 		elsif ($kind == 6) { $bf = $nm - $this->{'MAX'}; }							# samba
 		elsif ($kind == 7) { $bf = $nm - $this->{'MAX'}; }							# houshi
@@ -452,6 +454,39 @@ sub IsHoushi
 		}
 	}
 	return (0, 0);
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド立てすぎ判定 - IsTatesugi
+#	-------------------------------------------
+#	引　数：$hour		: スレッド作成数規制時間(時間)
+#	戻り値：$count		: スレッド数
+#
+#------------------------------------------------------------------------------------------------------------
+sub IsTatesugi
+{
+	my $this = shift;
+	my ($hour) = @_;
+	my ($i, $n, $tm, $nw, $kind, $count);
+	
+	$nw = time;
+	$n = @{$this->{'LOG'}};
+	$kind = $this->{'KIND'};
+	$count = 0;
+	
+	return 0 if ($kind != 2);
+	
+	for ($i = $n - 1 ; $i >= 0 ; $i--) {
+		$tm = (split(/<>/, $this->{'LOG'}->[$i]))[0];
+		if ($hour * 3600 > $nw - $tm) {
+			$count++;
+		}
+		else {
+			last;
+		}
+	}
+	return $count;
 }
 
 #------------------------------------------------------------------------------------------------------------

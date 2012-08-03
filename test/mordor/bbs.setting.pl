@@ -221,16 +221,17 @@ sub PrintSettingInfo
 	
 	$Setting->GetKeySet(\@settingKeys);
 	$keyNum = @settingKeys;
+	push @settingKeys, '';
 	
 	$Page->Print("<center><table cellspcing=2 width=100%>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	
 	for ($i = 0 ; $i < ($keyNum / 2) ; $i++) {
 		$key = $settingKeys[$i * 2];
-		$val = $Setting->Get($key);
+		$val = $Setting->Get($key, '');
 		$Page->Print("<tr><td class=\"DetailTitle\">$key</td><td>$val</td>");
 		$key = $settingKeys[$i * 2 + 1];
-		$val = $Setting->Get($key);
+		$val = $Setting->Get($key, '');
 		$Page->Print("<td class=\"DetailTitle\">$key</td><td>$val</td></tr>\n");
 	}
 	
@@ -347,9 +348,6 @@ sub PrintColorSetting
 	$Page->Print("<td class=\"DetailTitle\">名前色</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_NAME_COLOR value=\"$setName\">");
 	$Page->Print("</td><td><font color=$setName>名前</font></td></tr>\n");
-	$Page->Print("<td class=\"DetailTitle\">キャップ色</td><td>");
-	$Page->Print("<input type=text size=10 name=BBS_CAP_COLOR value=\"$setCap\">");
-	$Page->Print("</td><td><font color=$setCap>名前</font></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成背景色</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_MAKETHREAD_COLOR value=\"$setCreateBG\">");
 	$Page->Print("</td><td bgcolor=$setCreateBG></td>");
@@ -370,7 +368,10 @@ sub PrintColorSetting
 	$Page->Print("</td><td><font color=$setLinkV>リンク(訪問済み)</font></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">スレッドタイトル色</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_SUBJECT_COLOR value=\"$setThreadTitle\">");
-	$Page->Print("</td><td><font color=$setThreadTitle>スレッドタイトル</font></td></tr>\n");
+	$Page->Print("</td><td><font color=$setThreadTitle>スレッドタイトル</font></td>");
+	$Page->Print("<td class=\"DetailTitle\">キャップ色</td><td>");
+	$Page->Print("<input type=text size=10 name=BBS_CAP_COLOR value=\"$setCap\">");
+	$Page->Print("</td><td><font color=$setName><font color=$setCap>名前</font></font></td></tr>\n");
 	$Page->Print("<tr><td colspan=6><hr></td></tr>");
 	
 	# スレッドプレビューの表示
@@ -467,7 +468,7 @@ sub PrintLimitSetting
 	$Page->Print("<input type=text size=10 name=BBS_MESSAGE_COUNT value=\"$setContMax\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">海外ホスト規制</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_JP_CHECK $setOverSea value=on>規制有り</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成ログ保存数</td><td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成待機数</td><td>");
 	$Page->Print("<input type=text size=10 name=BBS_THREAD_TATESUGI value=\"$setThreadMax\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">トマト</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_RAWIP_CHECK $setTomato value=on>トマト表\示</td></tr>");
@@ -590,6 +591,8 @@ sub PrintOriginalSetting
 	$setItem[7]	= $Setting->Get('BBS_THREADCAPONLY');
 	$setItem[8]	= $Setting->Get('BBS_SAMBATIME');
 	$setItem[9]	= $Setting->Get('BBS_HOUSHITIME');
+	$setItem[10]= $Setting->Get('BBS_TATESUGI_HOUR');
+	$setItem[11]= $Setting->Get('BBS_TATESUGI_COUNT');
 	
 	$readOnly[0] = ($setItem[5] eq 'none' ? 'checked' : '');
 	$readOnly[1] = ($setItem[5] eq 'caps' ? 'checked' : '');
@@ -605,7 +608,7 @@ sub PrintOriginalSetting
 	$Page->Print("<tr><td class=\"DetailTitle\">cookie保存パス</td><td>");
 	$Page->Print("<input type=text size=8 name=BBS_COOKIEPATH value=\"$setItem[1]\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">リファラクッション</td><td>");
-	$Page->Print("<input type=text size=8 name=BBS_REFERER_CUSHION value=\"$setItem[2]\"></td>");
+	$Page->Print("<input type=text size=8 name=BBS_REFERER_CUSHION value=\"$setItem[2]\"></td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">トリップ桁数</td><td>");
 	$Page->Print("<input type=text size=8 name=BBS_TRIPCOLUMN value=\"$setItem[3]\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">スレッド作成CAP規制</td><td>");
@@ -621,6 +624,12 @@ sub PrintOriginalSetting
 	$Page->Print("<tr><td class=\"DetailTitle\">Samba奉仕時間(分)</td><td colspan=3>");
 	$Page->Print("<input type=text size=8 name=BBS_HOUSHITIME value=\"$setItem[9]\">");
 	$Page->Print("(無記入でデフォルト値)</td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成数規制(時間)</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_HOUR value=\"$setItem[10]\">");
+	$Page->Print("(0で無効)</td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成数規制(数)</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_COUNT value=\"$setItem[11]\">");
+	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETORIGIN');\"></td></tr></table>");
@@ -977,7 +986,7 @@ sub FunctionOriginalSetting
 	}
 	# 入力チェック
 	{
-		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER');
+		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER', 'BBS_TATESUGI_HOUR', 'BBS_TATESUGI_COUNT');
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
@@ -985,6 +994,11 @@ sub FunctionOriginalSetting
 			push @$pLog, "「$_」を「" . $Form->Get($_) . '」に設定';
 		}
 	}
+	
+	if ( $Form->Get('BBS_TATESUGI_HOUR') - 0 eq 0) {
+		$Form->Set('BBS_TATESUGI_HOUR' ,'0');
+	}
+	
 	require './module/isildur.pl';
 	$Setting = ISILDUR->new;
 	$Setting->Load($Sys);
@@ -998,6 +1012,8 @@ sub FunctionOriginalSetting
 	$Setting->Set('BBS_THREADCAPONLY', ($Form->Equal('BBS_THREADCAPONLY', 'on') ? 'checked' : ''));
 	$Setting->Set('BBS_SAMBATIME', $Form->Get('BBS_SAMBATIME'));
 	$Setting->Set('BBS_HOUSHITIME', $Form->Get('BBS_HOUSHITIME'));
+	$Setting->Set('BBS_TATESUGI_HOUR', $Form->Get('BBS_TATESUGI_HOUR'));
+	$Setting->Set('BBS_TATESUGI_COUNT', $Form->Get('BBS_TATESUGI_COUNT'));
 	
 	$Setting->Save($Sys);
 	

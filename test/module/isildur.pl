@@ -337,6 +337,8 @@ sub InitSettingData
 		'BBS_SAMBATIME'			=> '',
 		'BBS_HOUSHITIME'		=> '',
 		'BBS_CAP_COLOR'			=> '',
+		'BBS_TATESUGI_HOUR'		=> '0',
+		'BBS_TATESUGI_COUNT'	=> '5',
 	);
 }
 

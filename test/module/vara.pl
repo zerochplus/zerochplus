@@ -512,7 +512,14 @@ sub IsRegulation
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
 		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			if ($LOG->Search($koyuu, 3, $mode, $host)) {
+			my ($tateHour, $tateCount, $checkCount);
+			$tateHour = $oSET->Get('BBS_TATESUGI_HOUR', '0') - 0;
+			$tateCount = $oSET->Get('BBS_TATESUGI_COUNT', '0') - 0;
+			$checkCount = $oSET->Get('BBS_THREAD_TATESUGI', '0') - 0;
+			if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount) {
+				return 500;
+			}
+			if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount)) {
 				return 500;
 			}
 		}
