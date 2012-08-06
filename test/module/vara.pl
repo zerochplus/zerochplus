@@ -669,7 +669,7 @@ sub NormalizationNameMail
 	$this->{'CONV'}->ConvertCharacter0(\$name);
 	
 	# トリップキーを切り離す
-	if ($name =~ /#(.*)$/x) {
+	if ($name =~ /\#(.*)$/x) {
 		$key = $1;
 		
 		# トリップ変換
@@ -706,7 +706,7 @@ sub NormalizationNameMail
 	$this->{'CONV'}->ConvertCharacter2(\$subject, 3);
 	
 	# トリップと名前を結合する
-	$name =~ s|#.*$| </b>◆$key <b>|x if ($key ne '');
+	$name =~ s|\#.*$| </b>◆$key <b>|x if ($key ne '');
 	
 	# fusiana変換 2ch互換
 	$this->{'CONV'}->ConvertFusianasan(\$name, $host);
