@@ -412,7 +412,7 @@ sub PrintLimitterSetting
 sub PrintOtherSetting
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($urlLink, $linkSt, $linkEd, $pathKind, $headText, $headUrl, $FastMode, $BBSGET);
+	my ($urlLink, $linkSt, $linkEd, $pathKind, $headText, $headUrl, $FastMode, $BBSGET, $upCheck);
 	my ($linkChk, $pathInfo, $pathQuery, $fastMode, $bbsget);
 	my ($common);
 	
@@ -426,6 +426,7 @@ sub PrintOtherSetting
 	$headUrl	= $SYS->Get('HEADURL');
 	$FastMode	= $SYS->Get('FASTMODE');
 	$BBSGET		= $SYS->Get('BBSGET');
+	$upCheck	= $SYS->Get('UPCHECK');
 	
 	$linkChk	= ($urlLink eq 'TRUE' ? 'checked' : '');
 	$fastMode	= ($FastMode == 1 ? 'checked' : '');
@@ -466,9 +467,13 @@ sub PrintOtherSetting
 	$Page->Print("<tr><td>bbs.cgiでGETメソ\ッドを使用する</td>");
 	$Page->Print("<td><input type=checkbox name=BBSGET $bbsget value=on></td></tr>\n");
 	
+	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">更新チェック関連</td></tr>\n");
+	$Page->Print("<tr><td>更新チェックの間隔</td>");
+	$Page->Print("<td><input type=text size=2 name=UPCHECK value=\"$upCheck\">日(0でチェック無効)</td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2 align=right>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
+	
 	$Page->Print("</table>");
 	
 }
@@ -1008,6 +1013,7 @@ sub FunctionOtherSetting
 	$SYSTEM->Set('PATHKIND', $Form->Get('PATHKIND'));
 	$SYSTEM->Set('FASTMODE', ($Form->Equal('FASTMODE', 'on') ? 1 : 0));
 	$SYSTEM->Set('BBSGET', ($Form->Equal('BBSGET', 'on') ? 1 : 0));
+	$SYSTEM->Set('UPCHECK', $Form->Get('UPCHECK'));
 	
 	$SYSTEM->Save();
 	
@@ -1022,6 +1028,7 @@ sub FunctionOtherSetting
 		push @$pLog, '　　　 PATH種別：' . $SYSTEM->Get('PATHKIND');
 		push @$pLog, '　　　 高速モード：' . $SYSTEM->Get('FASTMODE');
 		push @$pLog, '　　　 bbs.cgiのGETメソ\ッド：' . $SYSTEM->Get('BBSGET');
+		push @$pLog, '　　　 更新チェック間隔：' . $SYSTEM->Get('UPCHECK');
 	}
 	return 0;
 }

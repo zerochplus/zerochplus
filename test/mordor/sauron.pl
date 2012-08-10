@@ -105,7 +105,7 @@ sub Print
 	PrintInner($Tad, $Tin, $ttl);														# 機能内容出力
 	PrintCommonInfo($Tad, $this->{'FORM'});
 	PrintFoot($Tad, $this->{'FORM'}->Get('UserName'), $this->{'SYS'}->Get('VERSION'),
-							$this->{'SYS'}->Get('ADMIN')->{'NEWRELEASE'}->Get('Ver'));	# フッタ出力
+						$this->{'SYS'}->Get('ADMIN')->{'NEWRELEASE'}->Get('Update'));	# フッタ出力
 	
 	$Tad->Flush(0, 0, '');																# 画面出力
 }
@@ -376,7 +376,7 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintFoot
 {
-	my ($Page, $user, $ver, $nver) = @_;
+	my ($Page, $user, $ver, $nverflag) = @_;
 	
 $Page->Print(<<HTML);
  </tr>
@@ -384,7 +384,7 @@ $Page->Print(<<HTML);
 
 <div class="MainFoot">
  Copyright 2001 - 2012 0ch+ BBS : Loggin User - <b>$user</b><br>
- Build Version:<b>$ver</b>@{[defined $nver ? " ($nver is Available.)" : '']}
+ Build Version:<b>$ver</b>@{[$nverflag ? " (New Version is Available.)" : '']}
 </div>
 
 </form>

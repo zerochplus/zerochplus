@@ -291,6 +291,7 @@ sub InitSystemValue
 		'MSEC'		=> 0,										# msecまで表示するか
 		'BBSGET'	=> 0,										# bbs.cgiでGETメソッドを使用するかどうか
 		'CONFVER'	=> '',										# システム設定ファイルのバージョン
+		'UPCHECK'	=> 1,										# 更新チェック間隔(日)
 		
 		# DNSBL設定
 		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
@@ -307,7 +308,7 @@ sub InitSystemValue
 		'SAMBATM',	'DEFSAMBA',	'DEFHOUSHI',
 		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
 		'CONFVER',
-		'BBQ',		'BBX',		'SPAMCH',
+		'BBQ',		'BBX',		'SPAMCH',	'UPCHECK',
 	);
 }
 

@@ -61,8 +61,12 @@ sub AdminCGI
 	$modName = 'login' if (! $userID);
 	
 	# バージョンチェック
+	$upcheck = $Sys->Get('UPCHECK', 1) - 0;
 	$SYS{'NEWRELEASE'}->Init($Sys);
-	$SYS{'NEWRELEASE'}->Check;
+	if ($upcheck) {
+		$SYS{'NEWRELEASE'}->Set('Interval', 24*60*60*$upcheck);
+		$SYS{'NEWRELEASE'}->Check;
+	}
 	
 	# 処理モジュールオブジェクトの生成
 	require "./mordor/$modName.pl";

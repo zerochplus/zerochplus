@@ -59,6 +59,7 @@ sub Init
 		'RawVer'	=> $sys->Get('VERSION'),
 		'CachePATH'	=>  '.' . $sys->Get('INFO') . '/Release.cgi',
 		'CachePM'	=> $sys->Get('PM-ADM'),
+		'Update'	=> 0,
 	};
 	
 }
@@ -89,6 +90,8 @@ sub Check
 		@ver = split /\./, $1;
 	} elsif ( $rawver =~ /dev-r(\d+)/ ) {
 		@ver = ( 'dev', $1 );
+	} else {
+		@ver = ( 'dev', 0 );
 	}
 	$date = '00000000';
 	if ( $rawver =~ /(\d{8})/ ) {
