@@ -123,9 +123,12 @@ sub Check
 		
 		# とれた
 		if ( $proxy->getStatus() eq 200 ) {
-			open ( FILE, "> $path" );
+			open ( FILE, "+< $path" );
+			flock FILE, 2;
 			binmode FILE;
+			seek FILE, 0, 0;
 			print FILE $proxy->getContent();
+			truncate FILE, tell FILE;
 			close FILE;
 			chmod $hash->{'CachePM'}, $path;
 		}
@@ -136,7 +139,15 @@ sub Check
 	my ( @release, $l, @newver, $newdate, $i, $newrelease, $vv, $nv );
 	
 	open ( FILE, "< $path" );
+	flock FILE, 1;
+	seek FILE, 0, 0;
+	undef @release;
 	while ( $l = <FILE> ) {
+		# 爆弾(BOM)処理
+		if ( $#release eq -1 ) {
+			$l =~ s/^\xef\xbb\xbf//;
+		}
+		
 		# $l =~ s/\x0d?\x0a?$//;
 		# samwiseと同等のサニタイジングを行います
 		$l =~ s/[\x0d\x0a\0]//g;
@@ -148,10 +159,6 @@ sub Check
 		push @release, $l;
 	}
 	close FILE;
-	# 爆弾(BOM)処理
-	$l = shift @release;
-	$l =~ s/^\xef\xbb\xbf//;
-	unshift @release, $l;
 	
 	# n.m.r形式であることを期待している
 	@newver = split /\./, $release[0];
