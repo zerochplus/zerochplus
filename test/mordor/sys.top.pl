@@ -603,8 +603,11 @@ sub CheckVersionUpdate
 		my $limit = 0;
 		
 		# 通知内容
-		my $subject = "0ch+ $newver 新バージョンリリース";
-		my $content = "<!-- \*Ver=$newver\* -->";
+		use Encode;
+		my $note = join('<br>', @{$nr->Get('Detail')});
+		Encode::from_to($note, 'utf8', 'sjis');
+		my $subject = "0ch+ New Version $newver is Released.";
+		my $content = "<!-- \*Ver=$newver\* --> $note";
 		
 		# 通知者 0ch+管理システム
 		my $from = '0000000000';
