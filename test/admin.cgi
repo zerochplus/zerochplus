@@ -60,6 +60,10 @@ sub AdminCGI
 	$modName = $Form->Get('MODULE', 'login');
 	$modName = 'login' if (! $userID);
 	
+	# バージョンチェック
+	$SYS{'NEWRELEASE'}->Init($Sys);
+	$SYS{'NEWRELEASE'}->Check;
+	
 	# 処理モジュールオブジェクトの生成
 	require "./mordor/$modName.pl";
 	$oModule = new MODULE;
@@ -98,14 +102,17 @@ sub SystemSetting
 		'LOGGER'	=> undef,		# ログオブジェクト
 		'AD_BBS'	=> undef,		# BBS情報オブジェクト
 		'AD_DAT'	=> undef,		# dat情報オブジェクト
-		'USER'		=> undef		# ログインユーザID
+		'USER'		=> undef,		# ログインユーザID
+		'NEWRELEASE'=> undef,		# バージョンチェック
 	);
 	
 	require './module/elves.pl';
 	require './module/imrahil.pl';
+	require './module/newrelease.pl';
 	
 	$pSYS->{'SECINFO'}	= new ARWEN;
 	$pSYS->{'LOGGER'}	= new IMRAHIL;
 	$pSYS->{'LOGGER'}->Open('./info/AdminLog', 100, 2 | 4);
+	$pSYS->{'NEWRELEASE'} = ZP_NEWRELEASE->new;
 }
 

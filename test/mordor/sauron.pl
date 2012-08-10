@@ -104,7 +104,8 @@ sub Print
 	PrintList($Tad, $this->{'MNUNUM'}, $this->{'MNUSTR'}, $this->{'MNUURL'});			# 機能リスト出力
 	PrintInner($Tad, $Tin, $ttl);														# 機能内容出力
 	PrintCommonInfo($Tad, $this->{'FORM'});
-	PrintFoot($Tad, $this->{'FORM'}->Get('UserName'), $this->{'SYS'}->Get('VERSION'));	# フッタ出力
+	PrintFoot($Tad, $this->{'FORM'}->Get('UserName'), $this->{'SYS'}->Get('VERSION'),
+							$this->{'SYS'}->Get('ADMIN')->{'NEWRELEASE'}->Get('Ver'));	# フッタ出力
 	
 	$Tad->Flush(0, 0, '');																# 画面出力
 }
@@ -375,15 +376,15 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintFoot
 {
-	my ($Page, $user, $ver) = @_;
+	my ($Page, $user, $ver, $nver) = @_;
 	
 $Page->Print(<<HTML);
  </tr>
 </table>
 
 <div class="MainFoot">
- Copyright 2001 - 2011 0ch+ BBS : Loggin User - <b>$user</b><br>
- Build Version:<b>$ver</b>
+ Copyright 2001 - 2012 0ch+ BBS : Loggin User - <b>$user</b><br>
+ Build Version:<b>$ver</b>@{[defined $nver ? " ($nver is Available.)" : '']}
 </div>
 
 </form>

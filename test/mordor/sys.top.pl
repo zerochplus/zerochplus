@@ -60,6 +60,7 @@ sub DoPrint
 	SetMenuList($BASE, $pSys);
 	
 	if ($subMode eq 'NOTICE') {														# 通知一覧画面
+		CheckVersionUpdate($Sys);
 		PrintNoticeList($Page, $Sys, $Form);
 	}
 	elsif ($subMode eq 'NOTICE_CREATE') {											# 通知一覧画面
@@ -217,7 +218,7 @@ HTML
 		$id = $noticeSet[$i];
 		if ($Notices->IsInclude($id, $curUser) && ! $Notices->IsLimitOut($id)) {
 			if ($Notices->Get('FROM', $id) eq '0000000000') {
-				$from = '0ch管理システム';
+				$from = '0ch+管理システム';
 			}
 			else {
 				$from = $Sys->Get('ADMIN')->{'SECINFO'}->{'USER'}->Get('NAME', $Notices->Get('FROM', $id));
@@ -488,7 +489,7 @@ sub FunctionNoticeCreate
 	}
 	else {
 		my @toSet = $Form->GetAtArray('NOTICE_USERS');
-		$users = join(', ', @toSet);
+		$users = join(',', @toSet);
 		$limit = 0;
 	}
 	# 通知情報を追加
@@ -576,6 +577,64 @@ sub FunctionLogRemove
 	push @$pLog, '操作ログを削除しました。';
 	
 	return 0;
+}
+
+
+sub CheckVersionUpdate
+{
+	my ($Sys) = @_;
+	
+	my $nr = $Sys->Get('ADMIN')->{'NEWRELEASE'};
+	
+	if ( $nr->Get('Update') eq 1) {
+		my $newver = $nr->Get('Ver');
+		my $reldate = $nr->Get('Date');
+		
+		# ユーザ通知 準備
+		require './module/gandalf.pl';
+		my $Notice = GANDALF->new;
+		$Notice->Load($Sys);
+		my $nid = 'verupnotif';
+		
+		# 通知時刻
+		use Time::Local;
+		$_ = [split /\./, $reldate];
+		my $date = timelocal(0, 0, 0, $_->[2], $_->[1] - 1, $_->[0]);
+		my $limit = 0;
+		
+		# 通知内容
+		my $subject = "0ch+ $newver 新バージョンリリース";
+		my $content = "<!-- \*Ver=$newver\* -->";
+		
+		# 通知者 0ch+管理システム
+		my $from = '0000000000';
+		
+		# 通知先 管理者権限を持つユーザ
+		require './module/elves.pl';
+		my $User = GLORFINDEL->new;
+		$User->Load($Sys);
+		my @toSet = ();
+		$User->GetKeySet('SYSAD', 1, \@toSet);
+		my $users = join(',', @toSet, 'nouser');
+		
+		# 通知を追加
+		if ($Notice->Get('TEXT', $nid, '') =~ /\*Ver=(.+?)\*/ && $1 eq $newver) {
+			$Notice->{'TO'}->{$nid}			= $users;
+			$Notice->{'TEXT'}->{$nid}		= $content;
+			$Notice->{'DATE'}->{$nid}		= $date;
+		}
+		else {
+			#$Notice->Add($users, $from, $subject, $content, $limit);
+			$Notice->{'TO'}->{$nid}			= $users;
+			$Notice->{'FROM'}->{$nid}		= $from;
+			$Notice->{'SUBJECT'}->{$nid}	= $subject;
+			$Notice->{'TEXT'}->{$nid}		= $content;
+			$Notice->{'DATE'}->{$nid}		= $date;
+			$Notice->{'LIMIT'}->{$nid}		= $limit;
+			$Notice->Save($Sys);
+		}
+	}
+	
 }
 
 #============================================================================================================

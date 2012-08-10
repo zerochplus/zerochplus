@@ -266,7 +266,7 @@ sub IsInclude
 		return 1;
 	}
 	
-	@users = split(/\,/, $this->{'TO'}->{$id});
+	@users = split(/\, ?/, $this->{'TO'}->{$id});
 	foreach (@users) {
 		return 1 if ($_ eq $user);
 	}
@@ -318,7 +318,7 @@ sub RemoveToUser
 	}
 	
 	undef @news;
-	@users = split(/\,/, $this->{'TO'}->{$id});
+	@users = split(/\, ?/, $this->{'TO'}->{$id});
 	
 	foreach (@users) {
 		if ($_ ne $user) {
