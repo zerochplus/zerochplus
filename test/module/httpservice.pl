@@ -105,7 +105,7 @@ sub request
 	
 	eval
 	{
-		my ($sockaddr, $header, $streamflag, $content, $contflag, $code, $uri);
+		my ($sockaddr, $header, $chunkedflag, $content, $contflag, $code, $uri);
 		local $SIG{ALRM} = sub{ die "connect time out. $!" };
 		
 		alarm($this->{'TIMEOUT'});
@@ -114,50 +114,72 @@ sub request
 		$sockaddr = pack_sockaddr_in( $port, inet_aton($host) );
 		socket ( SOCKET, PF_INET, SOCK_STREAM, 0 );
 		select SOCKET;
-		$| =1;
+		$| = 1;
 		select STDOUT;
 		connect ( SOCKET, $sockaddr );
+		binmode SOCKET;
 		#autoflush SOCKET (1);
 		
 		# リクエスト送信
 		print SOCKET $request;
+		$this->{'REQUEST'}	= $request;
 		
-		$streamflag = 0;
-		$contflag = 0;
+		$chunkedflag = 0;
+		$code = 0;
+		$header = '';
+		$content = '';
 		
 		while ( <SOCKET> ) {
 			
-			chomp;
+			s/\r?\n$//;
+			
+			last if ( $_ eq '' );
 			
 			# HTTPステータス
-			if ( $_ =~ m!HTTP/1.1 (\d+) .+$! ) {
+			if ( $_ =~ m|^HTTP/\d.\d (\d+) .+$| ) {
 				$code = $1;
 			}
 			
 			# レスポンスヘッダーの取得
-			if ( $contflag == 0 ) {
-				$header .= $_."\n";
+			$header .= $_ . "\n";
+		}
+		
+		# Chunked Transfer Coding
+		# http://tools.ietf.org/html/rfc2616#section-14.41
+		if ( $header =~ m|Transfer\-Encoding:\s*chunked|i ) {
+			$chunkedflag = 1;
+		}
+		
+		# 本文の取得
+		if ($chunkedflag) {
+			# http://tools.ietf.org/html/rfc2616#section-3.6.1
+			while (<SOCKET>) {
+				/^([0-9A-F]+)/i;
+				my $size = hex $1;
 				
-				# ストリームらしい
-				if ( $_ =~ m/^Transfer\-Encoding: chunked/i ) {
-					$streamflag = 1;
-				}
+				last if ($size eq 0);
 				
+				read(SOCKET, $_, $size);
+				$content .= $_;
+				
+				<SOCKET>;
 			}
 			
-			# 本文の取得
-			if ( $_ =~ m!^(\r)?(\n)?$! && $contflag == 0 ) {
-				$contflag = 1;
-			}
-			elsif ( $contflag == 1 ) {
+			# http://tools.ietf.org/html/rfc2616#section-7.1
+			while ( <SOCKET> ) {
+				s/\r?\n$//;
 				
-				# ストリームは無視する
-				next if ( $_ =~ /^([0-9a-fA-F]+)?(\x20+)?([\r|\n]+)$/ && $streamflag );
+				last if ( $_ eq '' );
 				
-				$content .= $_."\n";
+				# レスポンスヘッダーの取得
+				$header .= $_ . "\n";
 				
 			}
-			
+		}
+		else {
+			while (read(SOCKET, $_, 1024)) {
+				$content .= $_;
+			}
 		}
 		
 		close(SOCKET);
@@ -191,11 +213,10 @@ sub decompositionURI
 	my $uri = shift;
 	my ($host, $port, $path);
 	
-	$uri =~ m!(http:)?(//)?([^:/]*)?(:(\d+)?)?(/.*)?!;
-	if ($3) { $host = $3; }
-	if ($5) { $port = $5; }
-	else	{ $port = 80; }
-	if ($6) { $path = $6; }
+	$uri =~ m!(?:(?:http:)?//)?((?:[^:/]*)?)(?::(\d*))?(/.*)!;
+	$host = $1;
+	$port = $2 || 80;
+	$path = $3;
 	
 	return ( $host, $port, $path );
 }
@@ -213,35 +234,32 @@ sub createRequestString
 {
 	my $this = shift;
 	my ($host, $target) = @_;
-	my ($request, $params, $len);
+	my ($request, $params, $value, $len);
 	
 	# httpボディ(パラメータ)の作成
 	foreach (keys %{$this->{'PARAMETER'}}) {
-		$params .= "$_=" . encode($this->{'PARAMETER'}->{$_}) . '&';
+		$value = encode($this->{'PARAMETER'}->{$_});
+		$params .= "&$_=$value";
 	}
 	if (defined $params) {
-		$params = substr($params, 0, length($params) - 1);
+		$params = substr($params, 1);
 		$len = length $params;
 	}
 	
-	$request  = $this->{'METHOD'}." ".$target." HTTP/1.1\n";
-	$request .= "Host: ".$host."\n";
-	$request .= "User-Agent: ".$this->{'AGENT'}."\n";
-	$request .= "Accept-Language: ".$this->{'LANGUAGE'}."\n";
-	$request .= 'Content-Type: ' . $this->{'CONTENT_TYPE'} . "\n";
-	$request .= 'Keep-Alive: 115'."\n";
-	if ( $this->{'REFERER'} ) {
-		$request .= "Referer: ".$this->{'REFERER'}."\n";
-	}
-	$request .= "Connection: ".$this->{'CONNECTION'}."\n";
-	if ( $this->{'METHOD'} eq "POST" ) {
-		$request .= "Content-Length: ".$len."\n";
-	}
-	$request .= "\n";
+	$request  = '';
+	$request .= "$this->{'METHOD'} $target HTTP/1.1\r\n";
+	$request .= "Host: $host\r\n";
+	$request .= "User-Agent: $this->{'AGENT'}\r\n";
+	$request .= "Accept-Language: $this->{'LANGUAGE'}\r\n";
+	$request .= "Content-Type: $this->{'CONTENT_TYPE'}\r\n";
+	$request .= "Keep-Alive: 115\r\n";
+	$request .= "Referer: $this->{'REFERER'}\r\n" if ( $this->{'REFERER'} );
+	$request .= "Connection: $this->{'CONNECTION'}\r\n";
+	$request .= "Content-Length: $len\r\n" if ( $this->{'METHOD'} eq "POST" );
 	
-	if ( $this->{'METHOD'} eq "POST" ) {
-		$request .= $params."\n";
-	}
+	$request .= "\r\n";
+	
+	$request .= $params if ( $this->{'METHOD'} eq "POST" );
 	
 	return $request;
 	

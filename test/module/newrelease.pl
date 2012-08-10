@@ -104,7 +104,7 @@ sub Check
 	
 	
 	# キャッシュの有効期限が過ぎてたらデータをとってくる
-	if ( ( stat $path )[9] < time - $interval ) {
+	if ( !-f $path || ( stat $path )[9] < time - $interval ) {
 		# 同時接続防止みたいな
 		utime ( undef, undef, $path );
 		
@@ -124,6 +124,7 @@ sub Check
 		# とれた
 		if ( $proxy->getStatus() eq 200 ) {
 			open ( FILE, "> $path" );
+			binmode FILE;
 			print FILE $proxy->getContent();
 			close FILE;
 			chmod $hash->{'CachePM'}, $path;
