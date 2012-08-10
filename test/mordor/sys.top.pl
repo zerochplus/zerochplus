@@ -603,9 +603,7 @@ sub CheckVersionUpdate
 		my $limit = 0;
 		
 		# ’Ê’m“à—e
-		use Encode;
 		my $note = join('<br>', @{$nr->Get('Detail')});
-		Encode::from_to($note, 'utf8', 'sjis');
 		my $subject = "0ch+ New Version $newver is Released.";
 		my $content = "<!-- \*Ver=$newver\* --> $note";
 		

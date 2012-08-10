@@ -17,6 +17,8 @@ package ZP_NEWRELEASE;
 use strict;
 use warnings;
 
+use Encode;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -140,7 +142,8 @@ sub Check
 		$l =~ s/"/&quot;/g;
 		$l =~ s/</&lt;/g;
 		$l =~ s/>/&gt;/g;
-
+		
+		Encode::from_to( $l, 'utf8', 'sjis' );
 		push @release, $l;
 	}
 	close FILE;
