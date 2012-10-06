@@ -1259,28 +1259,21 @@ sub CheckDNSBL
 {
 	
 	my ( $host ) = @_;
-	my ( $res, $query, @ans );
+	my ( $res, @ans );
 	
-	require Net::DNS;
+	require Net::DNS::Lite;
+	my $res = Net::DNS::Lite->new(
+		server => [ qw(8.8.4.4 8.8.8.8) ], # google public dns
+		timeout => [2, 3],
+	);
 	
-	$res = Net::DNS::Resolver->new;
-	$res->tcp_timeout(1);
-	$res->udp_timeout(1);
-	$res->retry(1);
+	@ans = $res->resolve($host, 'a');
 	
-	if ( ($query = $res->query($host)) ) {
-		
-		@ans = $query->answer;
-		
-		foreach ( @ans ) {
-			return $_->address;
-		}
-	}
-	if ( $res->errorstring eq 'query timed out' ) {
-		return "127.0.0.0";
+	foreach ( @ans ) {
+		return $_->[4];
 	}
 	
-	return "127.0.0.1";
+	return '127.0.0.1';
 	
 }
 

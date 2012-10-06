@@ -151,15 +151,15 @@ test/
 
 Digest-SHA-PurePerl
 Perl implementation of SHA-1/224/256/384/512
-	Version:	5.62
-	Released:	2011-05-09
+	Version:	5.72
+	Released:	2012-09-24
 	Author:	Mark Shelor <mshelor@cpan.org>
-	CPAN:	http://search.cpan.org/dist/Digest-SHA-PurePerl-5.62/
+	CPAN:	http://search.cpan.org/dist/Digest-SHA-PurePerl-5.72/
 
-Jcode
-Japanese Charset Handler
-	Version:	2.07
-	Released:	2008-05-10
-	Author:	Dan Kogai <dankogai@dan.co.jp>
-	CPAN:	http://search.cpan.org/dist/Jcode-2.07/
+Net-DNS-Lite
+a pure-perl DNS resolver with support for timeout
+	Version:	0.09
+	Released:	2012-06-20
+	Author:	Kazuho Oku <kazuhooku@gmail.com>
+	CPAN:	http://search.cpan.org/dist/Net-DNS-Lite-0.09/
 
