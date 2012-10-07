@@ -151,15 +151,16 @@ test/
 
 Digest-SHA-PurePerl
 Perl implementation of SHA-1/224/256/384/512
-	Version:	5.72
-	Released:	2012-09-24
-	Author:	Mark Shelor <mshelor@cpan.org>
-	CPAN:	http://search.cpan.org/dist/Digest-SHA-PurePerl-5.72/
+    Version:    5.72
+    Released:   2012-09-24
+    Author:     Mark Shelor <mshelor@cpan.org>
+    License:    Artistic License
+    CPAN:       http://search.cpan.org/dist/Digest-SHA-PurePerl-5.72/
 
 Net-DNS-Lite
 a pure-perl DNS resolver with support for timeout
-	Version:	0.09
-	Released:	2012-06-20
-	Author:	Kazuho Oku <kazuhooku@gmail.com>
-	CPAN:	http://search.cpan.org/dist/Net-DNS-Lite-0.09/
-
+    Version:    0.09
+    Released:   2012-06-20
+    Author:     Kazuho Oku <kazuhooku@gmail.com>
+    License:    Artistic License
+    CPAN:       http://search.cpan.org/dist/Net-DNS-Lite-0.09/
