@@ -422,7 +422,7 @@ sub PrintValidUserEdit
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">対象ホスト一覧</td><td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">対象ホスト・<br>端末識別子一覧</td><td>");
 	$Page->Print("<textarea name=VALID_USERS rows=10 cols=70 wrap=off>");
 	
 	foreach (@$pUsers) {

@@ -196,7 +196,7 @@ sub Set
 sub Check
 {
 	my $this = shift;
-	my ($host, $addr) = @_;
+	my ($host, $addr, $koyuu) = @_;
 	my ($flag, $sys, $addrb, $adex);
 	
 	$sys = $this->{'SYS'};
@@ -234,6 +234,11 @@ sub Check
 			}
 		}
 		elsif ($host =~ /$line/) { # $line‚Í³‹K•\Œ»
+			$flag = 1;
+			$sys->Set('HITS', $line);
+			last;
+		}
+		elsif (defined $koyuu && $koyuu =~ /^\Q$line\E$/) { # $line‚Í³‹K•\Œ»
 			$flag = 1;
 			$sys->Set('HITS', $line);
 			last;

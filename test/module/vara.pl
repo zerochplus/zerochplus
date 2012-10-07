@@ -293,12 +293,13 @@ sub ReadyBeforeCheck
 sub ReadyBeforeWrite
 {
 	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet, $text, $host, $addr, $koyuu, $from);
+	my ($Sys, $Form, @pluginSet, $text, $host, $addr, $koyuu, $client, $from);
 	
 	$Sys	= $this->{'SYS'};
 	$Form	= $this->{'FORM'};
 	$from	= $Form->Get('FROM');
 	$koyuu	= $Sys->Get('KOYUU');
+	$client	= $Sys->Get('CLIENT');
 	$host	= $ENV{'REMOTE_HOST'};
 	$addr	= $ENV{'REMOTE_ADDR'};
 	
@@ -309,7 +310,7 @@ sub ReadyBeforeWrite
 		require './module/faramir.pl';
 		$vUser = FARAMIR->new;
 		$vUser->Load($Sys);
-		$check = $vUser->Check($host, $addr);
+		$check = $vUser->Check($host, $addr, ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef));
 		if ($check == 4) {
 			return 601;
 		}
