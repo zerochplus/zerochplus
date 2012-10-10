@@ -566,33 +566,27 @@ sub FunctionCreateLogs
 	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/pool';
 	$bCreate = 0;
 	
-#	eval
-	{
-		foreach $key (@poolSet) {
-			if ($Dat->Load($Sys,"$basePath/$key.cgi", 1)) {
-				if (CreateKAKOLog($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key)) {
-					if ($Logs->Get('KEY', $key, '') eq '') {
-						$Logs->Add($key, $Dat->GetSubject(), time, '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
-					}
-					else {
-						$Logs->($key, 'SUBJECT', $Dat->GetSubject());
-						$Logs->($key, 'DATE', time);
-						$Logs->($key, 'PATH', '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
-					}
-					$bCreate = 1;
-					push @$pLog, "■$key：過去ログ生成完了";
+	foreach $key (@poolSet) {
+		if ($Dat->Load($Sys,"$basePath/$key.cgi", 1)) {
+			if (CreateKAKOLog($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key)) {
+				if ($Logs->Get('KEY', $key, '') eq '') {
+					$Logs->Add($key, $Dat->GetSubject(), time, '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
 				}
+				else {
+					$Logs->($key, 'SUBJECT', $Dat->GetSubject());
+					$Logs->($key, 'DATE', time);
+					$Logs->($key, 'PATH', '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
+				}
+				$bCreate = 1;
+				push @$pLog, "■$key：過去ログ生成完了";
 			}
-			if (! $bCreate){
-				push @$pLog, "■$key：過去ログ生成失敗";
-			}
-			$bCreate = 0;
 		}
-	};
-	if ($@ ne '') {
-		push @$pLog, $@;
-		return 9999;
+		if (! $bCreate){
+			push @$pLog, "■$key：過去ログ生成失敗";
+		}
+		$bCreate = 0;
 	}
+	
 	$Logs->Save($Sys);
 	
 	return 0;
@@ -638,13 +632,11 @@ sub CreateKAKOLog
 	$color[4]	= $Set->Get('BBS_ALINK_COLOR');
 	$color[5]	= $Set->Get('BBS_VLINK_COLOR');
 	
-#	eval
-	{
-		require './module/earendil.pl';
-		
-		$Page->Clear();
-		
-		$Page->Print(<<HTML);
+	require './module/earendil.pl';
+	
+	$Page->Clear();
+	
+	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -652,10 +644,10 @@ sub CreateKAKOLog
  <meta http-equiv="Content-Type" content="text/html;charset=Shift_JIS">
 
 HTML
-		
-		$Caption->Print($Page, undef);
-		
-		$Page->Print(<<HTML);
+	
+	$Caption->Print($Page, undef);
+	
+	$Page->Print(<<HTML);
  <title>$title</title>
 
 </head>
@@ -664,10 +656,10 @@ HTML
 
 HTML
 
-		# 告知欄出力
-		$Banner->Print($Page, 100, 2, 0) if ($Sys->Get('BANNER'));
-		
-		$Page->Print(<<HTML);
+	# 告知欄出力
+	$Banner->Print($Page, 100, 2, 0) if ($Sys->Get('BANNER'));
+	
+	$Page->Print(<<HTML);
 <div style="margin:0px;">
  <a href="http://ofuda.cc/"><img width="400" height="15" border="0" src="http://e.ofuda.cc/disp/$account/00813400.gif" alt="無料アクセスカウンターofuda.cc「全世界カウント計画」"></a>
  <div style="margin-top:1em;">
@@ -681,17 +673,17 @@ HTML
 <h1 style="color:red;font-size:larger;font-weight:normal;margin:-.5em 0 0;">$title</h1>
 
 HTML
-		
-		$Page->Print("<dl>\n");
-		
-		# レスの出力
-		for ($i = 0 ; $i < $Dat->Size() ; $i++) {
-			PrintResponse($Sys, $Page, $Dat->Get($i), $i + 1, $Conv, $Set);
-		}
-		
-		$Page->Print("</dl>\n");
-		
-		$Page->Print(<<HTML);
+	
+	$Page->Print("<dl>\n");
+	
+	# レスの出力
+	for ($i = 0 ; $i < $Dat->Size() ; $i++) {
+		PrintResponse($Sys, $Page, $Dat->Get($i), $i + 1, $Conv, $Set);
+	}
+	
+	$Page->Print("</dl>\n");
+	
+	$Page->Print(<<HTML);
 
 <hr>
 
@@ -706,19 +698,15 @@ $var
 
 
 HTML
-		
-		$Page->Print("</body>\n</html>\n");
-		$Dat->Close();
-		
-		# 過去ログの出力
-		EARENDIL::CreateFolderHierarchy($logDir);
-		EARENDIL::Copy($datPath, "$logDir/$key.dat");
-		$Page->Flush(1, $Sys->Get('PM-TXT'), $logPath);
-	};
-	if ($@ ne '') {
-		$Dat->Close();
-		return 0;
-	}
+	
+	$Page->Print("</body>\n</html>\n");
+	$Dat->Close();
+	
+	# 過去ログの出力
+	EARENDIL::CreateFolderHierarchy($logDir);
+	EARENDIL::Copy($datPath, "$logDir/$key.dat");
+	$Page->Flush(1, $Sys->Get('PM-TXT'), $logPath);
+	
 	return 1;
 }
 

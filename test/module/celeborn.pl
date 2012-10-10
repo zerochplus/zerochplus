@@ -59,7 +59,8 @@ sub Load
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
 	if (-e $path) {
-		open KAKO, "< $path";
+		open(KAKO, '<', $path);
+		flock(KAKO, 1);
 		while (<KAKO>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -68,7 +69,7 @@ sub Load
 			$this->{'DATE'}->{$elem[0]}		= $elem[3];
 			$this->{'PATH'}->{$elem[0]}		= $elem[4];
 		}
-		close KAKO;
+		close(KAKO);
 		return 0;
 	}
 	return -1;
@@ -90,27 +91,24 @@ sub Save
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-#	eval
-	{
-		open KAKO, "> $path";
-		flock KAKO, 2;
-		binmode KAKO;
-		#truncate KAKO, 0;
-		#seek KAKO, 0, 0;
-		foreach (keys %{$this->{'SUBJECT'}}) {
-			$data = join('<>',
-				$_,
-				$this->{KEY}->{$_},
-				$this->{SUBJECT}->{$_},
-				$this->{DATE}->{$_},
-				$this->{PATH}->{$_}
-			);
-			
-			print KAKO "$data\n";
-		}
-		close KAKO;
-		chmod $SYS->Get('PM-DAT'), $path;
-	};
+	open(KAKO, '+<', $path);
+	flock(KAKO, 2);
+	seek(KAKO, 0, 0);
+	binmode(KAKO);
+	foreach (keys %{$this->{'SUBJECT'}}) {
+		$data = join('<>',
+			$_,
+			$this->{KEY}->{$_},
+			$this->{SUBJECT}->{$_},
+			$this->{DATE}->{$_},
+			$this->{PATH}->{$_}
+		);
+		
+		print KAKO "$data\n";
+	}
+	truncate(KAKO, tell(KAKO));
+	close(KAKO);
+	chmod $SYS->Get('PM-DAT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -374,19 +372,20 @@ sub GetSubFolders
 sub GetThreadSubject
 {
 	my ($path) = @_;
-	my ($text);
+	my $title = '';
 	
 	if (-e $path) {
-		open FILE, "< $path";
-		foreach $text (<FILE>) {
+		open(FILE, '<', $path);
+		flock(FILE, 1);
+		foreach my $text (<FILE>) {
 			if ($text =~ /<title>(.*)<\/title>/) {
-				close FILE;
-				return $1;
+				$title = $1;
+				last;
 			}
 		}
+		close(FILE);
 	}
-	close FILE;
-	return '';
+	return $title;
 }
 
 #------------------------------------------------------------------------------------------------------------

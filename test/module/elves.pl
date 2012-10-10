@@ -77,7 +77,8 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
 	if (-e $path) {
-		open USERS, "< $path";
+		open(USERS, '<', $path);
+		flock(USERS, 1);
 		while (<USERS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -87,7 +88,7 @@ sub Load
 			$this->{'EXPL'}->{$elem[0]}		= $elem[4];
 			$this->{'SYSAD'}->{$elem[0]}	= $elem[5];
 		}
-		close USERS;
+		close(USERS);
 	}
 }
 
@@ -107,28 +108,25 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
-#	eval
-	{
-		open USERS, "> $path";
-		flock USERS, 2;
-		binmode USERS;
-		#truncate USERS, 0;
-		#seek USERS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{PASS}->{$_},
-				$this->{FULL}->{$_},
-				$this->{EXPL}->{$_},
-				$this->{SYSAD}->{$_}
-			);
-			
-			print USERS "$data\n";
-		}
-		close USERS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(USERS, '+<', $path);
+	flock(USERS, 2);
+	binmode(USERS);
+	seek(USERS, 0, 0);
+	foreach (keys %{$this->{'NAME'}}) {
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{PASS}->{$_},
+			$this->{FULL}->{$_},
+			$this->{EXPL}->{$_},
+			$this->{SYSAD}->{$_}
+		);
+		
+		print USERS "$data\n";
+	}
+	truncate(USERS, tell(USERS));
+	close(USERS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -274,15 +272,10 @@ sub GetStrictPass
 	my ($hash);
 	
 	if (length($pass) >= 9) {
-		eval {
-			require Digest::SHA::PurePerl;
-			Digest::SHA::PurePerl->import( qw(sha1_base64) );
-			$hash = substr(crypt($key, 'ZC'), -2);
-			$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
-		};
-		if ( $@ ) {
-			$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
-		}
+		require Digest::SHA::PurePerl;
+		Digest::SHA::PurePerl->import( qw(sha1_base64) );
+		$hash = substr(crypt($key, 'ZC'), -2);
+		$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
 	}
 	else {
 		$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
@@ -352,22 +345,20 @@ sub Load
 	
 	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-#	eval
-	{
-		if (-e $path) {
-			open GROUPS, "< $path";
-			while (<GROUPS>) {
-				chomp $_;
-				@elem = split(/<>/, $_);
-				$elem[4] =~ s/ //g;
-				$this->{'NAME'}->{$elem[0]}		= $elem[1];
-				$this->{'EXPL'}->{$elem[0]}		= $elem[2];
-				$this->{'AUTH'}->{$elem[0]}		= $elem[3];
-				$this->{'USERS'}->{$elem[0]}	= $elem[4];
-			}
-			close GROUPS;
+	if (-e $path) {
+		open(GROUPS, '<', $path);
+		flock(GROUPS, 1);
+		while (<GROUPS>) {
+			chomp $_;
+			@elem = split(/<>/, $_);
+			$elem[4] =~ s/ //g;
+			$this->{'NAME'}->{$elem[0]}		= $elem[1];
+			$this->{'EXPL'}->{$elem[0]}		= $elem[2];
+			$this->{'AUTH'}->{$elem[0]}		= $elem[3];
+			$this->{'USERS'}->{$elem[0]}	= $elem[4];
 		}
-	};
+		close(GROUPS);
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -386,27 +377,24 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-#	eval
-	{
-		open GROUPS, "> $path";
-		flock GROUPS, 2;
-		binmode GROUPS;
-		#truncate GROUPS, 0;
-		#seek GROUPS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{EXPL}->{$_},
-				$this->{AUTH}->{$_},
-				$this->{USERS}->{$_}
-			);
-			
-			print GROUPS "$data\n";
-		}
-		close GROUPS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(GROUPS, '+<', $path);
+	flock(GROUPS, 2);
+	seek(GROUPS, 0, 0);
+	binmode(GROUPS);
+	foreach (keys %{$this->{'NAME'}}) {
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{EXPL}->{$_},
+			$this->{AUTH}->{$_},
+			$this->{USERS}->{$_}
+		);
+		
+		print GROUPS "$data\n";
+	}
+	truncate(GROUPS, tell(GROUPS));
+	close(GROUPS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------

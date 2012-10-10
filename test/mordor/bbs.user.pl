@@ -428,33 +428,26 @@ sub PrintGroupImport
 	my ($Page, $SYS, $Form, $BBS) = @_;
 	my (@bbsSet, $id, $name);
 	
-#	eval
-	{
-		$SYS->Set('_TITLE', 'Group Import');
-		
-		# 所属BBSを取得
-		$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@bbsSet);
-		
-		$Page->Print("<center><table cellspcing=2 width=100%>");
-		$Page->Print("<tr><td colspan=2><hr></td></tr>");
-		$Page->Print("<tr><td class=\"DetailTitle\">既存BBSからインポート</td>");
-		$Page->Print("<td><select name=IMPORT_BBS><option value=\"\">--掲示板を選択--</option>");
-		
-		# 掲示板一覧の出力
-		foreach $id (@bbsSet) {
-			$name	= $BBS->Get('NAME', $id);
-			$Page->Print("<option value=$id>$name</option>\n");
-		}
-		
-		$Page->Print("</select></td></tr>");
-		$Page->Print("<tr><td colspan=2><hr></td></tr>");
-		$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
-		$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','IMPORT');\"></td></tr></table>");
-	};
+	$SYS->Set('_TITLE', 'Group Import');
 	
-	if (defined $@) {
-		print $@;
+	# 所属BBSを取得
+	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@bbsSet);
+	
+	$Page->Print("<center><table cellspcing=2 width=100%>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">既存BBSからインポート</td>");
+	$Page->Print("<td><select name=IMPORT_BBS><option value=\"\">--掲示板を選択--</option>");
+	
+	# 掲示板一覧の出力
+	foreach $id (@bbsSet) {
+		$name	= $BBS->Get('NAME', $id);
+		$Page->Print("<option value=$id>$name</option>\n");
 	}
+	
+	$Page->Print("</select></td></tr>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>");
+	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
+	$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','IMPORT');\"></td></tr></table>");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -645,20 +638,12 @@ sub FunctionGroupImport
 	return 0 if ($src eq $dst);
 	
 	# グループ設定をコピー
-#	eval
-	{
-		EARENDIL::Copy($src, $dst);
-	};
+	EARENDIL::Copy($src, $dst);
 	
 	# ログの出力
-	if ($@ ne '') {
-		push @$pLog, $@;
-		return 9999;
-	}
-	else {
-		my $name = $BBS->Get('NAME', $Form->Get('IMPORT_BBS'));
-		push @$pLog, "「$name」のグループ設定をインポートしました。";
-	}
+	my $name = $BBS->Get('NAME', $Form->Get('IMPORT_BBS'));
+	push @$pLog, "「$name」のグループ設定をインポートしました。";
+	
 	return 0;
 }
 

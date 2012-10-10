@@ -628,23 +628,21 @@ sub FunctionBBSCreate
 	if (! (EARENDIL::CreateDirectory($createPath, $Sys->Get('PM-BDIR')))) {
 		return 2000;
 	}
-#	eval
-	{
-		# サブディレクトリ生成
-		EARENDIL::CreateDirectory("$createPath/i", $Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/dat", $Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/log", $Sys->Get('PM-LDIR'));
-		EARENDIL::CreateDirectory("$createPath/kako", $Sys->Get('PM-BDIR'));
-		EARENDIL::CreateDirectory("$createPath/pool", $Sys->Get('PM-ADIR'));
-		EARENDIL::CreateDirectory("$createPath/info", $Sys->Get('PM-ADIR'));
-		
-		# デフォルトデータのコピー
-		EARENDIL::Copy("$dataPath/default_img.gif", "$createPath/kanban.gif");
-		EARENDIL::Copy("$dataPath/default_bac.gif", "$createPath/ba.gif");
-		EARENDIL::Copy("$dataPath/default_hed.txt", "$createPath/head.txt");
-		EARENDIL::Copy("$dataPath/default_fot.txt", "$createPath/foot.txt");
-	};
-	return 1002 if ($@ ne '');
+	
+	# サブディレクトリ生成
+	EARENDIL::CreateDirectory("$createPath/i", $Sys->Get('PM-BDIR'));
+	EARENDIL::CreateDirectory("$createPath/dat", $Sys->Get('PM-BDIR'));
+	EARENDIL::CreateDirectory("$createPath/log", $Sys->Get('PM-LDIR'));
+	EARENDIL::CreateDirectory("$createPath/kako", $Sys->Get('PM-BDIR'));
+	EARENDIL::CreateDirectory("$createPath/pool", $Sys->Get('PM-ADIR'));
+	EARENDIL::CreateDirectory("$createPath/info", $Sys->Get('PM-ADIR'));
+	
+	# デフォルトデータのコピー
+	EARENDIL::Copy("$dataPath/default_img.gif", "$createPath/kanban.gif");
+	EARENDIL::Copy("$dataPath/default_bac.gif", "$createPath/ba.gif");
+	EARENDIL::Copy("$dataPath/default_hed.txt", "$createPath/head.txt");
+	EARENDIL::Copy("$dataPath/default_fot.txt", "$createPath/foot.txt");
+	
 	push @$pLog, "■掲示板ディレクトリ生成完了...[$createPath]";
 	
 	# 設定継承情報のコピー
@@ -653,96 +651,79 @@ sub FunctionBBSCreate
 		require './module/nazguls.pl';
 		$BBS = NAZGUL->new;
 		$BBS->Load($Sys);
-#		eval
-		{
-			$inheritPath = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $bbsInherit);
-			EARENDIL::Copy("$inheritPath/SETTING.TXT", "$createPath/SETTING.TXT");
-			EARENDIL::Copy("$inheritPath/info/groups.cgi", "$createPath/info/groups.cgi");
-			EARENDIL::Copy("$inheritPath/info/capgroups.cgi", "$createPath/info/capgroups.cgi");
-		};
+		
+		$inheritPath = $Sys->Get('BBSPATH') . '/' . $BBS->Get('DIR', $bbsInherit);
+		EARENDIL::Copy("$inheritPath/SETTING.TXT", "$createPath/SETTING.TXT");
+		EARENDIL::Copy("$inheritPath/info/groups.cgi", "$createPath/info/groups.cgi");
+		EARENDIL::Copy("$inheritPath/info/capgroups.cgi", "$createPath/info/capgroups.cgi");
+		
 		push @$pLog, "■設定継承完了...[$inheritPath]";
 	}
 	
 	my ($bbsSetting);
 	
 	# 掲示板設定情報生成
-#	eval
+	require './module/isildur.pl';
+	$bbsSetting = ISILDUR->new;
+	
+	$Sys->Set('BBS', $bbsDir);
+	$bbsSetting->Load($Sys);
+	
+	my $createPath2 = $Sys->Get('CGIPATH') . "/$createPath";
 	{
-		require './module/isildur.pl';
-		$bbsSetting = ISILDUR->new;
-		
-		$Sys->Set('BBS', $bbsDir);
-		$bbsSetting->Load($Sys);
-		
-		my $createPath2 = $Sys->Get('CGIPATH') . "/$createPath";
-		{
-			my @pathparse = split /\//, $createPath2;
-			for (my $i = 0 ; $i <= $#pathparse ; $i++) {
-				if ($pathparse[$i] eq '.') {
-					splice @pathparse, $i, 1;
-					redo if ($i <= $#pathparse);
-				}
-				if ($pathparse[$i] eq '..' && $i > 0 && $pathparse[$i - 1] ne '..') {
-					splice @pathparse, $i - 1, 2;
-					redo if ($i <= $#pathparse);
-				}
+		my @pathparse = split /\//, $createPath2;
+		for (my $i = 0 ; $i <= $#pathparse ; $i++) {
+			if ($pathparse[$i] eq '.') {
+				splice @pathparse, $i, 1;
+				redo if ($i <= $#pathparse);
 			}
-			$createPath2 = join '/', @pathparse;
+			if ($pathparse[$i] eq '..' && $i > 0 && $pathparse[$i - 1] ne '..') {
+				splice @pathparse, $i - 1, 2;
+				redo if ($i <= $#pathparse);
+			}
 		}
-		$bbsSetting->Set('BBS_TITLE', $bbsName);
-		$bbsSetting->Set('BBS_SUBTITLE', $bbsExplanation);
-		$bbsSetting->Set('BBS_BG_PICTURE', "$createPath2/ba.gif");
-		$bbsSetting->Set('BBS_TITLE_PICTURE', "$createPath2/kanban.gif");
-		
-		$bbsSetting->Save($Sys);
-	};
-	return 2001 if ($@ ne '');
+		$createPath2 = join '/', @pathparse;
+	}
+	$bbsSetting->Set('BBS_TITLE', $bbsName);
+	$bbsSetting->Set('BBS_SUBTITLE', $bbsExplanation);
+	$bbsSetting->Set('BBS_BG_PICTURE', "$createPath2/ba.gif");
+	$bbsSetting->Set('BBS_TITLE_PICTURE', "$createPath2/kanban.gif");
+	
+	$bbsSetting->Save($Sys);
+	
 	push @$pLog, '■掲示板設定完了...';
 	
 	# 掲示板構成要素生成
-#	eval
-	{
-		my ($BBSAid);
-		require './module/varda.pl';
-		$BBSAid = VARDA->new;
-		
-		$Sys->Set('MODE', 'CREATE');
-		$BBSAid->Init($Sys, $bbsSetting);
-		$BBSAid->CreateIndex();
-		$BBSAid->CreateIIndex();
-		$BBSAid->CreateSubback();
-	};
-	if ($@ ne '') {
-		push @$pLog, "$@";
-		return 2002;
-	}
+	my ($BBSAid);
+	require './module/varda.pl';
+	$BBSAid = VARDA->new;
+	
+	$Sys->Set('MODE', 'CREATE');
+	$BBSAid->Init($Sys, $bbsSetting);
+	$BBSAid->CreateIndex();
+	$BBSAid->CreateIIndex();
+	$BBSAid->CreateSubback();
+	
 	push @$pLog, '■掲示板構\成要素生成完了...';
 	
 	# 過去ログインデクス生成
-#	eval
-	{
-		require './module/thorin.pl';
-		require './module/celeborn.pl';
-		my $PastLog = CELEBORN->new;
-		my $Page = THORIN->new;
-		$PastLog->Load($Sys);
-		$PastLog->UpdateInfo($Sys);
-		$PastLog->UpdateIndex($Sys, $Page);
-		$PastLog->Save($Sys);
-	};
-	return 2003 if ($@ ne '');
+	require './module/thorin.pl';
+	require './module/celeborn.pl';
+	my $PastLog = CELEBORN->new;
+	my $Page = THORIN->new;
+	$PastLog->Load($Sys);
+	$PastLog->UpdateInfo($Sys);
+	$PastLog->UpdateIndex($Sys, $Page);
+	$PastLog->Save($Sys);
+	
 	push @$pLog, '■過去ログインデクス生成完了...';
 	
 	# 掲示板情報に追加
-#	eval
-	{
-		require './module/nazguls.pl';
-		my $BBS = NAZGUL->new;
-		$BBS->Load($Sys);
-		$BBS->Add($bbsName, $bbsDir, $bbsExplanation, $bbsCategory);
-		$BBS->Save($Sys);
-	};
-	return 2004 if ($@ ne '');
+	require './module/nazguls.pl';
+	my $BBS = NAZGUL->new;
+	$BBS->Load($Sys);
+	$BBS->Add($bbsName, $bbsDir, $bbsExplanation, $bbsCategory);
+	$BBS->Save($Sys);
 	
 	push @$pLog, '■掲示板情報追加完了';
 	push @$pLog, "　　　　名前：$bbsName";
@@ -782,18 +763,12 @@ sub FunctionBBSUpdate
 		next if ($bbs eq '');
 		$name = $BBS->Get('NAME', $id);
 		$Sys->Set('BBS', $bbs);
-#		eval
-		{
-			$Sys->Set('MODE', 'CREATE');
-			$BBSAid->Init($Sys, undef);
-			$BBSAid->CreateIndex();
-			$BBSAid->CreateIIndex();
-			$BBSAid->CreateSubback();
-		};
-		if ($@ ne '') {
-			push @$pLog, "$@";
-			return 2002;
-		}
+		$Sys->Set('MODE', 'CREATE');
+		$BBSAid->Init($Sys, undef);
+		$BBSAid->CreateIndex();
+		$BBSAid->CreateIIndex();
+		$BBSAid->CreateSubback();
+		
 		push @$pLog, "■掲示板「$name」を更新しました。";
 	}
 	return 0;

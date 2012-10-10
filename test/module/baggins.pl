@@ -78,8 +78,8 @@ sub Load
 	$num	= 0;
 	
 	if (-e $path) {
-		open(SUBJ, "< $path");
-		flock SUBJ, 1;
+		open(SUBJ, '<', $path);
+		flock(SUBJ, 1);
 		while (<SUBJ>) {
 			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
@@ -92,7 +92,7 @@ sub Load
 			push @{$this->{'SORT'}}, $elem[0];
 			$num++;
 		}
-		close SUBJ;
+		close(SUBJ);
 		$this->{'NUM'} = $num;
 	}
 }
@@ -113,22 +113,19 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
 	
-#	eval
-	{
-		open SUBJ, "> $path";
-		flock SUBJ, 2;
-		#truncate SUBJ, 0;
-		#seek SUBJ, 0, 0;
-		binmode SUBJ;
-		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{'SUBJECT'}->{$_});
-			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
-			
-			print SUBJ "$data\n";
-		}
-		close SUBJ;
-		chmod $Sys->Get('PM-TXT'), $path;
-	};
+	open(SUBJ, '+<', $path);
+	flock(SUBJ, 2);
+	seek(SUBJ, 0, 0);
+	binmode(SUBJ);
+	foreach (@{$this->{'SORT'}}) {
+		next if (! defined $this->{'SUBJECT'}->{$_});
+		$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
+		
+		print SUBJ "$data\n";
+	}
+	truncate(SUBJ, tell(SUBJ));
+	close(SUBJ);
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -157,9 +154,10 @@ sub OnDemand
 	
 	if (-e $path) {
 		# subjectì«Ç›çûÇ›
-		open SUBJ, "+< $path" or return;
-		flock SUBJ, 2;
-		seek SUBJ, 0, 0;
+		open(SUBJ, '+<', $path) or return;
+		flock(SUBJ, 2);
+		seek(SUBJ, 0, 0);
+		
 		while (<SUBJ>) {
 			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
@@ -192,16 +190,18 @@ sub OnDemand
 		}
 
 		# subjectèëÇ´çûÇ›
-		seek SUBJ, 0, 0 ;
-		binmode SUBJ;
+		seek(SUBJ, 0, 0);
+		binmode(SUBJ);
+		
 		foreach (@{$this->{'SORT'}}) {
 			next if (! defined $this->{'SUBJECT'}->{$_});
 			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
 			
 			print SUBJ "$data\n";
 		}
-		truncate ( SUBJ, tell ( SUBJ ) );
-		close SUBJ;
+		
+		truncate(SUBJ, tell(SUBJ));
+		close(SUBJ);
 		chmod $Sys->Get('PM-TXT'), $path;
 	}
 
@@ -432,11 +432,12 @@ sub Update
 	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
 		if (-e "$base/$id.dat") {
-			open DAT, "< $base/$id.dat";
+			open(DAT, '<', "$base/$id.dat");
+			flock(DAT, 1);
 			while (<DAT>) {
 				$n++;
 			}
-			close DAT;
+			close(DAT);
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -474,7 +475,8 @@ sub UpdateAll
 		if ($el =~ /(.*)\.dat/) {
 			$n	= 0;
 			$id	= $1;
-			open DAT, "$base/$el";
+			open(DAT, '<', "$base/$el");
+			flock(DAT, 1);
 			while (<DAT>) {
 				if ($n == 0) {
 					chomp $_;
@@ -587,7 +589,8 @@ sub Load
 	$num = 0;
 	
 	if (-e $path) {
-		open SUBJ, $path;
+		open(SUBJ, '<', $path);
+		flock(SUBJ, 1);
 		while (<SUBJ>) {
 			chomp;
 			@elem = split(/<>/, $_);
@@ -600,7 +603,7 @@ sub Load
 			push @{$this->{'SORT'}}, $elem[0];
 			$num++;
 		}
-		close SUBJ;
+		close(SUBJ);
 		$this->{'NUM'} = $num;
 	}
 }
@@ -621,22 +624,19 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	
-#	eval
-	{
-		open SUBJ, "> $path";
-		flock SUBJ, 2;
-		#truncate SUBJ, 0;
-		#seek SUBJ, 0, 0;
-		binmode SUBJ;
-		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{SUBJECT}->{$_});
-			$data = "$_.dat<>" . $this->{SUBJECT}->{$_} . ' (' . $this->{RES}->{$_} . ')';
-			
-			print SUBJ "$data\n";
-		}
-		close SUBJ;
-		chmod $Sys->Get('PM-TXT'), $path;
-	};
+	open(SUBJ, '+<', $path);
+	flock(SUBJ, 2);
+	seek(SUBJ, 0, 0);
+	binmode(SUBJ);
+	foreach (@{$this->{'SORT'}}) {
+		next if (! defined $this->{SUBJECT}->{$_});
+		$data = "$_.dat<>" . $this->{SUBJECT}->{$_} . ' (' . $this->{RES}->{$_} . ')';
+		
+		print SUBJ "$data\n";
+	}
+	truncate(SUBJ, tell(SUBJ));
+	close(SUBJ);
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -799,11 +799,12 @@ sub Update
 	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
 		if (-e "$base/$id.cgi") {
-			open DAT, "< $base/$id.cgi";
+			open(DAT, '<', "$base/$id.cgi");
+			flock(DAT, 1);
 			while (<DAT>) {
 				$n++;
 			}
-			close DAT;
+			close(DAT);
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -839,7 +840,8 @@ sub UpdateAll
 		if ($el =~ /(\d+)\.cgi/) {
 			$n	= 0;
 			$id	= $1;
-			open DAT, "$base/$el";
+			open(DAT, '<', "$base/$el");
+			flock(DAT, 1);
 			while (<DAT>) {
 				if ($n == 0) {
 					chomp $_;
@@ -847,7 +849,7 @@ sub UpdateAll
 				}
 				$n++;
 			}
-			close DAT;
+			close(DAT);
 			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;

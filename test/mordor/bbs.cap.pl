@@ -655,20 +655,11 @@ sub FunctionGroupImport
 	$dst = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/capgroups.cgi';
 	
 	# グループ設定をコピー
-#	eval
-	{
-		EARENDIL::Copy($src, $dst);
-	};
+	EARENDIL::Copy($src, $dst);
 	
 	# ログの出力
-	if ($@ ne '') {
-		push @$pLog, $@;
-		return 9999;
-	}
-	else {
-		my $name = $BBS->Get('NAME', $Form->Get('IMPORT_BBS'));
-		push @$pLog, "「$name」のキャップグループ設定をインポートしました。";
-	}
+	my $name = $BBS->Get('NAME', $Form->Get('IMPORT_BBS'));
+	push @$pLog, "「$name」のキャップグループ設定をインポートしました。";
 	return 0;
 }
 

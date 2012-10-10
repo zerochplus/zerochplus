@@ -852,12 +852,13 @@ sub Get1001Data
 	
 	# 1000.txtが存在すればその内容、無ければデフォルトの1001を使用する
 	if (-e $endPath) {
-		open LAST, $endPath;
+		open(LAST, '<', $endPath);
+		flock(LAST, 1);
 		while (<LAST>) {
 			$$data = $_;
 			last;
 		}
-		close LAST;
+		close(LAST);
 	}
 	else {
 		my ($resmax, $resmax1, $resmaxz, $resmaxz1);

@@ -38,7 +38,8 @@ sub getSession
 	
 	# セッション情報ファイルが存在する場合はそれを読み込む
 	if (-e $filePath) {
-		open SESSION, "< $filePath";
+		open(SESSION, '<', $filePath);
+		flock(SESSION, 1);
 		while (<SESSION>) {
 			chomp $_;
 			# 1行目(セッション開始時間)を取得
@@ -57,7 +58,7 @@ sub getSession
 				$session->setAttribute($key, $value);
 			}
 		}
-		close SESSION;
+		close(SESSION);
 	# セッション情報ファイルが存在しない場合は空ファイルを作成する
 	}
 	else {
@@ -65,8 +66,8 @@ sub getSession
 			require './module/earendil.pl';
 			EARENDIL::CreateDirectory('./info/session', 0770);
 		}
-		open SESSION, "> $filePath";
-		close SESSION;
+		open(SESSION, '>', $filePath);
+		close(SESSION);
 		$session->setId(time);
 	}
 	return $session;
@@ -88,25 +89,22 @@ sub setSession
 	$id = createSessionID($ENV{'REMOTE_ADDR'});
 	$filePath = './info/session/' . $id;
 	
-#	eval
-	{
-		if (-e $filePath) {
-			open SESSION, "> $filePath";
-			flock SESSION, 2;
-			#truncate SESSION, 0;
-			#seek SESSION, 0, 0;
-			binmode SESSION;
-			
-			print SESSION $session->getId() . "\n";
-			foreach $key (keys %{$session->{'ATTRIBUTE'}}) {
-				$value = $session->getAttribute($key);
-				$value =~ s/=/&equal;/g;
-				print SESSION "$key=$value\n";
-			}
-			
-			close SESSION;
+	if (-e $filePath) {
+		open(SESSION, '+<', $filePath);
+		flock(SESSION, 2);
+		seek(SESSION, 0, 0);
+		binmode(SESSION);
+		
+		print SESSION $session->getId() . "\n";
+		foreach $key (keys %{$session->{'ATTRIBUTE'}}) {
+			$value = $session->getAttribute($key);
+			$value =~ s/=/&equal;/g;
+			print SESSION "$key=$value\n";
 		}
-	};
+		
+		truncate(SESSION, tell(SESSION));
+		close SESSION;
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------

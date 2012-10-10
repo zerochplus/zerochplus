@@ -64,9 +64,10 @@ sub Load
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
 	if (-e $path) {
-		open USER, "< $path";
+		open(USER, '<', $path);
+		flock(USER, 1);
 		@datas = <USER>;
-		close USER;
+		close(USER);
 		
 		($dummy, @datas) = @datas;
 		chomp $dummy;
@@ -99,21 +100,18 @@ sub Save
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-#	eval
-	{
-		open USER, "> $path";
-		flock USER, 2;
-		binmode USER;
-		print USER $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
-		foreach (@{$this->{'USER'}}) {
-			print USER "$_\n";
-		}
-		close USER;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
-	if ($@ ne '') {
-		return $@;
+	open(USER, '+<', $path);
+	flock(USER, 2);
+	seek(USER, 0, 0);
+	binmode(USER);
+	print USER $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
+	foreach (@{$this->{'USER'}}) {
+		print USER "$_\n";
 	}
+	truncate(USER, tell(USER));
+	close(USER);
+	chmod $Sys->Get('PM-ADM'), $path;
+	
 	return 0;
 }
 

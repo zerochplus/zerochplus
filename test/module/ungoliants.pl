@@ -77,7 +77,8 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
 	if (-e $path) {
-		open USERS, $path;
+		open(USERS, '<', $path);
+		flock(USERS, 1);
 		while (<USERS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -87,7 +88,7 @@ sub Load
 			$this->{'EXPL'}->{$elem[0]}		= $elem[4];
 			$this->{'SYSAD'}->{$elem[0]}	= $elem[5];
 		}
-		close USERS;
+		close(USERS);
 	}
 }
 
@@ -107,28 +108,25 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
-#	eval
-	{
-		open USERS, "> $path";
-		flock USERS, 2;
-		binmode USERS;
-		#truncate USERS, 0;
-		#seek USERS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{PASS}->{$_},
-				$this->{FULL}->{$_},
-				$this->{EXPL}->{$_},
-				$this->{SYSAD}->{$_}
-			);
-			
-			print USERS "$data\n";
-		}
-		close USERS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(USERS, '+<', $path);
+	flock(USERS, 2);
+	seek(USERS, 0, 0);
+	binmode(USERS);
+	foreach (keys %{$this->{'NAME'}}) {
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{PASS}->{$_},
+			$this->{FULL}->{$_},
+			$this->{EXPL}->{$_},
+			$this->{SYSAD}->{$_}
+		);
+		
+		print USERS "$data\n";
+	}
+	truncate(USERS, tell(USERS));
+	close(USERS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -276,15 +274,10 @@ sub GetStrictPass
 	if (length($pass) >= 9) {
 		#$hash = substr(crypt($key, 'ZC'), -2);
 		#$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
-		eval {
-			require Digest::SHA::PurePerl;
-			Digest::SHA::PurePerl->import( qw(sha1_base64) );
-			$hash = substr(crypt($key, 'ZC'), -2);
-			$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
-		};
-		if ( $@ ) {
-			$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
-		}
+		require Digest::SHA::PurePerl;
+		Digest::SHA::PurePerl->import( qw(sha1_base64) );
+		$hash = substr(crypt($key, 'ZC'), -2);
+		$hash = substr(sha1_base64("ZeroChPlus_${hash}_$pass"), 0, 10);
 	}
 	else {
 		$hash = substr(crypt($pass, substr(crypt($key, 'ZC'), -2)), -10);
@@ -357,7 +350,8 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/capgroups.cgi';
 	if (-e $path) {
-		open GROUPS, $path;
+		open(GROUPS, '<', $path);
+		flock(GROUPS, 1);
 		while (<GROUPS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -370,13 +364,14 @@ sub Load
 			$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 			$this->{'ISCOMMON'}->{$elem[0]}	= 1;
 		}
-		close GROUPS;
+		close(GROUPS);
 	}
 	
 	unless (defined $sysgroup && $sysgroup) {
 		$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
 		if (-e $path) {
-			open GROUPS, $path;
+			open(GROUPS, '<', $path);
+			flock(GROUPS, 1);
 			while (<GROUPS>) {
 				chomp $_;
 				@elem = split(/<>/, $_);
@@ -389,7 +384,7 @@ sub Load
 				$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 				$this->{'ISCOMMON'}->{$elem[0]}	= 0;
 			}
-			close GROUPS;
+			close(GROUPS);
 		}
 	}
 }
@@ -418,30 +413,27 @@ sub Save
 	}
 	
 	
-#	eval
-	{
-		open GROUPS, "> $path";
-		flock GROUPS, 2;
-		binmode GROUPS;
-		#truncate GROUPS, 0;
-		#seek GROUPS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			next if ($this->{ISCOMMON}->{$_} ne $commflg);
-			
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{EXPL}->{$_},
-				$this->{AUTH}->{$_},
-				$this->{CAPS}->{$_},
-				$this->{COLOR}->{$_},
-			);
-			
-			print GROUPS "$data\n";
-		}
-		close GROUPS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(GROUPS, '+<', $path);
+	flock(GROUPS, 2);
+	seek(GROUPS, 0, 0);
+	binmode(GROUPS);
+	foreach (keys %{$this->{'NAME'}}) {
+		next if ($this->{ISCOMMON}->{$_} ne $commflg);
+		
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{EXPL}->{$_},
+			$this->{AUTH}->{$_},
+			$this->{CAPS}->{$_},
+			$this->{COLOR}->{$_},
+		);
+		
+		print GROUPS "$data\n";
+	}
+	truncate(GROUPS, tell(GROUPS));
+	close(GROUPS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------

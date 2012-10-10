@@ -67,41 +67,39 @@ sub Load
 	my $this = shift;
 	my ($var, $val, @dlist, $pSYS, $sysFile);
 	
-#	eval
-	{
-		# システム情報ハッシュの初期化
-		undef %{$this->{'SYS'}};
-		InitSystemValue(\%{$this->{'SYS'}}, \@{$this->{'KEY'}});
-		$sysFile = $this->{'SYS'}->{'SYSFILE'};
-		
-		# 設定ファイルから読み込む
-		if (-e $sysFile) {
-			open SYS, "< $sysFile";
-			while (<SYS>) {
-				chomp $_;
-				($var, $val) = split(/<>/, $_);
-				$this->{'SYS'}->{$var} = $val;
-			}
-			close SYS;
+	# システム情報ハッシュの初期化
+	undef %{$this->{'SYS'}};
+	InitSystemValue(\%{$this->{'SYS'}}, \@{$this->{'KEY'}});
+	$sysFile = $this->{'SYS'}->{'SYSFILE'};
+	
+	# 設定ファイルから読み込む
+	if (-e $sysFile) {
+		open(SYS, '<', $sysFile);
+		flock(SYS, 1);
+		while (<SYS>) {
+			chomp $_;
+			($var, $val) = split(/<>/, $_);
+			$this->{'SYS'}->{$var} = $val;
 		}
-		$pSYS = $this->{'SYS'};
-		
-		# 時間制限のチェック
-		@dlist = localtime time;
-		if (($dlist[2] >= $pSYS->{'LINKST'} || $dlist[2] < $pSYS->{'LINKED'}) &&
-			($pSYS->{'URLLINK'} eq 'FALSE')) {
-			$pSYS->{'LIMTIME'} = 1;
-		}
-		else {
-			$pSYS->{'LIMTIME'} = 0;
-		}
-		
-		if ($this->Get('CONFVER', '') ne $pSYS->{'VERSION'}) {
-			$this->NormalizeConf();
-			$this->Save();
-		}
-	};
-	return 1 if ($@ ne '');
+		close(SYS);
+	}
+	$pSYS = $this->{'SYS'};
+	
+	# 時間制限のチェック
+	@dlist = localtime time;
+	if (($dlist[2] >= $pSYS->{'LINKST'} || $dlist[2] < $pSYS->{'LINKED'}) &&
+		($pSYS->{'URLLINK'} eq 'FALSE')) {
+		$pSYS->{'LIMTIME'} = 1;
+	}
+	else {
+		$pSYS->{'LIMTIME'} = 0;
+	}
+	
+	if ($this->Get('CONFVER', '') ne $pSYS->{'VERSION'}) {
+		$this->NormalizeConf();
+		$this->Save();
+	}
+	
 	return 0;
 }
 
@@ -120,20 +118,17 @@ sub Save
 	
 	$this->NormalizeConf();
 	
-#	eval
-	{
-		open SYS, '>' . $this->{'SYS'}->{'SYSFILE'};
-		flock SYS, 2;
-		binmode SYS;
-		#truncate SYS, 0;
-		#seek SYS, 0, 0;
-		foreach (@{$this->{'KEY'}}) {
-			$val = $this->{'SYS'}->{$_};
-			print SYS "$_<>$val\n";
-		}
-		close SYS;
-		chmod 0700, $this->{'SYS'}->{'SYSFILE'};
-	};
+	open(SYS, '+<', $this->{'SYS'}->{'SYSFILE'});
+	flock(SYS, 2);
+	seek(SYS, 0, 0);
+	binmode(SYS);
+	foreach (@{$this->{'KEY'}}) {
+		$val = $this->{'SYS'}->{$_};
+		print SYS "$_<>$val\n";
+	}
+	truncate(SYS, tell(SYS));
+	close(SYS);
+	chmod 0700, $this->{'SYS'}->{'SYSFILE'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -339,8 +334,8 @@ sub NormalizeConf
 	{
 		$buf = (int rand 900000) + 100000;
 		$buf++ while (-e "$buf.dat");
-		open PM, "> $buf.dat";
-		close PM;
+		open(PM, '>', "$buf.dat");
+		close(PM);
 		
 		$perm = $this->Get('PM-STOP', 0604);
 		chmod $perm, "$buf.dat";

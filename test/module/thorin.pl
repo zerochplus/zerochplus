@@ -86,16 +86,13 @@ sub Flush
 	
 	# ファイルへ出力
 	if ($flag) {
-#		eval
-		{
-			open OUTPUT, "> $szFilePath";
-			flock OUTPUT, 2;
-			#truncate OUTPUT, 0;
-			#seek OUTPUT, 0, 0;
-			print OUTPUT @{$this->{'BUFF'}};
-			close OUTPUT;
-			chmod $perm, $szFilePath;
-		};
+		open(OUTPUT, '+<', $szFilePath);
+		flock(OUTPUT, 2);
+		seek(OUTPUT, 0, 0);
+		print OUTPUT @{$this->{'BUFF'}};
+		truncate(OUTPUT, tell(OUTPUT));
+		close(OUTPUT);
+		chmod $perm, $szFilePath;
 	}
 	# 標準出力に出力
 	else {

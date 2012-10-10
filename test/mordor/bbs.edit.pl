@@ -551,12 +551,13 @@ sub PrintLastEdit
 		$isLast = 0;
 		
 		if (-e $path) {
-			open LAST, $path;
+			open(LAST, '<', $path);
+			flock(LAST, 1);
 			while(<LAST>) {
 				$data = $_;
 				last;
 			}
-			close LAST;
+			close(LAST);
 			chomp $data;
 			$isLast = 1;
 		}
@@ -829,18 +830,15 @@ sub FunctionLastEdit
 		$mail =~ s/<>/&lt;&gt;/g;
 		$date =~ s/<>/&lt;&gt;/g;
 		$cont =~ s/<>/&lt;&gt;/g;
-#		eval
-		{
-			open LAST, "> $lastPath";
-			flock LAST, 2;
-			binmode LAST;
-			print LAST "$name<>$mail<>$date<> $cont <>\n";
-			close LAST;
-		};
-		if ($@ ne ''){
-			push @$pLog, $@;
-			return 9999;
-		}
+		
+		open(LAST, '+<', $lastPath);
+		flock(LAST, 2);
+		seek(LAST, 0, 0);
+		binmode(LAST);
+		print LAST "$name<>$mail<>$date<> $cont <>\n";
+		truncate(LAST, tell(LAST));
+		close(LAST);
+		
 		push @$pLog, 'Å°1000.txtÇê›íËÇµÇ‹ÇµÇΩÅB';
 	}
 	

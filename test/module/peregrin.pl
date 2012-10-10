@@ -102,12 +102,13 @@ sub Load
 	
 	if ($kind) {													# 正常に設定
 		if (-e "$path/$file") {
-			open LOG, "< $path/$file";
+			open(LOG, '<', "$path/$file");
+			flock(LOG, 1);
 			while (<LOG>) {
 				push @{$this->{'LOG'}}, $_;
 				$this->{'NUM'}++;
 			}
-			close LOG;
+			close(LOG);
 		}
 		$this->{'PATH'} = $path;
 		$this->{'FILE'} = $file;
@@ -133,17 +134,15 @@ sub Save
 	$file	= $this->{'FILE'};
 	
 	if ($this->{'KIND'}) {
-#		eval
-		{ chmod 0666, "$path/$file"; };				# パーミッション設定
-		if (open LOG, "> $path/$file") {
-			flock LOG, 2;
-			truncate LOG, 0;
-			seek LOG, 0, 0;
+		chmod 0666, "$path/$file";				# パーミッション設定
+		if (open(LOG, '+<', "$path/$file")) {
+			flock(LOG, 2);
+			seek(LOG, 0, 0);
 			print LOG @{$this->{'LOG'}};
+			truncate(LOG, tell(LOG));
 			close LOG;
 		}
-#		eval
-		{ chmod $M->Get('PM-LOG'), "$path/$file"; };	# パーミッション設定
+		chmod $M->Get('PM-LOG'), "$path/$file";	# パーミッション設定
 	}
 }
 

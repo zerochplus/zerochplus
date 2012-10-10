@@ -55,11 +55,9 @@ sub DESTROY
 	if ($this->{'STAT'}) {
 		my $handle	= $this->{'HANDLE'};
 		if ($handle) {
-#			eval
-			{
-				close $handle;
-				chmod $this->{'PERM'}, $this->{'PATH'};
-			};
+			#truncate($handle, tell($handle));
+			close($handle);
+			chmod $this->{'PERM'}, $this->{'PATH'};
 		}
 	}
 }
@@ -79,41 +77,41 @@ sub Load
 	my $this = shift;
 	my ($SYS, $szPath, $readOnly) = @_;
 	
-#	eval
-	{
-		$this->{'RES'} = 0;
+	$this->{'RES'} = 0;
+	
+	# 状態が初期状態なら読み込み開始
+	if ($this->{'STAT'} == 0) {
+		undef @{$this->{'LINE'}};
+		$this->{'MAX'} = $SYS->Get('RESMAX');
+		$this->{'PATH'} = $szPath;
+		$this->{'PERM'} = GetPermission($szPath);
+		$this->{'MODE'} = $readOnly;
 		
-		# 状態が初期状態なら読み込み開始
-		if ($this->{'STAT'} == 0) {
-			undef @{$this->{'LINE'}};
-			$this->{'MAX'} = $SYS->Get('RESMAX');
-			$this->{'PATH'} = $szPath;
-			$this->{'PERM'} = GetPermission($szPath);
-			$this->{'MODE'} = $readOnly;
-			
-			if (-e $szPath) {
-				chmod 0777, $szPath;
-				open DATFILE, "< $szPath";
-				binmode DATFILE;
-				while (<DATFILE>) {
-					push @{$this->{'LINE'}}, $_;
-				}
-				
-				# 書き込みモードの場合
-				if (! $readOnly) {
-					close DATFILE;
-					open DATFILE, "+> $szPath";
-					flock DATFILE, 2;
-					binmode DATFILE;
-				}
-				
-				# ハンドルを保存し状態を読み込み状態にする
-				$this->{'HANDLE'}	= *DATFILE;
-				$this->{'STAT'}		= 1;
-				$this->{'RES'}		= @{$this->{'LINE'}};
+		if (-e $szPath) {
+			chmod 0777, $szPath;
+			open(DATFILE, '<', $szPath);
+			flock(DATFILE, 1);
+			binmode(DATFILE);
+			while (<DATFILE>) {
+				push @{$this->{'LINE'}}, $_;
 			}
+			
+			# 書き込みモードの場合
+			if (! $readOnly) {
+				close(DATFILE);
+				open(DATFILE, '+<', $szPath);
+				flock(DATFILE, 2);
+				seek(DATFILE, 0, 0);
+				binmode(DATFILE);
+			}
+			
+			# ハンドルを保存し状態を読み込み状態にする
+			$this->{'HANDLE'}	= *DATFILE;
+			$this->{'STAT'}		= 1;
+			$this->{'RES'}		= @{$this->{'LINE'}};
 		}
-	};
+	}
+	
 	return $this->{'RES'};
 }
 
@@ -156,14 +154,11 @@ sub Save
 	if ($this->{'STAT'} && $this->{'HANDLE'}) {
 		if (! $this->{'MODE'}) {
 			$handle = $this->{'HANDLE'};
-#			eval
-			{
-				truncate $handle, 0;
-				seek $handle, 0, 0;
-				print $handle @{$this->{'LINE'}};
-				close $handle;
-				chmod $this->{'PERM'}, $this->{'PATH'};
-			};
+			seek($handle, 0, 0);
+			print $handle @{$this->{'LINE'}};
+			truncate($handle, tell($handle));
+			close($handle);
+			chmod $this->{'PERM'}, $this->{'PATH'};
 			$this->{'STAT'}		= 0;
 			$this->{'HANDLE'}	= undef;
 		}
@@ -187,14 +182,12 @@ sub Close
 	
 	# ファイルオープン状態の場合はクローズする
 	if ($this->{'STAT'}) {
-#		eval
-		{
-			my $handle	= $this->{'HANDLE'};
-			close $handle;
-			chmod $this->{'PERM'}, $this->{'PATH'};
-			$this->{'STAT'}		= 0;
-			$this->{'HANDLE'}	= undef;
-		}
+		my $handle	= $this->{'HANDLE'};
+		#truncate($handle, tell($handle));
+		close($handle);
+		chmod $this->{'PERM'}, $this->{'PATH'};
+		$this->{'STAT'}		= 0;
+		$this->{'HANDLE'}	= undef;
 	}
 }
 
@@ -324,22 +317,20 @@ sub Stop
 	$stopData = "停止しました。。。<>停止<>停止<>真・スレッドストッパー。。。（￣ー￣）ﾆﾔﾘｯ<>停止したよ。\n";
 	$res = 0;
 	
-#	eval
-	{
-		# レス最大数超えてる場合はスレスト不可
-		if ($this->Size() <= $SYS->Get('RESMAX')) {
-			# 停止状態じゃない場合のみ実行
-			if (! $this->IsStopped($SYS)) {
-				# 停止データを追加して強制的にセーブする
-				$this->Add($stopData);
-				$this->Save($SYS);
-				
-				# パーミッションを停止用に設定する
-				chmod $SYS->Get('PM-STOP'), $this->{'PATH'};
-				$res = 1;
-			}
+	# レス最大数超えてる場合はスレスト不可
+	if ($this->Size() <= $SYS->Get('RESMAX')) {
+		# 停止状態じゃない場合のみ実行
+		if (! $this->IsStopped($SYS)) {
+			# 停止データを追加して強制的にセーブする
+			$this->Add($stopData);
+			$this->Save($SYS);
+			
+			# パーミッションを停止用に設定する
+			chmod $SYS->Get('PM-STOP'), $this->{'PATH'};
+			$res = 1;
 		}
-	};
+	}
+	
 	return $res;
 }
 
@@ -358,20 +349,19 @@ sub Start
 	my ($res, $line);
 	
 	$res = 0;
-#	eval
-	{
-		# 停止状態の場合のみ実行
-		if ($this->IsStopped($SYS)) {
-			# 最終行を削除して保存
-			$line = $this->{'RES'} - 1;
-			$this->Delete($line);
-			$this->Save($SYS);
-			
-			# パーミッションを通常用に設定する
-			chmod $SYS->Get('PM-DAT'), $this->{'PATH'};
-			$res = 1;
-		}
-	};
+	
+	# 停止状態の場合のみ実行
+	if ($this->IsStopped($SYS)) {
+		# 最終行を削除して保存
+		$line = $this->{'RES'} - 1;
+		$this->Delete($line);
+		$this->Save($SYS);
+		
+		# パーミッションを通常用に設定する
+		chmod $SYS->Get('PM-DAT'), $this->{'PATH'};
+		$res = 1;
+	}
+	
 	return $res;
 }
 
@@ -389,24 +379,19 @@ sub DirectAppend
 	my ($SYS, $path, $data) = @_;
 	my $ret = 0;
 	
-#	eval
-	{
-		if (GetPermission($path) ne $SYS->Get('PM-STOP')) {
-			if (open DATFILE, ">> $path") {
-				flock DATFILE, 2;
-				binmode DATFILE;
-				print DATFILE "$data";
-				close DATFILE;
-			}
-			chmod $SYS->Get('PM-DAT'), $path;
+	if (GetPermission($path) ne $SYS->Get('PM-STOP')) {
+		if (open(DATFILE, '>>', $path)) {
+			flock(DATFILE, 2);
+			binmode(DATFILE);
+			print DATFILE "$data";
+			close(DATFILE);
 		}
-		else {
-			$ret = 2;
-		}
-	};
-	if ($@ ne '') {
-		$ret = 1;
+		chmod $SYS->Get('PM-DAT'), $path;
 	}
+	else {
+		$ret = 2;
+	}
+	
 	return $ret;
 }
 
@@ -424,11 +409,12 @@ sub GetNumFromFile
 	my $cnt = 0;
 	
 	if (-e $path) {
-		open FILE, "< $path";
+		open(FILE, '<', $path);
+		flock(FILE, 1);
 		while (<FILE>) {
 			$cnt++;
 		}
-		close FILE;
+		close(FILE);
 	}
 	return $cnt;
 }
@@ -462,12 +448,13 @@ sub IsMoved
 	my (@elem, $line);
 	
 	if (-e $path) {
-		open FILE, "< $path";
+		open(FILE, '<', $path);
+		flock(FILE, 1);
 		while (<FILE>) {
 			$line = $_;
 			last;
 		}
-		close FILE;
+		close(FILE);
 		@elem = split(/<>/, $line);
 		if ($elem[2] eq '移転') {
 			return 1;
@@ -490,23 +477,6 @@ sub IsStopped
 	my $this = shift;
 	my ($SYS) = @_;
 	return $this->{'PERM'} eq $SYS->Get('PM-STOP');
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	デバグ用出力
-#	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub DEBUG
-{
-	my $this = shift;
-	my ($pStream) = @_;
-	
-	print $pStream "DEBUG MODE ------- \n";
-	print $pStream @{$this->{'LINE'}};
 }
 
 #============================================================================================================

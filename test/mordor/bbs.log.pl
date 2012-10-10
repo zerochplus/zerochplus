@@ -345,21 +345,19 @@ sub FunctionLogDelete
 	$logFile = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/HOST'	if ($mode == 1);
 	$logFile = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/errs'	if ($mode == 2);
 	
-#	eval
-	{
-		# ログ情報の削除
-		$Logger->Open($logFile, 0, 2 | 4);
-		
-		# 既存ログを退避する
-		$Logger->MoveToOld();
-		push @$pLog, '既存ログの退避完了...';
-		
-		# ログのクリアと保存
-		$Logger->Clear();
-		$Logger->Write();
-		$Logger->Close();
-		push @$pLog, 'ログの削除完了...';
-	};
+	# ログ情報の削除
+	$Logger->Open($logFile, 0, 2 | 4);
+	
+	# 既存ログを退避する
+	$Logger->MoveToOld();
+	push @$pLog, '既存ログの退避完了...';
+	
+	# ログのクリアと保存
+	$Logger->Clear();
+	$Logger->Write();
+	$Logger->Close();
+	push @$pLog, 'ログの削除完了...';
+	
 	return 0;
 }
 

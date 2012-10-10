@@ -66,9 +66,10 @@ sub Load
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
 	
 	if (-e $path) {
-		open NGWORD, "< $path";
+		open(NGWORD, '<', $path);
+		flock(NGWORD, 1);
 		@datas = <NGWORD>;
-		close NGWORD;
+		close(NGWORD);
 		
 		($dummy, @datas) = @datas;
 		chomp $dummy;
@@ -101,21 +102,18 @@ sub Save
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
 	
-#	eval
-	{
-		open NGWORD, "> $path";
-		flock NGWORD, 2;
-		binmode NGWORD;
-		print NGWORD $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
-		foreach (@{$this->{'NGWORD'}}) {
-			print NGWORD "$_\n";
-		}
-		close NGWORD;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
-	if ($@ ne '') {
-		return $@;
+	open(NGWORD, '+<', $path);
+	flock(NGWORD, 2);
+	seek(NGWORD, 0, 0);
+	binmode(NGWORD);
+	print NGWORD $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
+	foreach (@{$this->{'NGWORD'}}) {
+		print NGWORD "$_\n";
 	}
+	truncate(NGWORD, tell(NGWORD));
+	close(NGWORD);
+	chmod $Sys->Get('PM-ADM'), $path;
+	
 	return 0;
 }
 

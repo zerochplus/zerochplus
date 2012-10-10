@@ -73,7 +73,8 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
 	if (-e $path) {
-		open BBSS, "< $path";
+		open(BBSS, '<', $path);
+		flock(BBSS, 1);
 		while (<BBSS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -82,7 +83,7 @@ sub Load
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[3];
 			$this->{'CATEGORY'}->{$elem[0]}	= $elem[4];
 		}
-		close BBSS;
+		close(BBSS);
 	}
 }
 
@@ -102,27 +103,24 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
-#	eval
-	{
-		open BBSS, "> $path";
-		flock BBSS, 2;
-		binmode BBSS;
-		#truncate BBSS, 0;
-		#seek BBSS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{DIR}->{$_},
-				$this->{SUBJECT}->{$_},
-				$this->{CATEGORY}->{$_}
-			);
-			
-			print BBSS "$data\n";
-		}
-		close BBSS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(BBSS, '+<', $path);
+	flock(BBSS, 2);
+	seek(BBSS, 0, 0);
+	binmode(BBSS);
+	foreach (keys %{$this->{'NAME'}}) {
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{DIR}->{$_},
+			$this->{SUBJECT}->{$_},
+			$this->{CATEGORY}->{$_}
+		);
+		
+		print BBSS "$data\n";
+	}
+	truncate(BBSS, tell(BBSS));
+	close(BBSS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -286,7 +284,8 @@ sub Update
 				}
 				$this->{'DIR'}->{$id}		= $dir;
 				$this->{'CATEGORY'}->{$id}	= '0000000001';
-				open SETTING, "< $bbsroot/$dir/SETTING.TXT";
+				open(SETTING, '<', "$bbsroot/$dir/SETTING.TXT");
+				flock(SETTING, 1);
 				
 				# SETTING.TXT‚©‚ç•K—v‚Èî•ñ‚ðŽæ“¾‚·‚é
 				foreach (<SETTING>) {
@@ -304,7 +303,7 @@ sub Update
 						last;
 					}
 				}
-				close SETTING;
+				close(SETTING);
 			}
 		}
 	}
@@ -412,14 +411,15 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
 	if (-e $path) {
-		open CATS, "< $path";
+		open(CATS, '<', $path);
+		flock(CATS, 1);
 		while (<CATS>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'NAME'}->{$elem[0]}		= $elem[1];
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[2];
 		}
-		close CATS;
+		close(CATS);
 	}
 }
 
@@ -439,25 +439,22 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
-#	eval
-	{
-		open CATS, "> $path";
-		flock CATS, 2;
-		binmode CATS;
-		#truncate CATS, 0;
-		#seek CATS, 0, 0;
-		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
-				$_,
-				$this->{NAME}->{$_},
-				$this->{SUBJECT}->{$_}
-			);
-			
-			print CATS "$data\n";
-		}
-		close CATS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(CATS, '+<', $path);
+	flock(CATS, 2);
+	seek(CATS, 0, 0);
+	binmode(CATS);
+	foreach (keys %{$this->{'NAME'}}) {
+		$data = join('<>',
+			$_,
+			$this->{NAME}->{$_},
+			$this->{SUBJECT}->{$_}
+		);
+		
+		print CATS "$data\n";
+	}
+	truncate(CATS, tell(CATS));
+	close(CATS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------

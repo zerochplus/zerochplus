@@ -31,23 +31,23 @@ sub Copy
 	my ($src, $dst) = @_;
 	my ($perm);
 	
-#	eval
-	{
-		if (-e $src) {
-			$perm = (stat $src)[2];	# パーミッション取得
-			open SRC, "< $src";
-			open DST, "> $dst";
-			flock DST, 2;
-			binmode SRC;
-			binmode DST;
-			while (<SRC>) {
-				print DST $_;
-			}
-			close DST;
-			close SRC;
-			chmod $perm, $dst;	# パーミッション設定
+	if (-e $src) {
+		$perm = (stat $src)[2];	# パーミッション取得
+		open(SRC, '<', $src);
+		flock(SRC, 1);
+		open(DST, '+<', $dst);
+		flock(DST, 2);
+		seek(DST, 0, 0);
+		binmode(SRC);
+		binmode(DST);
+		while (<SRC>) {
+			print DST $_;
 		}
-	};
+		truncate(DST, tell(DST));
+		close(DST);
+		close(SRC);
+		chmod $perm, $dst;	# パーミッション設定
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -64,24 +64,24 @@ sub Move
 	my ($src, $dst) = @_;
 	my ($perm);
 	
-#	eval
-	{
-		if (-e $src) {
-			$perm = (stat $src)[2];	# パーミッション取得
-			open SRC, "< $src";
-			open DST, "> $dst";
-			flock DST, 2;
-			binmode SRC;
-			binmode DST;
-			while (<SRC>) {
-				print DST $_;
-			}
-			close DST;
-			close SRC;
-			chmod $perm, $dst;	# パーミッション設定
-			unlink $src;		# コピー元削除
+	if (-e $src) {
+		$perm = (stat $src)[2];	# パーミッション取得
+		open(SRC, '<', $src);
+		flock(SRC, 1);
+		open(DST, '+<', $dst);
+		flock(DST, 2);
+		seek(DST, 0, 0);
+		binmode(SRC);
+		binmode(DST);
+		while (<SRC>) {
+			print DST $_;
 		}
-	};
+		truncate(DST, tell(DST));
+		close(DST);
+		close(SRC);
+		chmod $perm, $dst;	# パーミッション設定
+		unlink $src;		# コピー元削除
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------

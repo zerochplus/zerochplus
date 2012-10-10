@@ -87,7 +87,8 @@ sub Load
 	
 	if (-e "$path/bannerpc.cgi") {	# PC用読み込み
 		$this->{'TEXTPC'} = '';
-		open BANPC, "< $path/bannerpc.cgi";
+		open(BANPC, '<', "$path/bannerpc.cgi");
+		flock(BANPC, 1);
 		while (<BANPC>) {
 			if ($f) {
 				$this->{'TEXTPC'} .= $_;
@@ -98,22 +99,24 @@ sub Load
 				$f = 1;
 			}
 		}
-		close BANPC;
+		close(BANPC);
 	}
 	$f = 0;
 	
 	if (-e "$path/bannersub.cgi") {	# サブバナー読み込み
 		$this->{'TEXTSB'} = '';
-		open BANSB, "< $path/bannersub.cgi";
+		open(BANSB, '<', "$path/bannersub.cgi");
+		flock(BANSB, 1);
 		while (<BANSB>) {
 			$this->{'TEXTSB'} .= $_;
 		}
-		close BANSB;
+		close(BANSB);
 	}
 	
 	if (-e "$path/bannermb.cgi") {	# 携帯用読み込み
 		$this->{'TEXTMB'} = '';
-		open BANMB, "< $path/bannermb.cgi";
+		open(BANMB, '<', "$path/bannermb.cgi");
+		flock(BANMB, 1);
 		while (<BANMB>) {
 			if ($f) {
 				$this->{'TEXTMB'} .= $_;
@@ -124,7 +127,7 @@ sub Load
 				$f = 1;
 			}
 		}
-		close BANMB;
+		close(BANMB);
 	}
 }
 
@@ -146,40 +149,37 @@ sub Save
 	$file[1] = '.' . $M->Get('INFO') . '/bannermb.cgi';
 	$file[2] = '.' . $M->Get('INFO') . '/bannersub.cgi';
 	
-#	eval
-	{ chmod 0666, $file[0]; };	# PC用書き込み
-	open BANPC, "> $file[0]";
-	binmode BANPC;
-#	eval
-	{ flock BANPC, 2; };
+	chmod 0666, $file[0];	# PC用書き込み
+	open(BANPC, '+<', $file[0]);
+	flock(BANPC, 2);
+	seek(BANPC, 0, 0);
+	binmode(BANPC);
 	print BANPC "$$this{'COLPC'}\n";
 	print BANPC "$$this{'TEXTPC'}";
-	close BANPC;
-#	eval
-	{ chmod $M->Get('PM-ADM'), $file[0]; };
+	truncate(BANPC, tell(BANPC));
+	close(BANPC);
+	chmod $M->Get('PM-ADM'), $file[0];
 	
-#	eval
-	{ chmod 0666, $file[2]; };	# PC用書き込み
-	open BANSB, "> $file[2]";
-	binmode BANSB;
-#	eval
-	{ flock BANSB, 2; };
+	chmod 0666, $file[2];	# PC用書き込み
+	open(BANSB, '+<', $file[2]);
+	flock(BANSB, 2);
+	seek(BANSB, 0, 0);
+	binmode(BANSB);
 	print BANSB "$$this{'TEXTSB'}";
-	close BANSB;
-#	eval
-	{ chmod $M->Get('PM-ADM'), $file[2]; };
+	truncate(BANSB, tell(BANSB));
+	close(BANSB);
+	chmod $M->Get('PM-ADM'), $file[2];
 	
-#	eval
-	{ chmod 0666, $file[1]; };	# 携帯用書き込み
-	open BANMB, "> $file[1]";
-	binmode BANMB;
-#	eval
-	{ flock BANMB, 2; };
+	chmod 0666, $file[1];	# 携帯用書き込み
+	open(BANMB, '+<', $file[1]);
+	flock(BANMB, 2);
+	seek(BANMB, 0, 0);
+	binmode(BANMB);
 	print BANMB "$$this{'COLMB'}\n";
 	print BANMB "$$this{'TEXTMB'}";
-	close BANMB;
-#	eval
-	{ chmod $M->Get('PM-ADM'), $file[1]; };
+	truncate(BANMB, tell(BANMB));
+	close(BANMB);
+	chmod $M->Get('PM-ADM'), $file[1];
 }
 
 #------------------------------------------------------------------------------------------------------------

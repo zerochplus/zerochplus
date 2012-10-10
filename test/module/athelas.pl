@@ -70,7 +70,9 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
 	if	(-e $path) {
-		open PLUGINS, "< $path";
+		open(PLUGINS, '<', $path);
+		flock(PLUGINS, 1);
+		
 		my $i = 0;
 		while (<PLUGINS>) {
 			chomp $_;
@@ -88,7 +90,7 @@ sub Load
 				$this->LoadConfig($elem[0]);
 			}
 		}
-		close PLUGINS;
+		close(PLUGINS);
 	}
 }
 
@@ -116,13 +118,15 @@ sub LoadConfig
 	$file =~ /^(0ch_.*)\.pl$/;
 	$path = "./plugin_conf/$1.cgi";
 	if (-f $path) {
-		open CONF, $path;
+		open(CONF, $path);
+		flock(CONF, 1);
 		while (<CONF>) {
 			chomp $_;
 			my ($type, $key, $val) = split(/<>/, $_, 3);
 			$CONFIG->{$key} = $val;
 			$CONFTYPE->{$key} = $type;
 		}
+		close(CONF);
 	}
 }
 
@@ -152,7 +156,10 @@ sub SaveConfig
 	$file =~ /^(0ch_.*)\.pl$/;
 	$path = "./plugin_conf/$1.cgi";
 	if (($_ = keys %$CONFIG) > 0) {
-		if (open CONF, "> $path") {
+		if (open CONF, '+<', $path) {
+			flock(CONF, 2);
+			seek(CONF, 0, 0);
+			
 			my ($key, $val, $type);
 			foreach $key (sort keys %$CONFIG) {
 				next unless (defined $CONFIG->{$key});
@@ -170,7 +177,9 @@ sub SaveConfig
 				}
 				print CONF "$type<>$key<>$val\n";
 			}
-			close CONF;
+			
+			truncate(CONF, tell(CONF));
+			close(CONF);
 		}
 	}
 	else {
@@ -232,29 +241,28 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-#	eval
-	{
-		open PLUGINS, "> $path";
-		flock PLUGINS, 2;
-		binmode PLUGINS;
-		#truncate PLUGINS, 0;
-		#seek PLUGINS, 0, 0;
-		foreach my $id (@{$this->{'ORDER'}}) {
-			$data = join('<>',
-				$id,
-				$this->{'FILE'}->{$id},
-				$this->{'CLASS'}->{$id},
-				$this->{'NAME'}->{$id},
-				$this->{'EXPL'}->{$id},
-				$this->{'TYPE'}->{$id},
-				$this->{'VALID'}->{$id}
-			);
-			
-			print PLUGINS "$data\n";
-		}
-		close PLUGINS;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(PLUGINS, '+<', $path);
+	flock(PLUGINS, 2);
+	seek(PLUGINS, 0, 0);
+	binmode(PLUGINS);
+	
+	foreach my $id (@{$this->{'ORDER'}}) {
+		$data = join('<>',
+			$id,
+			$this->{'FILE'}->{$id},
+			$this->{'CLASS'}->{$id},
+			$this->{'NAME'}->{$id},
+			$this->{'EXPL'}->{$id},
+			$this->{'TYPE'}->{$id},
+			$this->{'VALID'}->{$id}
+		);
+		
+		print PLUGINS "$data\n";
+	}
+	
+	truncate(PLUGINS, tell(PLUGINS));
+	close(PLUGINS);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -357,26 +365,23 @@ sub Add
 	if (-e "./plugin/$file") {
 		if ($file =~ /0ch_(.*)\.pl/) {
 			my $className = "ZPL_$1";
-#			eval
-			{
-				require "./plugin/$file";
-				my $plugin = new $className;
-				if (! exists $this->{'FILE'}->{$id}) {
-					push @{$this->{'ORDER'}}, $id;
-				}
-				$this->{'FILE'}->{$id}		= $file;
-				$this->{'CLASS'}->{$id}		= $className;
-				$this->{'NAME'}->{$id}		= $plugin->getName();
-				$this->{'EXPL'}->{$id}		= $plugin->getExplanation();
-				$this->{'TYPE'}->{$id}		= $plugin->getType();
-				$this->{'VALID'}->{$id}		= $valid;
-				$this->{'CONFIG'}->{$id}	= {};
-				$this->{'CONFTYPE'}->{$id}	= {};
-				$this->SetDefaultConfig($id);
-				$this->LoadConfig($id);
-				$this->SaveConfig($id);
-				$ret = $id;
-			};
+			require "./plugin/$file";
+			my $plugin = new $className;
+			if (! exists $this->{'FILE'}->{$id}) {
+				push @{$this->{'ORDER'}}, $id;
+			}
+			$this->{'FILE'}->{$id}		= $file;
+			$this->{'CLASS'}->{$id}		= $className;
+			$this->{'NAME'}->{$id}		= $plugin->getName();
+			$this->{'EXPL'}->{$id}		= $plugin->getExplanation();
+			$this->{'TYPE'}->{$id}		= $plugin->getType();
+			$this->{'VALID'}->{$id}		= $valid;
+			$this->{'CONFIG'}->{$id}	= {};
+			$this->{'CONFTYPE'}->{$id}	= {};
+			$this->SetDefaultConfig($id);
+			$this->LoadConfig($id);
+			$this->SaveConfig($id);
+			$ret = $id;
 		}
 	}
 	return '';

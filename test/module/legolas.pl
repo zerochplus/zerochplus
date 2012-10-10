@@ -72,9 +72,10 @@ sub Load
 	$head = $this->{'HEAD'};
 	
 	if (-e "$path/$file") {
-		open(HEAD, "< $path/$file");
+		open(HEAD, '<', "$path/$file");
+		flock(HEAD, 1);
 		@$head = <HEAD>;
-		close HEAD;
+		close(HEAD);
 		return 0;
 	}
 	
@@ -99,15 +100,14 @@ sub Save
 	$file = $this->{'FILE'};
 	
 	if ($path) {
-#		eval
-		{
-			chmod 0666, "$path/$file";
-			open HEAD, "> $path/$file";
-			flock HEAD, 2;
-			print HEAD @{$this->{'HEAD'}};
-			close HEAD;
-			chmod $Sys->Get('PM-TXT'), "$path/$file";
-		};
+		chmod 0666, "$path/$file";
+		open(HEAD, '<+', "$path/$file");
+		flock(HEAD, 2);
+		seek(HEAD, 0, 0);
+		print HEAD @{$this->{'HEAD'}};
+		truncate(HEAD, tell(HEAD));
+		close(HEAD);
+		chmod $Sys->Get('PM-TXT'), "$path/$file";
 	}
 }
 

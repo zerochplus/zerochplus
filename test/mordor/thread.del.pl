@@ -120,20 +120,14 @@ sub DoFunction
 	$DAT = ARAGORN->new;
 	
 	# 掲示板情報の読み込みとグループ設定
-#	eval
-	{
-		$BBS->Load($Sys);
-		$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
-		$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
-	};
+	$BBS->Load($Sys);
+	$Sys->Set('BBS', $BBS->Get('DIR', $Form->Get('TARGET_BBS')));
+	$pSys->{'SECINFO'}->SetGroupInfo($BBS->Get('DIR', $Form->Get('TARGET_BBS')));
 	
 	# datの読み込み
-#	eval
-	{
-		$Sys->Set('KEY', $Form->Get('TARGET_THREAD'));
-		my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/del_' . $Sys->Get('KEY') . '.cgi';
-		$DAT->Load($Sys, $datPath, 1);
-	};
+	$Sys->Set('KEY', $Form->Get('TARGET_THREAD'));
+	my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/del_' . $Sys->Get('KEY') . '.cgi';
+	$DAT->Load($Sys, $datPath, 1);
 	
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
@@ -235,7 +229,7 @@ sub PrintResList
 	
 	# システム権限有無による表示抑制
 	if ($isAbone) {
-		$common = "onclick=\"DoSubmit('thread.del','DISP'";
+		$common = "onclick=\"DoSubmit('thread.del','FUNC'";
 		$Page->Print("<tr><td colspan=2 align=right>");
 		$Page->Print("<input type=button value=\"　復活　\" $common,'REPARE')\"> ");
 		$Page->Print("</td></tr>\n");
@@ -379,7 +373,7 @@ sub PrintError
 #------------------------------------------------------------------------------------------------------------
 sub FunctionResRepare
 {
-	my ($Sys, $Form, $Dat, $pLog, $mode) = @_;
+	my ($Sys, $Form, $Dat, $pLog) = @_;
 	my (@resSet, $pRes, $abone, $path, $tm, $user, $delCnt, $num);
 	
 	# 権限チェック
@@ -392,15 +386,6 @@ sub FunctionResRepare
 		}
 	}
 	
-	# あぼ～ん時は削除名を取得
-	if ($mode) {
-		my $Setting;
-		require './module/isildur.pl';
-		$Setting = ISILDUR->new;
-		$Setting->Load($Sys);
-		$abone	= $Setting->Get('BBS_DELETE_NAME');
-	}
-	
 	# 各値を設定
 	@resSet	= $Form->GetAtArray('RESS');
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/del_' . $Sys->Get('KEY') . '.cgi';
@@ -408,31 +393,31 @@ sub FunctionResRepare
 	$user	= $Form->Get('UserName');
 	$delCnt	= 0;
 	
+=pod
 	# 削除と同時に削除ログへ削除した内容を保存する
-#	eval
-	{
-		open DELLOG, ">> $path";
-		foreach $num (@resSet){
-			$pRes = $Dat->Get($num - $delCnt);
-			print DELLOG "$tm<>$user<>$num<>$$pRes";
-			if ($mode){
-				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
-			}
-			else {
-				$Dat->Delete($num - $delCnt);
-				$delCnt ++;
-			}
+	open(DELLOG, '>>', $path);
+	flock(DELLOG, 2);
+	foreach $num (@resSet){
+		$pRes = $Dat->Get($num - $delCnt);
+		print DELLOG "$tm<>$user<>$num<>$$pRes";
+		if ($mode){
+			$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
 		}
-		close DELLOG;
-	};
+		else {
+			$Dat->Delete($num - $delCnt);
+			$delCnt ++;
+		}
+	}
+	close(DELLOG);
 	
 	# 保存
-	$Dat->Save($Sys);
+	#$Dat->Save($Sys);
+=cut
 	
 	# ログの設定
 	$delCnt = 0;
 	$abone	= '';
-	push @$pLog, '以下のレスを' . ($mode ? 'あぼ～ん' : '削除') . 'しました。';
+	push @$pLog, '以下のレスを復活しました。';
 	foreach (@resSet) {
 		if ($delCnt > 5) {
 			push @$pLog, $abone;

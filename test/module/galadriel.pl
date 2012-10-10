@@ -724,15 +724,9 @@ sub ConvertTrip
 		}
 		elsif ($shatrip eq 1) {
 			# SHA1(新仕様)トリップ
-			eval {
-				require Digest::SHA::PurePerl;
-				Digest::SHA::PurePerl->import( qw(sha1_base64) );
-				$trip = substr(sha1_base64($$key), 0, 12);
-			};
-			if ( $@ ) {
-				# Digest::SHA::PurePerlできない場合は???(e)を表示させる
-				$trip = "???(e)";
-			}
+			require Digest::SHA::PurePerl;
+			Digest::SHA::PurePerl->import( qw(sha1_base64) );
+			$trip = substr(sha1_base64($$key), 0, 12);
 			$trip =~ tr/+/./;
 		}
 	}

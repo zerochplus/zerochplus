@@ -61,7 +61,8 @@ sub Load
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
 	if (-e $path) {
-		open NOTICE, "< $path";
+		open(NOTICE, '<', $path);
+		flock(NOTICE, 1);
 		while (<NOTICE>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
@@ -72,7 +73,7 @@ sub Load
 			$this->{'DATE'}->{$elem[0]}		= $elem[5];
 			$this->{'LIMIT'}->{$elem[0]}	= $elem[6];
 		}
-		close NOTICE;
+		close(NOTICE);
 	}
 }
 
@@ -92,29 +93,26 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-#	eval
-	{
-		open NOTICE, "> $path";
-		flock NOTICE, 2;
-		binmode NOTICE;
-		#truncate NOTICE, 0;
-		#seek NOTICE, 0, 0;
-		foreach (keys %{$this->{'TO'}}) {
-			$data = join('<>',
-				$_,
-				$this->{TO}->{$_},
-				$this->{FROM}->{$_},
-				$this->{SUBJECT}->{$_},
-				$this->{TEXT}->{$_},
-				$this->{DATE}->{$_},
-				$this->{LIMIT}->{$_}
-			);
-			
-			print NOTICE "$data\n";
-		}
-		close NOTICE;
-		chmod $Sys->Get('PM-ADM'), $path;
-	};
+	open(NOTICE, '+<', $path);
+	flock(NOTICE, 2);
+	seek(NOTICE, 0, 0);
+	binmode(NOTICE);
+	foreach (keys %{$this->{'TO'}}) {
+		$data = join('<>',
+			$_,
+			$this->{TO}->{$_},
+			$this->{FROM}->{$_},
+			$this->{SUBJECT}->{$_},
+			$this->{TEXT}->{$_},
+			$this->{DATE}->{$_},
+			$this->{LIMIT}->{$_}
+		);
+		
+		print NOTICE "$data\n";
+	}
+	truncate(NOTICE, tell(NOTICE));
+	close(NOTICE);
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -333,23 +331,6 @@ sub RemoveToUser
 	else {
 		$this->{'TO'}->{$id} = join(',', @news);
 	}
-}
-
-sub DEBUG
-{
-	my $this = shift;
-	my ($Page) = @_;
-	my ($id);
-	
-	$Page->Print("<b>DEBUG START</b><br>\n");
-	foreach $id (keys %{$this->{'TO'}}) {
-		$Page->Print("　 To:" . $this->{'TO'}->{$id} . "<br>\n");
-		$Page->Print("　 From:" . $this->{'FROM'}->{$id} . "<br>\n");
-		$Page->Print("　 Subject:" . $this->{'SUBJECT'}->{$id} . "<br>\n");
-		$Page->Print("　 Text:" . $this->{'TEXT'}->{$id} . "<br>\n");
-		$Page->Print("　 Date:" . $this->{'DATE'}->{$id} . "<br>\n");
-	}
-	$Page->Print("<b>DEBUG END</b><br>\n");
 }
 
 #============================================================================================================

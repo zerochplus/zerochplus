@@ -57,9 +57,10 @@ sub Load
 	$path = '.' . $M->Get('INFO') . '/errmsg.cgi';
 	
 	if (-e $path) {				# ファイルが存在すれば
-		open ERR, "< $path";	# ファイルオープン
+		open(ERR, '<', $path);	# ファイルオープン
+		flock(ERR, 1);
 		@readBuff = <ERR>;
-		close ERR;
+		close(ERR);
 		
 		foreach (@readBuff) {
 			# '#' はコメント行なので読まない

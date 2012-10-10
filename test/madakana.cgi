@@ -216,7 +216,8 @@ sub PrintMadaCont
 		
 		$path = "$BBSpath/$dir/info/access.cgi";
 		
-		if ( -e $path && open( SEC, "< $path") ) {
+		if ( -e $path && open(SEC, '<', $path) ) {
+			flock(FILE, 1);
 			
 			$line = <SEC>;
 			chomp $line;
@@ -238,7 +239,7 @@ sub PrintMadaCont
 				s/(http:\/\/.*)<br>/<a href="$1" target="_blank">$1<\/a><br>/g;
 				$Page->Print($_."\n");
 			}
-			close SEC;
+			close(SEC);
 		}
 		else {
 			$Page->Print('<span style="color:#AAA">Cannot open access.cgi.</span><br>'."\n");

@@ -64,10 +64,7 @@ sub DESTROY
 	if ($this->{'STAT'}) {
 		my $handle = $this->{'HANDLE'};
 		if ($handle) {
-#			eval
-			{
-				close $handle;
-			};
+			close($handle);
 		}
 	}
 }
@@ -105,21 +102,20 @@ sub Open
 	}
 	$File .= '.cgi';
 	
-#	eval
-	{
-		if ($this->{'STAT'} == 0) {
-			my $handle = $this->{'HANDLE'};
-			open $handle, "+>> $File";
-			flock $handle, 2 if ($Mode & 1);
-			binmode $handle;
-			
-			$this->{'STAT'} = 1;
-			$ret = 0;
-			if ($Mode & 2) {
-				$ret = $this->Read();
-			}
+	if ($this->{'STAT'} == 0) {
+		my $handle = $this->{'HANDLE'};
+		open($handle, '+<', $File);
+		flock($handle, 2);
+		seek($handle, 0, 2);
+		binmode($handle);
+		
+		$this->{'STAT'} = 1;
+		$ret = 0;
+		if ($Mode & 2) {
+			$ret = $this->Read();
 		}
-	};
+	}
+	
 	return $ret;
 }
 
@@ -136,12 +132,9 @@ sub Close
 	my $this = shift;
 	
 	if ($this->{'STAT'} == 1) {
-#		eval
-		{
-			my $handle = $this->{'HANDLE'};
-			close $handle;
-			$this->{'STAT'} = 0;
-		};
+		my $handle = $this->{'HANDLE'};
+		close($handle);
+		$this->{'STAT'} = 0;
 	}
 }
 
@@ -159,20 +152,17 @@ sub Read
 	my $ret = -1;
 	
 	if ($this->{'STAT'} == 1) {
-#		eval
-		{
-			my $handle = $this->{'HANDLE'};
-			my $count = 0;
-			undef @{$this->{'LOGS'}};
-			seek $handle, 0, 0;
-			while (<$handle>) {
-				chomp $_;
-				push @{$this->{'LOGS'}}, $_;
-				$count++;
-			}
-			$this->{'SIZE'} = $count;
-			$ret = 0;
-		};
+		my $handle = $this->{'HANDLE'};
+		my $count = 0;
+		undef @{$this->{'LOGS'}};
+		seek($handle, 0, 0);
+		while (<$handle>) {
+			chomp $_;
+			push @{$this->{'LOGS'}}, $_;
+			$count++;
+		}
+		$this->{'SIZE'} = $count;
+		$ret = 0;
 	}
 	return $ret;
 }
@@ -193,15 +183,12 @@ sub Write
 	if ($this->{'STAT'}) {
 		if (! ($this->{'MODE'} & 1)) {
 			my $handle = $this->{'HANDLE'};
-#			eval
-			{
-				truncate $handle, 0;
-				seek $handle, 0, 0;
-				for (my $i = 0 ; $i < $this->{'SIZE'} ; $i++) {
-					print $handle $this->{'LOGS'}->[$i] . "\n";
-				}
-				close $handle;
-			};
+			seek($handle, 0, 0);
+			for (my $i = 0 ; $i < $this->{'SIZE'} ; $i++) {
+				print $handle $this->{'LOGS'}->[$i] . "\n";
+			}
+			truncate($handle, tell($handle));
+			close($handle);
 			$this->{'STAT'} = 0;
 		}
 		else {
@@ -247,14 +234,11 @@ sub Put
 		my $old = shift @{$this->{'LOGS'}};
 		if ($this->{'MODE'} & 4) {
 			my $logName = $this->{'PATH'} . '_old.cgi';
-#			eval
-			{
-				open OLDLOG, ">> $logName";
-				flock OLDLOG, 2;
-				binmode OLDLOG;
-				print OLDLOG "$old\n";
-				close OLDLOG;
-			};
+			open(OLDLOG, '>>', $logName);
+			flock(OLDLOG, 2);
+			binmode(OLDLOG);
+			print OLDLOG "$old\n";
+			close(OLDLOG);
 		}
 		$this->{'SIZE'}--;
 	}
@@ -292,16 +276,13 @@ sub MoveToOld
 	my $this = shift;
 	my ($i);
 	
-#	eval
-	{
-		open OLDLOG, ">> " . $this->{'PATH'} . '_old.cgi';
-		flock OLDLOG, 2;
-		binmode OLDLOG;
-		for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
-			print OLDLOG $this->{'LOGS'}->[$i] . "\n";
-		}
-		close OLDLOG;
-	};
+	open(OLDLOG, '>>', "$this->{'PATH'}_old.cgi");
+	flock(OLDLOG, 2);
+	binmode(OLDLOG);
+	for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
+		print OLDLOG $this->{'LOGS'}->[$i] . "\n";
+	}
+	close(OLDLOG);
 }
 
 #------------------------------------------------------------------------------------------------------------
