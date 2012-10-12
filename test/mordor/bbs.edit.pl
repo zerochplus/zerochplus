@@ -550,14 +550,13 @@ sub PrintLastEdit
 		$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/1000.txt';
 		$isLast = 0;
 		
-		if (-e $path) {
-			open(LAST, '<', $path);
-			flock(LAST, 1);
-			while(<LAST>) {
+		if (open(my $f_last, '<', $path)) {
+			flock($f_last, 2);
+			while(<$f_last>) {
 				$data = $_;
 				last;
 			}
-			close(LAST);
+			close($f_last);
 			chomp $data;
 			$isLast = 1;
 		}
@@ -831,13 +830,14 @@ sub FunctionLastEdit
 		$date =~ s/<>/&lt;&gt;/g;
 		$cont =~ s/<>/&lt;&gt;/g;
 		
-		open(LAST, '+<', $lastPath);
-		flock(LAST, 2);
-		seek(LAST, 0, 0);
-		binmode(LAST);
-		print LAST "$name<>$mail<>$date<> $cont <>\n";
-		truncate(LAST, tell(LAST));
-		close(LAST);
+		if (open(my $f_last, (-f $lastPath ? '+<' : '>'), $lastPath)) {
+			flock($f_last, 2);
+			seek($f_last, 0, 0);
+			binmode($f_last);
+			print $f_last "$name<>$mail<>$date<> $cont <>\n";
+			truncate($f_last, tell($f_last));
+			close($f_last);
+		}
 		
 		push @$pLog, 'Å°1000.txtÇê›íËÇµÇ‹ÇµÇΩÅB';
 	}

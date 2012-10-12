@@ -86,13 +86,14 @@ sub Flush
 	
 	# ファイルへ出力
 	if ($flag) {
-		open(OUTPUT, '+<', $szFilePath);
-		flock(OUTPUT, 2);
-		seek(OUTPUT, 0, 0);
-		print OUTPUT @{$this->{'BUFF'}};
-		truncate(OUTPUT, tell(OUTPUT));
-		close(OUTPUT);
-		chmod $perm, $szFilePath;
+		if (open(my $f_output, (-f $szFilePath ? '+<' : '>'), $szFilePath)) {
+			flock($f_output, 2);
+			seek($f_output, 0, 0);
+			print $f_output @{$this->{'BUFF'}};
+			truncate($f_output, tell($f_output));
+			close($f_output);
+			chmod $perm, $szFilePath;
+		}
 	}
 	# 標準出力に出力
 	else {

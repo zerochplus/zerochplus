@@ -123,35 +123,38 @@ sub Check
 		
 		# とれた
 		if ( $proxy->getStatus() eq 200 ) {
-			open(FILE, '+<', $path);
-			flock(FILE, 2);
-			seek(FILE, 0, 0);
-			binmode(FILE);
-			print FILE $proxy->getContent();
-			truncate(FILE, tell(FILE));
-			close(FILE);
-			chmod $hash->{'CachePM'}, $path;
+			if (open(my $f_file, (-f $path ? '+<' : '>'), $path)) {
+				flock($f_file, 2);
+				seek($f_file, 0, 0);
+				binmode($f_file);
+				print $f_file $proxy->getContent();
+				truncate($f_file, tell($f_file));
+				close($f_file);
+				chmod $hash->{'CachePM'}, $path;
+			}
 		}
 	}
 	
 	
 	# 比較部
 	my ( @release, $l, @newver, $newdate, $i, $newrelease, $vv, $nv );
+	@release = ();
 	
-	open(FILE, '<', $path);
-	flock(FILE, 1);
-	while ( $l = <FILE> ) {
-		# $l =~ s/\x0d?\x0a?$//;
-		# samwiseと同等のサニタイジングを行います
-		$l =~ s/[\x0d\x0a\0]//g;
-		$l =~ s/"/&quot;/g;
-		$l =~ s/</&lt;/g;
-		$l =~ s/>/&gt;/g;
-		
-		Encode::from_to( $l, 'utf8', 'sjis' );
-		push @release, $l;
+	if (open(my $f_file, '<', $path)) {
+		flock($f_file, 2);
+		while ( $l = <$f_file> ) {
+			# $l =~ s/\x0d?\x0a?$//;
+			# samwiseと同等のサニタイジングを行います
+			$l =~ s/[\x0d\x0a\0]//g;
+			$l =~ s/"/&quot;/g;
+			$l =~ s/</&lt;/g;
+			$l =~ s/>/&gt;/g;
+			
+			Encode::from_to( $l, 'utf8', 'sjis' );
+			push @release, $l;
+		}
+		close($f_file);
 	}
-	close(FILE);
 	# 爆弾(BOM)処理
 	$l = shift @release;
 	$l =~ s/^\xef\xbb\xbf//;

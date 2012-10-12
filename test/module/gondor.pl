@@ -87,26 +87,21 @@ sub Load
 		$this->{'PERM'} = GetPermission($szPath);
 		$this->{'MODE'} = $readOnly;
 		
-		if (-e $szPath) {
-			chmod 0777, $szPath;
-			open(DATFILE, '<', $szPath);
-			flock(DATFILE, 1);
-			binmode(DATFILE);
-			while (<DATFILE>) {
+		chmod 0777, $szPath;
+		if (open(my $f_datfile, ($readOnly ? '<' : '+<'), $szPath)) {
+			flock($f_datfile, 2);
+			binmode($f_datfile);
+			while (<$f_datfile>) {
 				push @{$this->{'LINE'}}, $_;
 			}
 			
 			# 書き込みモードの場合
 			if (! $readOnly) {
-				close(DATFILE);
-				open(DATFILE, '+<', $szPath);
-				flock(DATFILE, 2);
-				seek(DATFILE, 0, 0);
-				binmode(DATFILE);
+				seek($f_datfile, 0, 0);
 			}
 			
 			# ハンドルを保存し状態を読み込み状態にする
-			$this->{'HANDLE'}	= *DATFILE;
+			$this->{'HANDLE'}	= $f_datfile;
 			$this->{'STAT'}		= 1;
 			$this->{'RES'}		= @{$this->{'LINE'}};
 		}
@@ -380,11 +375,11 @@ sub DirectAppend
 	my $ret = 0;
 	
 	if (GetPermission($path) ne $SYS->Get('PM-STOP')) {
-		if (open(DATFILE, '>>', $path)) {
-			flock(DATFILE, 2);
-			binmode(DATFILE);
-			print DATFILE "$data";
-			close(DATFILE);
+		if (open(my $f_datfile, '>>', $path)) {
+			flock($f_datfile, 2);
+			binmode($f_datfile);
+			print $f_datfile "$data";
+			close($f_datfile);
 		}
 		chmod $SYS->Get('PM-DAT'), $path;
 	}
@@ -408,13 +403,12 @@ sub GetNumFromFile
 	my ($path) = @_;
 	my $cnt = 0;
 	
-	if (-e $path) {
-		open(FILE, '<', $path);
-		flock(FILE, 1);
-		while (<FILE>) {
+	if (open(my $f_file, '<', $path)) {
+		flock($f_file, 2);
+		while (<$f_file>) {
 			$cnt++;
 		}
-		close(FILE);
+		close($f_file);
 	}
 	return $cnt;
 }
@@ -447,14 +441,13 @@ sub IsMoved
 	my ($path) = @_;
 	my (@elem, $line);
 	
-	if (-e $path) {
-		open(FILE, '<', $path);
-		flock(FILE, 1);
-		while (<FILE>) {
+	if (open(my $f_file, '<', $path)) {
+		flock($f_file, 2);
+		while (<$f_file>) {
 			$line = $_;
 			last;
 		}
-		close(FILE);
+		close($f_file);
 		@elem = split(/<>/, $line);
 		if ($elem[2] eq '移転') {
 			return 1;

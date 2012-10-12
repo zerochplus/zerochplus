@@ -29,25 +29,28 @@ use warnings;
 sub Copy
 {
 	my ($src, $dst) = @_;
-	my ($perm);
+	my ($perm, $flag);
 	
-	if (-e $src) {
-		$perm = (stat $src)[2];	# パーミッション取得
-		open(SRC, '<', $src);
-		flock(SRC, 1);
-		open(DST, '+<', $dst);
-		flock(DST, 2);
-		seek(DST, 0, 0);
-		binmode(SRC);
-		binmode(DST);
-		while (<SRC>) {
-			print DST $_;
+	$flag = 0;
+	if (open(my $f_src, '<', $src)) {
+		flock($f_src, 2);
+		if (open(my $f_dst, (-f $dst ? '+<' : '>'), $dst)) {
+			$perm = (stat $src)[2];	# パーミッション取得
+			flock($f_dst, 2);
+			seek($f_dst, 0, 0);
+			binmode($f_src);
+			binmode($f_dst);
+			while (<$f_src>) {
+				print $f_dst $_;
+			}
+			truncate($f_dst, tell($f_dst));
+			close($f_dst);
+			chmod $perm, $dst;	# パーミッション設定
+			$flag = 1;
 		}
-		truncate(DST, tell(DST));
-		close(DST);
-		close(SRC);
-		chmod $perm, $dst;	# パーミッション設定
+		close($f_src);
 	}
+	return $flag;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -62,25 +65,9 @@ sub Copy
 sub Move
 {
 	my ($src, $dst) = @_;
-	my ($perm);
 	
-	if (-e $src) {
-		$perm = (stat $src)[2];	# パーミッション取得
-		open(SRC, '<', $src);
-		flock(SRC, 1);
-		open(DST, '+<', $dst);
-		flock(DST, 2);
-		seek(DST, 0, 0);
-		binmode(SRC);
-		binmode(DST);
-		while (<SRC>) {
-			print DST $_;
-		}
-		truncate(DST, tell(DST));
-		close(DST);
-		close(SRC);
-		chmod $perm, $dst;	# パーミッション設定
-		unlink $src;		# コピー元削除
+	if (Copy($src, $dst)) {
+		unlink $src;	# コピー元削除
 	}
 }
 
@@ -128,9 +115,11 @@ sub GetFileInfoList
 	my ($Path, $pList) = @_;
 	my (@arFiles, $file, $Full, $Attr, $Size, $Perm);
 	
-	opendir DIR, $Path;
-	@arFiles = readdir DIR;
-	closedir DIR;
+	@arFiles = ();
+	if (opendir(my $f_dir, $Path)) {
+		@arFiles = readdir($f_dir);
+		closedir($f_dir);
+	}
 	
 	# ディレクトリ内の全ファイルを走査
 	foreach $file (@arFiles) {
@@ -160,9 +149,11 @@ sub GetFileList
 	my (@files, $file, $num);
 	
 	$num = 0;
-	opendir DIR, $path;
-	@files = readdir DIR;
-	closedir DIR;
+	@files = ();
+	if (opendir(my $f_dir, $path)) {
+		@files = readdir($f_dir);
+		closedir($f_dir);
+	}
 	
 	foreach $file (@files) {
 		# ディレクトリじゃなく抽出条件が一致したら配列にプッシュする
@@ -242,9 +233,11 @@ sub GetFolderHierarchy
 	my ($path, $pHash) = @_;
 	my (@elements, $elem);
 	
-	opendir DIR, $path;
-	@elements = readdir DIR;
-	closedir DIR;
+	@elements = ();
+	if (opendir(my $f_dir, $path)) {
+		@elements = readdir($f_dir);
+		closedir($f_dir);
+	}
 	
 	foreach $elem (sort @elements) {
 		# ディレクトリが見つかったら再帰的に探索する

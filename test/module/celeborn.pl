@@ -58,10 +58,9 @@ sub Load
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	if (-e $path) {
-		open(KAKO, '<', $path);
-		flock(KAKO, 1);
-		while (<KAKO>) {
+	if (open(my $f_kako, '<', $path)) {
+		flock($f_kako, 2);
+		while (<$f_kako>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'KEY'}->{$elem[0]}		= $elem[1];
@@ -69,7 +68,7 @@ sub Load
 			$this->{'DATE'}->{$elem[0]}		= $elem[3];
 			$this->{'PATH'}->{$elem[0]}		= $elem[4];
 		}
-		close(KAKO);
+		close($f_kako);
 		return 0;
 	}
 	return -1;
@@ -91,24 +90,25 @@ sub Save
 	
 	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	open(KAKO, '+<', $path);
-	flock(KAKO, 2);
-	seek(KAKO, 0, 0);
-	binmode(KAKO);
-	foreach (keys %{$this->{'SUBJECT'}}) {
-		$data = join('<>',
-			$_,
-			$this->{KEY}->{$_},
-			$this->{SUBJECT}->{$_},
-			$this->{DATE}->{$_},
-			$this->{PATH}->{$_}
-		);
-		
-		print KAKO "$data\n";
+	if (open(my $f_kako, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_kako, 2);
+		seek($f_kako, 0, 0);
+		binmode($f_kako);
+		foreach (keys %{$this->{'SUBJECT'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'KEY'}->{$_},
+				$this->{'SUBJECT'}->{$_},
+				$this->{'DATE'}->{$_},
+				$this->{'PATH'}->{$_}
+			);
+			
+			print $f_kako "$data\n";
+		}
+		truncate($f_kako, tell($f_kako));
+		close($f_kako);
+		chmod $SYS->Get('PM-DAT'), $path;
 	}
-	truncate(KAKO, tell(KAKO));
-	close(KAKO);
-	chmod $SYS->Get('PM-DAT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -374,16 +374,15 @@ sub GetThreadSubject
 	my ($path) = @_;
 	my $title = '';
 	
-	if (-e $path) {
-		open(FILE, '<', $path);
-		flock(FILE, 1);
-		foreach my $text (<FILE>) {
+	if (open(my $f_file, '<', $path)) {
+		flock($f_file, 2);
+		foreach my $text (<$f_file>) {
 			if ($text =~ /<title>(.*)<\/title>/) {
 				$title = $1;
 				last;
 			}
 		}
-		close(FILE);
+		close($f_file);
 	}
 	return $title;
 }

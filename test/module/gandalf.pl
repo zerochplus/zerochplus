@@ -60,10 +60,9 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	if (-e $path) {
-		open(NOTICE, '<', $path);
-		flock(NOTICE, 1);
-		while (<NOTICE>) {
+	if (open(my $f_notice, '<', $path)) {
+		flock($f_notice, 2);
+		while (<$f_notice>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'TO'}->{$elem[0]}		= $elem[1];
@@ -73,7 +72,7 @@ sub Load
 			$this->{'DATE'}->{$elem[0]}		= $elem[5];
 			$this->{'LIMIT'}->{$elem[0]}	= $elem[6];
 		}
-		close(NOTICE);
+		close($f_notice);
 	}
 }
 
@@ -93,26 +92,27 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	open(NOTICE, '+<', $path);
-	flock(NOTICE, 2);
-	seek(NOTICE, 0, 0);
-	binmode(NOTICE);
-	foreach (keys %{$this->{'TO'}}) {
-		$data = join('<>',
-			$_,
-			$this->{TO}->{$_},
-			$this->{FROM}->{$_},
-			$this->{SUBJECT}->{$_},
-			$this->{TEXT}->{$_},
-			$this->{DATE}->{$_},
-			$this->{LIMIT}->{$_}
-		);
-		
-		print NOTICE "$data\n";
+	if (open(my $f_notice, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_notice, 2);
+		seek($f_notice, 0, 0);
+		binmode($f_notice);
+		foreach (keys %{$this->{'TO'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'TO'}->{$_},
+				$this->{'FROM'}->{$_},
+				$this->{'SUBJECT'}->{$_},
+				$this->{'TEXT'}->{$_},
+				$this->{'DATE'}->{$_},
+				$this->{'LIMIT'}->{$_}
+			);
+			
+			print $f_notice "$data\n";
+		}
+		truncate($f_notice, tell($f_notice));
+		close($f_notice);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(NOTICE, tell(NOTICE));
-	close(NOTICE);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ sub GetKeySet
 	$n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (keys(%{$this->{TO}})) {
+		foreach $key (keys(%{$this->{'TO'}})) {
 			push @$pBuf, $key;
 			$n++;
 		}

@@ -578,30 +578,31 @@ sub FunctionResDelete
 	$Dat->Load($Sys, $datPath, 0);
 	
 	# íœ‚Æ“¯‚ÉíœƒƒO‚Öíœ‚µ‚½“à—e‚ğ•Û‘¶‚·‚é
-	open(DELLOG, '>>', $path);
-	flock(DELLOG, 2);
-	binmode(DELLOG);
-	foreach $num (@resSet) {
-		next if ($num == 0);
-		$pRes = $Dat->Get($num - $delCnt);
-		print DELLOG "$tm<>$user<>$num<>$mode<>$$pRes";
-		if ($mode) {
-			$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
+	if (open(my $f_dellog, '>>', $path)) {
+		flock($f_dellog, 2);
+		binmode($f_dellog);
+		foreach $num (@resSet) {
+			next if ($num == 0);
+			$pRes = $Dat->Get($num - $delCnt);
+			print $f_dellog "$tm<>$user<>$num<>$mode<>$$pRes";
+			if ($mode) {
+				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
+			}
+			else {
+				$Dat->Delete($num - $delCnt);
+				$LOG->Delete($logsize - 1 + ($num - $delCnt) - $lastnum);
+				$delCnt ++;
+				$logsize --;
+				$lastnum --;
+			}
 		}
-		else {
-			$Dat->Delete($num - $delCnt);
-			$LOG->Delete($logsize - 1 + ($num - $delCnt) - $lastnum);
-			$delCnt ++;
-			$logsize --;
-			$lastnum --;
-		}
+		close($f_dellog);
+		chmod($Sys->Get('PM-LOG'), $path);
+		
+		# •Û‘¶
+		$Dat->Save($Sys);
+		$LOG->Save($Sys) if (! $mode);
 	}
-	close(DELLOG);
-	chmod($Sys->Get('PM-LOG'), $path);
-	
-	# •Û‘¶
-	$Dat->Save($Sys);
-	$LOG->Save($Sys) if (! $mode);
 	
 	# ƒƒO‚Ìİ’è
 	$delCnt = 0;

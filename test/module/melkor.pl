@@ -73,15 +73,14 @@ sub Load
 	$sysFile = $this->{'SYS'}->{'SYSFILE'};
 	
 	# ê›íËÉtÉ@ÉCÉãÇ©ÇÁì«Ç›çûÇﬁ
-	if (-e $sysFile) {
-		open(SYS, '<', $sysFile);
-		flock(SYS, 1);
-		while (<SYS>) {
+	if (open(my $f_sys, '<', $sysFile)) {
+		flock($f_sys, 2);
+		while (<$f_sys>) {
 			chomp $_;
 			($var, $val) = split(/<>/, $_);
 			$this->{'SYS'}->{$var} = $val;
 		}
-		close(SYS);
+		close($f_sys);
 	}
 	$pSYS = $this->{'SYS'};
 	
@@ -118,17 +117,19 @@ sub Save
 	
 	$this->NormalizeConf();
 	
-	open(SYS, '+<', $this->{'SYS'}->{'SYSFILE'});
-	flock(SYS, 2);
-	seek(SYS, 0, 0);
-	binmode(SYS);
-	foreach (@{$this->{'KEY'}}) {
-		$val = $this->{'SYS'}->{$_};
-		print SYS "$_<>$val\n";
+	my $path = $this->{'SYS'}->{'SYSFILE'};
+	if (open(my $f_sys, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_sys, 2);
+		seek($f_sys, 0, 0);
+		binmode($f_sys);
+		foreach (@{$this->{'KEY'}}) {
+			$val = $this->{'SYS'}->{$_};
+			print $f_sys "$_<>$val\n";
+		}
+		truncate($f_sys, tell($f_sys));
+		close($f_sys);
+		chmod 0700, $this->{'SYS'}->{'SYSFILE'};
 	}
-	truncate(SYS, tell(SYS));
-	close(SYS);
-	chmod 0700, $this->{'SYS'}->{'SYSFILE'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -334,8 +335,8 @@ sub NormalizeConf
 	{
 		$buf = (int rand 900000) + 100000;
 		$buf++ while (-e "$buf.dat");
-		open(PM, '>', "$buf.dat");
-		close(PM);
+		open(my $f_pm, '>', "$buf.dat");
+		close($f_pm);
 		
 		$perm = $this->Get('PM-STOP', 0604);
 		chmod $perm, "$buf.dat";

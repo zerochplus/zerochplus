@@ -101,14 +101,13 @@ sub Load
 	}
 	
 	if ($kind) {													# 正常に設定
-		if (-e "$path/$file") {
-			open(LOG, '<', "$path/$file");
-			flock(LOG, 1);
-			while (<LOG>) {
+		if (open(my $f_log, '<', "$path/$file")) {
+			flock($f_log, 2);
+			while (<$f_log>) {
 				push @{$this->{'LOG'}}, $_;
 				$this->{'NUM'}++;
 			}
-			close(LOG);
+			close($f_log);
 		}
 		$this->{'PATH'} = $path;
 		$this->{'FILE'} = $file;
@@ -128,21 +127,20 @@ sub Save
 {
 	my $this = shift;
 	my ($M) = @_;
-	my ($path, $file);
+	my ($path);
 	
-	$path	= $this->{'PATH'};
-	$file	= $this->{'FILE'};
+	$path	= "$this->{'PATH'}/$this->{'FILE'}";
 	
 	if ($this->{'KIND'}) {
-		chmod 0666, "$path/$file";				# パーミッション設定
-		if (open(LOG, '+<', "$path/$file")) {
-			flock(LOG, 2);
-			seek(LOG, 0, 0);
-			print LOG @{$this->{'LOG'}};
-			truncate(LOG, tell(LOG));
-			close LOG;
+		chmod 0666, $path;				# パーミッション設定
+		if (open(my $f_log, (-f $path ? '+<' : '>'), $path)) {
+			flock($f_log, 2);
+			seek($f_log, 0, 0);
+			print $f_log @{$this->{'LOG'}};
+			truncate($f_log, tell($f_log));
+			close $f_log;
 		}
-		chmod $M->Get('PM-LOG'), "$path/$file";	# パーミッション設定
+		chmod $M->Get('PM-LOG'), $path;	# パーミッション設定
 	}
 }
 

@@ -395,23 +395,24 @@ sub FunctionResRepare
 	
 =pod
 	# íœ‚Æ“¯‚ÉíœƒƒO‚Öíœ‚µ‚½“à—e‚ğ•Û‘¶‚·‚é
-	open(DELLOG, '>>', $path);
-	flock(DELLOG, 2);
-	foreach $num (@resSet){
-		$pRes = $Dat->Get($num - $delCnt);
-		print DELLOG "$tm<>$user<>$num<>$$pRes";
-		if ($mode){
-			$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
+	if (open(my $f_dellog, '>>', $path)) {
+		flock($f_dellog, 2);
+		foreach $num (@resSet){
+			$pRes = $Dat->Get($num - $delCnt);
+			print $f_dellog "$tm<>$user<>$num<>$$pRes";
+			if ($mode){
+				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
+			}
+			else {
+				$Dat->Delete($num - $delCnt);
+				$delCnt ++;
+			}
 		}
-		else {
-			$Dat->Delete($num - $delCnt);
-			$delCnt ++;
-		}
+		close($f_dellog);
+		
+		# •Û‘¶
+		#$Dat->Save($Sys);
 	}
-	close(DELLOG);
-	
-	# •Û‘¶
-	#$Dat->Save($Sys);
 =cut
 	
 	# ƒƒO‚Ìİ’è

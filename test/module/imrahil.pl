@@ -104,15 +104,19 @@ sub Open
 	
 	if ($this->{'STAT'} == 0) {
 		my $handle = $this->{'HANDLE'};
-		open($handle, '+<', $File);
-		flock($handle, 2);
-		seek($handle, 0, 2);
-		binmode($handle);
-		
-		$this->{'STAT'} = 1;
-		$ret = 0;
-		if ($Mode & 2) {
-			$ret = $this->Read();
+		if (open($handle, (-f $File ? '+<' : '>'), $File)) {
+			flock($handle, 2);
+			seek($handle, 0, 2);
+			binmode($handle);
+			
+			$this->{'STAT'} = 1;
+			$ret = 0;
+			if ($Mode & 2) {
+				$ret = $this->Read();
+			}
+		}
+		else {
+			$ret = -1;
 		}
 	}
 	
@@ -234,11 +238,12 @@ sub Put
 		my $old = shift @{$this->{'LOGS'}};
 		if ($this->{'MODE'} & 4) {
 			my $logName = $this->{'PATH'} . '_old.cgi';
-			open(OLDLOG, '>>', $logName);
-			flock(OLDLOG, 2);
-			binmode(OLDLOG);
-			print OLDLOG "$old\n";
-			close(OLDLOG);
+			if (open(my $f_oldlog, '>>', $logName)) {
+				flock($f_oldlog, 2);
+				binmode($f_oldlog);
+				print $f_oldlog "$old\n";
+				close($f_oldlog);
+			}
 		}
 		$this->{'SIZE'}--;
 	}
@@ -276,13 +281,14 @@ sub MoveToOld
 	my $this = shift;
 	my ($i);
 	
-	open(OLDLOG, '>>', "$this->{'PATH'}_old.cgi");
-	flock(OLDLOG, 2);
-	binmode(OLDLOG);
-	for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
-		print OLDLOG $this->{'LOGS'}->[$i] . "\n";
+	if (open(my $f_oldlog, '>>', "$this->{'PATH'}_old.cgi")) {
+		flock($f_oldlog, 2);
+		binmode($f_oldlog);
+		for($i = 0 ; $i < $this->{'SIZE'} ; $i++) {
+			print $f_oldlog $this->{'LOGS'}->[$i] . "\n";
+		}
+		close($f_oldlog);
 	}
-	close(OLDLOG);
 }
 
 #------------------------------------------------------------------------------------------------------------

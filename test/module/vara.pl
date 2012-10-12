@@ -851,14 +851,13 @@ sub Get1001Data
 	my $endPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/1000.txt';
 	
 	# 1000.txtが存在すればその内容、無ければデフォルトの1001を使用する
-	if (-e $endPath) {
-		open(LAST, '<', $endPath);
-		flock(LAST, 1);
-		while (<LAST>) {
+	if (open(my $f_last, '<', $endPath)) {
+		flock($f_last, 2);
+		while (<$f_last>) {
 			$$data = $_;
 			last;
 		}
-		close(LAST);
+		close($f_last);
 	}
 	else {
 		my ($resmax, $resmax1, $resmaxz, $resmaxz1);

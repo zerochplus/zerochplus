@@ -56,11 +56,10 @@ sub Load
 	undef %{$this->{'ERR'}};
 	$path = '.' . $M->Get('INFO') . '/errmsg.cgi';
 	
-	if (-e $path) {				# ファイルが存在すれば
-		open(ERR, '<', $path);	# ファイルオープン
-		flock(ERR, 1);
-		@readBuff = <ERR>;
-		close(ERR);
+	if (open(my $f_err, '<', $path)) {
+		flock($f_err, 2);
+		@readBuff = <$f_err>;
+		close($f_err);
 		
 		foreach (@readBuff) {
 			# '#' はコメント行なので読まない

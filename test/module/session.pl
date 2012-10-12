@@ -37,10 +37,9 @@ sub getSession
 	$check = 1;
 	
 	# セッション情報ファイルが存在する場合はそれを読み込む
-	if (-e $filePath) {
-		open(SESSION, '<', $filePath);
-		flock(SESSION, 1);
-		while (<SESSION>) {
+	if (open(my $f_session, '<', $filePath)) {
+		flock($f_session, 2);
+		while (<$f_session>) {
 			chomp $_;
 			# 1行目(セッション開始時間)を取得
 			if ($check) {
@@ -58,7 +57,7 @@ sub getSession
 				$session->setAttribute($key, $value);
 			}
 		}
-		close(SESSION);
+		close($f_session);
 	# セッション情報ファイルが存在しない場合は空ファイルを作成する
 	}
 	else {
@@ -66,8 +65,8 @@ sub getSession
 			require './module/earendil.pl';
 			EARENDIL::CreateDirectory('./info/session', 0770);
 		}
-		open(SESSION, '>', $filePath);
-		close(SESSION);
+		open(my $f_session, '>', $filePath);
+		close($f_session);
 		$session->setId(time);
 	}
 	return $session;

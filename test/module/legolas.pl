@@ -71,11 +71,10 @@ sub Load
 	
 	$head = $this->{'HEAD'};
 	
-	if (-e "$path/$file") {
-		open(HEAD, '<', "$path/$file");
-		flock(HEAD, 1);
-		@$head = <HEAD>;
-		close(HEAD);
+	if (open(my $f_head, '<', "$path/$file")) {
+		flock($f_head, 2);
+		@$head = <$f_head>;
+		close($f_head);
 		return 0;
 	}
 	
@@ -94,20 +93,18 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $file);
+	my ($path);
 	
-	$path = $this->{'PATH'};
-	$file = $this->{'FILE'};
+	$path = "$this->{'PATH'}/$this->{'FILE'}";
 	
-	if ($path) {
-		chmod 0666, "$path/$file";
-		open(HEAD, '<+', "$path/$file");
-		flock(HEAD, 2);
-		seek(HEAD, 0, 0);
-		print HEAD @{$this->{'HEAD'}};
-		truncate(HEAD, tell(HEAD));
-		close(HEAD);
-		chmod $Sys->Get('PM-TXT'), "$path/$file";
+	chmod 0666, $path;
+	if (open(my $f_head, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_head, 2);
+		seek($f_head, 0, 0);
+		print $f_head @{$this->{'HEAD'}};
+		truncate($f_head, tell($f_head));
+		close($f_head);
+		chmod $Sys->Get('PM-TXT'), $path;
 	}
 }
 

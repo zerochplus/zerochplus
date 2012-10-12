@@ -52,15 +52,14 @@ sub Load
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
-	if (-e $path) {
-		open(SETTING, '<', $path);
-		flock(SETTING, 1);
-		while (<SETTING>) {
+	if (open(my $f_setting, '<', $path)) {
+		flock($f_setting, 2);
+		while (<$f_setting>) {
 			chomp $_;
 			($key, $val) = split(/=/, $_);
 			$this->{'SETTING'}->{$key} = $val;
 		}
-		close(SETTING);
+		close($f_setting);
 		return 1;
 	}
 	return 0;
@@ -98,28 +97,29 @@ sub Save
 	
 	%orz = %{$this->{'SETTING'}};
 	
-	open(SETTING, '+<', $path);
-	flock(SETTING, 2);
-	binmode(SETTING);
-	seek(SETTING, 0, 0);
-	# ‡”Ô‚Éo—Í
-	foreach $key ( @ch2setting ) {
-		print SETTING "$key=" . $this->Get($key, '') . "\n";
-		delete $orz{$key};
-	}
-	foreach $key (sort keys %orz) {
-		#$val = $orz{$key};
-		print SETTING "$key=" . $this->Get($key, '') . "\n";
-	}
+	if (open(my $f_setting, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_setting, 2);
+		binmode($f_setting);
+		seek($f_setting, 0, 0);
+		# ‡”Ô‚Éo—Í
+		foreach $key ( @ch2setting ) {
+			print $f_setting "$key=" . $this->Get($key, '') . "\n";
+			delete $orz{$key};
+		}
+		foreach $key (sort keys %orz) {
+			#$val = $orz{$key};
+			print $f_setting "$key=" . $this->Get($key, '') . "\n";
+		}
 =pod
-	foreach $key (sort keys %{$this->{'SETTING'}}) {
-		$val = $this->{'SETTING'}->{$key};
-		print SETTING "$key=$val\n";
-	}
+		foreach $key (sort keys %{$this->{'SETTING'}}) {
+			$val = $this->{'SETTING'}->{$key};
+			print $f_setting "$key=$val\n";
+		}
 =cut
-	truncate(SETTING, tell(SETTING));
-	close(SETTING);
-	chmod $Sys->Get('PM-TXT'), $path;
+		truncate($f_setting, tell($f_setting));
+		close($f_setting);
+		chmod $Sys->Get('PM-TXT'), $path;
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -138,15 +138,14 @@ sub LoadFrom
 	
 	undef %{$this->{'SETTING'}};
 	
-	if (-e $path) {
-		open(SETTING, '<', $path);
-		flock(SETTING, 1);
-		while (<SETTING>) {
+	if (open(my $f_setting, '<', $path)) {
+		flock($f_setting, 2);
+		while (<$f_setting>) {
 			chomp $_;
 			($key, $val) = split(/=/, $_);
 			$this->{'SETTING'}->{$key} = $val;
 		}
-		close(SETTING);
+		close($f_setting);
 		return 1;
 	}
 	return 0;
@@ -166,17 +165,18 @@ sub SaveAs
 	my ($path) = @_;
 	my ($key, $val);
 	
-	open(SETTING, '+<', $path);
-	flock(SETTING, 2);
-	seek(SETTING, 0, 0);
-	binmode(SETTING);
-	foreach $key (keys %{$this->{'SETTING'}}) {
-		$val = $this->{'SETTING'}->{$key};
-		print SETTING "$key=$val\n";
+	if (open(my $f_setting, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_setting, 2);
+		seek($f_setting, 0, 0);
+		binmode($f_setting);
+		foreach $key (keys %{$this->{'SETTING'}}) {
+			$val = $this->{'SETTING'}->{$key};
+			print $f_setting "$key=$val\n";
+		}
+		truncate($f_setting, tell($f_setting));
+		close($f_setting);
+		#chmod $Sys->Get('PM-TXT'), $path;
 	}
-	truncate(SETTING, tell(SETTING));
-	close(SETTING);
-	#chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------

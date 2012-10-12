@@ -77,10 +77,9 @@ sub Load
 	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
 	$num	= 0;
 	
-	if (-e $path) {
-		open(SUBJ, '<', $path);
-		flock(SUBJ, 1);
-		while (<SUBJ>) {
+	if (open(my $f_subj, '<', $path)) {
+		flock($f_subj, 2);
+		while (<$f_subj>) {
 			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
@@ -92,7 +91,7 @@ sub Load
 			push @{$this->{'SORT'}}, $elem[0];
 			$num++;
 		}
-		close(SUBJ);
+		close($f_subj);
 		$this->{'NUM'} = $num;
 	}
 }
@@ -113,19 +112,22 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
 	
-	open(SUBJ, '+<', $path);
-	flock(SUBJ, 2);
-	seek(SUBJ, 0, 0);
-	binmode(SUBJ);
-	foreach (@{$this->{'SORT'}}) {
-		next if (! defined $this->{'SUBJECT'}->{$_});
-		$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
+	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_subj, 2);
+		seek($f_subj, 0, 0);
+		binmode($f_subj);
 		
-		print SUBJ "$data\n";
+		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{'SUBJECT'}->{$_});
+			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
+			
+			print $f_subj "$data\n";
+		}
+		
+		truncate($f_subj, tell($f_subj));
+		close($f_subj);
+		chmod $Sys->Get('PM-TXT'), $path;
 	}
-	truncate(SUBJ, tell(SUBJ));
-	close(SUBJ);
-	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -152,21 +154,20 @@ sub OnDemand
 	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
 	$num	= 0;
 	
-	if (-e $path) {
-		# subject読み込み
-		open(SUBJ, '+<', $path) or return;
-		flock(SUBJ, 2);
-		seek(SUBJ, 0, 0);
+	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_subj, 2);
+		seek($f_subj, 0, 0);
 		
-		while (<SUBJ>) {
+		# subject読み込み
+		while (<$f_subj>) {
 			next if ($_ !~ /<>/);
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
 			$elem[1] =~ s/ ?\((\d+)\)\n//;
 			$elem[2] = $1;
 			
-			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
-			$this->{'RES'}->{$elem[0]}	= $elem[2];
+			$this->{'SUBJECT'}->{$elem[0]} = $elem[1];
+			$this->{'RES'}->{$elem[0]} = $elem[2];
 			push @{$this->{'SORT'}}, $elem[0];
 			$num++;
 		}
@@ -174,7 +175,7 @@ sub OnDemand
 
 		# レス数更新
 		if ( exists($this->{'RES'}->{$id}) ) {
-			$this->{'RES'}->{$id}	= $val;
+			$this->{'RES'}->{$id} = $val;
 		}
 
 		if ( $age eq 1 ) {
@@ -190,18 +191,18 @@ sub OnDemand
 		}
 
 		# subject書き込み
-		seek(SUBJ, 0, 0);
-		binmode(SUBJ);
+		seek($f_subj, 0, 0);
+		binmode($f_subj);
 		
 		foreach (@{$this->{'SORT'}}) {
 			next if (! defined $this->{'SUBJECT'}->{$_});
 			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
 			
-			print SUBJ "$data\n";
+			print $f_subj "$data\n";
 		}
 		
-		truncate(SUBJ, tell(SUBJ));
-		close(SUBJ);
+		truncate($f_subj, tell($f_subj));
+		close($f_subj);
 		chmod $Sys->Get('PM-TXT'), $path;
 	}
 
@@ -431,13 +432,12 @@ sub Update
 	
 	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
-		if (-e "$base/$id.dat") {
-			open(DAT, '<', "$base/$id.dat");
-			flock(DAT, 1);
-			while (<DAT>) {
+		if (open(my $f_dat, '<', "$base/$id.dat")) {
+			flock($f_dat, 2);
+			while (<$f_dat>) {
 				$n++;
 			}
-			close(DAT);
+			close($f_dat);
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -462,29 +462,30 @@ sub UpdateAll
 	$psort = $this->{'SORT'};
 	$this->{'SORT'} = [];
 	%idhash = ();
+	@dirSet = ();
 	
 	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
 	$num	= 0;
 	
 	# ディレクトリ内一覧を取得
-	opendir DATDIR, $base;
-	@dirSet = readdir DATDIR;
-	closedir DATDIR;
+	if (opendir(my $f_datdir, $base)) {
+		@dirSet = readdir($f_datdir);
+		closedir($f_datdir);
+	}
 	
 	foreach $el	(@dirSet) {
-		if ($el =~ /(.*)\.dat/) {
+		if ($el =~ /(.*)\.dat/ && open(my $f_dat, '<', "$base/$el")) {
+			flock($f_dat, 2);
 			$n	= 0;
 			$id	= $1;
-			open(DAT, '<', "$base/$el");
-			flock(DAT, 1);
-			while (<DAT>) {
+			while (<$f_dat>) {
 				if ($n == 0) {
 					chomp $_;
 					$first = $_;
 				}
 				$n++;
 			}
-			close DAT;
+			close($f_dat);
 			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;
@@ -588,10 +589,9 @@ sub Load
 	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	$num = 0;
 	
-	if (-e $path) {
-		open(SUBJ, '<', $path);
-		flock(SUBJ, 1);
-		while (<SUBJ>) {
+	if (open(my $f_subj, '<', $path)) {
+		flock($f_subj, 2);
+		while (<$f_subj>) {
 			chomp;
 			@elem = split(/<>/, $_);
 			($elem[0], undef) = split(/\./, $elem[0]);
@@ -603,7 +603,7 @@ sub Load
 			push @{$this->{'SORT'}}, $elem[0];
 			$num++;
 		}
-		close(SUBJ);
+		close($f_subj);
 		$this->{'NUM'} = $num;
 	}
 }
@@ -624,19 +624,22 @@ sub Save
 	
 	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	
-	open(SUBJ, '+<', $path);
-	flock(SUBJ, 2);
-	seek(SUBJ, 0, 0);
-	binmode(SUBJ);
-	foreach (@{$this->{'SORT'}}) {
-		next if (! defined $this->{SUBJECT}->{$_});
-		$data = "$_.dat<>" . $this->{SUBJECT}->{$_} . ' (' . $this->{RES}->{$_} . ')';
+	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_subj, 2);
+		seek($f_subj, 0, 0);
+		binmode($f_subj);
 		
-		print SUBJ "$data\n";
+		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{'SUBJECT'}->{$_});
+			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
+			
+			print $f_subj "$data\n";
+		}
+		
+		truncate($f_subj, tell($f_subj));
+		close($f_subj);
+		chmod $Sys->Get('PM-TXT'), $path;
 	}
-	truncate(SUBJ, tell(SUBJ));
-	close(SUBJ);
-	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -658,7 +661,7 @@ sub GetKeySet
 	$n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (@{$this->{SORT}}) {
+		foreach $key (@{$this->{'SORT'}}) {
 			push @$pBuf, $key;
 			$n++;
 		}
@@ -798,13 +801,12 @@ sub Update
 	
 	foreach $id (@{$this->{'SORT'}}) {
 		$n = 0;
-		if (-e "$base/$id.cgi") {
-			open(DAT, '<', "$base/$id.cgi");
-			flock(DAT, 1);
-			while (<DAT>) {
+		if (open(my $f_dat, '<', "$base/$id.cgi")) {
+			flock($f_dat, 2);
+			while (<$f_dat>) {
 				$n++;
 			}
-			close(DAT);
+			close($f_dat);
 			$this->{'RES'}->{$id} = $n;
 		}
 	}
@@ -830,26 +832,27 @@ sub UpdateAll
 	
 	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
 	$num	= 0;
+	@dirSet	= ();
 	
 	# ディレクトリ内一覧を取得
-	opendir DATDIR, $base;
-	@dirSet = readdir DATDIR;
-	closedir DATDIR;
+	if (opendir(my $f_datdir, $base)) {
+		@dirSet = readdir(DATDIR);
+		closedir(DATDIR);
+	}
 	
 	foreach $el (@dirSet) {
-		if ($el =~ /(\d+)\.cgi/) {
+		if ($el =~ /(\d+)\.cgi/ && open(my $f_dat, '<', "$base/$el")) {
 			$n	= 0;
 			$id	= $1;
-			open(DAT, '<', "$base/$el");
-			flock(DAT, 1);
-			while (<DAT>) {
+			flock($f_dat, 2);
+			while (<$f_dat>) {
 				if ($n == 0) {
 					chomp $_;
 					$first = $_;
 				}
 				$n++;
 			}
-			close(DAT);
+			close($f_dat);
 			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
 			$this->{'SUBJECT'}->{$id}	= $subj;
 			$this->{'RES'}->{$id}		= $n;

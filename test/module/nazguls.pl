@@ -72,10 +72,9 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
-	if (-e $path) {
-		open(BBSS, '<', $path);
-		flock(BBSS, 1);
-		while (<BBSS>) {
+	if (open(my $f_bbss, '<', $path)) {
+		flock($f_bbss, 2);
+		while (<$f_bbss>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'NAME'}->{$elem[0]}		= $elem[1];
@@ -83,7 +82,7 @@ sub Load
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[3];
 			$this->{'CATEGORY'}->{$elem[0]}	= $elem[4];
 		}
-		close(BBSS);
+		close($f_bbss);
 	}
 }
 
@@ -103,24 +102,25 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
-	open(BBSS, '+<', $path);
-	flock(BBSS, 2);
-	seek(BBSS, 0, 0);
-	binmode(BBSS);
-	foreach (keys %{$this->{'NAME'}}) {
-		$data = join('<>',
-			$_,
-			$this->{NAME}->{$_},
-			$this->{DIR}->{$_},
-			$this->{SUBJECT}->{$_},
-			$this->{CATEGORY}->{$_}
-		);
-		
-		print BBSS "$data\n";
+	if (open(my $f_bbss, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_bbss, 2);
+		seek($f_bbss, 0, 0);
+		binmode($f_bbss);
+		foreach (keys %{$this->{'NAME'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'NAME'}->{$_},
+				$this->{'DIR'}->{$_},
+				$this->{'SUBJECT'}->{$_},
+				$this->{'CATEGORY'}->{$_}
+			);
+			
+			print $f_bbss "$data\n";
+		}
+		truncate($f_bbss, tell($f_bbss));
+		close($f_bbss);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(BBSS, tell(BBSS));
-	close(BBSS);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ sub GetKeySet
 	$n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (sort keys %{$this->{NAME}}) {
+		foreach $key (sort keys %{$this->{'NAME'}}) {
 			push @$pBuf, $key;
 			$n++;
 		}
@@ -269,9 +269,11 @@ sub Update
 	$bbsroot = $Sys->Get('BBSPATH');
 	$skey = 'BBS_TITLE' if ($skey eq '');
 	
-	opendir DIRS, $bbsroot;							# BBSルート対象
-	@dirs = readdir DIRS;
-	closedir DIRS;
+	@dirs = ();
+	if (opendir(my $f_dirs, $bbsroot)) {			# BBSルート対象
+		@dirs = readdir($f_dirs);
+		closedir($f_dirs);
+	}
 	
 	foreach $dir (@dirs) {							# 掲示板ルート検索
 		if (-d "$bbsroot/$dir") {					# ディレクトリ発見
@@ -284,26 +286,27 @@ sub Update
 				}
 				$this->{'DIR'}->{$id}		= $dir;
 				$this->{'CATEGORY'}->{$id}	= '0000000001';
-				open(SETTING, '<', "$bbsroot/$dir/SETTING.TXT");
-				flock(SETTING, 1);
-				
-				# SETTING.TXTから必要な情報を取得する
-				foreach (<SETTING>) {
-					chomp $_;
-					($key, $dat) = split(/=/, $_);
-					if ($key eq $skey) {
-						$this->{'NAME'}->{$id} = $dat;
-						$f++;
+				if (open(my $f_setting, '<', "$bbsroot/$dir/SETTING.TXT")) {
+					flock($f_setting, 2);
+					
+					# SETTING.TXTから必要な情報を取得する
+					foreach (<$f_setting>) {
+						chomp $_;
+						($key, $dat) = split(/=/, $_);
+						if ($key eq $skey) {
+							$this->{'NAME'}->{$id} = $dat;
+							$f++;
+						}
+						elsif ($key eq 'BBS_SUBTITLE') {
+							$this->{'SUBJECT'}->{$id} = $dat;
+							$f++;
+						}
+						if ($f == 2) {
+							last;
+						}
 					}
-					elsif ($key eq 'BBS_SUBTITLE') {
-						$this->{'SUBJECT'}->{$id} = $dat;
-						$f++;
-					}
-					if ($f == 2) {
-						last;
-					}
+					close($f_setting);
 				}
-				close(SETTING);
 			}
 		}
 	}
@@ -410,16 +413,15 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
-	if (-e $path) {
-		open(CATS, '<', $path);
-		flock(CATS, 1);
-		while (<CATS>) {
+	if (open(my $f_cats, '<', $path)) {
+		flock($f_cats, 2);
+		while (<$f_cats>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'NAME'}->{$elem[0]}		= $elem[1];
 			$this->{'SUBJECT'}->{$elem[0]}	= $elem[2];
 		}
-		close(CATS);
+		close($f_cats);
 	}
 }
 
@@ -439,22 +441,23 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
-	open(CATS, '+<', $path);
-	flock(CATS, 2);
-	seek(CATS, 0, 0);
-	binmode(CATS);
-	foreach (keys %{$this->{'NAME'}}) {
-		$data = join('<>',
-			$_,
-			$this->{NAME}->{$_},
-			$this->{SUBJECT}->{$_}
-		);
-		
-		print CATS "$data\n";
+	if (open(my $f_cats, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_cats, 2);
+		seek($f_cats, 0, 0);
+		binmode($f_cats);
+		foreach (keys %{$this->{'NAME'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'NAME'}->{$_},
+				$this->{'SUBJECT'}->{$_}
+			);
+			
+			print $f_cats "$data\n";
+		}
+		truncate($f_cats, tell($f_cats));
+		close($f_cats);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(CATS, tell(CATS));
-	close(CATS);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -473,7 +476,7 @@ sub GetKeySet
 	
 	$n = 0;
 	
-	foreach $key (keys %{$this->{NAME}}) {
+	foreach $key (keys %{$this->{'NAME'}}) {
 		push @$pBuf, $key;
 		$n++;
 	}

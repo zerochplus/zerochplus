@@ -76,10 +76,9 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
-	if (-e $path) {
-		open(USERS, '<', $path);
-		flock(USERS, 1);
-		while (<USERS>) {
+	if (open(my $f_users, '<', $path)) {
+		flock($f_users, 2);
+		while (<$f_users>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$this->{'NAME'}->{$elem[0]}		= $elem[1];
@@ -88,7 +87,7 @@ sub Load
 			$this->{'EXPL'}->{$elem[0]}		= $elem[4];
 			$this->{'SYSAD'}->{$elem[0]}	= $elem[5];
 		}
-		close(USERS);
+		close($f_users);
 	}
 }
 
@@ -108,25 +107,26 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
-	open(USERS, '+<', $path);
-	flock(USERS, 2);
-	seek(USERS, 0, 0);
-	binmode(USERS);
-	foreach (keys %{$this->{'NAME'}}) {
-		$data = join('<>',
-			$_,
-			$this->{NAME}->{$_},
-			$this->{PASS}->{$_},
-			$this->{FULL}->{$_},
-			$this->{EXPL}->{$_},
-			$this->{SYSAD}->{$_}
-		);
-		
-		print USERS "$data\n";
+	if (open(my $f_users, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_users, 2);
+		seek($f_users, 0, 0);
+		binmode($f_users);
+		foreach (keys %{$this->{'NAME'}}) {
+			$data = join('<>',
+				$_,
+				$this->{'NAME'}->{$_},
+				$this->{'PASS'}->{$_},
+				$this->{'FULL'}->{$_},
+				$this->{'EXPL'}->{$_},
+				$this->{'SYSAD'}->{$_}
+			);
+			
+			print $f_users "$data\n";
+		}
+		truncate($f_users, tell($f_users));
+		close($f_users);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(USERS, tell(USERS));
-	close(USERS);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -349,10 +349,9 @@ sub Load
 	undef $this->{'ISCOMMON'};
 	
 	$path = '.' . $Sys->Get('INFO') . '/capgroups.cgi';
-	if (-e $path) {
-		open(GROUPS, '<', $path);
-		flock(GROUPS, 1);
-		while (<GROUPS>) {
+	if (open(my $f_groups, '<', $path)) {
+		flock($f_groups, 2);
+		while (<$f_groups>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			$elem[4] = '' if (! defined $elem[4]);
@@ -364,15 +363,14 @@ sub Load
 			$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 			$this->{'ISCOMMON'}->{$elem[0]}	= 1;
 		}
-		close(GROUPS);
+		close($f_groups);
 	}
 	
 	unless (defined $sysgroup && $sysgroup) {
 		$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/capgroups.cgi';
-		if (-e $path) {
-			open(GROUPS, '<', $path);
-			flock(GROUPS, 1);
-			while (<GROUPS>) {
+		if (open(my $f_groups, '<', $path)) {
+			flock($f_groups, 1);
+			while (<$f_groups>) {
 				chomp $_;
 				@elem = split(/<>/, $_);
 				$elem[4] = '' if (! defined $elem[4]);
@@ -384,7 +382,7 @@ sub Load
 				$this->{'COLOR'}->{$elem[0]}	= $elem[5];
 				$this->{'ISCOMMON'}->{$elem[0]}	= 0;
 			}
-			close(GROUPS);
+			close($f_groups);
 		}
 	}
 }
@@ -413,27 +411,28 @@ sub Save
 	}
 	
 	
-	open(GROUPS, '+<', $path);
-	flock(GROUPS, 2);
-	seek(GROUPS, 0, 0);
-	binmode(GROUPS);
-	foreach (keys %{$this->{'NAME'}}) {
-		next if ($this->{ISCOMMON}->{$_} ne $commflg);
-		
-		$data = join('<>',
-			$_,
-			$this->{NAME}->{$_},
-			$this->{EXPL}->{$_},
-			$this->{AUTH}->{$_},
-			$this->{CAPS}->{$_},
-			$this->{COLOR}->{$_},
-		);
-		
-		print GROUPS "$data\n";
+	if (open(my $f_groups, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_groups, 2);
+		seek($f_groups, 0, 0);
+		binmode($f_groups);
+		foreach (keys %{$this->{'NAME'}}) {
+			next if ($this->{'ISCOMMON'}->{$_} ne $commflg);
+			
+			$data = join('<>',
+				$_,
+				$this->{'NAME'}->{$_},
+				$this->{'EXPL'}->{$_},
+				$this->{'AUTH'}->{$_},
+				$this->{'CAPS'}->{$_},
+				$this->{'COLOR'}->{$_},
+			);
+			
+			print $f_groups "$data\n";
+		}
+		truncate($f_groups, tell($f_groups));
+		close($f_groups);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(GROUPS, tell(GROUPS));
-	close(GROUPS);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------

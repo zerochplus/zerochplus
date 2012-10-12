@@ -69,12 +69,11 @@ sub Load
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	if	(-e $path) {
-		open(PLUGINS, '<', $path);
-		flock(PLUGINS, 1);
+	if (open(my $f_plugins, '<', $path)) {
+		flock($f_plugins, 2);
 		
 		my $i = 0;
-		while (<PLUGINS>) {
+		while (<$f_plugins>) {
 			chomp $_;
 			@elem = split(/<>/, $_);
 			if (@elem >= 6) {
@@ -90,7 +89,7 @@ sub Load
 				$this->LoadConfig($elem[0]);
 			}
 		}
-		close(PLUGINS);
+		close($f_plugins);
 	}
 }
 
@@ -117,16 +116,15 @@ sub LoadConfig
 	
 	$file =~ /^(0ch_.*)\.pl$/;
 	$path = "./plugin_conf/$1.cgi";
-	if (-f $path) {
-		open(CONF, $path);
-		flock(CONF, 1);
-		while (<CONF>) {
+	if (open(my $f_conf, '<', $path)) {
+		flock($f_conf, 2);
+		while (<$f_conf>) {
 			chomp $_;
 			my ($type, $key, $val) = split(/<>/, $_, 3);
 			$CONFIG->{$key} = $val;
 			$CONFTYPE->{$key} = $type;
 		}
-		close(CONF);
+		close($f_conf);
 	}
 }
 
@@ -156,9 +154,9 @@ sub SaveConfig
 	$file =~ /^(0ch_.*)\.pl$/;
 	$path = "./plugin_conf/$1.cgi";
 	if (($_ = keys %$CONFIG) > 0) {
-		if (open CONF, '+<', $path) {
-			flock(CONF, 2);
-			seek(CONF, 0, 0);
+		if (open(my $f_conf, (-f $path ? '+<' : '>'), $path)) {
+			flock($f_conf, 2);
+			seek($f_conf, 0, 0);
 			
 			my ($key, $val, $type);
 			foreach $key (sort keys %$CONFIG) {
@@ -175,11 +173,11 @@ sub SaveConfig
 				elsif ($type == 3) {
 					$val = ($val ? 1 : 0);
 				}
-				print CONF "$type<>$key<>$val\n";
+				print $f_conf "$type<>$key<>$val\n";
 			}
 			
-			truncate(CONF, tell(CONF));
-			close(CONF);
+			truncate($f_conf, tell($f_conf));
+			close($f_conf);
 		}
 	}
 	else {
@@ -241,28 +239,29 @@ sub Save
 	
 	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	open(PLUGINS, '+<', $path);
-	flock(PLUGINS, 2);
-	seek(PLUGINS, 0, 0);
-	binmode(PLUGINS);
-	
-	foreach my $id (@{$this->{'ORDER'}}) {
-		$data = join('<>',
-			$id,
-			$this->{'FILE'}->{$id},
-			$this->{'CLASS'}->{$id},
-			$this->{'NAME'}->{$id},
-			$this->{'EXPL'}->{$id},
-			$this->{'TYPE'}->{$id},
-			$this->{'VALID'}->{$id}
-		);
+	if (open(my $f_plugins, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_plugins, 2);
+		seek($f_plugins, 0, 0);
+		binmode($f_plugins);
 		
-		print PLUGINS "$data\n";
+		foreach my $id (@{$this->{'ORDER'}}) {
+			$data = join('<>',
+				$id,
+				$this->{'FILE'}->{$id},
+				$this->{'CLASS'}->{$id},
+				$this->{'NAME'}->{$id},
+				$this->{'EXPL'}->{$id},
+				$this->{'TYPE'}->{$id},
+				$this->{'VALID'}->{$id}
+			);
+			
+			print $f_plugins "$data\n";
+		}
+		
+		truncate($f_plugins, tell($f_plugins));
+		close($f_plugins);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	
-	truncate(PLUGINS, tell(PLUGINS));
-	close(PLUGINS);
-	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -428,10 +427,9 @@ sub Update
 	my $this = shift;
 	my (@files, $file, $plugin, @buff, $exist);
 	
-	if (-e './plugin') {
-		opendir PLUGINS, './plugin';
-		@files = readdir PLUGINS;
-		closedir PLUGINS;
+	if (opendir(my $d_plugins, './plugin')) {
+		@files = readdir($d_plugins);
+		closedir($d_plugins);
 		# プラグイン追加・更新フェイズ
 		foreach $file (@files) {
 			if ($file =~ /^0ch_(.*)\.pl/) {

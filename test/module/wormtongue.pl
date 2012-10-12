@@ -65,11 +65,10 @@ sub Load
 	undef @{$this->{'NGWORD'}};
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
 	
-	if (-e $path) {
-		open(NGWORD, '<', $path);
-		flock(NGWORD, 1);
-		@datas = <NGWORD>;
-		close(NGWORD);
+	if (open(my $f_ngword, '<', $path)) {
+		flock($f_ngword, 2);
+		@datas = <$f_ngword>;
+		close($f_ngword);
 		
 		($dummy, @datas) = @datas;
 		chomp $dummy;
@@ -100,19 +99,20 @@ sub Save
 	my ($Sys) = @_;
 	my ($path);
 	
-	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
+	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
 	
-	open(NGWORD, '+<', $path);
-	flock(NGWORD, 2);
-	seek(NGWORD, 0, 0);
-	binmode(NGWORD);
-	print NGWORD $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
-	foreach (@{$this->{'NGWORD'}}) {
-		print NGWORD "$_\n";
+	if (open(my $f_ngword, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_ngword, 2);
+		seek($f_ngword, 0, 0);
+		binmode($f_ngword);
+		print $f_ngword $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
+		foreach (@{$this->{'NGWORD'}}) {
+			print $f_ngword "$_\n";
+		}
+		truncate($f_ngword, tell($f_ngword));
+		close($f_ngword);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(NGWORD, tell(NGWORD));
-	close(NGWORD);
-	chmod $Sys->Get('PM-ADM'), $path;
 	
 	return 0;
 }

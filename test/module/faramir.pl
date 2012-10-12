@@ -63,11 +63,10 @@ sub Load
 	undef @{$this->{'USER'}};
 	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	if (-e $path) {
-		open(USER, '<', $path);
-		flock(USER, 1);
-		@datas = <USER>;
-		close(USER);
+	if (open(my $f_user, '<', $path)) {
+		flock($f_user, 2);
+		@datas = <$f_user>;
+		close($f_user);
 		
 		($dummy, @datas) = @datas;
 		chomp $dummy;
@@ -100,17 +99,18 @@ sub Save
 	
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	open(USER, '+<', $path);
-	flock(USER, 2);
-	seek(USER, 0, 0);
-	binmode(USER);
-	print USER $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
-	foreach (@{$this->{'USER'}}) {
-		print USER "$_\n";
+	if (open(my $f_user, (-f $path ? '+<' : '>'), $path)) {
+		flock($f_user, 2);
+		seek($f_user, 0, 0);
+		binmode($f_user);
+		print $f_user $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
+		foreach (@{$this->{'USER'}}) {
+			print $f_user "$_\n";
+		}
+		truncate($f_user, tell($f_user));
+		close($f_user);
+		chmod $Sys->Get('PM-ADM'), $path;
 	}
-	truncate(USER, tell(USER));
-	close(USER);
-	chmod $Sys->Get('PM-ADM'), $path;
 	
 	return 0;
 }
