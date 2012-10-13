@@ -328,7 +328,7 @@ sub NormalizeConf
 	if ($this->Get('SERVER', '') eq '') {
 		$path = $ENV{'SCRIPT_NAME'};
 		$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
-		$this->Set('SERVER', 'http://' . $ENV{'SERVER_NAME'});
+		$this->Set('SERVER', 'http://' . $ENV{'HTTP_HOST'});
 		$this->Set('CGIPATH', $path);
 	}
 	
