@@ -84,7 +84,7 @@ sub Load
 		foreach (@lines) {
 			next if ($_ eq '');
 			
-			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+			if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
 				$this->{'SUBJECT'}->{$1} = $2;
 				$this->{'RES'}->{$1} = $3;
 				push @{$this->{'SORT'}}, $1;
@@ -167,7 +167,7 @@ sub OnDemand
 		foreach (@lines) {
 			next if ($_ eq '');
 			
-			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+			if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
 				$this->{'SUBJECT'}->{$1} = $2;
 				$this->{'RES'}->{$1} = $3;
 				push @{$this->{'SORT'}}, $1;
@@ -588,7 +588,7 @@ sub Load
 		for (@lines) {
 			next if ($_ eq '');
 			
-			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+			if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
 				$this->{'SUBJECT'}->{$1} = $2;
 				$this->{'RES'}->{$1} = $3;
 				push @{$this->{'SORT'}}, $1;
