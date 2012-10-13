@@ -48,11 +48,80 @@ sub new
 		'SUBJECT'	=> {},
 		'RES'		=> {},
 		'SORT'		=> [],
-		'NUM'		=> 0
+		'NUM'		=> 0,
+		'HANDLE'	=> undef,
 	};
 	bless $obj, $class;
 	
 	return $obj;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	デストラクタ
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub DESTROY
+{
+	my $this = shift;
+	
+	my $handle = $this->{'HANDLE'};
+	close($handle) if ($handle);
+	$this->{'HANDLE'} = undef;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	オープン
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Open
+{
+	my $this = shift;
+	my ($Sys) = @_;
+	
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	my $fh = undef;
+	
+	if ($this->{'HANDLE'}) {
+		$fh = $this->{'HANDLE'};
+		seek($fh, 0, 0);
+	}
+	elsif (open($fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		binmode($fh);
+		seek($fh, 0, 0);
+		$this->{'HANDLE'} = $fh;
+	}
+	else {
+		warn "can't load subject: $path";
+	}
+	
+	return $fh;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	強制クローズ
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Close
+{
+	my $this = shift;
+	
+	my $handle = $this->{'HANDLE'};
+	close($handle) if ($handle);
+	$this->{'HANDLE'} = undef;
+	#chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -72,34 +141,26 @@ sub Load
 	$this->{'RES'} = {};
 	$this->{'SORT'} = [];
 	
-	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	my $fh = $this->Open($Sys) or return;
+	my @lines = <$fh>;
+	chomp @lines;
 	
-	if (open(my $fh, '<', $path)) {
-		flock($fh, 2);
-		my @lines = <$fh>;
-		close($fh);
-		chomp @lines;
+	my $num = 0;
+	foreach (@lines) {
+		next if ($_ eq '');
 		
-		my $num = 0;
-		foreach (@lines) {
-			next if ($_ eq '');
-			
-			if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
-				$this->{'SUBJECT'}->{$1} = $2;
-				$this->{'RES'}->{$1} = $3;
-				push @{$this->{'SORT'}}, $1;
-				$num++;
-			}
-			else {
-				warn "invalid line in $path";
-				next;
-			}
+		if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
+			$this->{'SUBJECT'}->{$1} = $2;
+			$this->{'RES'}->{$1} = $3;
+			push @{$this->{'SORT'}}, $1;
+			$num++;
 		}
-		$this->{'NUM'} = $num;
+		else {
+			warn "invalid line";
+			next;
+		}
 	}
-	else {
-		warn "can't load subject: $path";
-	}
+	$this->{'NUM'} = $num;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -115,25 +176,16 @@ sub Save
 	my $this = shift;
 	my ($Sys) = @_;
 	
-	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
+	my $fh = $this->Open($Sys) or return;
 	
-	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
-		flock($fh, 2);
-		seek($fh, 0, 0);
-		binmode($fh);
-		
-		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{'SUBJECT'}->{$_});
-			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
-		}
-		
-		truncate($fh, tell($fh));
-		close($fh);
+	foreach (@{$this->{'SORT'}}) {
+		next if (! defined $this->{'SUBJECT'}->{$_});
+		print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
 	}
-	else {
-		warn "can't save subject: $path";
-	}
-	chmod $Sys->Get('PM-TXT'), $path;
+	
+	truncate($fh, tell($fh));
+	
+	$this->Close();
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -156,62 +208,54 @@ sub OnDemand
 	$this->{'RES'} = {};
 	$this->{'SORT'} = [];
 	
-	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	my $fh = $this->Open($Sys) or return;
+	my @lines = <$fh>;
+	chomp @lines;
 	
-	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
-		flock($fh, 2);
-		my @lines = <$fh>;
-		chomp @lines;
+	my $num = 0;
+	foreach (@lines) {
+		next if ($_ eq '');
 		
-		my $num = 0;
-		foreach (@lines) {
-			next if ($_ eq '');
-			
-			if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
-				$this->{'SUBJECT'}->{$1} = $2;
-				$this->{'RES'}->{$1} = $3;
-				push @{$this->{'SORT'}}, $1;
-				$num++;
-			}
-			else {
-				warn "invalid line in $path";
-				next;
-			}
+		if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
+			$this->{'SUBJECT'}->{$1} = $2;
+			$this->{'RES'}->{$1} = $3;
+			push @{$this->{'SORT'}}, $1;
+			$num++;
 		}
-		$this->{'NUM'} = $num;
-		
-		# レス数更新
-		if (exists $this->{'RES'}->{$id}) {
-			$this->{'RES'}->{$id} = $val;
+		else {
+			warn "invalid line";
+			next;
 		}
-		
-		if ($age) {
-			my $sort = $this->{'SORT'};
-			for (my $i = 0; $i <= $#$sort; $i++) {
-				if ($id eq $sort->[$i]) {
-					splice @$sort, $i, 1;
-					unshift @$sort, $id;
-					last;
-				}
-			}
-		}
-		
-		# subject書き込み
-		seek($fh, 0, 0);
-		binmode($fh);
-		
-		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{'SUBJECT'}->{$_});
-			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
-		}
-		
-		truncate($fh, tell($fh));
-		close($fh);
 	}
-	else {
-		warn "can't load subject: $path";
+	$this->{'NUM'} = $num;
+	
+	# レス数更新
+	if (exists $this->{'RES'}->{$id}) {
+		$this->{'RES'}->{$id} = $val;
 	}
-	chmod $Sys->Get('PM-TXT'), $path;
+	
+	if ($age) {
+		my $sort = $this->{'SORT'};
+		for (my $i = 0; $i <= $#$sort; $i++) {
+			if ($id eq $sort->[$i]) {
+				splice @$sort, $i, 1;
+				unshift @$sort, $id;
+				last;
+			}
+		}
+	}
+	
+	# subject書き込み
+	seek($fh, 0, 0);
+	
+	foreach (@{$this->{'SORT'}}) {
+		next if (! defined $this->{'SUBJECT'}->{$_});
+		print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
+	}
+	
+	truncate($fh, tell($fh));
+	
+	$this->Close();
 }
 
 #------------------------------------------------------------------------------------------------------------
