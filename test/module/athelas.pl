@@ -458,20 +458,20 @@ sub Update
 	my ($plugin, $exist);
 	
 	my @files = ();
-	if (opendir(my $d_plugins, './plugin')) {
-		@files = readdir($d_plugins);
-		closedir($d_plugins);
+	if (opendir(my $dh, './plugin')) {
+		@files = readdir($dh);
+		closedir($dh);
 	}
 	else {
-		undef $this->{'FILE'} = {};
-		undef $this->{'CLASS'} = {};
-		undef $this->{'NAME'} = {};
-		undef $this->{'EXPL'} = {};
-		undef $this->{'TYPE'} = {};
-		undef $this->{'VALID'} = {};
-		undef $this->{'CONFIG'} = {};
-		undef $this->{'CONFTYPE'} = {};
-		undef $this->{'ORDER'} = [];
+		$this->{'FILE'} = {};
+		$this->{'CLASS'} = {};
+		$this->{'NAME'} = {};
+		$this->{'EXPL'} = {};
+		$this->{'TYPE'} = {};
+		$this->{'VALID'} = {};
+		$this->{'CONFIG'} = {};
+		$this->{'CONFTYPE'} = {};
+		$this->{'ORDER'} = [];
 		return;
 	}
 	
@@ -479,7 +479,7 @@ sub Update
 	foreach my $file (@files) {
 		if ($file =~ /^0ch_(.*)\.pl/) {
 			my $className = "ZPL_$1";
-			if (scalar $this->GetKeySet('FILE', $file, ($_ = {})) > 0) {
+			if (scalar $this->GetKeySet('FILE', $file, ($_ = [])) > 0) {
 				my $id = $_->[0];
 				require "./plugin/$file";
 				my $plugin = $className->new;
@@ -496,7 +496,7 @@ sub Update
 		}
 	}
 	# プラグイン削除フェイズ
-	if ($this->GetKeySet('ALL', '', ($_ = {})) > 0) {
+	if ($this->GetKeySet('ALL', '', ($_ = [])) > 0) {
 		foreach my $id (@$_) {
 			my $exist = 0;
 			foreach my $file (@files) {
