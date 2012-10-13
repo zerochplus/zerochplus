@@ -594,7 +594,7 @@ sub IsRegulation
 		
 		# ƒŒƒX‘‚«ž‚Ý(˜A‘±“Še)
 		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
-			if ($oSET->Get('timeclose') ne '' && $oSET->Get('timecount') ne '' ) {
+			if ($oSET->Get('timeclose') && $oSET->Get('timecount') ne '') {
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'HST');
 				if ($LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount')) >= $oSET->Get('timeclose')) {

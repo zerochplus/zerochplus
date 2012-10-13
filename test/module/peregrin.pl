@@ -316,7 +316,7 @@ sub Search
 			$num = 0;
 			$dat = @{$this->{'LOG'}};
 			$count = $dat if (! defined $count);
-			for ($i = $dat - 1 ; $i >= $dat - $count ; $i--) {
+			for ($i = $dat - 1 ; $i >= $dat - $count && $i >= 0 ; $i--) {
 				$dmy = $this->{'LOG'}->[$i];
 				chomp $dmy;
 				$key = (split /<>/, $dmy)[$kind == 3 ? 5 : $kind == 5 ? 1 : 3];
@@ -331,7 +331,7 @@ sub Search
 			$num = 0;
 			$dat = @{$this->{'LOG'}};
 			$count = $dat if (! defined $count);
-			for ($i = $dat - 1 ; $i >= $dat - $count ; $i--) {
+			for ($i = $dat - 1 ; $i >= $dat - $count && $i >= 0 ; $i--) {
 				$dmy = $this->{'LOG'}->[$i];
 				chomp $dmy;
 				($key, $data2) = (split /<>/, $dmy)[1, 3];

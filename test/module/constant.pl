@@ -17,7 +17,7 @@ package	ZP;
 
 use strict;
 use warnings;
-use bigint;
+#use bigint;
 
 # CLIENT
 #  M: Mobile Browser, F: Full Browser
