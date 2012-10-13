@@ -42,16 +42,15 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, %SUBJECT, %RES, @SORT);
+	my $class = shift;
 	
-	$obj = {
-		'SUBJECT'	=> \%SUBJECT,
-		'RES'		=> \%RES,
-		'SORT'		=> \@SORT,
+	my $obj = {
+		'SUBJECT'	=> {},
+		'RES'		=> {},
+		'SORT'		=> [],
 		'NUM'		=> 0
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -68,31 +67,38 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem, $num);
 	
-	undef($this->{'SUBJECT'});
-	undef($this->{'RES'});
-	undef($this->{'SORT'});
+	$this->{'SUBJECT'} = {};
+	$this->{'RES'} = {};
+	$this->{'SORT'} = [];
 	
-	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
-	$num	= 0;
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
 	
-	if (open(my $f_subj, '<', $path)) {
-		flock($f_subj, 2);
-		while (<$f_subj>) {
-			next if ($_ !~ /<>/);
-			@elem = split(/<>/, $_);
-			($elem[0], undef) = split(/\./, $elem[0]);
-			$elem[1] =~ s/ ?\((\d+)\)\n//;
-			$elem[2] = $1;
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		chomp @lines;
+		
+		my $num = 0;
+		foreach (@lines) {
+			next if ($_ eq '');
 			
-			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
-			$this->{'RES'}->{$elem[0]}		= $elem[2];
-			push @{$this->{'SORT'}}, $elem[0];
-			$num++;
+			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+				$this->{'SUBJECT'}->{$1} = $2;
+				$this->{'RES'}->{$1} = $3;
+				push @{$this->{'SORT'}}, $1;
+				$num++;
+			}
+			else {
+				warn "invalid line in $path";
+				next;
+			}
 		}
-		close($f_subj);
 		$this->{'NUM'} = $num;
+	}
+	else {
+		warn "can't load subject: $path";
 	}
 }
 
@@ -108,26 +114,26 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data);
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/subject.txt';
 	
-	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_subj, 2);
-		seek($f_subj, 0, 0);
-		binmode($f_subj);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
 		
 		foreach (@{$this->{'SORT'}}) {
 			next if (! defined $this->{'SUBJECT'}->{$_});
-			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
-			
-			print $f_subj "$data\n";
+			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
 		}
 		
-		truncate($f_subj, tell($f_subj));
-		close($f_subj);
-		chmod $Sys->Get('PM-TXT'), $path;
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save subject: $path";
+	}
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -145,501 +151,67 @@ sub OnDemand
 {
 	my $this = shift;
 	my ($Sys, $id, $val, $age) = @_;
-	my ($path, @elem, $num, $data);
 	
-	undef($this->{'SUBJECT'});
-	undef($this->{'RES'});
-	undef($this->{'SORT'});
+	$this->{'SUBJECT'} = {};
+	$this->{'RES'} = {};
+	$this->{'SORT'} = [];
 	
-	$path	= $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
-	$num	= 0;
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
 	
-	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_subj, 2);
-		seek($f_subj, 0, 0);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		chomp @lines;
 		
-		# subject読み込み
-		while (<$f_subj>) {
-			next if ($_ !~ /<>/);
-			@elem = split(/<>/, $_);
-			($elem[0], undef) = split(/\./, $elem[0]);
-			$elem[1] =~ s/ ?\((\d+)\)\n//;
-			$elem[2] = $1;
+		my $num = 0;
+		foreach (@lines) {
+			next if ($_ eq '');
 			
-			$this->{'SUBJECT'}->{$elem[0]} = $elem[1];
-			$this->{'RES'}->{$elem[0]} = $elem[2];
-			push @{$this->{'SORT'}}, $elem[0];
-			$num++;
-		}
-		$this->{'NUM'} = $num;
-
-		# レス数更新
-		if ( exists($this->{'RES'}->{$id}) ) {
-			$this->{'RES'}->{$id} = $val;
-		}
-
-		if ( $age eq 1 ) {
-			$num = 0;
-			foreach my $lid (@{$this->{'SORT'}}) {
-				if ($id eq $lid) {
-					splice @{$this->{'SORT'}}, $num, 1;
-					unshift @{$this->{'SORT'}}, $lid;
-					last;
-				}
+			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+				$this->{'SUBJECT'}->{$1} = $2;
+				$this->{'RES'}->{$1} = $3;
+				push @{$this->{'SORT'}}, $1;
 				$num++;
 			}
-		}
-
-		# subject書き込み
-		seek($f_subj, 0, 0);
-		binmode($f_subj);
-		
-		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{'SUBJECT'}->{$_});
-			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
-			
-			print $f_subj "$data\n";
-		}
-		
-		truncate($f_subj, tell($f_subj));
-		close($f_subj);
-		chmod $Sys->Get('PM-TXT'), $path;
-	}
-
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッドIDセット取得
-#	-------------------------------------------------------------------------------------
-#	@param	$kind	検索種別('ALL'の場合すべて)
-#	@param	$name	検索ワード
-#	@param	$pBuf	IDセット格納バッファ
-#	@return	キーセット数
-#
-#------------------------------------------------------------------------------------------------------------
-sub GetKeySet
-{
-	my $this = shift;
-	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
-	
-	$n = 0;
-	
-	if ($kind eq 'ALL') {
-		foreach $key (@{$this->{SORT}}) {
-			push @$pBuf, $key;
-			$n++;
-		}
-	}
-	else {
-		foreach $key (keys %{$this->{$kind}}) {
-			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
-				push @$pBuf, $key;
-				$n++;
+			else {
+				warn "invalid line in $path";
+				next;
 			}
 		}
-	}
-	
-	return $n;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報取得
-#	-------------------------------------------------------------------------------------
-#	@param	$kind	情報種別
-#	@param	$key	スレッドID
-#			$default : デフォルト
-#	@return	スレッド情報
-#
-#------------------------------------------------------------------------------------------------------------
-sub Get
-{
-	my $this = shift;
-	my ($kind, $key, $default) = @_;
-	my ($val);
-	
-	$val = $this->{$kind}->{$key};
-	
-	return (defined $val ? $val : (defined $default ? $default : undef));
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報追加
-#	-------------------------------------------------------------------------------------
-#	@param	$subject	スレッドタイトル
-#	@return	スレッドID
-#
-#------------------------------------------------------------------------------------------------------------
-sub Add
-{
-	my $this = shift;
-	my ($id, $subject, $res) = @_;
-	
-	$this->{'SUBJECT'}->{$id}	= $subject;
-	$this->{'RES'}->{$id}		= $res;
-	unshift @{$this->{'SORT'}}, $id;
-	$this->{'NUM'}++;
-	
-	return $id;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報設定
-#	-------------------------------------------------------------------------------------
-#	@param	$id		スレッドID
-#	@param	$kind	情報種別
-#	@param	$val	設定値
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub Set
-{
-	my $this = shift;
-	my ($id, $kind, $val) = @_;
-	
-	if (exists($this->{$kind}->{$id})) {
-		$this->{$kind}->{$id} = $val;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報削除
-#	-------------------------------------------------------------------------------------
-#	@param	$id		削除スレッドID
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub Delete
-{
-	my $this = shift;
-	my ($id) = @_;
-	my ($lid, $n);
-	
-	delete $this->{'SUBJECT'}->{$id};
-	delete $this->{'RES'}->{$id};
-	
-	$n = 0;
-	foreach $lid (@{$this->{'SORT'}}) {
-		if ($id eq $lid) {
-			splice @{$this->{'SORT'}}, $n, 1;
-			$this->{'NUM'}--;
-			last;
-		}
-		$n++;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド数取得
-#	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	スレッド数
-#
-#------------------------------------------------------------------------------------------------------------
-sub GetNum
-{
-	my $this = shift;
-	
-	return $this->{'NUM'};
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	最後のスレッドID取得
-#	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	スレッドID
-#
-#------------------------------------------------------------------------------------------------------------
-sub GetLastID
-{
-	my $this = shift;
-	
-	return ${$this->{'SORT'}}[$#{$this->{'SORT'}}];
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッドあげ
-#	-------------------------------------------------------------------------------------
-#	@param	スレッドID
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub AGE
-{
-	my $this = shift;
-	my ($id) = @_;
-	my ($lid, $n);
-	
-	$n = 0;
-	foreach $lid (@{$this->{'SORT'}}) {
-		if ($id eq $lid) {
-			splice @{$this->{'SORT'}}, $n, 1;
-			unshift @{$this->{'SORT'}}, $lid;
-			last;
-		}
-		$n++;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッドだめ
-#	-------------------------------------------------------------------------------------
-#	@param	スレッドID
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub DAME
-{
-	my $this = shift;
-	my ($id) = @_;
-	my ($lid, $n);
-	
-	$n = 0;
-	foreach $lid (@{$this->{'SORT'}}) {
-		if ($id eq $lid) {
-			splice @{$this->{'SORT'}}, $n, 1;
-			push @{$this->{'SORT'}}, $lid;
-			last;
-		}
-		$n++;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報更新
-#	-------------------------------------------------------------------------------------
-#	@param	$SYS	MELKOR
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub Update
-{
-	my $this = shift;
-	my ($SYS) = @_;
-	my ($id, $base, $n);
-	
-	$base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
-	
-	foreach $id (@{$this->{'SORT'}}) {
-		$n = 0;
-		if (open(my $f_dat, '<', "$base/$id.dat")) {
-			flock($f_dat, 2);
-			while (<$f_dat>) {
-				$n++;
-			}
-			close($f_dat);
-			$this->{'RES'}->{$id} = $n;
-		}
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報完全更新
-#	-------------------------------------------------------------------------------------
-#	@param	$SYS	MELKOR
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub UpdateAll
-{
-	my $this = shift;
-	my ($SYS) = @_;
-	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el, $psort, %idhash);
-	
-	undef $this->{'SUBJECT'};
-	undef $this->{'RES'};
-	$psort = $this->{'SORT'};
-	$this->{'SORT'} = [];
-	%idhash = ();
-	@dirSet = ();
-	
-	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
-	$num	= 0;
-	
-	# ディレクトリ内一覧を取得
-	if (opendir(my $f_datdir, $base)) {
-		@dirSet = readdir($f_datdir);
-		closedir($f_datdir);
-	}
-	
-	foreach $el	(@dirSet) {
-		if ($el =~ /(.*)\.dat/ && open(my $f_dat, '<', "$base/$el")) {
-			flock($f_dat, 2);
-			$n	= 0;
-			$id	= $1;
-			while (<$f_dat>) {
-				if ($n == 0) {
-					chomp $_;
-					$first = $_;
-				}
-				$n++;
-			}
-			close($f_dat);
-			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
-			$this->{'SUBJECT'}->{$id}	= $subj;
-			$this->{'RES'}->{$id}		= $n;
-			$idhash{$id} = 1;
-			$num++;
-		}
-	}
-	$this->{'NUM'} = $num;
-	
-	foreach $id (@$psort) {
-		if (defined $idhash{$id}) {
-			push @{$this->{'SORT'}}, $id;
-			delete $idhash{$id};
-		}
-	}
-	foreach $id (sort keys %idhash) {
-		unshift @{$this->{'SORT'}}, $id;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド位置取得
-#	-------------------------------------------------------------------------------------
-#	@param	$id	スレッドID
-#	@return	スレッド位置。取得できない場合は-1
-#
-#------------------------------------------------------------------------------------------------------------
-sub GetPosition
-{
-	my $this = shift;
-	my ($id) = @_;
-	my ($iid, $n);
-	
-	$n = 0;
-	foreach $iid (@{$this->{'SORT'}}) {
-		if ($iid eq $id) {
-			return $n;
-		}
-		$n++;
-	}
-	return -1;
-}
-
-
-#============================================================================================================
-#
-#	プールスレッド情報管理パッケージ
-#	FRODO
-#	-------------------------------------------------------------------------------------
-#	2004.02.18 start
-#
-#============================================================================================================
-package	FRODO;
-
-use strict;
-use warnings;
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	コンストラクタ
-#	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	モジュールオブジェクト
-#
-#------------------------------------------------------------------------------------------------------------
-sub new
-{
-	my $this = shift;
-	my ($obj, %SUBJECT, %RES, @SORT);
-	
-	$obj = {
-		'SUBJECT'	=> \%SUBJECT,
-		'RES'		=> \%RES,
-		'SORT'		=> \@SORT,
-		'NUM'		=> 0
-	};
-	bless $obj, $this;
-	
-	return $obj;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報読み込み
-#	-------------------------------------------------------------------------------------
-#	@param	$Sys	MELKOR
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub Load
-{
-	my $this = shift;
-	my ($Sys) = @_;
-	my ($path, @elem, $num);
-	
-	undef $this->{'SUBJECT'};
-	undef $this->{'RES'};
-	undef $this->{'SORT'};
-	
-	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
-	$num = 0;
-	
-	if (open(my $f_subj, '<', $path)) {
-		flock($f_subj, 2);
-		while (<$f_subj>) {
-			chomp;
-			@elem = split(/<>/, $_);
-			($elem[0], undef) = split(/\./, $elem[0]);
-			$elem[1] =~ s/ ?\((\d+)\)$//;
-			$elem[2] = $1;
-			
-			$this->{'SUBJECT'}->{$elem[0]}	= $elem[1];
-			$this->{'RES'}->{$elem[0]}		= $elem[2];
-			push @{$this->{'SORT'}}, $elem[0];
-			$num++;
-		}
-		close($f_subj);
 		$this->{'NUM'} = $num;
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	スレッド情報保存
-#	-------------------------------------------------------------------------------------
-#	@param	$Sys	MELKOR
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub Save
-{
-	my $this = shift;
-	my ($Sys) = @_;
-	my ($path, $data);
-	
-	$path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
-	
-	if (open(my $f_subj, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_subj, 2);
-		seek($f_subj, 0, 0);
-		binmode($f_subj);
+		
+		# レス数更新
+		if (exists $this->{'RES'}->{$id}) {
+			$this->{'RES'}->{$id} = $val;
+		}
+		
+		if ($age) {
+			my $sort = $this->{'SORT'};
+			for (my $i = 0; $i <= $#$sort; $i++) {
+				if ($id eq $sort->[$i]) {
+					splice @$sort, $i, 1;
+					unshift @$sort, $id;
+					last;
+				}
+			}
+		}
+		
+		# subject書き込み
+		seek($fh, 0, 0);
+		binmode($fh);
 		
 		foreach (@{$this->{'SORT'}}) {
 			next if (! defined $this->{'SUBJECT'}->{$_});
-			$data = "$_.dat<>" . $this->{'SUBJECT'}->{$_} . ' (' . $this->{'RES'}->{$_} . ')';
-			
-			print $f_subj "$data\n";
+			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
 		}
 		
-		truncate($f_subj, tell($f_subj));
-		close($f_subj);
-		chmod $Sys->Get('PM-TXT'), $path;
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't load subject: $path";
+	}
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -656,21 +228,16 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
 	
-	$n = 0;
+	my $n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (@{$this->{'SORT'}}) {
-			push @$pBuf, $key;
-			$n++;
-		}
+		$n += push @$pBuf, @{$this->{'SORT'}};
 	}
 	else {
-		foreach $key (keys %{$this->{$kind}}) {
+		foreach my $key (keys %{$this->{$kind}}) {
 			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
@@ -692,9 +259,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -712,8 +278,8 @@ sub Add
 	my $this = shift;
 	my ($id, $subject, $res) = @_;
 	
-	$this->{'SUBJECT'}->{$id}	= $subject;
-	$this->{'RES'}->{$id}		= $res;
+	$this->{'SUBJECT'}->{$id} = $subject;
+	$this->{'RES'}->{$id} = $res;
 	unshift @{$this->{'SORT'}}, $id;
 	$this->{'NUM'}++;
 	
@@ -752,19 +318,440 @@ sub Delete
 {
 	my $this = shift;
 	my ($id) = @_;
-	my ($lid, $n);
 	
 	delete $this->{'SUBJECT'}->{$id};
 	delete $this->{'RES'}->{$id};
 	
-	$n = 0;
-	foreach $lid (@{$this->{'SORT'}}) {
-		if ($id eq $lid) {
-			splice @{$this->{'SORT'}}, $n, 1;
+	my $sort = $this->{'SORT'};
+	for (my $i = 0; $i <= $#$sort; $i++) {
+		if ($id eq $sort->[$i]) {
+			splice @$sort, $i, 1;
 			$this->{'NUM'}--;
 			last;
 		}
-		$n++;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド数取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	スレッド数
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetNum
+{
+	my $this = shift;
+	
+	return $this->{'NUM'};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	最後のスレッドID取得
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	スレッドID
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetLastID
+{
+	my $this = shift;
+	
+	my $sort = $this->{'SORT'};
+	return $sort->[$#$sort];
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッドあげ
+#	-------------------------------------------------------------------------------------
+#	@param	スレッドID
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub AGE
+{
+	my $this = shift;
+	my ($id) = @_;
+	
+	my $sort = $this->{'SORT'};
+	for (my $i = 0; $i <= $#$sort; $i++) {
+		if ($id eq $sort->[$i]) {
+			splice @$sort, $i, 1;
+			unshift @$sort, $sort->[$i];
+			last;
+		}
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッドだめ
+#	-------------------------------------------------------------------------------------
+#	@param	スレッドID
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub DAME
+{
+	my $this = shift;
+	my ($id) = @_;
+	
+	my $sort = $this->{'SORT'};
+	for (my $i = 0; $i <= $#$sort; $i++) {
+		if ($id eq $sort->[$i]) {
+			splice @$sort, $i, 1;
+			push @$sort, $sort->[$i];
+			last;
+		}
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報更新
+#	-------------------------------------------------------------------------------------
+#	@param	$SYS	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Update
+{
+	my $this = shift;
+	my ($SYS) = @_;
+	
+	my $base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
+	
+	foreach my $id (@{$this->{'SORT'}}) {
+		if (open(my $fh, '<', "$base/$id.dat")) {
+			flock($fh, 2);
+			my $n = 0;
+			$n++ while (<$fh>);
+			close($fh);
+			$this->{'RES'}->{$id} = $n;
+		}
+		else {
+			warn "can't open file: $base/$id.dat";
+		}
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報完全更新
+#	-------------------------------------------------------------------------------------
+#	@param	$SYS	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub UpdateAll
+{
+	my $this = shift;
+	my ($SYS) = @_;
+	
+	my $psort = $this->{'SORT'};
+	$this->{'SORT'} = [];
+	$this->{'SUBJECT'} = {};
+	$this->{'RES'} = {};
+	my $idhash = {};
+	my @dirSet = ();
+	
+	my $base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/dat';
+	my $num	= 0;
+	
+	# ディレクトリ内一覧を取得
+	if (opendir(my $fh, $base)) {
+		@dirSet = readdir($fh);
+		closedir($fh);
+	}
+	else {
+		warn "can't open dir: $base";
+		return;
+	}
+	
+	foreach my $el (@dirSet) {
+		if ($el =~ /^(.*)\.dat$/ && open(my $fh, '<', "$base/$el")) {
+			flock($fh, 2);
+			my $id = $1;
+			my $n = 1;
+			my $first = <$fh>;
+			$n++ while (<$fh>);
+			close($fh);
+			chomp $first;
+			
+			my @elem = split(/<>/, $first, -1);
+			$this->{'SUBJECT'}->{$id} = $elem[4];
+			$this->{'RES'}->{$id} = $n;
+			$idhash->{$id} = 1;
+			$num++;
+		}
+	}
+	$this->{'NUM'} = $num;
+	
+	foreach my $id (@$psort) {
+		if (defined $idhash->{$id}) {
+			push @{$this->{'SORT'}}, $id;
+			delete $idhash->{$id};
+		}
+	}
+	foreach my $id (sort keys %$idhash) {
+		unshift @{$this->{'SORT'}}, $id;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド位置取得
+#	-------------------------------------------------------------------------------------
+#	@param	$id	スレッドID
+#	@return	スレッド位置。取得できない場合は-1
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetPosition
+{
+	my $this = shift;
+	my ($id) = @_;
+	
+	my $sort = $this->{'SORT'};
+	for (my $i = 0; $i <= $#$sort; $i++) {
+		return $i if ($id eq $sort->[$i]);
+	}
+	
+	return -1;
+}
+
+
+#============================================================================================================
+#
+#	プールスレッド情報管理パッケージ
+#	FRODO
+#	-------------------------------------------------------------------------------------
+#	2004.02.18 start
+#
+#============================================================================================================
+package	FRODO;
+
+use strict;
+use warnings;
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	コンストラクタ
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	モジュールオブジェクト
+#
+#------------------------------------------------------------------------------------------------------------
+sub new
+{
+	my $class = shift;
+	
+	my $obj = {
+		'SUBJECT'	=> {},
+		'RES'		=> {},
+		'SORT'		=> [],
+		'NUM'		=> 0
+	};
+	bless $obj, $class;
+	
+	return $obj;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報読み込み
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Load
+{
+	my $this = shift;
+	my ($Sys) = @_;
+	
+	$this->{'SUBJECT'} = {};
+	$this->{'RES'} = {};
+	$this->{'SORT'} = [];
+	
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
+	
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		chomp @lines;
+		
+		my $num = 0;
+		for (@lines) {
+			next if ($_ eq '');
+			
+			if ($_ =~ /^(.+)\.dat<>(.*) ?\(([0-9]+)\)$/) {
+				$this->{'SUBJECT'}->{$1} = $2;
+				$this->{'RES'}->{$1} = $3;
+				push @{$this->{'SORT'}}, $1;
+				$num++;
+			}
+			else {
+				warn "invalid line in $path";
+				next;
+			}
+		}
+		$this->{'NUM'} = $num;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報保存
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Save
+{
+	my $this = shift;
+	my ($Sys) = @_;
+	
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
+	
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		foreach (@{$this->{'SORT'}}) {
+			next if (! defined $this->{'SUBJECT'}->{$_});
+			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
+		}
+		
+		truncate($fh, tell($fh));
+		close($fh);
+	}
+	else {
+		warn "can't save subject: $path";
+	}
+	chmod $Sys->Get('PM-TXT'), $path;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッドIDセット取得
+#	-------------------------------------------------------------------------------------
+#	@param	$kind	検索種別('ALL'の場合すべて)
+#	@param	$name	検索ワード
+#	@param	$pBuf	IDセット格納バッファ
+#	@return	キーセット数
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetKeySet
+{
+	my $this = shift;
+	my ($kind, $name, $pBuf) = @_;
+	
+	my $n = 0;
+	
+	if ($kind eq 'ALL') {
+		$n += push @$pBuf, @{$this->{'SORT'}};
+	}
+	else {
+		foreach my $key (keys %{$this->{$kind}}) {
+			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
+				$n += push @$pBuf, $key;
+			}
+		}
+	}
+	
+	return $n;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報取得
+#	-------------------------------------------------------------------------------------
+#	@param	$kind	情報種別
+#	@param	$key	スレッドID
+#			$default : デフォルト
+#	@return	スレッド情報
+#
+#------------------------------------------------------------------------------------------------------------
+sub Get
+{
+	my $this = shift;
+	my ($kind, $key, $default) = @_;
+	
+	my $val = $this->{$kind}->{$key};
+	
+	return (defined $val ? $val : (defined $default ? $default : undef));
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報追加
+#	-------------------------------------------------------------------------------------
+#	@param	$subject	スレッドタイトル
+#	@return	スレッドID
+#
+#------------------------------------------------------------------------------------------------------------
+sub Add
+{
+	my $this = shift;
+	my ($id, $subject, $res) = @_;
+	
+	$this->{'SUBJECT'}->{$id} = $subject;
+	$this->{'RES'}->{$id} = $res;
+	unshift @{$this->{'SORT'}}, $id;
+	$this->{'NUM'}++;
+	
+	return $id;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報設定
+#	-------------------------------------------------------------------------------------
+#	@param	$id		スレッドID
+#	@param	$kind	情報種別
+#	@param	$val	設定値
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Set
+{
+	my $this = shift;
+	my ($id, $kind, $val) = @_;
+	
+	if (exists $this->{$kind}->{$id}) {
+		$this->{$kind}->{$id} = $val;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド情報削除
+#	-------------------------------------------------------------------------------------
+#	@param	$id		削除スレッドID
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub Delete
+{
+	my $this = shift;
+	my ($id) = @_;
+	
+	delete $this->{'SUBJECT'}->{$id};
+	delete $this->{'RES'}->{$id};
+	
+	my $sort = $this->{'SORT'};
+	for (my $i = 0; $i <= $#$sort; $i++) {
+		if ($id eq $sort->[$i]) {
+			splice @$sort, $i, 1;
+			$this->{'NUM'}--;
+			last;
+		}
 	}
 }
 
@@ -799,15 +786,16 @@ sub Update
 	
 	$base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
 	
-	foreach $id (@{$this->{'SORT'}}) {
-		$n = 0;
-		if (open(my $f_dat, '<', "$base/$id.cgi")) {
-			flock($f_dat, 2);
-			while (<$f_dat>) {
-				$n++;
-			}
-			close($f_dat);
+	foreach my $id (@{$this->{'SORT'}}) {
+		if (open(my $fh, '<', "$base/$id.cgi")) {
+			flock($fh, 2);
+			my $n = 0;
+			$n++ while (<$fh>);
+			close($fh);
 			$this->{'RES'}->{$id} = $n;
+		}
+		else {
+			warn "can't open file: $base/$id.dat";
 		}
 	}
 }
@@ -824,39 +812,39 @@ sub UpdateAll
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my (@dirSet, $id, $base, $n, $num, $first, $subj, $el);
 	
-	undef $this->{'SUBJECT'};
-	undef $this->{'RES'};
-	undef $this->{'SORT'};
+	$this->{'SORT'} = [];
+	$this->{'SUBJECT'} = {};
+	$this->{'RES'} = {};
+	my @dirSet = ();
 	
-	$base	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
-	$num	= 0;
-	@dirSet	= ();
+	my $base = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/pool';
+	my $num = 0;
 	
 	# ディレクトリ内一覧を取得
-	if (opendir(my $f_datdir, $base)) {
-		@dirSet = readdir(DATDIR);
-		closedir(DATDIR);
+	if (opendir(my $fh, $base)) {
+		@dirSet = readdir($fh);
+		closedir($fh);
+	}
+	else {
+		warn "can't open dir: $base";
+		return;
 	}
 	
-	foreach $el (@dirSet) {
-		if ($el =~ /(\d+)\.cgi/ && open(my $f_dat, '<', "$base/$el")) {
-			$n	= 0;
-			$id	= $1;
-			flock($f_dat, 2);
-			while (<$f_dat>) {
-				if ($n == 0) {
-					chomp $_;
-					$first = $_;
-				}
-				$n++;
-			}
-			close($f_dat);
-			(undef, undef, undef, undef, $subj) = split(/<>/, $first);
-			$this->{'SUBJECT'}->{$id}	= $subj;
-			$this->{'RES'}->{$id}		= $n;
-			unshift @{$this->{'SORT'}}, $id;
+	foreach my $el (@dirSet) {
+		if ($el =~ /^(.*)\.cgi$/ && open(my $fh, '<', "$base/$el")) {
+			flock($fh, 2);
+			my $id = $1;
+			my $n = 1;
+			my $first = <$fh>;
+			$n++ while (<$fh>);
+			close($fh);
+			chomp $first;
+			
+			my @elem = split(/<>/, $first, -1);
+			$this->{'SUBJECT'}->{$id} = $elem[4];
+			$this->{'RES'}->{$id} = $n;
+			push @{$this->{'SORT'}}, $id;
 			$num++;
 		}
 	}

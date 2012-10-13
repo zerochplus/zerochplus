@@ -21,21 +21,21 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, %FILES, %CLASSES, %NAMES, %EXPS, %TYPES, %VALIDS, %CONFIGS, %CONFTYPES, @ORDER);
+	my $class = shift;
 	
-	$obj = {
-		'FILE'		=> \%FILES,
-		'CLASS'		=> \%CLASSES,
-		'NAME'		=> \%NAMES,
-		'EXPL'		=> \%EXPS,
-		'TYPE'		=> \%TYPES,
-		'VALID'		=> \%VALIDS,
-		'CONFIG'	=> \%CONFIGS,
-		'CONFTYPE'	=> \%CONFTYPES,
-		'ORDER'		=> \@ORDER,
+	my $obj = {
+		'FILE'		=> {},
+		'CLASS'		=> {},
+		'NAME'		=> {},
+		'EXPL'		=> {},
+		'TYPE'		=> {},
+		'VALID'		=> {},
+		'CONFIG'	=> {},
+		'CONFTYPE'	=> {},
+		'ORDER'		=> [],
 	};
-	bless $obj, $this;
+	bless $obj, $class;
+	
 	return $obj;
 }
 
@@ -54,42 +54,47 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef $this->{'FILE'};
-	undef $this->{'CLASS'};
-	undef $this->{'NAME'};
-	undef $this->{'EXPL'};
-	undef $this->{'TYPE'};
-	undef $this->{'VALID'};
-	undef $this->{'CONFIG'};
-	undef $this->{'CONFTYPE'};
-	undef $this->{'ORDER'};
+	$this->{'FILE'} = {};
+	$this->{'CLASS'} = {};
+	$this->{'NAME'} = {};
+	$this->{'EXPL'} = {};
+	$this->{'TYPE'} = {};
+	$this->{'VALID'} = {};
+	$this->{'CONFIG'} = {};
+	$this->{'CONFTYPE'} = {};
+	$this->{'ORDER'} = [];
 	
-	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
+	my $path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	if (open(my $f_plugins, '<', $path)) {
-		flock($f_plugins, 2);
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		chomp @lines;
 		
-		my $i = 0;
-		while (<$f_plugins>) {
-			chomp $_;
-			@elem = split(/<>/, $_);
-			if (@elem >= 6) {
-				$this->{'FILE'}->{$elem[0]}		= $elem[1];
-				$this->{'CLASS'}->{$elem[0]}	= $elem[2];
-				$this->{'NAME'}->{$elem[0]}		= $elem[3];
-				$this->{'EXPL'}->{$elem[0]}		= $elem[4];
-				$this->{'TYPE'}->{$elem[0]}		= $elem[5];
-				$this->{'VALID'}->{$elem[0]}	= $elem[6];
-				$this->{'CONFIG'}->{$elem[0]}	= {};
-				$this->{'CONFTYPE'}->{$elem[0]}	= {};
-				$this->{'ORDER'}->[$i++]		= $elem[0];
-				$this->LoadConfig($elem[0]);
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_, -1);
+			if ($#elem + 1 < 7) {
+				warn "invalid line in $path";
+				next;
 			}
+			
+			my $id = $elem[0];
+			$this->{'FILE'}->{$id} = $elem[1];
+			$this->{'CLASS'}->{$id} = $elem[2];
+			$this->{'NAME'}->{$id} = $elem[3];
+			$this->{'EXPL'}->{$id} = $elem[4];
+			$this->{'TYPE'}->{$id} = $elem[5];
+			$this->{'VALID'}->{$id} = $elem[6];
+			$this->{'CONFIG'}->{$id} = {};
+			$this->{'CONFTYPE'}->{$id} = {};
+			push @{$this->{'ORDER'}}, $id;
+			$this->LoadConfig($id);
 		}
-		close($f_plugins);
 	}
 }
 
@@ -108,23 +113,34 @@ sub LoadConfig
 {
 	my $this = shift;
 	my ($id) = @_;
-	my ($file, $path, $CONFIG, $CONFTYPE);
 	
-	$file = $this->{'FILE'}->{$id};
-	$CONFIG = $this->{'CONFIG'}->{$id};
-	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	my $config = $this->{'CONFIG'}->{$id};
+	my $conftype = $this->{'CONFTYPE'}->{$id};
+	my $file = $this->{'FILE'}->{$id};
+	my $path = undef;
 	
-	$file =~ /^(0ch_.*)\.pl$/;
-	$path = "./plugin_conf/$1.cgi";
-	if (open(my $f_conf, '<', $path)) {
-		flock($f_conf, 2);
-		while (<$f_conf>) {
-			chomp $_;
-			my ($type, $key, $val) = split(/<>/, $_, 3);
-			$CONFIG->{$key} = $val;
-			$CONFTYPE->{$key} = $type;
+	if ($file =~ /^(0ch_.*)\.pl$/) {
+		$path = "./plugin_conf/$1.cgi";
+	}
+	else {
+		warn "invalid plugin file name: $file";
+		return;
+	}
+	
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		chomp @lines;
+		foreach (@lines) {
+			my @elem = split(/<>/, $_, -1);
+			if ($#elem + 1 < 3) {
+				warn "invalid line in $path";
+				next;
+			}
+			$config->{$elem[1]} = $elem[2];
+			$conftype->{$elem[1]} = $elem[0];
 		}
-		close($f_conf);
 	}
 }
 
@@ -143,26 +159,41 @@ sub SaveConfig
 {
 	my $this = shift;
 	my ($id) = @_;
-	my ($file, $path, $CONFIG, $CONFTYPE);
 	
-	$file = $this->{'FILE'}->{$id};
-	$CONFIG = $this->{'CONFIG'}->{$id};
-	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	if (! -d './plugin_conf') {
+		if (! -e './plugin_conf') {
+			mkdir './plugin_conf';
+		}
+		else {
+			warn "can't mkdir: ./plugin_conf";
+			warn "can't save plugin config";
+			return;
+		}
+	}
 	
-	mkdir './plugin_conf' if (! -e './plugin_conf');
+	my $config = $this->{'CONFIG'}->{$id};
+	my $conftype = $this->{'CONFTYPE'}->{$id};
+	my $file = $this->{'FILE'}->{$id};
+	my $path = undef;
 	
-	$file =~ /^(0ch_.*)\.pl$/;
-	$path = "./plugin_conf/$1.cgi";
-	if (($_ = keys %$CONFIG) > 0) {
-		if (open(my $f_conf, (-f $path ? '+<' : '>'), $path)) {
-			flock($f_conf, 2);
-			seek($f_conf, 0, 0);
+	if ($file =~ /^(0ch_.*)\.pl$/) {
+		$path = "./plugin_conf/$1.cgi";
+	}
+	else {
+		warn "invalid plugin file name: $file";
+		return;
+	}
+	
+	if (scalar keys %$config > 0) {
+		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+			flock($fh, 2);
+			seek($fh, 0, 0);
 			
-			my ($key, $val, $type);
-			foreach $key (sort keys %$CONFIG) {
-				next unless (defined $CONFIG->{$key});
-				$val = $CONFIG->{$key};
-				$type = $CONFTYPE->{$key};
+			foreach my $key (sort keys %$config) {
+				next unless (defined $config->{$key});
+				
+				my $val = $config->{$key};
+				my $type = $conftype->{$key};
 				if ($type == 1) {
 					$val -= 0;
 				}
@@ -173,11 +204,11 @@ sub SaveConfig
 				elsif ($type == 3) {
 					$val = ($val ? 1 : 0);
 				}
-				print $f_conf "$type<>$key<>$val\n";
+				print $fh "$type<>$key<>$val\n";
 			}
 			
-			truncate($f_conf, tell($f_conf));
-			close($f_conf);
+			truncate($fh, tell($fh));
+			close($fh);
 		}
 	}
 	else {
@@ -200,25 +231,27 @@ sub SetDefaultConfig
 {
 	my $this = shift;
 	my ($id) = @_;
-	my ($file, $path, $CONFIG, $CONFTYPE, $className);
 	
-	$file = $this->{'FILE'}->{$id};
-	$CONFIG = $this->{'CONFIG'}->{$id};
-	$CONFTYPE = $this->{'CONFTYPE'}->{$id};
+	my $config = $this->{'CONFIG'}->{$id} = {};
+	my $conftype = $this->{'CONFTYPE'}->{$id} = {};
+	my $file = $this->{'FILE'}->{$id};
+	my $className = undef;
 	
-	%$CONFIG = ();
-	%$CONFTYPE = ();
-	
-	$file =~ /^0ch_(.*)\.pl$/;
-	$className = "ZPL_$1";
+	if ($file =~ /^(0ch_.*)\.pl$/) {
+		$className = "ZPL_$1";
+	}
+	else {
+		warn "invalid plugin file name: $file";
+		return;
+	}
 	
 	require "./plugin/$file";
-	my $plugin = new $className;
 	if ($className->can('getConfig')) {
-		my $conf = $plugin->getConfig();
+		my $plugin = $className->new;
+		my $conf = $plugin->getConfig;
 		foreach my $key (keys %$conf) {
-			$CONFIG->{$key} = $conf->{$key}->{'default'};
-			$CONFTYPE->{$key} = $conf->{$key}->{'valuetype'};
+			$config->{$key} = $conf->{$key}->{'default'};
+			$conftype->{$key} = $conf->{$key}->{'valuetype'};
 		}
 	}
 }
@@ -235,17 +268,16 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data, $id);
 	
-	$path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
+	my $path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
-	if (open(my $f_plugins, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_plugins, 2);
-		seek($f_plugins, 0, 0);
-		binmode($f_plugins);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
 		
 		foreach my $id (@{$this->{'ORDER'}}) {
-			$data = join('<>',
+			my $data = join('<>',
 				$id,
 				$this->{'FILE'}->{$id},
 				$this->{'CLASS'}->{$id},
@@ -255,13 +287,13 @@ sub Save
 				$this->{'VALID'}->{$id}
 			);
 			
-			print $f_plugins "$data\n";
+			print $fh "$data\n";
 		}
 		
-		truncate($f_plugins, tell($f_plugins));
-		close($f_plugins);
-		chmod $Sys->Get('PM-ADM'), $path;
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -278,21 +310,16 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
 	
-	$n = 0;
+	my $n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (@{$this->{'ORDER'}}) {
-			push @$pBuf, $key;
-			$n++;
-		}
+		$n += push @$pBuf, @{$this->{'ORDER'}};
 	}
 	else {
-		foreach $key (@{$this->{'ORDER'}}) {
+		foreach my $key (@{$this->{'ORDER'}}) {
 			if ($this->{$kind}->{$key} eq $name || $name eq 'ALL') {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
@@ -314,9 +341,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -354,36 +380,40 @@ sub Add
 {
 	my $this = shift;
 	my ($file, $valid) = @_;
-	my ($id, $ret);
 	
-	$ret = undef;
-	$id = time;
-	while (exists $this->{'FILE'}->{$id}) {
-		$id++;
+	my $id = time;
+	$id++ while (exists $this->{'FILE'}->{$id});
+	
+	if (! -e "./plugin/$file") {
+		warn "not found plugin: ./plugin/$file";
+		return undef;
 	}
-	if (-e "./plugin/$file") {
-		if ($file =~ /0ch_(.*)\.pl/) {
-			my $className = "ZPL_$1";
-			require "./plugin/$file";
-			my $plugin = new $className;
-			if (! exists $this->{'FILE'}->{$id}) {
-				push @{$this->{'ORDER'}}, $id;
-			}
-			$this->{'FILE'}->{$id}		= $file;
-			$this->{'CLASS'}->{$id}		= $className;
-			$this->{'NAME'}->{$id}		= $plugin->getName();
-			$this->{'EXPL'}->{$id}		= $plugin->getExplanation();
-			$this->{'TYPE'}->{$id}		= $plugin->getType();
-			$this->{'VALID'}->{$id}		= $valid;
-			$this->{'CONFIG'}->{$id}	= {};
-			$this->{'CONFTYPE'}->{$id}	= {};
-			$this->SetDefaultConfig($id);
-			$this->LoadConfig($id);
-			$this->SaveConfig($id);
-			$ret = $id;
-		}
+	
+	my $className = undef;
+	if ($file =~ /0ch_(.*)\.pl/) {
+		$className = "ZPL_$1";
 	}
-	return '';
+	else {
+		warn "invalid plugin file name: $file";
+		return undef;
+	}
+	
+	require "./plugin/$file";
+	my $plugin = $className->new;
+	$this->{'FILE'}->{$id} = $file;
+	$this->{'CLASS'}->{$id} = $className;
+	$this->{'NAME'}->{$id} = $plugin->getName;
+	$this->{'EXPL'}->{$id} = $plugin->getExplanation;
+	$this->{'TYPE'}->{$id} = $plugin->getType;
+	$this->{'VALID'}->{$id} = $valid;
+	$this->{'CONFIG'}->{$id} = {};
+	$this->{'CONFTYPE'}->{$id} = {};
+	$this->SetDefaultConfig($id);
+	$this->LoadConfig($id);
+	$this->SaveConfig($id);
+	push @{$this->{'ORDER'}}, $id;
+	
+	return $id;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -408,9 +438,9 @@ sub Delete
 	delete $this->{'CONFIG'}->{$id};
 	delete $this->{'CONFTYPE'}->{$id};
 	
-	$_ = $this->{'ORDER'};
-	for (my $i = 0 ; $i < $#{$_} ; $i++) {
-		splice(@$_, $i--, 1) if ($_->[$i] eq $id);
+	my $order = $this->{'ORDER'};
+	for (my $i = 0 ; $i <= $#$order ; $i++) {
+		splice(@$order, $i--, 1) if ($order->[$i] eq $id);
 	}
 }
 
@@ -425,59 +455,58 @@ sub Delete
 sub Update
 {
 	my $this = shift;
-	my (@files, $file, $plugin, @buff, $exist);
+	my ($plugin, $exist);
 	
+	my @files = ();
 	if (opendir(my $d_plugins, './plugin')) {
 		@files = readdir($d_plugins);
 		closedir($d_plugins);
-		# プラグイン追加・更新フェイズ
-		foreach $file (@files) {
-			if ($file =~ /^0ch_(.*)\.pl/) {
-				my $className = "ZPL_$1";
-				if ($this->GetKeySet('FILE', $file, \@buff) > 0) {
-					require "./plugin/$file";
-					$plugin = new $className;
-					$this->{'NAME'}->{$buff[0]} = $plugin->getName();
-					$this->{'EXPL'}->{$buff[0]} = $plugin->getExplanation();
-					$this->{'TYPE'}->{$buff[0]} = $plugin->getType();
-					$this->SetDefaultConfig($buff[0]);
-					$this->LoadConfig($buff[0]);
-					$this->SaveConfig($buff[0]);
-					$plugin = undef;
-				}
-				else {
-					$this->Add($file, 0);
-				}
-				undef @buff;
+	}
+	else {
+		undef $this->{'FILE'} = {};
+		undef $this->{'CLASS'} = {};
+		undef $this->{'NAME'} = {};
+		undef $this->{'EXPL'} = {};
+		undef $this->{'TYPE'} = {};
+		undef $this->{'VALID'} = {};
+		undef $this->{'CONFIG'} = {};
+		undef $this->{'CONFTYPE'} = {};
+		undef $this->{'ORDER'} = [];
+		return;
+	}
+	
+	# プラグイン追加・更新フェイズ
+	foreach my $file (@files) {
+		if ($file =~ /^0ch_(.*)\.pl/) {
+			my $className = "ZPL_$1";
+			if (scalar $this->GetKeySet('FILE', $file, ($_ = {})) > 0) {
+				my $id = $_->[0];
+				require "./plugin/$file";
+				my $plugin = $className->new;
+				$this->{'NAME'}->{$id} = $plugin->getName;
+				$this->{'EXPL'}->{$id} = $plugin->getExplanation;
+				$this->{'TYPE'}->{$id} = $plugin->getType;
+				$this->SetDefaultConfig($id);
+				$this->LoadConfig($id);
+				$this->SaveConfig($id);
 			}
-		}
-		# プラグイン削除フェイズ
-		if ($this->GetKeySet('ALL', '', \@buff) > 0) {
-			$exist = 0;
-			foreach $plugin (@buff) {
-				foreach $file (@files) {
-					if ($this->Get('FILE', $plugin) eq $file) {
-						$exist = 1;
-						last;
-					}
-				}
-				if ($exist == 0) {
-					$this->Delete($plugin);
-				}
-				$exist = 0;
+			else {
+				$this->Add($file, 0);
 			}
 		}
 	}
-	else {
-		undef $this->{'FILE'};
-		undef $this->{'CLASS'};
-		undef $this->{'NAME'};
-		undef $this->{'EXPL'};
-		undef $this->{'TYPE'};
-		undef $this->{'VALID'};
-		undef $this->{'CONFIG'};
-		undef $this->{'CONFTYPE'};
-		undef $this->{'ORDER'};
+	# プラグイン削除フェイズ
+	if ($this->GetKeySet('ALL', '', ($_ = {})) > 0) {
+		foreach my $id (@$_) {
+			my $exist = 0;
+			foreach my $file (@files) {
+				if ($this->Get('FILE', $id) eq $file) {
+					$exist = 1;
+					last;
+				}
+			}
+			$this->Delete($id) if ($exist == 0);
+		}
 	}
 }
 
@@ -504,16 +533,15 @@ package	PLUGINCONF;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
+	my $class = shift;
 	my ($Plugin, $id) = @_;
-	my ($obj);
 	
-	$obj = {
+	my $obj = {
 		'PLUGIN'	=> $Plugin,
 		'id'		=> $id
 	};
 	
-	bless $obj, $this;
+	bless $obj, $class;
 	return $obj;
 }
 
@@ -533,30 +561,25 @@ sub SetConfig
 {
 	my $this = shift;
 	my ($key, $val) = @_;
-	my ($CONFIG, $CONFTYPE, $id, $type);
 	
-	$id = $this->{'id'};
-	$CONFIG = $this->{'PLUGIN'}->{'CONFIG'}->{$id};
-	$CONFTYPE = $this->{'PLUGIN'}->{'CONFTYPE'}->{$id};
+	my $id = $this->{'id'};
+	my $Plugin = $this->{'PLUGIN'};
+	my $config = $Plugin->{'CONFIG'}->{$id};
+	my $conftype = $Plugin->{'CONFTYPE'}->{$id};
+	my $type = 0;
 	
-	if (! defined $CONFTYPE->{$key}) {
+	if (defined $conftype->{$key}) {
+		$type = $conftype->{$key};
+	}
+	else {
 		if (ref(\$val) eq 'SCALAR') {
-	#		if (($val ^ $val) eq '0') {
-	#			$type = 1;
-	#		}
-	#		else {
-	#			$type = 2;
-	#		}
 			$type = 2;
 		}
 		else {
 			$type = 0;
 			return;
 		}
-		$CONFTYPE->{$key} = $type;
-	}
-	else {
-		$type = $CONFTYPE->{$key};
+		$conftype->{$key} = $type;
 	}
 	
 	if ($type == 1) {
@@ -570,9 +593,9 @@ sub SetConfig
 		$val = ($val ? 1 : 0);
 	}
 	
-	$CONFIG->{$key} = $val;
+	$config->{$key} = $val;
 	
-	$this->{'PLUGIN'}->SaveConfig($id);
+	$Plugin->SaveConfig($id);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -590,12 +613,11 @@ sub GetConfig
 {
 	my $this = shift;
 	my ($key) = @_;
-	my ($CONFIG, $id);
 	
-	$id = $this->{'id'};
-	$CONFIG = $this->{'PLUGIN'}->{'CONFIG'}->{$id};
+	my $id = $this->{'id'};
+	my $config = $this->{'PLUGIN'}->{'CONFIG'}->{$id};
 	
-	return $CONFIG->{$key};
+	return $config->{$key};
 }
 
 #============================================================================================================
