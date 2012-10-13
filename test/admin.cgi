@@ -29,7 +29,7 @@ exit(AdminCGI());
 sub AdminCGI
 {
 	my ($Sys, $Form, %SYS);
-	my ($oModule, $modName, $userID, $name, $pass);
+	my ($oModule, $modName, $userID, $name, $pass, $upcheck);
 	
 	# ƒVƒXƒeƒ€‰Šúİ’è
 	SystemSetting(\%SYS);
