@@ -24,15 +24,15 @@ sub new
 	my $class = shift;
 	
 	my $obj = {
-		'FILE'		=> {},
-		'CLASS'		=> {},
-		'NAME'		=> {},
-		'EXPL'		=> {},
-		'TYPE'		=> {},
-		'VALID'		=> {},
-		'CONFIG'	=> {},
-		'CONFTYPE'	=> {},
-		'ORDER'		=> [],
+		'FILE'		=> undef,
+		'CLASS'		=> undef,
+		'NAME'		=> undef,
+		'EXPL'		=> undef,
+		'TYPE'		=> undef,
+		'VALID'		=> undef,
+		'CONFIG'	=> undef,
+		'CONFTYPE'	=> undef,
+		'ORDER'		=> undef,
 	};
 	bless $obj, $class;
 	
@@ -209,6 +209,9 @@ sub SaveConfig
 			
 			truncate($fh, tell($fh));
 			close($fh);
+		}
+		else {
+			warn "can't save subject: $path";
 		}
 	}
 	else {

@@ -23,13 +23,12 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj);
 	
-	$obj = {
+	my $obj = {
 		'SYS'		=> undef,
 		'TYPE'		=> undef,
 		'SEARCHSET'	=> undef,
-		'RESULTSET'	=> undef
+		'RESULTSET'	=> undef,
 	};
 	bless $obj, $this;
 	
@@ -53,61 +52,59 @@ sub Create
 {
 	my $this = shift;
 	my ($SYS, $mode, $type, $bbs, $thread) = @_;
-	my ($pSearchSet, $dir, $set);
 	
 	$this->{'SYS'} = $SYS;
 	$this->{'TYPE'} = $type;
-	undef @{$this->{'SEARCHSET'}};
-	$pSearchSet = $this->{'SEARCHSET'};
+	
+	$this->{'SEARCHSET'} = [];
+	$this->{'RESULTSET'} = [];
+	my $pSearchSet = $this->{'SEARCHSET'};
 	
 	# 鯖内全検索
 	if ($mode == 0) {
 		require './module/baggins.pl';
 		require './module/nazguls.pl';
 		my $BBSs = NAZGUL->new;
-		my $Threads = BILBO->new;
-		my (@bbsSet, @threadSet, $bbsID, $threadID, $set, $BBSpath);
 		
 		$BBSs->Load($SYS);
-		$BBSs->GetKeySet('ALL', '', \@bbsSet);
+		$BBSs->GetKeySet('ALL', '', ($_ = []));
 		
-		$BBSpath = $SYS->Get('BBSPATH');
+		my $BBSpath = $SYS->Get('BBSPATH');
 		
-		foreach $bbsID (@bbsSet) {
-			$dir = $BBSs->Get('DIR', $bbsID);
+		foreach my $bbsID (@$_) {
+			my $dir = $BBSs->Get('DIR', $bbsID);
 			
 			# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
 			next if ( -e "$BBSpath/$dir/.0ch_hidden" );
 			
 			$SYS->Set('BBS', $dir);
+			my $Threads = BILBO->new;
 			$Threads->Load($SYS);
-			$Threads->GetKeySet('ALL', '', \@threadSet);
+			$Threads->GetKeySet('ALL', '', ($_ = []));
 			
-			foreach $threadID (@threadSet) {
-				$set = "$dir<>$threadID";
+			foreach my $threadID (@$_) {
+				my $set = "$dir<>$threadID";
 				push @$pSearchSet, $set;
 			}
-			undef @threadSet;
 		}
 	}
 	# 掲示板内全検索
 	elsif ($mode == 1) {
 		require './module/baggins.pl';
 		my $Threads = BILBO->new;
-		my (@threadSet, $threadID, $set);
 		
 		$SYS->Set('BBS', $bbs);
 		$Threads->Load($SYS);
-		$Threads->GetKeySet('ALL', '', \@threadSet);
+		$Threads->GetKeySet('ALL', '', ($_ = []));
 		
-		foreach $threadID (@threadSet) {
-			$set = "$bbs<>$threadID";
+		foreach my $threadID (@$_) {
+			my $set = "$bbs<>$threadID";
 			push @$pSearchSet, $set;
 		}
 	}
 	# スレッド内全検索
 	elsif ($mode == 2) {
-		$set = "$bbs<>$thread";
+		my $set = "$bbs<>$thread";
 		push @$pSearchSet, $set;
 	}
 	# 指定がおかすぃ
@@ -135,17 +132,17 @@ sub Run
 {
 	my $this = shift;
 	my ($word, $f) = @_;
-	my ($pSearchSet, $bbs, $key);
 	
-	$pSearchSet = $this->{'SEARCHSET'};
+	my $pSearchSet = $this->{'SEARCHSET'};
+	$this->{'RESULTSET'} = [] if ($f);
 	
 	foreach (@$pSearchSet) {
-		($bbs, $key) = split(/<>/, $_);
+		my ($bbs, $key) = split(/<>/, $_);
 		$this->{'SYS'}->Set('BBS', $bbs);
 		$this->{'SYS'}->Set('KEY', $key);
 		Search($this, $word);
 	}
-	return($this->{'RESULTSET'});
+	return $this->{'RESULTSET'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -160,7 +157,7 @@ sub GetResultSet
 {
 	my $this = shift;
 	
-	return($this->{'RESULTSET'});
+	return $this->{'RESULTSET'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -175,51 +172,48 @@ sub GetResultSet
 sub Search
 {
 	my ($this, $word) = @_;
-	my ($pDAT, $pResultSet, $SetStr);
-	my ($bbs, $key, $i, $bFind, $Path, $pDat, @elem);
 	
-	$bbs	= $this->{'SYS'}->Get('BBS');
-	$key	= $this->{'SYS'}->Get('KEY');
-	$Path	= $this->{'SYS'}->Get('BBSPATH') . "/$bbs/dat/$key.dat";
+	my $bbs = $this->{'SYS'}->Get('BBS');
+	my $key = $this->{'SYS'}->Get('KEY');
+	my $Path = $this->{'SYS'}->Get('BBSPATH') . "/$bbs/dat/$key.dat";
+	my $ARAGORN = $this->{'ARAGORN'};
 	
-	if ($this->{'ARAGORN'}->Load($this->{'SYS'}, $Path, 1)) {
-		$pResultSet = $this->{'RESULTSET'};
-		$bFind = 0;
+	if ($ARAGORN->Load($this->{'SYS'}, $Path, 1)) {
+		my $pResultSet = $this->{'RESULTSET'};
+		my $type = $this->{'TYPE'} || 0x7;
+		
 		# すべてのレス数でループ
-		for ($i = 0 ; $i < $this->{'ARAGORN'}->Size() ; $i++) {
-			$pDat = $this->{'ARAGORN'}->Get($i);
-			@elem = split(/<>/, $$pDat);
+		for (my $i = 0 ; $i < $ARAGORN->Size() ; $i++) {
+			my $bFind = 0;
+			my $pDat = $ARAGORN->Get($i);
+			my @elem = split(/<>/, $$pDat, -1);
+			
 			# 名前検索
-			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 1) {
-				if (index($elem[0], $word) > -1) {
-					$elem[0] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
+			if ($type & 0x1) {
+				if ($elem[0] =~ s/(\Q$word\E)(?![^<>]*>)/<span class="res">$1<\/span>/g) {
 					$bFind = 1;
 				}
 			}
 			# 本文検索
-			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 2) {
-				if (index($elem[3], $word) > -1) {
-					$elem[3] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
+			if ($type & 0x2) {
+				if ($elem[3] =~ s/(\Q$word\E)(?![^<>]*>)/<span class="res">$1<\/span>/g) {
 					$bFind = 1;
 				}
 			}
 			# ID or 日付検索
-			if ($this->{'TYPE'} == 0 || $this->{'TYPE'} & 4) {
-				if (index($elem[2], $word) > -1) {
-					$elem[2] =~ s/(\Q$word\E)/<span class="res">$word<\/span>/g;
+			if ($type & 0x4) {
+				if ($elem[2] =~ s/(\Q$word\E)(?![^<>]*>)/<span class="res">$1<\/span>/g) {
 					$bFind = 1;
 				}
 			}
 			if ($bFind) {
-				$SetStr = "$bbs<>$key<>" . ($i + 1) . '<>';
+				my $SetStr = "$bbs<>$key<>" . ($i + 1) . '<>';
 				$SetStr .= join('<>', @elem);
 				push @$pResultSet, $SetStr;
 			}
-			$bFind = 0;
 		}
-		$this->{'RESULTSET'} = $pResultSet;
 	}
-	$this->{'ARAGORN'}->Close();
+	$ARAGORN->Close();
 }
 
 #============================================================================================================

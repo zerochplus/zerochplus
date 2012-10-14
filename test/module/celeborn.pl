@@ -24,9 +24,8 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my (%KAKO, $PATH, $obj);
 	
-	$obj = {
+	my $obj = {
 		'KEY'		=> undef,
 		'SUBJECT'	=> undef,
 		'DATE'		=> undef,
@@ -49,26 +48,35 @@ sub Load
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my (@elem, $path);
 	
-	undef $this->{'KEY'};
-	undef $this->{'SUBJECT'};
-	undef $this->{'DATE'};
-	undef $this->{'PATH'};
+	$this->{'KEY'} = {};
+	$this->{'SUBJECT'} = {};
+	$this->{'DATE'} = {};
+	$this->{'PATH'} = {};
 	
-	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
+	my $path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	if (open(my $f_kako, '<', $path)) {
-		flock($f_kako, 2);
-		while (<$f_kako>) {
-			chomp $_;
-			@elem = split(/<>/, $_);
-			$this->{'KEY'}->{$elem[0]}		= $elem[1];
-			$this->{'SUBJECT'}->{$elem[0]}	= $elem[2];
-			$this->{'DATE'}->{$elem[0]}		= $elem[3];
-			$this->{'PATH'}->{$elem[0]}		= $elem[4];
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		chomp @lines;
+		
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_);
+			if ($#elem + 1 < 5) {
+				warn "invalid line in $path";
+				next;
+			}
+			
+			my $id = $elem[0];
+			$this->{'KEY'}->{$id} = $elem[1];
+			$this->{'SUBJECT'}->{$id} = $elem[2];
+			$this->{'DATE'}->{$id} = $elem[3];
+			$this->{'PATH'}->{$id} = $elem[4];
 		}
-		close($f_kako);
 		return 0;
 	}
 	return -1;
@@ -86,16 +94,16 @@ sub Save
 {
 	my $this = shift;
 	my ($SYS) = @_;
-	my ($path, $data);
 	
-	$path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
+	my $path = $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS') . '/kako/kako.idx';
 	
-	if (open(my $f_kako, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_kako, 2);
-		seek($f_kako, 0, 0);
-		binmode($f_kako);
-		foreach (keys %{$this->{'SUBJECT'}}) {
-			$data = join('<>',
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		foreach (keys %{$this->{'KEY'}}) {
+			my $data = join('<>',
 				$_,
 				$this->{'KEY'}->{$_},
 				$this->{'SUBJECT'}->{$_},
@@ -103,12 +111,16 @@ sub Save
 				$this->{'PATH'}->{$_}
 			);
 			
-			print $f_kako "$data\n";
+			print $fh "$data\n";
 		}
-		truncate($f_kako, tell($f_kako));
-		close($f_kako);
-		chmod $SYS->Get('PM-DAT'), $path;
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save subject: $path";
+	}
+	chmod $SYS->Get('PM-DAT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -125,23 +137,20 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
 	
-	$n = 0;
+	my $n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (keys %{$this->{'KEY'}}) {
+		foreach my $key (keys %{$this->{'KEY'}}) {
 			if ($this->{'KEY'}->{$key} ne '0') {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
 	else {
-		foreach $key (keys %{$this->{$kind}}) {
+		foreach my $key (keys %{$this->{$kind}}) {
 			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
@@ -163,9 +172,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -184,16 +192,14 @@ sub Add
 {
 	my $this = shift;
 	my ($key, $subject, $date, $path) = @_;
-	my ($id);
 	
-	$id = time;
-	while (exists $this->{'KEY'}->{$id}) {
-		$id++;
-	}
-	$this->{'KEY'}->{$id}		= $key;
-	$this->{'SUBJECT'}->{$id}	= $subject;
-	$this->{'DATE'}->{$id}		= $date;
-	$this->{'PATH'}->{$id}		= $path;
+	my $id = time;
+	$id++ while (exists $this->{'KEY'}->{$id});
+	
+	$this->{'KEY'}->{$id} = $key;
+	$this->{'SUBJECT'}->{$id} = $subject;
+	$this->{'DATE'}->{$id} = $date;
+	$this->{'PATH'}->{$id} = $path;
 	
 	return $id;
 }
@@ -249,33 +255,29 @@ sub UpdateInfo
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my (%Dirs, @dirList, @fileList, @elem);
-	my ($dir, $file, $path, $subj);
 	
 	require './module/earendil.pl';
 	
-	undef $this->{'KEY'};
-	undef $this->{'SUBJECT'};
-	undef $this->{'DATE'};
-	undef $this->{'PATH'};
+	$this->{'KEY'} = {};
+	$this->{'SUBJECT'} = {};
+	$this->{'DATE'} = {};
+	$this->{'PATH'} = {};
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/kako';
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/kako';
 	
 	# ディレクトリ情報を取得
-	EARENDIL::GetFolderHierarchy($path, \%Dirs);
-	EARENDIL::GetFolderList(\%Dirs, \@dirList, '');
+	my @dirList = ();
+	EARENDIL::GetFolderHierarchy($path, ($_ = {}));
+	EARENDIL::GetFolderList($_, \@dirList, '');
 	
-	foreach $dir (@dirList) {
-		EARENDIL::GetFileList("$path/$dir", \@fileList, '(\d+)\.html');
+	foreach my $dir (@dirList) {
+		EARENDIL::GetFileList("$path/$dir", ($_ = []), '([0-9]+)\.html');
 		Add($this, 0, 0, 0, $dir);
-		foreach $file (@fileList) {
-			@elem = split(/\./, $file);
-			$subj = GetThreadSubject("$path/$dir/$file");
-			if ($subj ne '') {
-				Add($this, $elem[0], $subj, time, $dir);
-			}
+		foreach my $file (@$_) {
+			my @elem = split(/\./, $file);
+			my $subj = GetThreadSubject("$path/$dir/$file");
+			Add($this, $elem[0], $subj, time, $dir) if ($subj ne '');
 		}
-		undef @fileList;
 	}
 }
 
@@ -291,48 +293,50 @@ sub UpdateIndex
 {
 	my $this = shift;
 	my ($Sys, $Page) = @_;
-	my ($Banner, %PATHES, @subDirs, @info, @dirs);
-	my ($basePath, $path, $id, $dir, $key, $subj, $date);
+	my (@subDirs, @info);
 	
 	# 告知情報読み込み
 	require './module/denethor.pl';
-	$Banner = DENETHOR->new;
+	my $Banner = DENETHOR->new;
 	$Banner->Load($Sys);
 	
-	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	my $basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	
 	# パスをキーにしてハッシュを作成
-	foreach $id (keys(%{$this->{'KEY'}})) {
-		$path = $this->{'PATH'}->{$id};
+	my %PATHES = ();
+	foreach my $id (keys %{$this->{'KEY'}}) {
+		my $path = $this->{'PATH'}->{$id};
 		$PATHES{$path} = $id;
 	}
-	@dirs = keys %PATHES;
+	my @dirs = keys %PATHES;
 	unshift @dirs, '';
 	
 	# パスごとにindexを生成する
-	foreach $path (@dirs) {
+	foreach my $path (@dirs) {
+		my @info = ();
+		
 		# 1階層下のサブフォルダを取得する
-		GetSubFolders($path, \@dirs, \@subDirs);
-		foreach $dir (sort @subDirs) {
+		GetSubFolders($path, \@dirs, ($_ = []));
+		foreach my $dir (sort @$_) {
 			push @info, "0<>0<>0<>$dir";
 		}
 		
 		# ログデータがあれば情報配列に追加する
-		foreach $id (keys(%{$this->{'KEY'}})) {
+		foreach my $id (keys %{$this->{'KEY'}}) {
 			if ($path eq $this->{'PATH'}->{$id} && $this->{'KEY'}->{$id} ne '0') {
-				$key = $this->{'KEY'}->{$id};
-				$subj = $this->{'SUBJECT'}->{$id};
-				$date = $this->{'DATE'}->{$id};
-				push @info, "$key<>$subj<>$date<>$path";
+				my $data = join('<>',
+					$this->{'KEY'}->{$id},
+					$this->{'SUBJECT'}->{$id},
+					$this->{'DATE'}->{$id},
+					$path
+				);
+				push @info, "$data";
 			}
 		}
 		
 		# indexファイルを出力する
 		$Page->Clear();
 		OutputIndex($Sys, $Page, $Banner, \@info, $basePath, $path);
-		
-		undef @info;
-		undef @subDirs;
 	}
 }
 
@@ -349,14 +353,10 @@ sub UpdateIndex
 sub GetSubFolders
 {
 	my ($base, $pDirs, $pList) = @_;
-	my ($dir, $old);
 	
-	$base .= '/';
-	foreach $dir (@$pDirs) {
-		$old = $dir;
-		$old =~ s/^\Q$base\E//;
-		if ($old ne $dir && $old !~ /\//) {
-			push @$pList, $old;
+	foreach my $dir (@$pDirs) {
+		if ($dir =~ s|^\Q$base/\E|| && $dir !~ m|/|) {
+			push @$pList, $dir;
 		}
 	}
 }
@@ -374,15 +374,20 @@ sub GetThreadSubject
 	my ($path) = @_;
 	my $title = '';
 	
-	if (open(my $f_file, '<', $path)) {
-		flock($f_file, 2);
-		foreach my $text (<$f_file>) {
-			if ($text =~ /<title>(.*)<\/title>/) {
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		
+		foreach (@lines) {
+			if ($_ =~ m|<title>(.*)</title>|) {
 				$title = $1;
 				last;
 			}
 		}
-		close($f_file);
+	}
+	else {
+		warn "can't open: $path";
 	}
 	return $title;
 }
@@ -403,18 +408,16 @@ sub GetThreadSubject
 sub OutputIndex
 {
 	my ($Sys, $Page, $Banner, $pInfo, $base, $path, $Set) = @_;
-	my (@elem, $info, $version);
-	my ($Caption, $bbsRoot, $board, $cgipath);
 	
-	$cgipath	= $Sys->Get('CGIPATH');
+	my $cgipath	= $Sys->Get('CGIPATH');
 	
 	require './module/legolas.pl';
-	$Caption = LEGOLAS->new;
+	my $Caption = LEGOLAS->new;
 	$Caption->Load($Sys, 'META');
 	
-	$version = $Sys->Get('VERSION');
-	$bbsRoot = $Sys->Get('CGIPATH') . '/' . $Sys->Get('BBSPATH') . '/'. $Sys->Get('BBS');
-	$board = $Sys->Get('BBS');
+	my $version = $Sys->Get('VERSION');
+	my $bbsRoot = $Sys->Get('CGIPATH') . '/' . $Sys->Get('BBSPATH') . '/'. $Sys->Get('BBS');
+	my $board = $Sys->Get('BBS');
 	
 	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -451,8 +454,8 @@ HTML
  </tr>
 HTML
 	
-	foreach $info (@$pInfo) {
-		@elem = split(/<>/, $info);
+	foreach (@$pInfo) {
+		my @elem = split(/<>/, $_, -1);
 		
 		# サブフォルダ情報
 		if ($elem[0] eq '0') {
