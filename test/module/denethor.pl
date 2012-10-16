@@ -22,45 +22,17 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj);
 	
-	$obj = {
-		'TEXTPC'	=> '',	# PC用テキスト
-		'TEXTSB'	=> '',	# サブバナーテキスト
-		'TEXTMB'	=> '',	# 携帯用テキスト
-		'COLPC'		=> '',	# PC用背景色
-		'COLMB'		=> ''	# 携帯用背景色
+	my $obj = {
+		'TEXTPC'	=> undef,	# PC用テキスト
+		'TEXTSB'	=> undef,	# サブバナーテキスト
+		'TEXTMB'	=> undef,	# 携帯用テキスト
+		'COLPC'		=> undef,	# PC用背景色
+		'COLMB'		=> undef,	# 携帯用背景色
 	};
 	bless $obj, $this;
 	
 	return $obj;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	モジュールデストラクタ - DESTROY
-#	-------------------------------------------
-#	引　数：なし
-#	戻り値：なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub DESTROY
-{
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	オブジェクト取得 - Object
-#	-------------------------------------------
-#	引　数：なし
-#	戻り値：オブジェクトの参照
-#
-#------------------------------------------------------------------------------------------------------------
-sub Object
-{
-	my $this = shift;
-	
-	return $this->{'BANNER'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -75,56 +47,43 @@ sub Load
 {
 	my $this = shift;
 	my ($M) = @_;
-	my (@pc, @mb, $path, $f);
 	
-	$this->{'TEXTPC'}	= '<tr><td>なるほど告知欄じゃねーの</td></tr>';
-	$this->{'TEXTMB'}	= '<tr><td>なるほど告知欄じゃねーの</td></tr>';
-	$this->{'COLPC'}	= '#ccffcc';
-	$this->{'COLMB'}	= '#ccffcc';
+	$this->{'TEXTPC'} = '<tr><td>なるほど告知欄じゃねーの</td></tr>';
+	$this->{'TEXTSB'} = '';
+	$this->{'TEXTMB'} = '<tr><td>なるほど告知欄じゃねーの</td></tr>';
+	$this->{'COLPC'} = '#ccffcc';
+	$this->{'COLMB'} = '#ccffcc';
 	
-	$path = '.' . $M->Get('INFO');
+	my $path = '.' . $M->Get('INFO');
 	
-	if (open(my $f_banpc, '<', "$path/bannerpc.cgi")) {	# PC用読み込み
-		flock($f_banpc, 2);
-		$this->{'TEXTPC'} = '';
-		$f = 0;
-		while (<$f_banpc>) {
-			if ($f) {
-				$this->{'TEXTPC'} .= $_;
-			}
-			else {
-				chomp $_;
-				$this->{'COLPC'} = $_;
-				$f = 1;
-			}
-		}
-		close($f_banpc);
+	# PC用読み込み
+	if (open(my $fh, '<', "$path/bannerpc.cgi")) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		$_ = shift @lines;
+		$_ =~ s/[\r\n]+\z//;
+		$this->{'COLPC'} = $_;
+		$this->{'TEXTPC'} = join '', @lines;
 	}
 	
-	if (open(my $f_bansb, '<', "$path/bannersub.cgi")) {	# サブバナー読み込み
-		flock($f_bansb, 2);
-		$this->{'TEXTSB'} = '';
-		while (<$f_bansb>) {
-			$this->{'TEXTSB'} .= $_;
-		}
-		close($f_bansb);
+	# サブバナー読み込み
+	if (open(my $fh, '<', "$path/bannersub.cgi")) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		$this->{'TEXTSB'} = join '', @lines;
 	}
 	
-	if (open(my $f_banmb, '<', "$path/bannermb.cgi")) {	# 携帯用読み込み
-		flock($f_banmb, 2);
-		$this->{'TEXTMB'} = '';
-		$f = 0;
-		while (<$f_banmb>) {
-			if ($f) {
-				$this->{'TEXTMB'} .= $_;
-			}
-			else {
-				chomp $_;
-				$this->{'COLMB'} = $_;
-				$f = 1;
-			}
-		}
-		close($f_banmb);
+	# 携帯用読み込み
+	if (open(my $fh, '<', "$path/bannermb.cgi")) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		$_ = shift @lines;
+		$_ =~ s/[\r\n]+\z//;
+		$this->{'COLMB'} = $_;
+		$this->{'TEXTMB'} = join '', @lines;
 	}
 }
 
@@ -140,44 +99,47 @@ sub Save
 {
 	my $this = shift;
 	my ($M) = @_;
-	my (@file);
 	
+	my @file = ();
 	$file[0] = '.' . $M->Get('INFO') . '/bannerpc.cgi';
 	$file[1] = '.' . $M->Get('INFO') . '/bannermb.cgi';
 	$file[2] = '.' . $M->Get('INFO') . '/bannersub.cgi';
 	
-	chmod 0666, $file[0];	# PC用書き込み
-	if (open(my $f_banpc, (-f $file[0] ? '+<' : '>'), $file[0])) {
-		flock($f_banpc, 2);
-		seek($f_banpc, 0, 0);
-		binmode($f_banpc);
-		print $f_banpc "$$this{'COLPC'}\n";
-		print $f_banpc "$$this{'TEXTPC'}";
-		truncate($f_banpc, tell($f_banpc));
-		close($f_banpc);
+	# PC用書き込み
+	chmod 0666, $file[0];
+	if (open(my $fh, (-f $file[0] ? '+<' : '>'), $file[0])) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		print $fh $this->{'COLPC'} . "\n";
+		print $fh $this->{'TEXTPC'};
+		truncate($fh, tell($fh));
+		close($fh);
 	}
 	chmod $M->Get('PM-ADM'), $file[0];
 	
-	chmod 0666, $file[2];	# PC用書き込み
-	if (open(my $f_bansb, (-f $file[2] ? '+<' : '>'), $file[2])) {
-		flock($f_bansb, 2);
-		seek($f_bansb, 0, 0);
-		binmode($f_bansb);
-		print $f_bansb "$$this{'TEXTSB'}";
-		truncate($f_bansb, tell($f_bansb));
-		close($f_bansb);
+	# サブバナー書き込み
+	chmod 0666, $file[2];
+	if (open(my $fh, (-f $file[2] ? '+<' : '>'), $file[2])) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		print $fh $this->{'TEXTSB'};
+		truncate($fh, tell($fh));
+		close($fh);
 	}
 	chmod $M->Get('PM-ADM'), $file[2];
 	
-	chmod 0666, $file[1];	# 携帯用書き込み
-	if (open(my $f_banmb, (-f $file[1] ? '+<' : '>'), $file[1])) {
-		flock($f_banmb, 2);
-		seek($f_banmb, 0, 0);
-		binmode($f_banmb);
-		print $f_banmb "$$this{'COLMB'}\n";
-		print $f_banmb "$$this{'TEXTMB'}";
-		truncate($f_banmb, tell($f_banmb));
-		close($f_banmb);
+	# 携帯用書き込み
+	chmod 0666, $file[1];
+	if (open(my $fh, (-f $file[1] ? '+<' : '>'), $file[1])) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		print $fh $this->{'COLMB'} . "\n";
+		print $fh $this->{'TEXTMB'};
+		truncate($fh, tell($fh));
+		close($fh);
 	}
 	chmod $M->Get('PM-ADM'), $file[1];
 }
@@ -212,9 +174,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$key};
+	my $val = $this->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -240,14 +201,14 @@ sub Print
 	# 携帯用バナー表示
 	if ($mode) {
 		$Page->Print('<table border width="100%" ');
-		$Page->Print("bgcolor=$$this{'COLMB'}>");
-		$Page->Print("$$this{'TEXTMB'}</table>\n");
+		$Page->Print("bgcolor=$this->{'COLMB'}>");
+		$Page->Print("$this->{'TEXTMB'}</table>\n");
 	}
 	# PC用バナー表示
 	else {
 		$Page->Print("<table border=\"1\" cellspacing=\"7\" cellpadding=\"3\" width=\"$width%\"");
-		$Page->Print(" bgcolor=\"$$this{'COLPC'}\" align=\"center\">\n");
-		$Page->Print("$$this{'TEXTPC'}\n</table>\n");
+		$Page->Print(" bgcolor=\"$this->{'COLPC'}\" align=\"center\">\n");
+		$Page->Print("$this->{'TEXTPC'}\n</table>\n");
 	}
 	
 	# 下区切り
@@ -268,9 +229,9 @@ sub PrintSub
 	my ($Page) = @_;
 	
 	# サブバナーが存在したら表示する
-	if (defined $$this{'TEXTSB'} && $$this{'TEXTSB'} ne '') {
+	if ($this->{'TEXTSB'} ne '') {
 		$Page->Print("<div style=\"margin-bottom:1.2em;\">\n");
-		$Page->Print("$$this{'TEXTSB'}\n");
+		$Page->Print("$this->{'TEXTSB'}\n");
 		$Page->Print("</div>\n");
 		return 1;
 	}

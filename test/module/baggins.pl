@@ -593,10 +593,10 @@ sub new
 	my $class = shift;
 	
 	my $obj = {
-		'SUBJECT'	=> {},
-		'RES'		=> {},
-		'SORT'		=> [],
-		'NUM'		=> 0
+		'SUBJECT'	=> undef,
+		'RES'		=> undef,
+		'SORT'		=> undef,
+		'NUM'		=> undef,
 	};
 	bless $obj, $class;
 	

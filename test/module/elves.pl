@@ -38,14 +38,13 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj, %NAME, %PASS, %FULL, %EXPLAN);
 	
-	$obj = {
-		'NAME'	=> \%NAME,
-		'PASS'	=> \%PASS,
-		'FULL'	=> \%FULL,
-		'EXPL'	=> \%EXPLAN,
-		'SYSAD'	=> 0
+	my $obj = {
+		'NAME'	=> undef,
+		'PASS'	=> undef,
+		'FULL'	=> undef,
+		'EXPL'	=> undef,
+		'SYSAD'	=> undef,
 	};
 	
 	bless $obj, $this;
@@ -65,29 +64,38 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef $this->{'NAME'};
-	undef $this->{'PASS'};
-	undef $this->{'FULL'};
-	undef $this->{'EXPL'};
-	undef $this->{'SYSAD'};
+	$this->{'NAME'} = {};
+	$this->{'PASS'} = {};
+	$this->{'FULL'} = {};
+	$this->{'EXPL'} = {};
+	$this->{'SYSAD'} = {};
 	
-	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
+	my $path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
-	if (open(my $f_users, '<', $path)) {
-		flock($f_users, 2);
-		while (<$f_users>) {
-			chomp $_;
-			@elem = split(/<>/, $_);
-			$this->{'NAME'}->{$elem[0]}		= $elem[1];
-			$this->{'PASS'}->{$elem[0]}		= $elem[2];
-			$this->{'FULL'}->{$elem[0]}		= $elem[3];
-			$this->{'EXPL'}->{$elem[0]}		= $elem[4];
-			$this->{'SYSAD'}->{$elem[0]}	= $elem[5];
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_, -1);
+			if ($#elem + 1 < 6) {
+				warn "invalid line in $path";
+				next;
+			}
+			
+			my $id = $elem[0];
+			$this->{'NAME'}->{$id} = $elem[1];
+			$this->{'PASS'}->{$id} = $elem[2];
+			$this->{'FULL'}->{$id} = $elem[3];
+			$this->{'EXPL'}->{$id} = $elem[4];
+			$this->{'SYSAD'}->{$id} = $elem[5];
 		}
-		close($f_users);
 	}
 }
 
@@ -103,17 +111,16 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data);
 	
-	$path = '.' . $Sys->Get('INFO') . '/users.cgi';
+	my $path = '.' . $Sys->Get('INFO') . '/users.cgi';
 	
-	if (open(my $f_users, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_users, 2);
-		binmode($f_users);
-		seek($f_users, 0, 0);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		binmode($fh);
+		seek($fh, 0, 0);
 		
 		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
+			my $data = join('<>',
 				$_,
 				$this->{'NAME'}->{$_},
 				$this->{'PASS'}->{$_},
@@ -122,11 +129,11 @@ sub Save
 				$this->{'SYSAD'}->{$_}
 			);
 			
-			print $f_users "$data\n";
+			print $fh "$data\n";
 		}
 		
-		truncate($f_users, tell($f_users));
-		close($f_users);
+		truncate($fh, tell($fh));
+		close($fh);
 		chmod $Sys->Get('PM-ADM'), $path;
 	}
 }
@@ -145,21 +152,16 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
 	
-	$n = 0;
+	my $n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (keys %{$this->{NAME}}) {
-			push @$pBuf, $key;
-			$n++;
-		}
+		$n += push @$pBuf, keys %{$this->{'NAME'}};
 	}
 	else {
-		foreach $key (keys %{$this->{$kind}}) {
+		foreach my $key (keys %{$this->{$kind}}) {
 			if ($this->{$kind}->{$key} eq $name || $kind eq 'ALL') {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
@@ -181,9 +183,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -203,14 +204,13 @@ sub Add
 {
 	my $this = shift;
 	my ($name, $pass, $full, $explan, $sysad) = @_;
-	my ($id);
 	
-	$id = time;
-	$this->{'NAME'}->{$id}	= $name;
-	$this->{'PASS'}->{$id}	= $this->GetStrictPass($pass, $id);
-	$this->{'EXPL'}->{$id}	= $explan;
-	$this->{'FULL'}->{$id}	= $full;
-	$this->{'SYSAD'}->{$id}	= $sysad;
+	my $id = time;
+	$this->{'NAME'}->{$id} = $name;
+	$this->{'PASS'}->{$id} = $this->GetStrictPass($pass, $id);
+	$this->{'EXPL'}->{$id} = $explan;
+	$this->{'FULL'}->{$id} = $full;
+	$this->{'SYSAD'}->{$id} = $sysad;
 	
 	return $id;
 }
@@ -271,7 +271,8 @@ sub GetStrictPass
 {
 	my $this = shift;
 	my ($pass, $key) = @_;
-	my ($hash);
+	
+	my $hash;
 	
 	if (length($pass) >= 9) {
 		require Digest::SHA::PurePerl;
@@ -311,13 +312,12 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj, %NAME, %EXPLAN, %RANGE, %AUTHOR, %USERS);
 	
-	$obj = {
-		'NAME'	=> \%NAME,
-		'EXPL'	=> \%EXPLAN,
-		'AUTH'	=> \%AUTHOR,
-		'USERS'	=> \%USERS
+	my $obj = {
+		'NAME'	=> undef,
+		'EXPL'	=> undef,
+		'AUTH'	=> undef,
+		'USERS'	=> undef,
 	};
 	
 	bless $obj, $this;
@@ -337,28 +337,37 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem, @auth);
 	
 	# ハッシュ初期化
-	undef $this->{'NAME'};
-	undef $this->{'EXPL'};
-	undef $this->{'AUTH'};
-	undef $this->{'USERS'};
+	$this->{'NAME'} = {};
+	$this->{'EXPL'} = {};
+	$this->{'AUTH'} = {};
+	$this->{'USERS'} = {};
 	
-	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
+	my $path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-	if (open(my $f_groups, '<', $path)) {
-		flock($f_groups, 2);
-		while (<$f_groups>) {
-			chomp $_;
-			@elem = split(/<>/, $_);
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_, -1);
+			if ($#elem + 1 < 5) {
+				warn "invalid line in $path";
+				next;
+			}
+			
+			my $id = $elem[0];
 			$elem[4] =~ s/ //g;
-			$this->{'NAME'}->{$elem[0]}		= $elem[1];
-			$this->{'EXPL'}->{$elem[0]}		= $elem[2];
-			$this->{'AUTH'}->{$elem[0]}		= $elem[3];
-			$this->{'USERS'}->{$elem[0]}	= $elem[4];
+			$this->{'NAME'}->{$id} = $elem[1];
+			$this->{'EXPL'}->{$id} = $elem[2];
+			$this->{'AUTH'}->{$id} = $elem[3];
+			$this->{'USERS'}->{$id} = $elem[4];
 		}
-		close($f_groups);
 	}
 }
 
@@ -374,17 +383,16 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data);
 	
-	$path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
+	my $path = $Sys->Get('BBSPATH') . '/' .  $Sys->Get('BBS') . '/info/groups.cgi';
 	
-	if (open(my $f_groups, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_groups, 2);
-		seek($f_groups, 0, 0);
-		binmode($f_groups);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
 		
 		foreach (keys %{$this->{'NAME'}}) {
-			$data = join('<>',
+			my $data = join('<>',
 				$_,
 				$this->{'NAME'}->{$_},
 				$this->{'EXPL'}->{$_},
@@ -392,13 +400,13 @@ sub Save
 				$this->{'USERS'}->{$_}
 			);
 			
-			print $f_groups "$data\n";
+			print $fh "$data\n";
 		}
 		
-		truncate($f_groups, tell($f_groups));
-		close($f_groups);
-		chmod $Sys->Get('PM-ADM'), $path;
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -413,14 +421,9 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($pBuf) = @_;
-	my ($n);
 	
-	$n = 0;
+	my $n += push @$pBuf, keys %{$this->{'NAME'}};
 	
-	foreach (keys %{$this->{NAME}}) {
-		push @$pBuf, $_;
-		$n++;
-	}
 	return $n;
 }
 
@@ -438,9 +441,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -460,13 +462,12 @@ sub Add
 {
 	my $this = shift;
 	my ($name, $explan, $authors, $users) = @_;
-	my ($id);
 	
-	$id = time;
-	$this->{'NAME'}->{$id}	= $name;
-	$this->{'EXPL'}->{$id}	= $explan;
-	$this->{'AUTH'}->{$id}	= $authors;
-	$this->{'USERS'}->{$id}	= $users;
+	my $id = time;
+	$this->{'NAME'}->{$id} = $name;
+	$this->{'EXPL'}->{$id} = $explan;
+	$this->{'AUTH'}->{$id} = $authors;
+	$this->{'USERS'}->{$id} = $users;
 	
 	return $id;
 }
@@ -484,14 +485,12 @@ sub AddUser
 {
 	my $this = shift;
 	my ($id, $user) = @_;
-	my (@users, @match, $nuser);
 	
-	@users = split(/\,/, $this->{'USERS'}->{$id});
-	@match = grep($user, @users);
-	$nuser = $#match;
+	my @users = split(/\,/, $this->{'USERS'}->{$id});
+	my @match = grep($user, @users);
 	
 	# 登録済みのユーザは重複登録しない
-	if ($nuser == 0) {
+	if ($#match == 0) {
 		$this->{'USERS'}->{$id} .= ",$user";
 	}
 }
@@ -547,17 +546,15 @@ sub GetBelong
 {
 	my $this = shift;
 	my ($id) = @_;
-	my (@users, $group, $user);
 	
-	foreach $group (keys %{$this->{'USERS'}}) {
-		next if (! defined $this->{'USERS'}->{$group});
-		@users = split(/\,/, $this->{'USERS'}->{$group});
-		foreach $user (@users) {
-			if ($id eq $user) {
-				return $group;
-			}
+	my $Users = $this->{'USERS'};
+	foreach my $group (keys %$Users) {
+		my @users = split(/\,/, $Users->{$group});
+		foreach my $user (@users) {
+			return $group if ($id eq $user);
 		}
 	}
+	
 	return '';
 }
 
@@ -586,13 +583,12 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj);
 	
-	$obj = {
+	my $obj = {
 		'SYS'	=> undef,
 		'USER'	=> undef,
 		'GROUP'	=> undef,
-		'BBS'	=> undef
+		'BBS'	=> undef,
 	};
 	bless $obj, $this;
 	
@@ -635,20 +631,17 @@ sub IsLogin
 {
 	my $this = shift;
 	my ($name, $pass) = @_;
-	my (@userSet, $User, $lPass, $id);
 	
-	$User = $this->{'USER'};
+	my $User = $this->{'USER'};
 	
 	# ユーザ名でユーザIDセットを取得
-	$User->GetKeySet('NAME', $name, \@userSet);
+	$User->GetKeySet('NAME', $name, ($_ = {}));
 	
 	# 取得したIDセットからユーザ名とパスワードが同じものを検索
-	foreach $id (@userSet) {
-		$lPass = $User->Get('PASS', $id);
-		$pass = $User->GetStrictPass($pass, $id);
-		if ($lPass eq $pass) {
-			return $id;
-		}
+	foreach my $id (@$_) {
+		my $lPass = $User->Get('PASS', $id);
+		my $hash = $User->GetStrictPass($pass, $id);
+		return $id if ($lPass eq $hash);
 	}
 	return 0;
 }
@@ -665,9 +658,8 @@ sub SetGroupInfo
 {
 	my $this = shift;
 	my ($bbs) = @_;
-	my ($oldBBS);
 	
-	$oldBBS = $this->{'SYS'}->Get('BBS');
+	my $oldBBS = $this->{'SYS'}->Get('BBS');
 	$this->{'SYS'}->Set('BBS', $bbs);
 	$this->{'BBS'} = $bbs;
 	
@@ -690,31 +682,23 @@ sub IsAuthority
 {
 	my $this = shift;
 	my ($id, $author, $bbs) = @_;
-	my ($sysad, $group, $auth, @authors);
 	
 	# システム管理権限グループなら無条件OK
-	$sysad	= $this->{'USER'}->Get('SYSAD', $id);
-	if ($sysad) {
-		return 1;
-	}
-	if ($bbs eq '*') {
-		return 0;
-	}
+	my $sysad = $this->{'USER'}->Get('SYSAD', $id);
+	return 1 if ($sysad);
+	return 0 if ($bbs eq '*');
 	
 	# 対象BBSに所属しているか確認
-	$group = $this->{'GROUP'}->GetBelong($id);
-	if ($group eq '') {
-		return 0;
-	}
+	my $group = $this->{'GROUP'}->GetBelong($id);
+	return 0 if ($group eq '');;
 	
 	# 権限を持っているか確認
-	$auth = $this->{'GROUP'}->Get('AUTH', $group);
-	@authors = split(/\,/, $auth);
-	foreach $auth (@authors) {
-		if ($auth eq $author) {
-			return 1;
-		}
+	my $auth = $this->{'GROUP'}->Get('AUTH', $group);
+	my @authors = split(/\,/, $auth, -1);
+	foreach my $auth (@authors) {
+		return 1 if ($auth eq $author);
 	}
+	
 	return 0;
 }
 
@@ -732,25 +716,24 @@ sub GetBelongBBSList
 {
 	my $this = shift;
 	my ($id, $oBBS, $pBBS) = @_;
-	my (@bbsSet, $bbsDir, $bbsID, $n, $origBBS);
+	
+	my $n = 0;
 	
 	# システム管理ユーザは全てのBBSに所属とする
 	if ($this->{'USER'}->Get('SYSAD', $id)) {
 		$oBBS->GetKeySet('ALL', '', $pBBS);
-		$n = @$pBBS;
+		$n = scalar @$pBBS;
 	}
 	# 一般ユーザは所属グループから判断する
 	else {
-		$oBBS->GetKeySet('ALL', '', \@bbsSet);
-		$origBBS = $this->{'BBS'};
-		$n = 0;
+		my $origBBS = $this->{'BBS'};
+		$oBBS->GetKeySet('ALL', '', ($_ = []));
 		
-		foreach $bbsID (@bbsSet) {
-			$bbsDir = $oBBS->Get('DIR', $bbsID);
+		foreach my $bbsID (@$_) {
+			my $bbsDir = $oBBS->Get('DIR', $bbsID);
 			SetGroupInfo($this, $bbsDir);
 			if ($this->{'GROUP'}->GetBelong($id) ne '') {
-				push @$pBBS, $bbsID;
-				$n++;
+				$n += push @$pBBS, $bbsID;
 			}
 		}
 		
