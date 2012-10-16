@@ -635,7 +635,7 @@ sub IsLogin
 	my $User = $this->{'USER'};
 	
 	# ユーザ名でユーザIDセットを取得
-	$User->GetKeySet('NAME', $name, ($_ = {}));
+	$User->GetKeySet('NAME', $name, ($_ = []));
 	
 	# 取得したIDセットからユーザ名とパスワードが同じものを検索
 	foreach my $id (@$_) {
