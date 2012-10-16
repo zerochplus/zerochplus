@@ -72,7 +72,7 @@ sub Load
 		flock($fh, 2);
 		my @lines = <$fh>;
 		close($fh);
-		chomp @lines;
+		map { s/[\r\n]+\z// } @lines;
 		
 		foreach (@lines) {
 			next if ($_ eq '');
@@ -131,7 +131,7 @@ sub LoadConfig
 		flock($fh, 2);
 		my @lines = <$fh>;
 		close($fh);
-		chomp @lines;
+		map { s/[\r\n]+\z// } @lines;
 		foreach (@lines) {
 			my @elem = split(/<>/, $_, -1);
 			if ($#elem + 1 < 3) {

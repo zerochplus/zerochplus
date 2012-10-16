@@ -143,7 +143,7 @@ sub Load
 	
 	my $fh = $this->Open($Sys) or return;
 	my @lines = <$fh>;
-	chomp @lines;
+	map { s/[\r\n]+\z// } @lines;
 	
 	my $num = 0;
 	foreach (@lines) {
@@ -210,7 +210,7 @@ sub OnDemand
 	
 	my $fh = $this->Open($Sys) or return;
 	my @lines = <$fh>;
-	chomp @lines;
+	map { s/[\r\n]+\z// } @lines;
 	
 	my $num = 0;
 	foreach (@lines) {
@@ -523,7 +523,7 @@ sub UpdateAll
 			my $first = <$fh>;
 			$n++ while (<$fh>);
 			close($fh);
-			chomp $first;
+			$first =~ s/[\r\n]+\z//;
 			
 			my @elem = split(/<>/, $first, -1);
 			$this->{'SUBJECT'}->{$id} = $elem[4];
@@ -626,7 +626,7 @@ sub Load
 		flock($fh, 2);
 		my @lines = <$fh>;
 		close($fh);
-		chomp @lines;
+		map { s/[\r\n]+\z// } @lines;
 		
 		my $num = 0;
 		for (@lines) {
@@ -883,7 +883,7 @@ sub UpdateAll
 			my $first = <$fh>;
 			$n++ while (<$fh>);
 			close($fh);
-			chomp $first;
+			$first =~ s/[\r\n]+\z//;
 			
 			my @elem = split(/<>/, $first, -1);
 			$this->{'SUBJECT'}->{$id} = $elem[4];

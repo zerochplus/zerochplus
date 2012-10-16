@@ -60,7 +60,7 @@ sub Load
 		flock($fh, 2);
 		my @lines = <$fh>;
 		close($fh);
-		chomp @lines;
+		map { s/[\r\n]+\z// } @lines;
 		
 		foreach (@lines) {
 			next if ($_ eq '');
