@@ -1,19 +1,6 @@
 #============================================================================================================
 #
-#	アクセスユーザ管理モジュール(FARAMIR)
-#	faramir.pl
-#	------------------------------------------
-#	2002.12.15 start
-#	2003.01.22 共通インタフェイスに移行
-#	2003.02.25 役割変更
-#------------------------------------------------------------------------------------------------------------
-#
-#	Load
-#	Save
-#	Set
-#	Get
-#	Clear
-#	Check
+#	アクセスユーザ管理モジュール
 #
 #============================================================================================================
 package	FARAMIR;
@@ -31,15 +18,15 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my (@USER, $obj);
+	my $class = shift;
 	
-	$obj = {
-		'TYPE'		=> '',
-		'METHOD'	=> '',
-		'USER'		=> \@USER
+	my $obj = {
+		'TYPE'		=> undef,
+		'METHOD'	=> undef,
+		'USER'		=> undef,
+		'SYS'		=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -48,7 +35,7 @@ sub new
 #
 #	ユーザデータ読み込み - Load
 #	-------------------------------------------
-#	引　数：$M : MELKOR
+#	引　数：$Sys : MELKOR
 #	戻り値：正常読み込み:0,エラー:1
 #
 #------------------------------------------------------------------------------------------------------------
@@ -56,28 +43,23 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my (@datas, @head, $path, $dummy);
 	
 	$this->{'SYS'} = $Sys;
+	$this->{'USER'} = [];
 	
-	undef @{$this->{'USER'}};
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	if (open(my $f_user, '<', $path)) {
-		flock($f_user, 2);
-		@datas = <$f_user>;
-		close($f_user);
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @datas = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @datas;
 		
-		($dummy, @datas) = @datas;
-		chomp $dummy;
-		@head = split(/<>/, $dummy);
+		my @head = split(/<>/, shift(@datas), -1);
 		$this->{'TYPE'} = $head[0];
 		$this->{'METHOD'} = $head[1];
 		
-		foreach (@datas) {
-			chomp $_;
-			push @{$this->{'USER'}}, $_;
-		}
+		push @{$this->{'USER'}}, @datas;
 		return 0;
 	}
 	return 1;
@@ -87,7 +69,7 @@ sub Load
 #
 #	ユーザデータ書き込み - Save
 #	-------------------------------------------
-#	引　数：$M : MELKOR
+#	引　数：$Sys : MELKOR
 #	戻り値：正常書き込み:0,エラー:-1
 #
 #------------------------------------------------------------------------------------------------------------
@@ -95,20 +77,19 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path);
 	
-	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/access.cgi";
 	
-	if (open(my $f_user, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_user, 2);
-		seek($f_user, 0, 0);
-		binmode($f_user);
-		print $f_user $this->{'TYPE'} . '<>' . $this->{'METHOD'} . "\n";
-		foreach (@{$this->{'USER'}}) {
-			print $f_user "$_\n";
-		}
-		truncate($f_user, tell($f_user));
-		close($f_user);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		print $fh "$this->{'TYPE'}<>$this->{'METHOD'}\n";
+		print $fh "$_\n" foreach (@{$this->{'USER'}});
+		
+		truncate($fh, tell($fh));
+		close($fh);
 		chmod $Sys->Get('PM-ADM'), $path;
 	}
 	
@@ -144,9 +125,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$key};
+	my $val = $this->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -163,7 +143,7 @@ sub Clear
 {
 	my $this = shift;
 	
-	undef @{$this->{'USER'}};
+	$this->{'USER'} = [];
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -188,6 +168,8 @@ sub Set
 #	ユーザ調査 - Check
 #	-------------------------------------------
 #	引　数：$host : 調査ホスト
+#			$addr : 調査IPアドレス
+#			$koyuu : 端末固有識別子
 #	戻り値：登録ユーザ:1,未登録ユーザ:0
 #
 #------------------------------------------------------------------------------------------------------------
@@ -195,70 +177,72 @@ sub Check
 {
 	my $this = shift;
 	my ($host, $addr, $koyuu) = @_;
-	my ($flag, $sys, $addrb, $adex);
 	
-	$sys = $this->{'SYS'};
-	$addrb = unpack('B32', pack('C*', split(/\./, $addr)));
-	$flag = 0;
-	$adex = '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}';
+	my $Sys = $this->{'SYS'};
+	my $addrb = unpack('B32', pack('C*', split(/\./, $addr)));
+	my $flag = 0;
+	my $adex = '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}';
 	
 	foreach my $line (@{$this->{'USER'}}) {
-		next if ($line eq '' || $line =~ /^[#;]/);
+		next if ($line =~ /^[#;]|^$/);
 		
+		# IPアドレス/CIDR
 		if ($line =~ m|^($adex)(?:/([0-9]+))?$|) {
-			my ($leng, $a);
-			$leng = 32;
-			$leng = $2 if ($2);
-			$a = unpack("B$leng", pack('C*', split(/\./, $1)));
+			my $leng = $2 || 32;
+			my $a = unpack("B$leng", pack('C*', split(/\./, $1)));
 			if (substr($addrb, 0, $leng) eq $a) {
 				$flag = 1;
-				$sys->Set('HITS', $line);
+				$Sys->Set('HITS', $line);
 				last;
 			}
 		}
+		# IPアドレス範囲指定
 		elsif ($line =~ m|^($adex)-($adex)$|) {
-			my ($a, $b);
-			$a = unpack('B32', pack('C*', split(/\./, $1)));
-			$b = unpack('B32', pack('C*', split(/\./, $2)));
-			if ($a gt $b) {
-				$_ = $a;
-				$a = $b;
-				$b = $_;
-			}
+			my $a = unpack('B32', pack('C*', split(/\./, $1)));
+			my $b = unpack('B32', pack('C*', split(/\./, $2)));
+			($b, $a) = ($a, $b) if ($a gt $b);
 			if ($addrb ge $a && $addrb le $b) {
 				$flag = 1;
-				$sys->Set('HITS', $line);
+				$Sys->Set('HITS', $line);
 				last;
 			}
 		}
-		elsif ($host =~ /$line/) { # $lineは正規表現
+		# 端末固有識別子
+		elsif (defined $koyuu && $koyuu =~ /^\Q$line\E$/) {
 			$flag = 1;
-			$sys->Set('HITS', $line);
+			$Sys->Set('HITS', $line);
 			last;
 		}
-		elsif (defined $koyuu && $koyuu =~ /^\Q$line\E$/) { # $lineは正規表現
+		# ホスト名(正規表現)
+		elsif ($host =~ /$line/) {
 			$flag = 1;
-			$sys->Set('HITS', $line);
+			$Sys->Set('HITS', $line);
 			last;
 		}
 	}
 	
-	if ($flag && $this->{'TYPE'} eq 'disable') {		# 規制ユーザ
-		if ($this->{'METHOD'} eq 'disable') {			# 処理：書き込み不可
+	# 規制ユーザ
+	if ($flag && $this->{'TYPE'} eq 'disable') {
+		if ($this->{'METHOD'} eq 'disable') {
+			# 処理：書き込み不可
 			return 4;
 		}
-		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {
+			# 処理：ホスト表示
 			return 2;
 		}
 		else {
 			return 4;
 		}
 	}
-	elsif (! $flag && $this->{'TYPE'} eq 'enable') {	# 限定ユーザ以外
-		if ($this->{'METHOD'} eq 'disable') {			# 処理：書き込み不可
+	# 限定ユーザ以外
+	elsif (! $flag && $this->{'TYPE'} eq 'enable') {
+		if ($this->{'METHOD'} eq 'disable') {
+			# 処理：書き込み不可
 			return 4;
 		}
-		elsif ($this->{'METHOD'} eq 'host') {			# 処理：ホスト表示
+		elsif ($this->{'METHOD'} eq 'host') {
+			# 処理：ホスト表示
 			return 2;
 		}
 		else {

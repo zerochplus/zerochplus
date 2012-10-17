@@ -1,15 +1,6 @@
 #============================================================================================================
 #
 #	ファイル操作ユーティリティモジュール
-#	earendil.pl
-#	-------------------------------------------------------------------------------------
-#	2004.02.20 start
-#	-------------------------------------------------------------------------------------
-#	Copy					: ファイルコピー
-#	Move					: ファイル移動
-#	DeleteDirectory			: ディレクトリ削除
-#	GetFileInfoList			: ファイル情報リスト取得
-#	GetFileList				: ファイル一覧取得
 #
 #============================================================================================================
 package	EARENDIL;
@@ -79,12 +70,12 @@ sub Move
 sub DeleteDirectory
 {
 	my ($path) = @_;
-	my (%fileList, $file, $attr);
 	
 	# ファイル情報を取得
-	GetFileInfoList($path, ($_ = {}));
+	my %fileList = ();
+	GetFileInfoList($path, \%fileList);
 	
-	foreach my $file (keys %$_) {
+	foreach my $file (keys %fileList) {
 		if ($file ne '.' && $file ne '..') {
 			my (undef, undef, $attr) = split(/<>/, $fileList{$file}, -1);
 			if ($attr & 1) {						# ディレクトリなら

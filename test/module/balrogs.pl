@@ -1,10 +1,6 @@
 #============================================================================================================
 #
 #	検索モジュール(BALROGS)
-#	balrogs.pl
-#	-------------------------------------------------------------------------------------
-#	2003.11.22 start
-#	2004.09.18 システム改変に伴う変更
 #
 #============================================================================================================
 package	BALROGS;
@@ -22,7 +18,7 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
+	my $class = shift;
 	
 	my $obj = {
 		'SYS'		=> undef,
@@ -30,7 +26,7 @@ sub new
 		'SEARCHSET'	=> undef,
 		'RESULTSET'	=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -39,21 +35,21 @@ sub new
 #
 #	検索設定
 #	-------------------------------------------------------------------------------------
-#	@param	$SYS    : MELKOR
-#	@param	$mode   : 0:全検索,1:BBS内検索,2:スレッド内検索
-#	@param	$type   : 0:全検索,1:名前検索,2:本文検索
-#			          4:ID(日付)検索
-#	@param	$bbs    : 検索BBS名($mode=1の場合に指定)
-#	@param	$thread : 検索スレッド名($mode=2の場合に指定)
+#	@param	$Sys	MELKOR
+#	@param	$mode	0:全検索,1:BBS内検索,2:スレッド内検索
+#	@param	$type	0:全検索,1:名前検索,2:本文検索
+#					4:ID(日付)検索
+#	@param	$bbs	検索BBS名($mode=1の場合に指定)
+#	@param	$thread	検索スレッド名($mode=2の場合に指定)
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Create
 {
 	my $this = shift;
-	my ($SYS, $mode, $type, $bbs, $thread) = @_;
+	my ($Sys, $mode, $type, $bbs, $thread) = @_;
 	
-	$this->{'SYS'} = $SYS;
+	$this->{'SYS'} = $Sys;
 	$this->{'TYPE'} = $type;
 	
 	$this->{'SEARCHSET'} = [];
@@ -66,10 +62,10 @@ sub Create
 		require './module/nazguls.pl';
 		my $BBSs = NAZGUL->new;
 		
-		$BBSs->Load($SYS);
+		$BBSs->Load($Sys);
 		$BBSs->GetKeySet('ALL', '', ($_ = []));
 		
-		my $BBSpath = $SYS->Get('BBSPATH');
+		my $BBSpath = $Sys->Get('BBSPATH');
 		
 		foreach my $bbsID (@$_) {
 			my $dir = $BBSs->Get('DIR', $bbsID);
@@ -77,9 +73,9 @@ sub Create
 			# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
 			next if ( -e "$BBSpath/$dir/.0ch_hidden" );
 			
-			$SYS->Set('BBS', $dir);
+			$Sys->Set('BBS', $dir);
 			my $Threads = BILBO->new;
-			$Threads->Load($SYS);
+			$Threads->Load($Sys);
 			$Threads->GetKeySet('ALL', '', ($_ = []));
 			
 			foreach my $threadID (@$_) {
@@ -93,8 +89,8 @@ sub Create
 		require './module/baggins.pl';
 		my $Threads = BILBO->new;
 		
-		$SYS->Set('BBS', $bbs);
-		$Threads->Load($SYS);
+		$Sys->Set('BBS', $bbs);
+		$Threads->Load($Sys);
 		$Threads->GetKeySet('ALL', '', ($_ = []));
 		
 		foreach my $threadID (@$_) {
@@ -123,8 +119,8 @@ sub Create
 #
 #	検索実行
 #	-------------------------------------------------------------------------------------
-#	@param	$word : 検索ワード
-#	@param	$f    : 前結果クリアフラグ
+#	@param	$word	検索ワード
+#	@param	$f		前結果クリアフラグ
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
