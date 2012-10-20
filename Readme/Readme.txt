@@ -164,3 +164,12 @@ a pure-perl DNS resolver with support for timeout
     Author:     Kazuho Oku <kazuhooku@gmail.com>
     License:    Artistic License
     CPAN:       http://search.cpan.org/dist/Net-DNS-Lite-0.09/
+    
+List-MoreUtils
+Provide the stuff missing in List::Util
+    Version:    0.33
+    Released:   2011-08-04
+    Author:     Adam Kennedy <adamk@cpan.org>
+    License:    Artistic License
+    CPAN:       http://search.cpan.org/dist/List-MoreUtils-0.33/
+
