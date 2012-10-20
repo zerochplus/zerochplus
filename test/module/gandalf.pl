@@ -1,9 +1,6 @@
 #============================================================================================================
 #
 #	ユーザ通知管理モジュール
-#	gandalf.pl
-#	-------------------------------------------------------------------------------------
-#	2004.09.11 start
 #
 #============================================================================================================
 package	GANDALF;
@@ -22,15 +19,14 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my ($obj);
 	
-	$obj = {
+	my $obj = {
 		'TO'		=> undef,
 		'FROM'		=> undef,
 		'SUBJECT'	=> undef,
 		'TEXT'		=> undef,
 		'DATE'		=> undef,
-		'LIMIT'		=> undef
+		'LIMIT'		=> undef,
 	};
 	bless($obj,$this);
 	
@@ -49,30 +45,40 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, @elem);
 	
 	# ハッシュ初期化
-	undef $this->{'TO'};
-	undef $this->{'FROM'};
-	undef $this->{'SUBJECT'};
-	undef $this->{'TEXT'};
-	undef $this->{'DATE'};
+	$this->{'TO'} = {};
+	$this->{'FROM'} = {};
+	$this->{'SUBJECT'} = {};
+	$this->{'TEXT'} = {};
+	$this->{'DATE'} = {};
+	$this->{'LIMIT'} = {};
 	
-	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
+	my $path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
-	if (open(my $f_notice, '<', $path)) {
-		flock($f_notice, 2);
-		while (<$f_notice>) {
-			chomp $_;
-			@elem = split(/<>/, $_);
-			$this->{'TO'}->{$elem[0]}		= $elem[1];
-			$this->{'FROM'}->{$elem[0]}		= $elem[2];
-			$this->{'SUBJECT'}->{$elem[0]}	= $elem[3];
-			$this->{'TEXT'}->{$elem[0]}		= $elem[4];
-			$this->{'DATE'}->{$elem[0]}		= $elem[5];
-			$this->{'LIMIT'}->{$elem[0]}	= $elem[6];
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_, -1);
+			if ($#elem + 1 < 7) {
+				warn "invalid line in $path";
+				#next;
+			}
+			
+			my $id = $elem[0];
+			$this->{'TO'}->{$id} = $elem[1];
+			$this->{'FROM'}->{$id} = $elem[2];
+			$this->{'SUBJECT'}->{$id} = $elem[3];
+			$this->{'TEXT'}->{$id} = $elem[4];
+			$this->{'DATE'}->{$id} = $elem[5];
+			$this->{'LIMIT'}->{$id} = $elem[6];
 		}
-		close($f_notice);
 	}
 }
 
@@ -88,16 +94,20 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $data);
 	
-	$path = '.' . $Sys->Get('INFO') . '/notice.cgi';
+	foreach my $id (keys %{$this->{'TO'}}) {
+		$this->Delete($id) if ($this->IsLimitOut($id));
+	}
 	
-	if (open(my $f_notice, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_notice, 2);
-		seek($f_notice, 0, 0);
-		binmode($f_notice);
+	my $path = '.' . $Sys->Get('INFO') . '/notice.cgi';
+	
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
 		foreach (keys %{$this->{'TO'}}) {
-			$data = join('<>',
+			my $data = join('<>',
 				$_,
 				$this->{'TO'}->{$_},
 				$this->{'FROM'}->{$_},
@@ -107,12 +117,13 @@ sub Save
 				$this->{'LIMIT'}->{$_}
 			);
 			
-			print $f_notice "$data\n";
+			print $fh "$data\n";
 		}
-		truncate($f_notice, tell($f_notice));
-		close($f_notice);
-		chmod $Sys->Get('PM-ADM'), $path;
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	chmod $Sys->Get('PM-ADM'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -129,21 +140,16 @@ sub GetKeySet
 {
 	my $this = shift;
 	my ($kind, $name, $pBuf) = @_;
-	my ($key, $n);
 	
-	$n = 0;
+	my $n = 0;
 	
 	if ($kind eq 'ALL') {
-		foreach $key (keys(%{$this->{'TO'}})) {
-			push @$pBuf, $key;
-			$n++;
-		}
+		$n += push @$pBuf, keys(%{$this->{'TO'}});
 	}
 	else {
-		foreach $key (keys(%{$this->{$kind}})) {
+		foreach my $key (keys(%{$this->{$kind}})) {
 			if (($this->{$kind}->{$key} eq $name) || ($kind eq 'ALL')) {
-				push @$pBuf, $key;
-				$n++;
+				$n += push @$pBuf, $key;
 			}
 		}
 	}
@@ -155,9 +161,9 @@ sub GetKeySet
 #
 #	通知情報取得
 #	-------------------------------------------------------------------------------------
-#	@param	$kind	情報種別
-#	@param	$key	ID
-#			$default : デフォルト
+#	@param	$kind		情報種別
+#	@param	$key		ID
+#	@param	$default	デフォルト
 #	@return	情報
 #
 #------------------------------------------------------------------------------------------------------------
@@ -165,9 +171,8 @@ sub Get
 {
 	my $this = shift;
 	my ($kind, $key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$key};
+	my $val = $this->{$kind}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -180,6 +185,7 @@ sub Get
 #	@param	$from	送信ユーザ
 #	@param	$subj	タイトル
 #	@param	$text	内容
+#	@param	$limit	期限
 #	@return	ID
 #
 #------------------------------------------------------------------------------------------------------------
@@ -187,12 +193,10 @@ sub Add
 {
 	my $this = shift;
 	my ($to, $from, $subj, $text, $limit) = @_;
-	my ($id);
 	
-	$id = time;
-	while (exists $this->{'TO'}->{$id}) {
-		$id++;
-	}
+	my $id = time;
+	$id++ while (exists $this->{'TO'}->{$id});
+	
 	$this->{'TO'}->{$id}		= $to;
 	$this->{'FROM'}->{$id}		= $from;
 	$this->{'SUBJECT'}->{$id}	= $subj;
@@ -257,14 +261,13 @@ sub IsInclude
 {
 	my $this = shift;
 	my ($id, $user) = @_;
-	my (@users);
 	
 	# 全体通知
 	if ($this->{'TO'}->{$id} eq '*') {
 		return 1;
 	}
 	
-	@users = split(/\, ?/, $this->{'TO'}->{$id});
+	my @users = split(/\, ?/, $this->{'TO'}->{$id});
 	foreach (@users) {
 		return 1 if ($_ eq $user);
 	}
@@ -283,11 +286,10 @@ sub IsLimitOut
 {
 	my $this = shift;
 	my ($id) = @_;
-	my (@users, $now);
 	
 	# 全体通知の場合のみ
 	if ($this->{'TO'}->{$id} eq '*') {
-		$now = time;
+		my $now = time;
 		if ($now > $this->{'LIMIT'}->{$id}) {
 			return 1;
 		}
@@ -308,24 +310,20 @@ sub RemoveToUser
 {
 	my $this = shift;
 	my ($id, $user) = @_;
-	my (@users, @news);
 	
 	# 全体通知は個別削除不可
 	if ($this->{'TO'}->{$id} eq '*') {
 		return;
 	}
 	
-	undef @news;
-	@users = split(/\, ?/, $this->{'TO'}->{$id});
-	
+	my @users = split(/\, ?/, $this->{'TO'}->{$id});
+	my @news = ();
 	foreach (@users) {
-		if ($_ ne $user) {
-			push(@news, $_);
-		}
+		push(@news, $_) if ($_ ne $user);
 	}
 	
 	# すべての通知先ユーザが削除されたら、その通知は破棄する
-	if (@news == 0) {
+	if ($#news == -1) {
 		$this->Delete($id);
 	}
 	else {

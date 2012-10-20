@@ -74,7 +74,7 @@ sub Load
 			my @elem = split(/<>/, $_, -1);
 			if ($#elem + 1 < 7) {
 				warn "invalid line in $path";
-				next;
+				#next;
 			}
 			
 			my $id = $elem[0];
