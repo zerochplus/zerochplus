@@ -18,7 +18,7 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
+	my $class = shift;
 	
 	my $obj = {
 		'LINE'		=> undef,
@@ -30,7 +30,7 @@ sub new
 		'PERM'		=> undef,
 		'MODE'		=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }

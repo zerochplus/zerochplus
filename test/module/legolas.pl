@@ -1,12 +1,6 @@
 #============================================================================================================
 #
-#	ヘッダ・フッタ・META管理モジュール(LEGOLAS)
-#	legolas.pl
-#	--------------------------------------------------
-#	2003.01.24 start
-#	2003.02.04 Printを追加
-#	2003.03.15 フッタ管理追加
-#	2003.03.22 META管理統合
+#	ヘッダ・フッタ・META管理モジュール
 #
 #============================================================================================================
 package	LEGOLAS;
@@ -24,22 +18,17 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my (@HEAD, $TEXT, $URL, $PATH, $FILE, $obj);
+	my $class = shift;
 	
-	undef @HEAD;
-	$PATH = "";
-	$FILE = "";
-	
-	$obj = {
-		'HEAD'	=> \@HEAD,
-		'TEXT'	=> $TEXT,
-		'URL'	=> $URL,
-		'PATH'	=> $PATH,
-		'FILE'	=> $FILE
+	my $obj = {
+		'HEAD'	=> undef,
+		'TEXT'	=> undef,
+		'URL'	=> undef,
+		'PATH'	=> undef,
+		'FILE'	=> undef,
 	};
 	
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -50,31 +39,31 @@ sub new
 #	-------------------------------------------
 #	引　数：$Sys    : モジュール
 #			$kind : 種類
-#	戻り値：
+#	戻り値：エラー番号
 #
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
 	my $this = shift;
 	my ($Sys, $kind) = @_;
-	my ($head, $path, $file);
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
-	if ($kind eq 'HEAD') { $file = 'head.txt'; }
-	if ($kind eq 'FOOT') { $file = 'foot.txt'; }
-	if ($kind eq 'META') { $file = 'meta.txt'; }
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	my $file = '';
+	$file = 'head.txt' if ($kind eq 'HEAD');
+	$file = 'foot.txt' if ($kind eq 'FOOT');
+	$file = 'meta.txt' if ($kind eq 'META');
 	
 	$this->{'TEXT'} = $Sys->Get('HEADTEXT');
 	$this->{'URL'} = $Sys->Get('HEADURL');
 	$this->{'PATH'} = $path;
 	$this->{'FILE'} = $file;
 	
-	$head = $this->{'HEAD'};
+	my $head = $this->{'HEAD'} = [];
 	
-	if (open(my $f_head, '<', "$path/$file")) {
-		flock($f_head, 2);
-		@$head = <$f_head>;
-		close($f_head);
+	if (open(my $fh, '<', "$path/$file")) {
+		flock($fh, 2);
+		@$head = <$fh>;
+		close($fh);
 		return 0;
 	}
 	
@@ -85,7 +74,7 @@ sub Load
 #
 #	ヘッダ・フッタの書き込み - Save
 #	-------------------------------------------
-#	引　数：$Sys : モジュール
+#	引　数：$Sys : MELKORモジュール
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -93,26 +82,28 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path);
 	
-	$path = "$this->{'PATH'}/$this->{'FILE'}";
+	my $path = "$this->{'PATH'}/$this->{'FILE'}";
 	
 	chmod 0666, $path;
-	if (open(my $f_head, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_head, 2);
-		seek($f_head, 0, 0);
-		print $f_head @{$this->{'HEAD'}};
-		truncate($f_head, tell($f_head));
-		close($f_head);
-		chmod $Sys->Get('PM-TXT'), $path;
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		print $fh $_ foreach (@{$this->{'HEAD'}});
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save header/footer: $path";
+	}
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	内容の設定 - Set
 #	-------------------------------------------
-#	引　数：$head : 設定内容
+#	引　数：$head : 設定内容(リファレンス)
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -120,14 +111,11 @@ sub Set
 {
 	my $this = shift;
 	my ($head) = @_;
-	my @work;
 	
-	undef @{$this->{'HEAD'}};
-	
-	@work = split(/\n/, $$head);
-	foreach (@work) {
-		push @{$this->{'HEAD'}}, "$_\n";
-	}
+	open(my $fh, '<', $head);
+	my @lines = <$fh>;
+	close $fh;
+	$this->{'HEAD'} = \@lines;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -142,7 +130,7 @@ sub Get
 {
 	my $this = shift;
 	
-	return \@{$this->{'HEAD'}};
+	return $this->{'HEAD'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -158,14 +146,13 @@ sub Print
 {
 	my $this = shift;
 	my ($Page, $Set) = @_;
-	my ($bbs, $tcol, $text, $url);
 	
 	# head.txtの場合はヘッダ全てを表示する
 	if ($this->{'FILE'} eq 'head.txt') {
-		$bbs = $Set->Get('BBS_SUBTITLE');
-		$tcol = $Set->Get('BBS_MENU_COLOR');
-		$text = $this->{'TEXT'};
-		$url = $this->{'URL'};
+		my $bbs = $Set->Get('BBS_SUBTITLE');
+		my $tcol = $Set->Get('BBS_MENU_COLOR');
+		my $text = $this->{'TEXT'};
+		my $url = $this->{'URL'};
 	
 	$Page->Print(<<HEAD);
 <a name="info"></a>
@@ -181,9 +168,7 @@ sub Print
     <td colspan="2">
 HEAD
 		
-		foreach (@{$this->{'HEAD'}}) {
-			$Page->Print("    $_");
-		}
+		$Page->Print("    $_") foreach (@{$this->{'HEAD'}});
 		
 		$Page->Print("    </td>\n");
 		$Page->Print("   </tr>\n");
@@ -191,7 +176,7 @@ HEAD
 		$Page->Print("  </td>\n");
 		$Page->Print(" </tr>\n");
 		
-		if ($text ne "") {
+		if ($text ne '') {
 			$Page->Print(" <tr>\n");
 			$Page->Print("  <td align=\"center\"><a href=\"$url\" target=\"_blank\">$text</a></td>\n");
 			$Page->Print(" </tr>\n");
@@ -202,16 +187,12 @@ HEAD
 	}
 	# META.txtはインデント
 	elsif ($this->{'FILE'} eq 'meta.txt') {
-		foreach (@{$this->{'HEAD'}}) {
-			$Page->Print(" $_");
-		}
+		$Page->Print(" $_") foreach (@{$this->{'HEAD'}});
 		$Page->Print("\n");
 	}
 	# その他は内容をそのまま表示
 	else {
-		foreach (@{$this->{'HEAD'}}) {
-			$Page->Print("$_");
-		}
+		$Page->Print($_) foreach (@{$this->{'HEAD'}});
 	}
 }
 

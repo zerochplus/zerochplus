@@ -1,10 +1,6 @@
 #============================================================================================================
 #
-#	SETTINGデータ管理モジュール(ISILDUR)
-#	isuldur.pl
-#	--------------------------------------------
-#	2002.12.03 start
-#	2003.02.15 データ構造の変更
+#	SETTINGデータ管理モジュール
 #
 #============================================================================================================
 package	ISILDUR;
@@ -23,10 +19,9 @@ use warnings;
 sub new
 {
 	my $this = shift;
-	my (%SET, $obj);
 	
-	$obj = {
-		'SETTING'	=> \%SET
+	my $obj = {
+		'SETTING'	=> undef,
 	};
 	bless $obj, $this;
 	
@@ -37,29 +32,32 @@ sub new
 #
 #	掲示板設定読み込み
 #	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	なし
+#	@param	$Sys	MELKOR
+#	@return	エラー番号
 #
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $key, $val);
 	
-	undef %{$this->{'SETTING'}};
-	InitSettingData($this->{'SETTING'});
+	my $set = $this->{'SETTING'} = {};
+	InitSettingData($set);
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
-	if (open(my $f_setting, '<', $path)) {
-		flock($f_setting, 2);
-		while (<$f_setting>) {
-			chomp $_;
-			($key, $val) = split(/=/, $_);
-			$this->{'SETTING'}->{$key} = $val;
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			if ($_ =~ /^(.+?)=(.*)$/) {
+				$set->{$1} = $2;
+			}
 		}
-		close($f_setting);
+		
 		return 1;
 	}
 	return 0;
@@ -69,7 +67,7 @@ sub Load
 #
 #	掲示板設定書き込み
 #	-------------------------------------------------------------------------------------
-#	@param	なし
+#	@param	$Sys	MELKOR
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -77,77 +75,87 @@ sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path, $key, $val, @ch2setting, %orz);
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/SETTING.TXT';
 	
 	# ２ちゃんねるのSETTING.TXT順序
-	@ch2setting = (
-		'BBS_TITLE', 'BBS_TITLE_PICTURE', 'BBS_TITLE_COLOR', 'BBS_TITLE_LINK', 'BBS_BG_COLOR',
-		'BBS_BG_PICTURE', 'BBS_NONAME_NAME', 'BBS_MAKETHREAD_COLOR', 'BBS_MENU_COLOR', 'BBS_THREAD_COLOR',
-		'BBS_TEXT_COLOR', 'BBS_NAME_COLOR', 'BBS_LINK_COLOR', 'BBS_ALINK_COLOR', 'BBS_VLINK_COLOR',
-		'BBS_THREAD_NUMBER', 'BBS_CONTENTS_NUMBER', 'BBS_LINE_NUMBER', 'BBS_MAX_MENU_THREAD', 'BBS_SUBJECT_COLOR',
-		'BBS_PASSWORD_CHECK', 'BBS_UNICODE', 'BBS_DELETE_NAME', 'BBS_NAMECOOKIE_CHECK', 'BBS_MAILCOOKIE_CHECK',
-		'BBS_SUBJECT_COUNT', 'BBS_NAME_COUNT', 'BBS_MAIL_COUNT', 'BBS_MESSAGE_COUNT', 'BBS_NEWSUBJECT',
-		'BBS_THREAD_TATESUGI', 'BBS_AD2', 'SUBBBS_CGI_ON', 'NANASHI_CHECK', 'timecount', 'timeclose',
-		'BBS_PROXY_CHECK', 'BBS_OVERSEA_THREAD', 'BBS_OVERSEA_PROXY', 'BBS_RAWIP_CHECK', 'BBS_SLIP',
-		'BBS_DISP_IP', 'BBS_FORCE_ID', 'BBS_BE_ID', 'BBS_BE_TYPE2', 'BBS_NO_ID', 'BBS_JP_CHECK',
-		'BBS_VIP931', 'BBS_4WORLD', 'BBS_YMD_WEEKS', 'BBS_NINJA'
+	my @ch2setting = qw(
+		BBS_TITLE				BBS_TITLE_PICTURE		BBS_TITLE_COLOR			BBS_TITLE_LINK
+		BBS_BG_COLOR			BBS_BG_PICTURE			BBS_NONAME_NAME			BBS_MAKETHREAD_COLOR
+		BBS_MENU_COLOR			BBS_THREAD_COLOR		BBS_TEXT_COLOR			BBS_NAME_COLOR
+		BBS_LINK_COLOR			BBS_ALINK_COLOR			BBS_VLINK_COLOR			BBS_THREAD_NUMBER
+		BBS_CONTENTS_NUMBER		BBS_LINE_NUMBER			BBS_MAX_MENU_THREAD		BBS_SUBJECT_COLOR
+		BBS_PASSWORD_CHECK		BBS_UNICODE				BBS_DELETE_NAME			BBS_NAMECOOKIE_CHECK
+		BBS_MAILCOOKIE_CHECK	BBS_SUBJECT_COUNT		BBS_NAME_COUNT			BBS_MAIL_COUNT
+		BBS_MESSAGE_COUNT		BBS_NEWSUBJECT			BBS_THREAD_TATESUGI		BBS_AD2
+		SUBBBS_CGI_ON			NANASHI_CHECK			timecount				timeclose
+		BBS_PROXY_CHECK			BBS_OVERSEA_THREAD		BBS_OVERSEA_PROXY		BBS_RAWIP_CHECK
+		BBS_SLIP				BBS_DISP_IP				BBS_FORCE_ID			BBS_BE_ID
+		BBS_BE_TYPE2			BBS_NO_ID				BBS_JP_CHECK			BBS_VIP931
+		BBS_4WORLD				BBS_YMD_WEEKS			BBS_NINJA				
 	);
 	
-	%orz = %{$this->{'SETTING'}};
+	my %orz = %{$this->{'SETTING'}};
 	
-	if (open(my $f_setting, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_setting, 2);
-		binmode($f_setting);
-		seek($f_setting, 0, 0);
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		binmode($fh);
+		seek($fh, 0, 0);
+		
 		# 順番に出力
-		foreach $key ( @ch2setting ) {
-			print $f_setting "$key=" . $this->Get($key, '') . "\n";
+		foreach my $key (@ch2setting) {
+			my $val = $this->Get($key, '');
+			print $fh "$key=$val\n";
 			delete $orz{$key};
 		}
-		foreach $key (sort keys %orz) {
-			#$val = $orz{$key};
-			print $f_setting "$key=" . $this->Get($key, '') . "\n";
+		foreach my $key (sort keys %orz) {
+			my $val = $this->Get($key, '');
+			print $fh "$key=$val\n";
+			delete $orz{$key};
 		}
-=pod
-		foreach $key (sort keys %{$this->{'SETTING'}}) {
-			$val = $this->{'SETTING'}->{$key};
-			print $f_setting "$key=$val\n";
-		}
-=cut
-		truncate($f_setting, tell($f_setting));
-		close($f_setting);
-		chmod $Sys->Get('PM-TXT'), $path;
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save setting: $path";
+	}
+	chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	掲示板設定読み込み(指定ファイル)
 #	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	なし
+#	@param	$path	指定ファイルのパス
+#	@return	エラー番号
 #
 #------------------------------------------------------------------------------------------------------------
 sub LoadFrom
 {
 	my $this = shift;
 	my ($path) = @_;
-	my ($key, $val);
 	
-	undef %{$this->{'SETTING'}};
+	my $set = $this->{'SETTING'} = {};
 	
-	if (open(my $f_setting, '<', $path)) {
-		flock($f_setting, 2);
-		while (<$f_setting>) {
-			chomp $_;
-			($key, $val) = split(/=/, $_);
-			$this->{'SETTING'}->{$key} = $val;
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			if ($_ =~ /^(.+?)=(.*)$/) {
+				$set->{$1} = $2;
+			}
 		}
-		close($f_setting);
+		
 		return 1;
 	}
+	else {
+		warn "can't load setting: $path";
+	}
+	
 	return 0;
 }
 
@@ -155,7 +163,7 @@ sub LoadFrom
 #
 #	掲示板設定書き込み(指定ファイル)
 #	-------------------------------------------------------------------------------------
-#	@param	なし
+#	@param	$path	指定ファイルのパス
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -163,20 +171,24 @@ sub SaveAs
 {
 	my $this = shift;
 	my ($path) = @_;
-	my ($key, $val);
 	
-	if (open(my $f_setting, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_setting, 2);
-		seek($f_setting, 0, 0);
-		binmode($f_setting);
-		foreach $key (keys %{$this->{'SETTING'}}) {
-			$val = $this->{'SETTING'}->{$key};
-			print $f_setting "$key=$val\n";
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		foreach my $key (keys %{$this->{'SETTING'}}) {
+			my $val = $this->{'SETTING'}->{$key};
+			print $fh "$key=$val\n";
 		}
-		truncate($f_setting, tell($f_setting));
-		close($f_setting);
-		#chmod $Sys->Get('PM-TXT'), $path;
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save setting: $path";
+	}
+	#chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -192,9 +204,7 @@ sub GetKeySet
 	my $this = shift;
 	my ($keySet) = @_;
 	
-	foreach (keys %{$this->{'SETTING'}}) {
-		push @$keySet, $_;
-	}
+	push @$keySet, keys %{$this->{'SETTING'}};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -227,9 +237,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{'SETTING'}->{$key};
+	my $val = $this->{'SETTING'}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -263,7 +272,7 @@ sub InitSettingData
 {
 	my ($pSET) = @_;
 	
-	%$pSET = (
+	my %set = (
 		# ２ちゃんねる互換設定項目
 		'BBS_TITLE'				=> '掲示板＠ぜろちゃんねるプラス',
 		'BBS_TITLE_PICTURE'		=> 'kanban.gif',
@@ -330,6 +339,10 @@ sub InitSettingData
 		'BBS_TATESUGI_HOUR'		=> '0',
 		'BBS_TATESUGI_COUNT'	=> '5',
 	);
+	
+	while (my ($key, $val) = each(%set)) {
+		$pSET->{$key} = $val;
+	}
 }
 
 #============================================================================================================

@@ -1,10 +1,6 @@
 #============================================================================================================
 #
 #	httpサービスモジュール
-#	httpservice.pl
-#	-------------------------------------------------------------------------------------
-#	2005.11.09 start
-#	2012.02.25 大幅に改造 互換性？ナニソレ？
 #
 #============================================================================================================
 package HTTPSERVICE;
@@ -24,50 +20,28 @@ use Socket;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, %PARAMETER);
+	my $class = shift;
 	
-	$obj = {
+	my $obj = {
 		'METHOD'		=> 'GET',
 		'URI'			=> undef,
-		'PARAMETER'		=> \%PARAMETER,
-		'AGENT'			=> 'Mozilla/5.0 Zero-Channel BBS Plus Project',
+		'PARAMETER'		=> undef,
 		'CONTENT_TYPE'	=> 'application/x-www-form-urlencoded',
-		'CONNECTION'	=> 'close',
 		'REFERER'		=> undef,
+		'AGENT'			=> 'Mozilla/5.0 Zero-Channel BBS Plus Project',
+		'CONNECTION'	=> 'close',
 		'LANGUAGE'		=> 'ja,en-us;q=0.7,en;q=0.3',
 		'PROXY_HOST'	=> undef,
 		'PROXY_PORT'	=> undef,
-		
 		'TIMEOUT'		=> 3,
-		'HEADER'		=> undef,
+		
 		'CODE'			=> 500,
+		'HEADER'		=> undef,
 		'CONTENT'		=> undef
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	return $obj;
 }
-
-=for
-#------------------------------------------------------------------------------------------------------------
-#
-#	初期化(コンストラクタで初期化されない場合用)
-#	-------------------------------------------------------------------------------------
-#	@param	なし
-#	@return	httpサービスオブジェクト
-#
-#------------------------------------------------------------------------------------------------------------
-sub init
-{
-	my $this = shift;
-	
-	$this->{'AGENT'}		= 'Mozilla/5.0 Zero-Channel BBS Plus Project';
-	$this->{'METHOD'}		= 'GET';
-	$this->{'CONTENT_TYPE'}	= 'application/x-www-form-urlencoded';
-	$this->{'CONNECTION'}	= 'close';
-	$this->{'TIMEOUT'}		= 3;
-}
-=cut
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -83,70 +57,65 @@ sub init
 sub request
 {
 	my $this = shift;
-	my ($uri, $host, $port, $target, $request);
 	
 	# URIを分解
-	$uri = $this->{'URI'};
-	( $host, $port, $target ) = decompositionURI($uri);
+	my $uri = $this->{'URI'};
+	my ($host, $port, $target) = decompositionURI($uri);
 	
-	if ( !defined $host ) {
-		return -1;
-	}
+	return -1 if (!defined $host);
 	
 	# プロキシを使用する
-	if ( defined $this->{'PROXY_HOST'} ) {
-		$host	= $this->{'PROXY_HOST'};
-		$port	= $this->{'PROXY_PORT'} || 80;
-		$target	= $uri;
+	if (defined $this->{'PROXY_HOST'}) {
+		$host = $this->{'PROXY_HOST'};
+		$port = $this->{'PROXY_PORT'} || 80;
+		$target = $uri;
 	}
 	
 	# リクエストクエリの作成
-	$request = createRequestString($this, $host, $target);
+	my $request = createRequestString($this, $host, $target);
 	
 	eval
 	{
-		my ($sockaddr, $header, $chunkedflag, $content, $contflag, $code, $uri);
-		local $SIG{ALRM} = sub{ die "connect time out. $!" };
+		local $SIG{'ALRM'} = sub { die "connect time out. $!" };
 		
 		alarm($this->{'TIMEOUT'});
 		
 		# ソケットの作成
-		$sockaddr = pack_sockaddr_in( $port, inet_aton($host) );
-		socket ( SOCKET, PF_INET, SOCK_STREAM, 0 );
-		select SOCKET;
+		my $sockaddr = pack_sockaddr_in($port, inet_aton($host));
+		socket(SOCKET, PF_INET, SOCK_STREAM, 0);
+		select(SOCKET);
 		$| = 1;
-		select STDOUT;
-		connect ( SOCKET, $sockaddr );
-		binmode SOCKET;
+		select(STDOUT);
+		connect(SOCKET, $sockaddr);
+		binmode(SOCKET);
 		#autoflush SOCKET (1);
 		
 		# リクエスト送信
 		print SOCKET $request;
-		$this->{'REQUEST'}	= $request;
+		$this->{'REQUEST'} = $request;
 		
-		$chunkedflag = 0;
-		$code = 0;
-		$header = '';
-		$content = '';
+		my $chunkedflag = 0;
+		my $code = -1;
+		my $header = '';
+		my $content = '';
 		
-		while ( <SOCKET> ) {
+		while (<SOCKET>) {
+			$_ =~ s/[\r\n]+\z//;
 			
-			s/\r?\n$//;
-			
-			last if ( $_ eq '' );
+			last if ($_ eq '');
 			
 			# HTTPステータス
-			if ( $_ =~ m|^HTTP/\d.\d (\d+) .+$| ) {
+			if ($_ =~ m|^HTTP/\d.\d\s+(\d+)|) {
 				$code = $1;
 			}
 			
 			# レスポンスヘッダーの取得
-			$header .= $_ . "\n";
+			$header .= "$_\n";
 		}
 		
 		# Chunked Transfer Coding
 		# http://tools.ietf.org/html/rfc2616#section-14.41
-		if ( $header =~ m|Transfer\-Encoding:\s*chunked|i ) {
+		if ($header =~ m|Transfer\-Encoding:\s*chunked|i) {
 			$chunkedflag = 1;
 		}
 		
@@ -154,7 +123,7 @@ sub request
 		if ($chunkedflag) {
 			# http://tools.ietf.org/html/rfc2616#section-3.6.1
 			while (<SOCKET>) {
-				/^([0-9A-F]+)/i;
+				$_ = /^([0-9A-F]+)/i;
 				my $size = hex $1;
 				
 				last if ($size eq 0);
@@ -167,12 +136,12 @@ sub request
 			
 			# http://tools.ietf.org/html/rfc2616#section-7.1
 			while ( <SOCKET> ) {
-				s/\r?\n$//;
+				$_ =~ s/[\r\n]+\z//;
 				
 				last if ( $_ eq '' );
 				
 				# レスポンスヘッダーの取得
-				$header .= $_ . "\n";
+				$header .= "$_\n";
 				
 			}
 		}
@@ -184,14 +153,15 @@ sub request
 		
 		close(SOCKET);
 		
-		$this->{'CODE'}		= $code;
-		$this->{'HEADER'}	= $header;
-		$this->{'CONTENT'}	= $content;
+		$this->{'CODE'} = $code;
+		$this->{'HEADER'} = $header;
+		$this->{'CONTENT'} = $content;
 		
 		alarm(0);
-		
 	};
+	
 	if ($@) {
+		$this->{'CODE'} = -1;
 		$this->{'CONTENT'} = $@;
 		return -2;
 	}
@@ -210,15 +180,15 @@ sub request
 #------------------------------------------------------------------------------------------------------------
 sub decompositionURI
 {
-	my $uri = shift;
-	my ($host, $port, $path);
+	
+	my ($uri) = @_;
 	
 	$uri =~ m!(?:(?:http:)?//)?((?:[^:/]*)?)(?::(\d*))?(/.*)!;
-	$host = $1;
-	$port = $2 || 80;
-	$path = $3;
+	my $host = $1;
+	my $port = $2 || 80;
+	my $path = $3;
 	
-	return ( $host, $port, $path );
+	return ($host, $port, $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -234,35 +204,35 @@ sub createRequestString
 {
 	my $this = shift;
 	my ($host, $target) = @_;
-	my ($request, $params, $value, $len);
 	
 	# httpボディ(パラメータ)の作成
-	foreach (keys %{$this->{'PARAMETER'}}) {
-		$value = encode($this->{'PARAMETER'}->{$_});
-		$params .= "&$_=$value";
+	my $params = '';
+	my $len = 0;
+	foreach my $key (keys %{$this->{'PARAMETER'}}) {
+		my $value = encode($this->{'PARAMETER'}->{$key});
+		$params .= "&$key=$value";
 	}
-	if (defined $params) {
+	if ($params ne '') {
 		$params = substr($params, 1);
 		$len = length $params;
 	}
 	
-	$request  = '';
+	my $request = '';
 	$request .= "$this->{'METHOD'} $target HTTP/1.1\r\n";
 	$request .= "Host: $host\r\n";
 	$request .= "User-Agent: $this->{'AGENT'}\r\n";
 	$request .= "Accept-Language: $this->{'LANGUAGE'}\r\n";
 	$request .= "Content-Type: $this->{'CONTENT_TYPE'}\r\n";
 	$request .= "Keep-Alive: 115\r\n";
-	$request .= "Referer: $this->{'REFERER'}\r\n" if ( $this->{'REFERER'} );
+	$request .= "Referer: $this->{'REFERER'}\r\n" if ($this->{'REFERER'});
 	$request .= "Connection: $this->{'CONNECTION'}\r\n";
-	$request .= "Content-Length: $len\r\n" if ( $this->{'METHOD'} eq "POST" );
+	$request .= "Content-Length: $len\r\n" if ($this->{'METHOD'} eq 'POST');
 	
 	$request .= "\r\n";
 	
-	$request .= $params if ( $this->{'METHOD'} eq "POST" );
+	$request .= $params if ($this->{'METHOD'} eq 'POST');
 	
 	return $request;
-	
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -275,7 +245,8 @@ sub createRequestString
 #------------------------------------------------------------------------------------------------------------
 sub encode
 {
-	my $str = shift;
+	
+	my ($str) = @_;
 	$str =~ s/([^\w ])/'%'.unpack('H2', $1)/eg;
 	$str =~ tr/ /+/;
 	return $str;
@@ -456,7 +427,7 @@ sub setProxy
 {
 	my $this = shift;
 	my ($proxy) = @_;
-	my ($host, $port) = split( /:/, $proxy );
+	my ($host, $port) = split(/:/, $proxy);
 	$this->{'PROXY_HOST'} = $host;
 	$this->{'PROXY_PORT'} = $port;
 }

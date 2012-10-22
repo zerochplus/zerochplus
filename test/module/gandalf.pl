@@ -18,7 +18,7 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
+	my $class = shift;
 	
 	my $obj = {
 		'TO'		=> undef,
@@ -28,7 +28,7 @@ sub new
 		'DATE'		=> undef,
 		'LIMIT'		=> undef,
 	};
-	bless($obj,$this);
+	bless $obj, $class;
 	
 	return $obj;
 }
