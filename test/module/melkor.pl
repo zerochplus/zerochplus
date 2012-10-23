@@ -1,14 +1,6 @@
 #============================================================================================================
 #
-#	システムデータ管理モジュール(MELKOR)
-#	melkor.pl
-#	-----------------------------------------
-#	2002.12.03 start
-#	2003.10.20 外部ファイル対応に変更
-#	2004.04.24 モジュール整理
-#
-#	ぜろちゃんねるプラス
-#	2010.08.12 設定項目追加
+#	システムデータ管理モジュール
 #
 #============================================================================================================
 package	MELKOR;
@@ -27,14 +19,14 @@ no warnings 'redefine';
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my (%SYS, @KEYS, $obj);
+	my $class = shift;
 	
-	$obj = {
-		'SYS'	=> \%SYS,
-		'KEY'	=> \@KEYS
+	my $obj = {
+		'SYS'	=> undef,
+		'KEY'	=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
+	
 	return $obj;
 }
 
@@ -51,7 +43,7 @@ sub Init
 	my $this = shift;
 	
 	# システム設定を読み込む
-	return Load($this);
+	return $this->Load;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -65,37 +57,38 @@ sub Init
 sub Load
 {
 	my $this = shift;
-	my ($var, $val, @dlist, $pSYS, $sysFile);
 	
 	# システム情報ハッシュの初期化
-	undef %{$this->{'SYS'}};
-	InitSystemValue(\%{$this->{'SYS'}}, \@{$this->{'KEY'}});
-	$sysFile = $this->{'SYS'}->{'SYSFILE'};
+	my $pSys = $this->{'SYS'} = {};
+	$this->{'KEY'} = [];
+	InitSystemValue($this->{'SYS'}, $this->{'KEY'});
+	my $sysFile = $this->{'SYS'}->{'SYSFILE'};
 	
 	# 設定ファイルから読み込む
-	if (open(my $f_sys, '<', $sysFile)) {
-		flock($f_sys, 2);
-		while (<$f_sys>) {
-			chomp $_;
-			($var, $val) = split(/<>/, $_);
-			$this->{'SYS'}->{$var} = $val;
+	if (open(my $fh, '<', $sysFile)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			if ($_ =~ /^(.+?)<>(.*)$/) {
+				$pSys->{$1} = $2;
+			}
 		}
-		close($f_sys);
 	}
-	$pSYS = $this->{'SYS'};
 	
 	# 時間制限のチェック
-	@dlist = localtime time;
-	if (($dlist[2] >= $pSYS->{'LINKST'} || $dlist[2] < $pSYS->{'LINKED'}) &&
-		($pSYS->{'URLLINK'} eq 'FALSE')) {
-		$pSYS->{'LIMTIME'} = 1;
+	my @dlist = localtime time;
+	if (($dlist[2] >= $pSys->{'LINKST'} || $dlist[2] < $pSys->{'LINKED'}) &&
+		($pSys->{'URLLINK'} eq 'FALSE')) {
+		$pSys->{'LIMTIME'} = 1;
 	}
 	else {
-		$pSYS->{'LIMTIME'} = 0;
+		$pSys->{'LIMTIME'} = 0;
 	}
 	
-	if ($this->Get('CONFVER', '') ne $pSYS->{'VERSION'}) {
-		$this->NormalizeConf();
+	if ($this->Get('CONFVER', '') ne $pSys->{'VERSION'}) {
 		$this->Save();
 	}
 	
@@ -113,23 +106,28 @@ sub Load
 sub Save
 {
 	my $this = shift;
-	my ($val);
 	
 	$this->NormalizeConf();
 	
 	my $path = $this->{'SYS'}->{'SYSFILE'};
-	if (open(my $f_sys, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_sys, 2);
-		seek($f_sys, 0, 0);
-		binmode($f_sys);
-		foreach (@{$this->{'KEY'}}) {
-			$val = $this->{'SYS'}->{$_};
-			print $f_sys "$_<>$val\n";
+	
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		foreach my $key (@{$this->{'KEY'}}) {
+			my $val = $this->{'SYS'}->{$key};
+			print $fh "$key<>$val\n";
 		}
-		truncate($f_sys, tell($f_sys));
-		close($f_sys);
-		chmod 0700, $this->{'SYS'}->{'SYSFILE'};
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	else {
+		warn "can't save config: $path";
+	}
+	chmod 0700, $this->{'SYS'}->{'SYSFILE'};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -145,9 +143,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{'SYS'}->{$key};
+	my $val = $this->{'SYS'}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -199,11 +196,10 @@ sub GetOption
 {
 	my $this = shift;
 	my ($flag) = @_;
-	my (@elem);
 	
-	@elem = split(/\,/, $this->{'SYS'}->{'OPTION'});
+	my @elem = split(/\,/, $this->{'SYS'}->{'OPTION'});
 	
-	return($elem[$flag - 1]);
+	return $elem[$flag - 1];
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -230,20 +226,17 @@ sub SetOption
 #
 #	システム変数初期化 - InitSystemValue
 #	-------------------------------------------
-#	引　数：$pSYS : ハッシュの参照
+#	引　数：$pSys : ハッシュの参照
+#			$pKey : 配列の参照
 #	戻り値：なし
 #	備　考：(*)マークがついている項目のみ手動で変更可能です
-#
-#	2010.08.12 windyakin ★
-#	 -> Samba値の設定, 告知欄表示の設定, ２重カキコ規制の設定
 #
 #------------------------------------------------------------------------------------------------------------
 sub InitSystemValue
 {
-	my ($pSYS, $pKEY) = @_;
-	my (@dlist);
+	my ($pSys, $pKey) = @_;
 	
-	%$pSYS = (
+	my %sys = (
 		'SYSFILE'	=> './info/system.cgi',						# システム設定ファイル
 		'SERVER'	=> '',										# 設置サーバパス(*)
 		'CGIPATH'	=> '/test',									# CGI設置パス(*)
@@ -295,17 +288,24 @@ sub InitSystemValue
 		'SPAMCH'	=> 1,										# スパムちゃんぷるー
 	);
 	
+	while (my ($key, $val) = each(%sys)) {
+		$pSys->{$key} = $val;
+	}
+	
 	# 情報保持キー
-	@$pKEY = (
-		'SERVER',	'CGIPATH',	'INFO',		'DATA',		'BBSPATH',
-		'PM-DAT',	'PM-TXT',	'PM-LOG',	'PM-ADM',	'PM-ADIR',	'PM-BDIR',	'PM-LDIR',	'PM-STOP',
-		'ERRMAX',	'SUBMAX',	'RESMAX',	'ADMMAX',	'HISMAX',	'ANKERS',	'URLLINK',
-		'LINKST',	'LINKED',	'PATHKIND',	'HEADTEXT',	'HEADURL',	'FASTMODE',
-		'SAMBATM',	'DEFSAMBA',	'DEFHOUSHI',
-		'BANNER',	'KAKIKO',	'COUNTER',	'PRTEXT',	'PRLINK',	'TRIP12',	'MSEC',		'BBSGET',
-		'CONFVER',
-		'BBQ',		'BBX',		'SPAMCH',	'UPCHECK',
+	my @key = qw(
+		SERVER		CGIPATH		INFO		DATA		BBSPATH
+		PM-DAT		PM-TXT		PM-LOG		PM-ADM		PM-ADIR		PM-BDIR		PM-LDIR		PM-STOP
+		ERRMAX		SUBMAX		RESMAX		ADMMAX		HISMAX		ANKERS		URLLINK
+		LINKST		LINKED		PATHKIND	HEADTEXT	HEADURL		FASTMODE
+		SAMBATM		DEFSAMBA	DEFHOUSHI
+		BANNER		KAKIKO		COUNTER		PRTEXT		PRLINK		TRIP12		MSEC		BBSGET
+		CONFVER
+		BBQ			BBX			SPAMCH		UPCHECK
 	);
+	
+	pop @$pKey while (scalar(@$pKey));
+	push @$pKey, @key;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -326,19 +326,19 @@ sub NormalizeConf
 	$this->Set('CONFVER', $this->Get('VERSION'));
 	
 	if ($this->Get('SERVER', '') eq '') {
-		$path = $ENV{'SCRIPT_NAME'};
+		my $path = $ENV{'SCRIPT_NAME'};
 		$path =~ s|/[^/]+\.cgi([\/\?].*)?$||;
 		$this->Set('SERVER', 'http://' . $ENV{'HTTP_HOST'});
 		$this->Set('CGIPATH', $path);
 	}
 	
 	{
-		$buf = (int rand 900000) + 100000;
+		my $buf = (int rand 900000) + 100000;
 		$buf++ while (-e "$buf.dat");
-		open(my $f_pm, '>', "$buf.dat");
-		close($f_pm);
+		open(my $fh, '>', "$buf.dat");
+		close($fh);
 		
-		$perm = $this->Get('PM-STOP', 0604);
+		my $perm = $this->Get('PM-STOP', 0604);
 		chmod $perm, "$buf.dat";
 		if (((stat "$buf.dat")[2] & 0777) != $perm) {
 			$this->Set('PM-STOP', 0444);
@@ -348,8 +348,8 @@ sub NormalizeConf
 	}
 	
 	{
-		$server = $this->Get('SERVER', '');
-		$cgipath = $this->Get('CGIPATH', '');
+		my $server = $this->Get('SERVER', '');
+		my $cgipath = $this->Get('CGIPATH', '');
 		$server =~ s|/+$||;
 		if ($server =~ m|^(http://[^/]+)(/.+)$|) {
 			$server = $1;

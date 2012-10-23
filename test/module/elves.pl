@@ -78,7 +78,7 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_, -1);
-			if ($#elem + 1 < 6) {
+			if (scalar(@elem) < 6) {
 				warn "invalid line in $path";
 				next;
 			}
@@ -348,7 +348,7 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_, -1);
-			if ($#elem + 1 < 5) {
+			if (scalar(@elem) < 5) {
 				warn "invalid line in $path";
 				next;
 			}
@@ -482,7 +482,7 @@ sub AddUser
 	my @match = grep($user, @users);
 	
 	# “o˜^Ï‚Ý‚Ìƒ†[ƒU‚Íd•¡“o˜^‚µ‚È‚¢
-	if ($#match == 0) {
+	if (scalar(@match)) {
 		$this->{'USERS'}->{$id} .= ",$user";
 	}
 }

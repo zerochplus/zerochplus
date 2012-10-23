@@ -61,7 +61,7 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_);
-			if ($#elem + 1 < 5) {
+			if (scalar(@elem) < 5) {
 				warn "invalid line in $path";
 				next;
 			}

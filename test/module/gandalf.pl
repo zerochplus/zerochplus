@@ -66,7 +66,7 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_, -1);
-			if ($#elem + 1 < 7) {
+			if (scalar(@elem) < 7) {
 				warn "invalid line in $path";
 				#next;
 			}
@@ -323,7 +323,7 @@ sub RemoveToUser
 	}
 	
 	# すべての通知先ユーザが削除されたら、その通知は破棄する
-	if ($#news == -1) {
+	if (scalar(@news) == 0) {
 		$this->Delete($id);
 	}
 	else {

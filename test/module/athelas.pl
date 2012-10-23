@@ -72,7 +72,7 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_, -1);
-			if ($#elem + 1 < 7) {
+			if (scalar(@elem) < 7) {
 				warn "invalid line in $path";
 				#next;
 			}
@@ -125,7 +125,7 @@ sub LoadConfig
 		map { s/[\r\n]+\z// } @lines;
 		foreach (@lines) {
 			my @elem = split(/<>/, $_, -1);
-			if ($#elem + 1 < 3) {
+			if (scalar(@elem) < 3) {
 				warn "invalid line in $path";
 				next;
 			}
@@ -172,7 +172,7 @@ sub SaveConfig
 		return;
 	}
 	
-	if (scalar keys %$config > 0) {
+	if (scalar(keys %$config) > 0) {
 		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
@@ -427,7 +427,7 @@ sub Delete
 	delete $this->{'CONFTYPE'}->{$id};
 	
 	my $order = $this->{'ORDER'};
-	for (my $i = 0 ; $i <= $#$order ; $i++) {
+	for (my $i = 0 ; $i < scalar(@$order) ; $i++) {
 		splice(@$order, $i--, 1) if ($order->[$i] eq $id);
 	}
 }

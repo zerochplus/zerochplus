@@ -224,7 +224,7 @@ sub OnDemand
 	
 	if ($age) {
 		my $sort = $this->{'SORT'};
-		for (my $i = 0; $i <= $#$sort; $i++) {
+		for (my $i = 0; $i < scalar(@$sort); $i++) {
 			if ($id eq $sort->[$i]) {
 				splice @$sort, $i, 1;
 				unshift @$sort, $id;
@@ -357,7 +357,7 @@ sub Delete
 	delete $this->{'RES'}->{$id};
 	
 	my $sort = $this->{'SORT'};
-	for (my $i = 0; $i <= $#$sort; $i++) {
+	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
 			$this->{'NUM'}--;
@@ -411,7 +411,7 @@ sub AGE
 	my ($id) = @_;
 	
 	my $sort = $this->{'SORT'};
-	for (my $i = 0; $i <= $#$sort; $i++) {
+	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
 			unshift @$sort, $sort->[$i];
@@ -434,7 +434,7 @@ sub DAME
 	my ($id) = @_;
 	
 	my $sort = $this->{'SORT'};
-	for (my $i = 0; $i <= $#$sort; $i++) {
+	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
 			push @$sort, $sort->[$i];
@@ -549,7 +549,7 @@ sub GetPosition
 	my ($id) = @_;
 	
 	my $sort = $this->{'SORT'};
-	for (my $i = 0; $i <= $#$sort; $i++) {
+	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		return $i if ($id eq $sort->[$i]);
 	}
 	
@@ -779,7 +779,7 @@ sub Delete
 	delete $this->{'RES'}->{$id};
 	
 	my $sort = $this->{'SORT'};
-	for (my $i = 0; $i <= $#$sort; $i++) {
+	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
 			$this->{'NUM'}--;
