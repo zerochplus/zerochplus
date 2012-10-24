@@ -1,20 +1,6 @@
 #============================================================================================================
 #
-#	NGワード管理モジュール(WORMTONGUE)
-#	wormtongue.pl
-#	---------------------------------------
-#	2003.02.06 start
-#	2003.04.05 Get,Method追加
-#------------------------------------------------------------------------------------------------------------
-#
-#	Object																			; オブジェクト取得
-#	Load																			; NGワード読み込み
-#	Save																			; NGワード書き込み
-#	Set																				; NGワード追加
-#	Get																				; NGワードデータ取得
-#	Clear																			; NGワード削除
-#	Check																			; NGワード調査
-#	Method																			; NGワード処理
+#	NGワード管理モジュール
 #
 #============================================================================================================
 package	WORMTONGUE;
@@ -32,18 +18,15 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my (@NGWORD, $METHOD, $SUBSTITUTE, $obj);
+	my $class = shift;
 	
-	undef @NGWORD;
-	
-	$obj = {
-		'METHOD'	=> $METHOD,
-		'SUBSTITUTE'=> $SUBSTITUTE,
-		'NGWORD'	=> \@NGWORD
+	my $obj = {
+		'METHOD'	=> undef,
+		'SUBSTITUTE'=> undef,
+		'NGWORD'	=> undef,
 	};
 	
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -52,7 +35,7 @@ sub new
 #
 #	NGワード読み込み - Load
 #	-------------------------------------------
-#	引　数：$M : MELKOR
+#	引　数：$Sys : MELKOR
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -60,26 +43,21 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my (@datas, @head, $path, $dummy);
 	
-	undef @{$this->{'NGWORD'}};
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
+	$this->{'NGWORD'} = [];
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
 	
-	if (open(my $f_ngword, '<', $path)) {
-		flock($f_ngword, 2);
-		@datas = <$f_ngword>;
-		close($f_ngword);
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @datas = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @datas;
 		
-		($dummy, @datas) = @datas;
-		chomp $dummy;
-		@head = split(/<>/, $dummy);
+		my @head = split(/<>/, shift @datas);
 		$this->{'METHOD'} = $head[0];
 		$this->{'SUBSTITUTE'} = $head[1];
 		
-		foreach (@datas) {
-			chomp $_;
-			push @{$this->{'NGWORD'}}, $_;
-		}
+		push @{$this->{'NGWORD'}}, @datas;
 		return 0;
 	}
 	return 1;
@@ -89,30 +67,29 @@ sub Load
 #
 #	NGワード書き込み - Save
 #	-------------------------------------------
-#	引　数：$M : MELKOR
-#	戻り値：なし
+#	引　数：$Sys : MELKOR
+#	戻り値：0
 #
 #------------------------------------------------------------------------------------------------------------
 sub Save
 {
 	my $this = shift;
 	my ($Sys) = @_;
-	my ($path);
 	
-	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
+	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . "/info/ngwords.cgi";
 	
-	if (open(my $f_ngword, (-f $path ? '+<' : '>'), $path)) {
-		flock($f_ngword, 2);
-		seek($f_ngword, 0, 0);
-		binmode($f_ngword);
-		print $f_ngword $this->{'METHOD'} . '<>' . $this->{'SUBSTITUTE'} . "\n";
-		foreach (@{$this->{'NGWORD'}}) {
-			print $f_ngword "$_\n";
-		}
-		truncate($f_ngword, tell($f_ngword));
-		close($f_ngword);
-		chmod $Sys->Get('PM-ADM'), $path;
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
+		
+		print $fh "$this->{'METHOD'}<>$this->{'SUBSTITUTE'}\n";
+		print $fh "$_\n" foreach (@{$this->{'NGWORD'}});
+		
+		truncate($fh, tell($fh));
+		close($fh);
 	}
+	chmod $Sys->Get('PM-ADM'), $path;
 	
 	return 0;
 }
@@ -146,9 +123,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{$key};
+	my $val = $this->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -182,27 +158,27 @@ sub Clear
 {
 	my $this = shift;
 	
-	undef @{$this->{'NGWORD'}};
+	$this->{'NGWORD'} = [];
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	NGワード調査 - Check
 #	-------------------------------------------
-#	引　数：$S : SAMWISE
-#	戻り値：なし
+#	引　数：$Form  : SAMWISE
+#			$pList : チェックリスト(リファレンス)
+#	戻り値：検知番号
 #
 #------------------------------------------------------------------------------------------------------------
 sub Check
 {
 	my $this = shift;
 	my ($Form, $pList) = @_;
-	my ($word, $key, $work);
 	
-	foreach $word (@{$this->{'NGWORD'}}) {
+	foreach my $word (@{$this->{'NGWORD'}}) {
 		next if ($word eq '');
-		foreach $key (@$pList) {
-			$work = $Form->Get($key);
+		foreach my $key (@$pList) {
+			my $work = $Form->Get($key);
 			if ($work =~ /\Q$word\E/) {
 				return 2 if ($this->{'METHOD'} eq 'host');
 				return 3 if ($this->{'METHOD'} eq 'disable');
@@ -217,7 +193,8 @@ sub Check
 #
 #	NGワード処理 - Method
 #	-------------------------------------------
-#	引　数：$S : SAMWISE
+#	引　数：$Form  : SAMWISE
+#			$pList : チェックリスト(リファレンス)
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
@@ -225,30 +202,26 @@ sub Method
 {
 	my $this = shift;
 	my ($Form, $pList) = @_;
-	my ($word, $work, $substitute, $key);
 	
 	# 処理種別が代替か削除の場合のみ処理
-	if ($this->{'METHOD'} ne 'delete' && $this->{'METHOD'} ne 'substitute') {
-		return;
+	return unless ($this->{'METHOD'} eq 'delete' || $this->{'METHOD'} eq 'substitute');
+	
+	# 代替用文字列を設定
+	my $substitute = '';
+	if ($this->{'METHOD'} eq 'delete') {
+		#$substitute = '<b><font color=red>削除</font></b>';
+		$substitute = '';
 	}
 	else {
-		# 代替用文字列を設定
-		if ($this->{'METHOD'} eq 'delete') {
-#			$substitute = '<b><font color=red>削除</font></b>';
-			$substitute = '';
-		}
-		else {
-			$substitute = $this->{'SUBSTITUTE'};
-			$substitute = '' if (! defined $substitute);
-		}
+		$substitute = $this->{'SUBSTITUTE'};
+		$substitute = '' if (! defined $substitute);
 	}
 	
-	foreach $word (@{$this->{'NGWORD'}}) {
+	foreach my $word (@{$this->{'NGWORD'}}) {
 		next if ($word eq '');
-		foreach $key (@$pList) {
-			$work = $Form->Get($key);
-			if ($work =~ /\Q$word\E/) {
-				$work =~ s/\Q$word\E/$substitute/g;
+		foreach my $key (@$pList) {
+			my $work = $Form->Get($key);
+			if ($work =~ s/\Q$word\E/$substitute/g) {
 				$Form->Set($key, $work);
 			}
 		}

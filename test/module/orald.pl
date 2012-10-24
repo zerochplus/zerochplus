@@ -1,21 +1,12 @@
 #============================================================================================================
 #
-#	エラー情報管理モジュール(ORALD)
-#	orald.pl
-#	---------------------------------------
-#	2003.02.05 start
-#------------------------------------------------------------------------------------------------------------
-#
-#	Load																			; エラー情報読み込み
-#	Get																				; エラー情報取得
-#	Print																			; エラーページ出力(read)
+#	エラー情報管理モジュール
 #
 #============================================================================================================
 package	ORALD;
 
 use strict;
-#コメントアウトを外す場合は変数の初期化チェックをすること。
-#use warnings;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -28,11 +19,11 @@ use strict;
 sub new
 {
 	my $this = shift;
-	my ($obj);
 	
-	$obj = {
-		'SUBJECT' => undef,
-		'MESSAGE' => undef
+	my $obj = {
+		'SUBJECT'	=> undef,
+		'MESSAGE'	=> undef,
+		'ERR'		=> undef,
 	};
 	bless $obj, $this;
 	
@@ -43,32 +34,37 @@ sub new
 #
 #	エラー情報読み込み - Load
 #	-------------------------------------------
-#	引　数：$M : MELKOR
+#	引　数：$Sys : MELKOR
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Load
 {
 	my $this = shift;
-	my ($M) = @_;
-	my (@readBuff, $path, $err, $subj, $msg, @elem);
+	my ($Sys) = @_;
 	
-	undef %{$this->{'ERR'}};
-	$path = '.' . $M->Get('INFO') . '/errmsg.cgi';
+	$this->{'ERR'} = undef;
 	
-	if (open(my $f_err, '<', $path)) {
-		flock($f_err, 2);
-		@readBuff = <$f_err>;
-		close($f_err);
+	my $path = '.' . $Sys->Get('INFO') . '/errmsg.cgi';
+	
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
 		
-		foreach (@readBuff) {
-			# '#' はコメント行なので読まない
-			unless	(/^#.*/) {
-				chomp $_;
-				@elem = split(/<>/, $_);
-				$this->{'SUBJECT'}->{$elem[0]} = $elem[1];
-				$this->{'MESSAGE'}->{$elem[0]} = $elem[2];
+		foreach (@lines) {
+			next if ($_ eq '' || $_ =~ /^#/);
+			
+			my @elem = split(/<>/, $_, -1);
+			if (scalar(@elem) < 3) {
+				warn "invalid line in $path";
+				next;
 			}
+			
+			my $id = $elem[0];
+			$this->{'SUBJECT'}->{$id} = $elem[1];
+			$this->{'MESSAGE'}->{$id} = $elem[2];
 		}
 	}
 }
@@ -77,17 +73,17 @@ sub Load
 #
 #	エラー情報取得 - Get
 #	-------------------------------------------
-#	引　数：$err : エラー番号
-#	戻り値：($subj,$msg)
+#	引　数：$err  : エラー番号
+#			$kind : 種類
+#	戻り値：エラー情報
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
 	my ($err, $kind) = @_;
-	my ($val);
 	
-	$val = $this->{$kind}->{$err};
+	my $val = $this->{$kind}->{$err};
 	
 	return $val;
 }
@@ -96,47 +92,39 @@ sub Get
 #
 #	エラーページ出力 - PrintBBS
 #	-------------------------------------------
-#	引　数：$T,$M,$S : THORIN,MELKOR
-#			$err     : エラー番号
-#			$f       : モード(1:携帯用,0:PC用)
+#	引　数：$CGI  : 
+#			$Page : THORIN
+#			$err  : エラー番号
+#			$mode : エージェント
 #	戻り値：なし
-#
-#	2010.08.13 windyakin ★
-#	 -> ID末尾改造による変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
 	my $this = shift;
-	my ($Sys, $Page, $err, $mode) = @_;
-	my ($Form, $SYS, $version, $bbsPath, $message, $koyuu);
+	my ($CGI, $Page, $err, $mode) = @_;
 	
-	$Form		= $Sys->{'FORM'};
-	$SYS		= $Sys->{'SYS'};
-	$version	= $SYS->Get('VERSION');
-	$bbsPath	= $SYS->Get('BBSPATH') . '/' . $SYS->Get('BBS');
-	$message	= $this->{'MESSAGE'}->{$err};
-	$message	=~ s/\x5cn/\n/g;
-	$mode		= '0' if (! defined $mode);
-	$mode		= 'O' if ($Form->Equal('mb', 'on'));
+	my $Form = $CGI->{'FORM'};
+	my $Sys = $CGI->{'SYS'};
+	my $version = $Sys->Get('VERSION');
+	my $bbsPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	my $message = $this->{'MESSAGE'}->{$err};
 	
 	# エラーメッセージの置換
-	while ($message =~ /{!(.*?)!}/) {
-		my $rep = $SYS->Get($1, '');
-		$message =~ s/{!$1!}/$rep/;
-	}
+	$message =~ s/\\n/\n/g;
+	$message =~ s/{!(.*?)!}/$Sys->Get($1, '')/ge;
 	
 	# リモートホストの取得
-	$koyuu = $SYS->Get('KOYUU');
+	my $koyuu = $Sys->Get('KOYUU');
+	$mode = '0' if (! defined $mode);
+	$mode = 'O' if ($Form->Equal('mb', 'on'));
 	
 	# エラーログを保存
-	{
-		require './module/peregrin.pl';
-		my $P = PEREGRIN->new;
-		$P->Load($SYS, 'ERR', '');
-		$P->Set('', $err, $version, $koyuu, $mode);
-		$P->Save($SYS);
-	}
+	require './module/peregrin.pl';
+	my $Log = PEREGRIN->new;
+	$Log->Load($Sys, 'ERR', '');
+	$Log->Set('', $err, $version, $koyuu, $mode);
+	$Log->Save($Sys);
 	
 	if ($mode eq 'O') {
 		my $subject = $this->{'SUBJECT'}->{$err};
@@ -147,18 +135,17 @@ sub Print
 		$Page->Print("から戻ってください</body></html>");
 	}
 	else {
-		my $COOKIE = $Sys->{'COOKIE'};
-		my $oSET = $Sys->{'SET'};
-		my ($name, $mail, $msg);
+		my $Cookie = $CGI->{'COOKIE'};
+		my $Set = $CGI->{'SET'};
 		
-		$name = $Form->Get('NAME');
-		$mail = $Form->Get('MAIL');
-		$msg = $Form->Get('MESSAGE');
+		my $name = $Form->Get('NAME');
+		my $mail = $Form->Get('MAIL');
+		my $msg = $Form->Get('MESSAGE');
 		
 		# cookie情報の出力
-		$COOKIE->Set('NAME', $name) if ($oSET->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
-		$COOKIE->Set('MAIL', $mail) if ($oSET->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
-		$COOKIE->Out($Page, $oSET->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
+		$Cookie->Set('NAME', $name) if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+		$Cookie->Set('MAIL', $mail) if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+		$Cookie->Out($Page, $Set->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");
 		$Page->Print(<<HTML) if ($err < 505 || $err > 508);

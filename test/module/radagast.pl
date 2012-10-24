@@ -1,10 +1,6 @@
 #============================================================================================================
 #
-#	cookie管理モジュール(RADAGAST)
-#	radagast.pl
-#	---------------------------------------------
-#	2003.02.07 start
-#	2004.03.20 interface一新
+#	cookie管理モジュール
 #
 #============================================================================================================
 package RADAGAST;
@@ -23,13 +19,12 @@ use Encode;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, %COOKIE);
+	my $class = shift;
 	
-	$obj = {
-		'COOKIE'	=> \%COOKIE
+	my $obj = {
+		'COOKIE'	=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -45,15 +40,13 @@ sub new
 sub Init
 {
 	my $this = shift;
-	my (@pairs, $name, $value, $gCode);
 	
-	undef $this->{'COOKIE'};
+	$this->{'COOKIE'} = {};
 	
 	if ($ENV{'HTTP_COOKIE'}) {
-		@pairs = split(/;/, $ENV{'HTTP_COOKIE'});
+		my @pairs = split(/;\s*/, $ENV{'HTTP_COOKIE'});
 		foreach (@pairs) {
-			($name, $value) = split(/=/, $_);
-			$name =~ s/ //g;
+			my ($name, $value) = split(/=/, $_, 2);
 			$value =~ s/^"|"$//g;
 			$value =~ s/%([0-9A-Fa-f][0-9A-Fa-f])/pack('H2', $1)/eg;
 			Encode::from_to($value, 'utf8', 'sjis');
@@ -93,9 +86,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{'COOKIE'}->{$key};
+	my $val = $this->{'COOKIE'}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -146,21 +138,20 @@ sub Out
 {
 	my $this = shift;
 	my ($oOut, $path, $limit) = @_;
-	my (@gmt, @week, @month, $date, $key, $value);
 	
 	# 日付情報の設定
-	@gmt = gmtime(time + $limit * 60);
-	@week = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
-	@month = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+	my @gmt = gmtime(time + $limit * 60);
+	my @week = qw(Sun Mon Tue Wed Thu Fri Sat);
+	my @month = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 	
 	# 有効期限文字列生成
-	$date = sprintf('%s, %02d-%s-%04d %02d:%02d:%02d GMT',
+	my $date = sprintf('%s, %02d-%s-%04d %02d:%02d:%02d GMT',
 					$week[$gmt[6]], $gmt[3], $month[$gmt[4]], $gmt[5] + 1900,
 					$gmt[2], $gmt[1], $gmt[0]);
 	
 	# 設定されているcookieを全て出力する
-	foreach $key (keys %{$this->{'COOKIE'}}) {
-		$value = $this->{'COOKIE'}->{$key};
+	foreach my $key (keys %{$this->{'COOKIE'}}) {
+		my $value = $this->{'COOKIE'}->{$key};
 		Encode::from_to($value, 'sjis', 'utf8');
 		$value =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
 		$oOut->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");

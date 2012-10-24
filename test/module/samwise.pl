@@ -1,52 +1,42 @@
 #============================================================================================================
 #
-#	フォーム情報管理モジュール(SAMWISE)
-#	samwise.pl
-#	---------------------------------------------
-#	2002.12.13 start
-#	2003.02.10 IsInput,IsInputAll追加
-#	2010.08.14 文字コード変換処理廃止
-#	           禁則処理移動
+#	フォーム情報管理モジュール
 #
 #============================================================================================================
 package	SAMWISE;
 
 use strict;
-#コメントアウトを外す場合は変数の初期化チェックをすること。
-#use warnings;
+use warnings;
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
 #	-------------------------------------------
-#	引　数：なし
+#	引　数：$throughget	GETリクエストの受け入れ
 #	戻り値：モジュールオブジェクト
 #
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
+	my $class = shift;
 	my ($throughget) = @_;
-	my (%FORM, @SRC, $form, $obj);
 	
-	if ($ENV{'REQUEST_METHOD'} eq 'POST') {					# POSTメソッド
+	my $form = '';
+	if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		read STDIN, $form, $ENV{'CONTENT_LENGTH'};
 	}
-	elsif ($throughget && defined $ENV{'QUERY_STRING'}) {	# GETメソッド
+	elsif ($throughget && defined $ENV{'QUERY_STRING'}) {
 		$form = $ENV{'QUERY_STRING'};
 	}
-	else {
-		$form = '';
-	}
 	
-	@SRC = split(/&/, $form);								# データ分離
+	my @SRC = split(/[&;]/, $form);
 	
-	$obj = {
-		'FORM'	=> \%FORM,
-		'SRC'	=> \@SRC
+	my $obj = {
+		'FORM'	=> undef,
+		'SRC'	=> \@SRC,
 	};
 	
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -63,19 +53,17 @@ sub DecodeForm
 {
 	my $this = shift;
 	my ($mode) = @_;
-	my ($var, $val, $code);
 	
-	undef %{$this->{'FORM'}};
+	$this->{'FORM'} = {};
 	
-	foreach (@{$this->{'SRC'}}) {										# 各データごとに処理
-		($var, $val) = split(/=/, $_);									# name/valueで分離
+	foreach (@{$this->{'SRC'}}) {
+		my ($var, $val) = split(/=/, $_, 2);
 		$val =~ tr/+/ /;
 		$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
-		$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
-		$val =~ s/\0//g;												# ぬるぽ
-		$this->{'FORM'}->{$var} = $val;									# データセット
-		
-		$this->{'FORM'}->{"Raw_$var"} = $val;							# データセット
+		$val =~ s/\r\n|\r|\n/\n/g;
+		$val =~ s/\0//g;
+		$this->{'FORM'}->{$var} = $val;
+		$this->{'FORM'}->{"Raw_$var"} = $val;
 	}
 }
 
@@ -92,22 +80,21 @@ sub GetAtArray
 {
 	my $this = shift;
 	my ($key, $f) = @_;
-	my ($var, $val, $code, @ret);
 	
-	undef @ret;
+	my @ret = ();
 	
-	foreach (@{$this->{'SRC'}}) {											# 各データごとに処理
-		($var, $val) = split(/=/, $_);										# name/valueで分離
-		if ($key eq $var) {													# 指定キー
+	foreach (@{$this->{'SRC'}}) {
+		my ($var, $val) = split(/=/, $_, 2);
+		if ($key eq $var) {
 			$val =~ tr/+/ /;
 			$val =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack('C', hex($1))/eg;
-			$val =~ s/\r\n|\r|\n/\n/g;										# 改行を統一
-			$val =~ s/\0//g;												# ぬるぽ
+			$val =~ s/\r\n|\r|\n/\n/g;
+			$val =~ s/\0//g;
 			if ($f) {
-				$val =~ s/"/&quot;/g;										# 特殊文字対策 "
-				$val =~ s/</&lt;/g;											# 特殊文字対策 <
-				$val =~ s/>/&gt;/g;											# 特殊文字対策 >
-				$val =~ s/\r\n|\r|\n/<br>/g;								# 改行
+				$val =~ s/"/&quot;/g;
+				$val =~ s/</&lt;/g;
+				$val =~ s/>/&gt;/g;
+				$val =~ s/\r\n|\r|\n/<br>/g;
 			}
 			push @ret, $val;
 		}
@@ -128,9 +115,8 @@ sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{'FORM'}->{$key};
+	my $val = $this->{'FORM'}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : ''));
 }
@@ -165,9 +151,8 @@ sub Equal
 {
 	my $this = shift;
 	my ($key, $data) = @_;
-	my ($val);
 	
-	$val = $this->{'FORM'}->{$key};
+	my $val = $this->{'FORM'}->{$key};
 	
 	return (defined $val && $val eq $data);
 }
@@ -176,7 +161,7 @@ sub Equal
 #
 #	入力チェック - IsInput
 #	-------------------------------------------
-#	引　数：@keylist : 判定項目リスト
+#	引　数：$pkeylist : 判定項目リスト(リファレンス)
 #	戻り値：入力OKなら1,未入力ありなら0
 #
 #------------------------------------------------------------------------------------------------------------
@@ -186,9 +171,8 @@ sub IsInput
 	my ($pKeyList) = @_;
 	
 	foreach (@$pKeyList) {
-		if ($this->{'FORM'}->{$_} eq '') {
-			return 0;
-		}
+		my $val = $this->{'FORM'}->{$_};
+		return 0 if (!defined $val || $val eq '');
 	}
 	return 1;
 }
@@ -205,10 +189,8 @@ sub IsInputAll
 {
 	my $this = shift;
 	
-	foreach (keys %{$this->{'FORM'}}) {
-		if ($this->{'FORM'}->{$_} eq '') {
-			return 0;
-		}
+	foreach (values %{$this->{'FORM'}}) {
+		return 0 if ($_ eq '');
 	}
 	return 1;
 }
@@ -282,9 +264,7 @@ sub IsNumber
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		if ($this->{'FORM'}->{$_} =~ /\D/) {
-			return 0;
-		}
+		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9]/);
 	}
 	return 1;
 }
@@ -303,9 +283,7 @@ sub IsAlphabet
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/) {
-			return 0;
-		}
+		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/);
 	}
 	return 1;
 }
@@ -345,9 +323,7 @@ sub IsBBSDir
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z\_\-]/) {
-			return 0;
-		}
+		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z\_\-]/);
 	}
 	return 1;
 }

@@ -1,9 +1,6 @@
 #============================================================================================================
 #
-#	出力管理モジュール(THORIN)
-#	thorin.pl
-#	---------------------------------------------
-#	2002.12.05 start
+#	出力管理モジュール
 #
 #============================================================================================================
 package	THORIN;
@@ -21,13 +18,12 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my (@BUFF, $obj);
+	my $class = shift;
 	
-	$obj = {				# thorinオブジェクト
-		'BUFF'	=> \@BUFF,	# 出力バッファ
+	my $obj = {
+		'BUFF'	=> [],
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -62,9 +58,8 @@ sub HTMLInput
 {
 	my $this = shift;
 	my ($kind, $name, $value) = @_;
-	my $line;
 	
-	$line = "<input type=$kind name=\"$name\" value=\"$value\">\n";
+	my $line = "<input type=$kind name=\"$name\" value=\"$value\">\n";
 	
 	push @{$this->{'BUFF'}}, $line;
 }
@@ -82,22 +77,22 @@ sub HTMLInput
 sub Flush
 {
 	my $this = shift;
-	my ($flag, $perm, $szFilePath) = @_;
+	my ($flag, $perm, $path) = @_;
 	
 	# ファイルへ出力
 	if ($flag) {
-		if (open(my $f_output, (-f $szFilePath ? '+<' : '>'), $szFilePath)) {
-			flock($f_output, 2);
-			seek($f_output, 0, 0);
-			print $f_output @{$this->{'BUFF'}};
-			truncate($f_output, tell($f_output));
-			close($f_output);
-			chmod $perm, $szFilePath;
+		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+			flock($fh, 2);
+			seek($fh, 0, 0);
+			print $fh $_ foreach (@{$this->{'BUFF'}});
+			truncate($fh, tell($fh));
+			close($fh);
 		}
+		chmod $perm, $path;
 	}
 	# 標準出力に出力
 	else {
-		print @{$this->{'BUFF'}};
+		print $_ foreach (@{$this->{'BUFF'}});
 	}
 }
 
@@ -113,7 +108,7 @@ sub Clear
 {
 	my $this = shift;
 	
-	undef @{$this->{'BUFF'}};
+	$this->{'BUFF'} = [];
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -129,9 +124,7 @@ sub Merge
 	my $this = shift;
 	my ($thorin) = @_;
 	
-	foreach (@{$thorin->{'BUFF'}}) {
-		push @{$this->{'BUFF'}}, $_;
-	}
+	push @{$this->{'BUFF'}}, @{$thorin->{'BUFF'}};
 }
 
 #============================================================================================================

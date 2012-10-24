@@ -1,14 +1,6 @@
 #============================================================================================================
 #
 #	アップデート通知
-#	newrelease.pl
-#
-#	by ぜろちゃんねるプラス
-#	http://zerochplus.sourceforge.jp/
-#
-#	---------------------------------------------------------------------------
-#
-#	2012.08.09 start
 #
 #============================================================================================================
 
@@ -29,14 +21,13 @@ use Encode;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ( $obj, %NEWRELEASE );
+	my $class = shift;
 	
-	$obj = {
-		'NEWRELEASE'	=> \%NEWRELEASE
+	my $obj = {
+		'NEWRELEASE'	=> undef,
 	};
 	
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -45,22 +36,21 @@ sub new
 #
 #	初期化 - Init
 #	-------------------------------------------------------------------------------------
-#	引　数：$sys : MELKOR
+#	引　数：$Sys : MELKOR
 #	戻り値：0
 #
 #------------------------------------------------------------------------------------------------------------
 sub Init
 {
 	my $this = shift;
-	my ( $sys ) = @_;
-	undef $this->{'NEWRELEASE'};
+	my ($Sys) = @_;
 	
 	$this->{'NEWRELEASE'} = {
 		'CheckURL'	=> 'http://zerochplus.sourceforge.jp/Release.txt',
 		'Interval'	=> 60 * 60 * 24, # 24時間
-		'RawVer'	=> $sys->Get('VERSION'),
-		'CachePATH'	=>  '.' . $sys->Get('INFO') . '/Release.cgi',
-		'CachePM'	=> $sys->Get('PM-ADM'),
+		'RawVer'	=> $Sys->Get('VERSION'),
+		'CachePATH'	=>  '.' . $Sys->Get('INFO') . '/Release.cgi',
+		'CachePM'	=> $Sys->Get('PM-ADM'),
 		'Update'	=> 0,
 	};
 	
@@ -78,14 +68,14 @@ sub Init
 sub Check
 {
 	my $this = shift;
+	
 	my $hash = $this->{'NEWRELEASE'};
-	my ( $url, $interval, $rawver, @ver, $date, $path );
 	
+	my $url = $hash->{'CheckURL'};
+	my $interval = $hash->{'Interval'};
 	
-	$url = $hash->{'CheckURL'};
-	$interval = $hash->{'Interval'};
-	
-	$rawver = $hash->{'RawVer'};
+	my $rawver = $hash->{'RawVer'};
+	my @ver;
 	# 0ch+ BBS n.m.r YYYYMMDD 形式であることをちょっと期待している
 	# または 0ch+ BBS dev-rREV YYYYMMDD
 	if ( $rawver =~ /(\d+(?:\.\d+)+)/ ) {
@@ -95,12 +85,12 @@ sub Check
 	} else {
 		@ver = ( 'dev', 0 );
 	}
-	$date = '00000000';
+	my $date = '00000000';
 	if ( $rawver =~ /(\d{8})/ ) {
 		$date = $1;
 	}
 	
-	$path = $hash->{'CachePATH'};
+	my $path = $hash->{'CachePATH'};
 	
 	
 	# キャッシュの有効期限が過ぎてたらデータをとってくる
@@ -123,55 +113,52 @@ sub Check
 		
 		# とれた
 		if ( $proxy->getStatus() eq 200 ) {
-			if (open(my $f_file, (-f $path ? '+<' : '>'), $path)) {
-				flock($f_file, 2);
-				seek($f_file, 0, 0);
-				binmode($f_file);
-				print $f_file $proxy->getContent();
-				truncate($f_file, tell($f_file));
-				close($f_file);
-				chmod $hash->{'CachePM'}, $path;
+			if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+				flock($fh, 2);
+				seek($fh, 0, 0);
+				binmode($fh);
+				print $fh $proxy->getContent();
+				truncate($fh, tell($fh));
+				close($fh);
 			}
+			chmod $hash->{'CachePM'}, $path;
 		}
 	}
 	
 	
 	# 比較部
-	my ( @release, $l, @newver, $newdate, $i, $newrelease, $vv, $nv );
-	@release = ();
+	my @release = ();
 	
-	if (open(my $f_file, '<', $path)) {
-		flock($f_file, 2);
-		while ( $l = <$f_file> ) {
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		while ( <$fh> ) {
 			# $l =~ s/\x0d?\x0a?$//;
 			# samwiseと同等のサニタイジングを行います
-			$l =~ s/[\x0d\x0a\0]//g;
-			$l =~ s/"/&quot;/g;
-			$l =~ s/</&lt;/g;
-			$l =~ s/>/&gt;/g;
+			$_ =~ s/[\x0d\x0a\0]//g;
+			$_ =~ s/"/&quot;/g;
+			$_ =~ s/</&lt;/g;
+			$_ =~ s/>/&gt;/g;
 			
-			Encode::from_to( $l, 'utf8', 'sjis' );
-			push @release, $l;
+			Encode::from_to( $_, 'utf8', 'sjis' );
+			push @release, $_;
 		}
-		close($f_file);
+		close($fh);
 	}
 	# 爆弾(BOM)処理
-	$l = shift @release;
-	$l =~ s/^\xef\xbb\xbf//;
-	unshift @release, $l;
+	$release[0] =~ s/^\xef\xbb\xbf//;
 	
 	# n.m.r形式であることを期待している
-	@newver = split /\./, $release[0];
+	my @newver = split /\./, $release[0];
 	# YYYY.MM.DD形式であることを期待している
-	$newdate = join '', (split /\./, $release[2], 3);
+	my $newdate = join '', (split /\./, $release[2], 3);
 	
-	$i = 0;
-	$newrelease = 0;
+	my $i = 0;
+	my $newrelease = 0;
 	# バージョン比較
 	# とりあえず自verがdevなら無視(下の日付で確認)
 	if ( $ver[0] ne 'dev' ) {
-		foreach $nv ( @newver ) {
-			$vv = shift @ver;
+		foreach my $nv ( @newver ) {
+			my $vv = shift @ver;
 			if ( $vv < $nv ) {
 				$newrelease = 1;
 			} elsif ( $vv > $nv ) {
@@ -205,16 +192,17 @@ sub Check
 #
 #	設定値取得 - Get
 #	-------------------------------------------------------------------------------------
-#	MELKORとかとおなじような感じで
+#	@param	$key	取得キー
+#			$default : デフォルト
+#	@return	設定値
 #
 #------------------------------------------------------------------------------------------------------------
 sub Get
 {
 	my $this = shift;
 	my ($key, $default) = @_;
-	my ($val);
 	
-	$val = $this->{'NEWRELEASE'}->{$key};
+	my $val = $this->{'NEWRELEASE'}->{$key};
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -223,7 +211,9 @@ sub Get
 #
 #	設定値設定 - Set
 #	-------------------------------------------------------------------------------------
-#	MELKOR(ry
+#	@param	$key	設定キー
+#	@param	$data	設定値
+#	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Set

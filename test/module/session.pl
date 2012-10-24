@@ -1,16 +1,12 @@
 #============================================================================================================
 #
 #	セッション管理モジュール
-#	session.pl
-#	-------------------------------------------------------------------------------------
-#	2005.10.22 start
 #
 #============================================================================================================
 
 #============================================================================================================
 #
 #	セッションマネージャパッケージ
-#	SessionManager
 #
 #============================================================================================================
 package SessionManager;
@@ -28,19 +24,20 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub getSession
 {
-	my ($session, $id, $filePath, $check);
-	my ($key, $value);
 	
-	$session = new Session;
-	$id = createSessionID();
-	$filePath = "./info/session/$id";
-	$check = 1;
+	my $session = new Session;
+	my $id = createSessionID();
+	my $filePath = "./info/session/$id";
+	my $check = 1;
 	
 	# セッション情報ファイルが存在する場合はそれを読み込む
-	if (open(my $f_session, '<', $filePath)) {
-		flock($f_session, 2);
-		while (<$f_session>) {
-			chomp $_;
+	if (open(my $fh, '<', $filePath)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
 			# 1行目(セッション開始時間)を取得
 			if ($check) {
 				$check = 0;
@@ -52,21 +49,20 @@ sub getSession
 			# 2行目以降(セッション属性値)を取得
 			}
 			else {
-				($key, $value) = split(/=/, $_);
+				my ($key, $value) = split(/=/, $_);
 				$value =~ s/&equal;/=/g;
 				$session->setAttribute($key, $value);
 			}
 		}
-		close($f_session);
 	# セッション情報ファイルが存在しない場合は空ファイルを作成する
 	}
 	else {
-		if (! -e './info/session' || ! -d './info/session') {
+		if (!-e './info/session' || !-d './info/session') {
 			require './module/earendil.pl';
 			EARENDIL::CreateDirectory('./info/session', 0770);
 		}
-		open(my $f_session, '>', $filePath);
-		close($f_session);
+		open(my $fh, '>', $filePath);
+		close($fh);
 		$session->setId(time);
 	}
 	return $session;
@@ -82,27 +78,26 @@ sub getSession
 #------------------------------------------------------------------------------------------------------------
 sub setSession
 {
+	
 	my ($session) = @_;
-	my ($id, $filePath, $key, $value);
 	
-	$id = createSessionID($ENV{'REMOTE_ADDR'});
-	$filePath = './info/session/' . $id;
+	my $id = createSessionID($ENV{'REMOTE_ADDR'});
+	my $filePath = "./info/session/$id";
 	
-	if (-e $filePath) {
-		open(SESSION, '+<', $filePath);
-		flock(SESSION, 2);
-		seek(SESSION, 0, 0);
-		binmode(SESSION);
+	if (open(my $fh, '+<', $filePath)) {
+		flock($fh, 2);
+		seek($fh, 0, 0);
+		binmode($fh);
 		
-		print SESSION $session->getId() . "\n";
-		foreach $key (keys %{$session->{'ATTRIBUTE'}}) {
-			$value = $session->getAttribute($key);
+		print $fh $session->getId() . "\n";
+		foreach my $key (keys %{$session->{'ATTRIBUTE'}}) {
+			my $value = $session->getAttribute($key);
 			$value =~ s/=/&equal;/g;
-			print SESSION "$key=$value\n";
+			print $fh "$key=$value\n";
 		}
 		
-		truncate(SESSION, tell(SESSION));
-		close SESSION;
+		truncate($fh, tell($fh));
+		close($fh);
 	}
 }
 
@@ -116,10 +111,9 @@ sub setSession
 #------------------------------------------------------------------------------------------------------------
 sub removeSession
 {
-	my ($id, $filePath);
 	
-	$id = createSessionID($ENV{'REMOTE_ADDR'});
-	$filePath = "./info/session/$id";
+	my $id = createSessionID($ENV{'REMOTE_ADDR'});
+	my $filePath = "./info/session/$id";
 	
 	unlink $filePath;
 }
@@ -134,17 +128,17 @@ sub removeSession
 #------------------------------------------------------------------------------------------------------------
 sub createSessionID
 {
-	my $key = $ENV{'REMOTE_ADDR'};
 	
+	my $key = $ENV{'REMOTE_ADDR'};
 	$key =~ s/\.//g;
 	$key = substr($ENV{'REMOTE_ADDR'}, -8);
+	
 	return substr(crypt($key, substr(crypt($key, 'ZC'), -2)), -26);
 }
 
 #============================================================================================================
 #
 #	セッションオブジェクトパッケージ
-#	Session
 #
 #============================================================================================================
 package Session;
@@ -162,14 +156,13 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, %ATTRIBUTE);
+	my $class = shift;
 	
-	$obj = {
+	my $obj = {
 		'ID'		=> undef,
-		'ATTRIBUTE'	=> \%ATTRIBUTE
+		'ATTRIBUTE'	=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
