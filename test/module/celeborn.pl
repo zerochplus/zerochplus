@@ -262,14 +262,16 @@ sub UpdateInfo
 	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/kako';
 	
 	# ディレクトリ情報を取得
+	my $hierarchy = {};
 	my @dirList = ();
-	EARENDIL::GetFolderHierarchy($path, ($_ = {}));
-	EARENDIL::GetFolderList($_, \@dirList, '');
+	EARENDIL::GetFolderHierarchy($path, $hierarchy);
+	EARENDIL::GetFolderList($hierarchy, \@dirList, '');
 	
 	foreach my $dir (@dirList) {
-		EARENDIL::GetFileList("$path/$dir", ($_ = []), '([0-9]+)\.html');
+		my @fileList = ();
+		EARENDIL::GetFileList("$path/$dir", \@fileList, '([0-9]+)\.html');
 		Add($this, 0, 0, 0, $dir);
-		foreach my $file (@$_) {
+		foreach my $file (@fileList) {
 			my @elem = split(/\./, $file);
 			my $subj = GetThreadSubject("$path/$dir/$file");
 			Add($this, $elem[0], $subj, time, $dir) if ($subj ne '');
@@ -312,8 +314,9 @@ sub UpdateIndex
 		my @info = ();
 		
 		# 1階層下のサブフォルダを取得する
-		GetSubFolders($path, \@dirs, ($_ = []));
-		foreach my $dir (sort @$_) {
+		my @folderList = ();
+		GetSubFolders($path, \@dirs, \@folderList);
+		foreach my $dir (sort @folderList) {
 			push @info, "0<>0<>0<>$dir";
 		}
 		

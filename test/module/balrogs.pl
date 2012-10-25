@@ -63,11 +63,12 @@ sub Create
 		my $BBSs = NAZGUL->new;
 		
 		$BBSs->Load($Sys);
-		$BBSs->GetKeySet('ALL', '', ($_ = []));
+		my @bbsSet = ();
+		$BBSs->GetKeySet('ALL', '', \@bbsSet);
 		
 		my $BBSpath = $Sys->Get('BBSPATH');
 		
-		foreach my $bbsID (@$_) {
+		foreach my $bbsID (@bbsSet) {
 			my $dir = $BBSs->Get('DIR', $bbsID);
 			
 			# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
@@ -76,9 +77,10 @@ sub Create
 			$Sys->Set('BBS', $dir);
 			my $Threads = BILBO->new;
 			$Threads->Load($Sys);
-			$Threads->GetKeySet('ALL', '', ($_ = []));
+			my @threadSet = ();
+			$Threads->GetKeySet('ALL', '', \@threadSet);
 			
-			foreach my $threadID (@$_) {
+			foreach my $threadID (@threadSet) {
 				my $set = "$dir<>$threadID";
 				push @$pSearchSet, $set;
 			}
@@ -91,9 +93,10 @@ sub Create
 		
 		$Sys->Set('BBS', $bbs);
 		$Threads->Load($Sys);
-		$Threads->GetKeySet('ALL', '', ($_ = []));
+		my @threadSet = ();
+		$Threads->GetKeySet('ALL', '', \@threadSet);
 		
-		foreach my $threadID (@$_) {
+		foreach my $threadID (@threadSet) {
 			my $set = "$bbs<>$threadID";
 			push @$pSearchSet, $set;
 		}

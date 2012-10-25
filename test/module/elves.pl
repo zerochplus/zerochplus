@@ -627,10 +627,11 @@ sub IsLogin
 	my $User = $this->{'USER'};
 	
 	# ユーザ名でユーザIDセットを取得
-	$User->GetKeySet('NAME', $name, ($_ = []));
+	my @keySet = ();
+	$User->GetKeySet('NAME', $name, \@keySet);
 	
 	# 取得したIDセットからユーザ名とパスワードが同じものを検索
-	foreach my $id (@$_) {
+	foreach my $id (@keySet) {
 		my $lPass = $User->Get('PASS', $id);
 		my $hash = $User->GetStrictPass($pass, $id);
 		return $id if ($lPass eq $hash);
@@ -719,9 +720,10 @@ sub GetBelongBBSList
 	# 一般ユーザは所属グループから判断する
 	else {
 		my $origBBS = $this->{'BBS'};
-		$oBBS->GetKeySet('ALL', '', ($_ = []));
+		my @keySet = ();
+		$oBBS->GetKeySet('ALL', '', \@keySet);
 		
-		foreach my $bbsID (@$_) {
+		foreach my $bbsID (@keySet) {
 			my $bbsDir = $oBBS->Get('DIR', $bbsID);
 			SetGroupInfo($this, $bbsDir);
 			if ($this->{'GROUP'}->GetBelong($id) ne '') {

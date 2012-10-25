@@ -348,8 +348,9 @@ sub CreateContents
 		my $name = $Category->Get('NAME', $cid);
 		$Page->Print("<b>$name</b><br>\n");
 		
-		$this->GetKeySet('CATEGORY', $cid, ($_ = []));
-		foreach my $id (@$_) {
+		my @keySet = ();
+		$this->GetKeySet('CATEGORY', $cid, \@keySet);
+		foreach my $id (@keySet) {
 			my $name = $this->{'NAME'}->{$id};
 			my $dir = $this->{'DIR'}->{$id};
 			

@@ -467,8 +467,9 @@ sub Update
 	foreach my $file (@files) {
 		if ($file =~ /^0ch_(.*)\.pl/) {
 			my $className = "ZPL_$1";
-			if (scalar $this->GetKeySet('FILE', $file, ($_ = [])) > 0) {
-				my $id = $_->[0];
+			my @keySet = ();
+			if (scalar $this->GetKeySet('FILE', $file, \@keySet) > 0) {
+				my $id = $keySet[0];
 				require "./plugin/$file";
 				my $plugin = $className->new;
 				$this->{'NAME'}->{$id} = $plugin->getName;
@@ -484,8 +485,9 @@ sub Update
 		}
 	}
 	# プラグイン削除フェイズ
-	if ($this->GetKeySet('ALL', '', ($_ = [])) > 0) {
-		foreach my $id (@$_) {
+	my @keySet = ();
+	if ($this->GetKeySet('ALL', '', \@keySet) > 0) {
+		foreach my $id (@keySet) {
 			my $exist = 0;
 			foreach my $file (@files) {
 				if ($this->Get('FILE', $id) eq $file) {
