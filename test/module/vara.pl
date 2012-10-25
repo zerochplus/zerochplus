@@ -1,14 +1,6 @@
 #============================================================================================================
 #
 #	掲示板書き込み支援モジュール
-#	vara.pl
-#	-------------------------------------------------------------------------------------
-#	2004.03.27 start
-#
-#	ぜろちゃんねるプラス
-#	2010.08.12 規制選択性導入のため仕様変更
-#	2010.08.13 ログ保存形式変更による仕様変更
-#	2010.08.15 0ch本家プラグインとの互換性復活
 #
 #============================================================================================================
 package	VARA;
@@ -26,19 +18,18 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my $obj = {};
+	my $class = shift;
 	
-	$obj = {
+	my $obj = {
 		'SYS'		=> undef,
 		'SET'		=> undef,
 		'FORM'		=> undef,
 		'THREADS'	=> undef,
 		'CONV'		=> undef,
 		'SECURITY'	=> undef,
-		'PLUGIN'	=> undef
+		'PLUGIN'	=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -60,24 +51,24 @@ sub Init
 	my $this = shift;
 	my ($Sys, $Form, $Set, $Thread, $Conv) = @_;
 	
-	$this->{'SYS'}		= $Sys;
-	$this->{'FORM'}		= $Form;
-	$this->{'SET'}		= $Set;
-	$this->{'THREADS'}	= $Thread;
-	$this->{'CONV'}		= $Conv;
+	$this->{'SYS'} = $Sys;
+	$this->{'FORM'} = $Form;
+	$this->{'SET'} = $Set;
+	$this->{'THREADS'} = $Thread;
+	$this->{'CONV'} = $Conv;
 	
 	# モジュールが用意されてない場合はここで生成する
-	if (! defined $Set) {
+	if (!defined $Set) {
 		require './module/isildur.pl';
 		$this->{'SET'} = ISILDUR->new;
 		$this->{'SET'}->Load($Sys);
 	}
-	if (! defined $Thread) {
+	if (!defined $Thread) {
 		require './module/baggins.pl';
 		$this->{'THREADS'} = BILBO->new;
 		$this->{'THREADS'}->Load($Sys);
 	}
-	if (! defined $Conv) {
+	if (!defined $Conv) {
 		require './module/galadriel.pl';
 		$this->{'CONV'} = GALADRIEL->new;
 	}
@@ -98,86 +89,75 @@ sub Init
 #
 #	書き込み処理 - WriteData
 #	-------------------------------------------
-#	引　数：$I   : ISILDURオブジェクト
-#			$M   : MELKORオブジェクト
+#	引　数：なし
 #	戻り値：なし
-#
-#	2010.08.13 windyakin ★
-#	 -> ログ保存形式変更による規制チェック位置の変更
-#	2010.08.15 色々
-#	 -> プラグイン1,2の実行順序変更
-#	2020.08.23 windyakin ★
-#	 -> 規制チェック位置の変更, ログ保存を別に
 #
 #------------------------------------------------------------------------------------------------------------
 sub Write
 {
 	my $this = shift;
-	my ($err);
 	
 	# 書き込み前準備
-	ReadyBeforeCheck($this);
+	$this->ReadyBeforeCheck();
+	
+	my $err = 0;
 	
 	# 入力内容チェック(名前、メール)
-	if (($err = NormalizationNameMail($this))) {
-		return $err;
-	}
+	return $err if ($err = $this->NormalizationNameMail());
+	
 	# 入力内容チェック(本文)
-	if (($err = NormalizationContents($this))) {
-		return $err;
-	}
+	return $err if ($err = $this->NormalizationContents());
+	
 	# 規制チェック
-	if (($err = IsRegulation($this))) {
-		return $err;
-	}
+	return $err if ($err = $this->IsRegulation());
+	
 	
 	# データの書き込み
-	my ($oSys, $oSet, $oForm, $oConv, $oThread);
-	my (@elem, $date, $data, $data2, $resNum, $datPath, $id);
-	
 	require './module/gondor.pl';
-	$oSys		= $this->{'SYS'};
-	$oSet		= $this->{'SET'};
-	$oForm		= $this->{'FORM'};
-	$oConv		= $this->{'CONV'};
-	$oThread	= $this->{'THREADS'};
+	my $oSys = $this->{'SYS'};
+	my $oSet = $this->{'SET'};
+	my $oForm = $this->{'FORM'};
+	my $oConv = $this->{'CONV'};
+	my $oThread = $this->{'THREADS'};
 	
 	# 書き込み直前処理
-	if ($err = ReadyBeforeWrite($this, ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1)) {
-		return $err;
-	}
+	$err = $this->ReadyBeforeWrite(ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1);
+	return $err if ($err);
 	
 	# レス要素の取得
+	my @elem = ();
 	$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 	
-	$err		= 0;
-	$id			= $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('CLIENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
-	$date		= $oConv->GetDate($oSet, $oSys->Get('MSEC'));
-	$date		.= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('KOYUU'), $oSys->Get('AGENT'));
+	$err = 0;
+	my $id	 = $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('CLIENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
+	my $date = $oConv->GetDate($oSet, $oSys->Get('MSEC'));
+	$date .= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('KOYUU'), $oSys->Get('AGENT'));
 	
 	# プラグイン「 BE(HS)っぽいもの 」ver.0.x.x
-	$date		.= " $_" if ( ($_ = $oForm->Get('BEID', '')) ne '' );
+	my $beid = $oForm->Get('BEID', '');
+	$date .= " $beid" if ($beid ne '');
 	
-	$data		= join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
-	$data2		= "$data\n";
-	$datPath	= $oSys->Get('DATPATH');
+	my $data = join('<>', $elem[1], $elem[2], $date, $elem[3], $elem[0]);
+	my $data2 = "$data\n";
+	my $datPath = $oSys->Get('DATPATH');
 	
 	# ログ書き込み
-#	if ($oSys->Equal('MODE', 2)) {
-		require './module/peregrin.pl';
-		my $LOG = PEREGRIN->new;
-		$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
-		$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oSys->Get('KOYUU'), $data, $oSys->Get('AGENT', 0));
-		$LOG->Save($oSys);
-#	}
+	require './module/peregrin.pl';
+	my $LOG = PEREGRIN->new;
+	$LOG->Load($oSys, 'WRT', $oSys->Get('KEY'));
+	$LOG->Set($oSet, length($oForm->Get('MESSAGE')), $oSys->Get('VERSION'), $oSys->Get('KOYUU'), $data, $oSys->Get('AGENT', 0));
+	$LOG->Save($oSys);
 	
 	# リモートホスト保存(SETTING.TXT変更により、常に保存)
 	SaveHost($oSys, $oForm);
 	
 	# datファイルへ直接書き込み
-	if (($err = ARAGORN::DirectAppend($oSys, $datPath, $data2)) == 0) {
+	my $resNum = 0;
+	$err = ARAGORN::DirectAppend($oSys, $datPath, $data2);
+	if ($err == 0) {
 		# レス数が最大数を超えたらover設定をする
-		if (($resNum = ARAGORN::GetNumFromFile($datPath)) >= $oSys->Get('RESMAX')) {
+		$resNum = ARAGORN::GetNumFromFile($datPath);
+		if ($resNum >= $oSys->Get('RESMAX')) {
 			# datにOVERスレッドレスを書き込む
 			Get1001Data($oSys, \$data2);
 			ARAGORN::DirectAppend($oSys, $datPath, $data2);
@@ -192,7 +172,7 @@ sub Write
 		$err = 200 if ($err == 2);
 	}
 	
-	if ($err == 0 && $@ eq '') {
+	if ($err == 0) {
 		# subject.txtの更新
 		# スレッド作成モードなら新規に追加する
 		if ($oSys->Equal('MODE', 1)) {
@@ -201,6 +181,7 @@ sub Write
 			my $oPools = FRODO->new;
 			$oPools->Load($oSys);
 			$oThread->Add($oSys->Get('KEY'), $elem[0], 1);
+			
 			while ($oThread->GetNum() > $oSys->Get('SUBMAX')) {
 				my $lid = $oThread->GetLastID();
 				$oPools->Add($lid, $oThread->Get('SUBJECT', $lid), $oThread->Get('RES', $lid));
@@ -208,23 +189,15 @@ sub Write
 				EARENDIL::Copy("$path/dat/$lid.dat", "$path/pool/$lid.cgi");
 				unlink "$path/dat/$lid.dat";
 			}
+			
 			$oPools->Save($oSys);
 			$oThread->Save($oSys);
 		}
 		# 書き込みモードならレス数の更新
 		else {
-=for
-			$this->{'THREADS'}->Set($oSys->Get('KEY'), 'RES', $resNum);
-			# sageが入っていなかったらageる
-			if (!$oForm->Contain('mail', 'sage')) {
-				$this->{'THREADS'}->AGE($oSys->Get('KEY'));
-			}
-=cut
-			$oThread->OnDemand( $oSys, $oSys->Get('KEY'), $resNum,
-				!$oForm->Contain( 'mail', 'sage' ) ? 1 : 0
-			);
+			my $sage = (!$oForm->Contain('mail', 'sage') ? 1 : 0);
+			$oThread->OnDemand($oSys, $oSys->Get('KEY'), $resNum, $sage);
 		}
-		# $this->{'THREADS'}->Save($oSys);
 	}
 	
 	return $err;
@@ -234,42 +207,35 @@ sub Write
 #
 #	前準備
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	なし
 #	@return	なし
-#
-#	2010.08.15 色々
-#	 -> プラグイン互換性維持につき処理順序の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub ReadyBeforeCheck
 {
 	my ($this) = @_;
-	my ($Sys, $Form, @pluginSet, $capPass, $capID);
 	
-	$Sys = $this->{'SYS'};
-	$Form = $this->{'FORM'};
+	my $Sys = $this->{'SYS'};
+	my $Form = $this->{'FORM'};
 	
 	# cookie用にオリジナルを保存する
-	my ($from, $mail);
-	$from = $Form->Get('FROM');
-	$mail = $Form->Get('mail');
-	$from =~ s/\n//g;
-	$mail =~ s/\n//g;
+	my $from = $Form->Get('FROM');
+	my $mail = $Form->Get('mail');
+	$from =~ s/[\r\n]//g;
+	$mail =~ s/[\r\n]//g;
 	$Form->Set('NAME', $from);
 	$Form->Set('MAIL', $mail);
 	
 	# キャップパスの抽出と削除
-	if ($mail =~ /(#|＃)(.+)/) {
-		$mail =~ s/＃/#/;
-		$mail =~ s/#(.+)//;
-		$capPass = $1;
+	$Sys->Set('CAPID', '');
+	if ($mail =~ s/(?:#|＃)(.+)//) {
+		my $capPass = $1;
 		
 		# キャップ情報設定
-		$capID = $this->{'SECURITY'}->GetCapID($capPass);
+		my $capID = $this->{'SECURITY'}->GetCapID($capPass);
+		$Sys->Set('CAPID', $capID);
 		$Form->Set('mail', $mail);
 	}
-	$capID = '' if (! defined $capID);
-	$Sys->Set('CAPID', $capID);
 	
 	# datパスの生成
 	my $datPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat/' . $Sys->Get('KEY') . '.dat';
@@ -285,59 +251,49 @@ sub ReadyBeforeCheck
 #
 #	書き込み直前処理
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	なし
 #	@param	$res
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub ReadyBeforeWrite
 {
-	my ($this, $res) = @_;
-	my ($Sys, $Form, @pluginSet, $text, $host, $addr, $koyuu, $client, $from);
+	my $this = shift;
+	my ($res) = @_;
 	
-	$Sys	= $this->{'SYS'};
-	$Form	= $this->{'FORM'};
-	$from	= $Form->Get('FROM');
-	$koyuu	= $Sys->Get('KOYUU');
-	$client	= $Sys->Get('CLIENT');
-	$host	= $ENV{'REMOTE_HOST'};
-	$addr	= $ENV{'REMOTE_ADDR'};
+	my $Sys = $this->{'SYS'};
+	my $Form = $this->{'FORM'};
+	my $from = $Form->Get('FROM');
+	my $koyuu = $Sys->Get('KOYUU');
+	my $client = $Sys->Get('CLIENT');
+	my $host = $ENV{'REMOTE_HOST'};
+	my $addr = $ENV{'REMOTE_ADDR'};
 	
 	# 規制ユーザ・NGワードチェック
 	{
-		my ($vUser, $ngWord, $check, @checkKey);
 		# 規制ユーザ
 		require './module/faramir.pl';
-		$vUser = FARAMIR->new;
+		my $vUser = FARAMIR->new;
 		$vUser->Load($Sys);
-		$check = $vUser->Check($host, $addr, ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef));
-		if ($check == 4) {
-			return 601;
-		}
+		
+		my $koyuu2 = ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef);
+		my $check = $vUser->Check($host, $addr, $koyuu2);
+		return 601 if ($check == 4);
 		if ($check == 2) {
-			if ($from =~ /$host/i) { # $hostは正規表現
-				$Form->Set('FROM', "</b>[´･ω･｀] <b>$from");
-			}
-			else {
-				return 601;
-			}
+			return 601 if ($from !~ /$host/i); # $hostは正規表現
+			$Form->Set('FROM', "</b>[´･ω･｀] <b>$from");
 		}
 		
 		# NGワード
 		require './module/wormtongue.pl';
-		$ngWord = WORMTONGUE->new;
+		my $ngWord = WORMTONGUE->new;
 		$ngWord->Load($Sys);
-		@checkKey = ('FROM', 'mail', 'MESSAGE');
+		my @checkKey = ('FROM', 'mail', 'MESSAGE');
+		
 		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
-		if ($check == 3) {
-			return 600;
-		}
-		if ($check == 1) {
-			$ngWord->Method($Form, \@checkKey);
-		}
-		if ($check == 2) {
-			$Form->Set('FROM', "</b>[´+ω+｀] $host <b>$from");
-		}
+		return 600 if ($check == 3);
+		$ngWord->Method($Form, \@checkKey) if ($check == 1);
+		$Form->Set('FROM', "</b>[´+ω+｀] $host <b>$from") if ($check == 2);
 	}
 	
 	# pluginに渡す値を設定
@@ -348,7 +304,7 @@ sub ReadyBeforeWrite
 	
 	$this->ExecutePlugin(16);
 	
-	$text = $Form->Get('MESSAGE');
+	my $text = $Form->Get('MESSAGE');
 	$text =~ s/<br>/ <br> /g;
 	$Form->Set('MESSAGE', " $text ");
 	
@@ -366,34 +322,30 @@ sub ReadyBeforeWrite
 #
 #	プラグイン処理
 #	-------------------------------------------------------------------------------------
-#	@param	$this
 #	@param	$type
 #	@return	なし
-#
-#	2010.08.15 色々
-#	 -> プラグイン互換性維持につき処理順序の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub ExecutePlugin
 {
-	my ($this, $type) = @_;
-	my ($Sys, $Form, $Plugin, $id, @pluginSet, $Config);
+	my $this = shift;
+	my ($type) = @_;
 	
-	$Sys = $this->{'SYS'};
-	$Form = $this->{'FORM'};
-	$Plugin = $this->{'PLUGIN'};
+	my $Sys = $this->{'SYS'};
+	my $Form = $this->{'FORM'};
+	my $Plugin = $this->{'PLUGIN'};
 	
 	# 有効な拡張機能一覧を取得
+	my @pluginSet = ();
 	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
-	foreach $id (@pluginSet) {
+	foreach my $id (@pluginSet) {
 		# タイプが先呼び出しの場合はロードして実行
 		if ($Plugin->Get('TYPE', $id) & $type) {
-			my ($file, $className, $command, $config);
-			$file = $Plugin->Get('FILE', $id);
-			$className = $Plugin->Get('CLASS', $id);
+			my $file = $Plugin->Get('FILE', $id);
+			my $className = $Plugin->Get('CLASS', $id);
 			require "./plugin/$file";
-			$Config = PLUGINCONF->new($Plugin, $id);
-			$command = $className->new($Config);
+			my $Config = PLUGINCONF->new($Plugin, $id);
+			my $command = $className->new($Config);
 			$command->execute($Sys, $Form, $type);
 		}
 	}
@@ -403,86 +355,66 @@ sub ExecutePlugin
 #
 #	規制チェック
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	なし
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
-#
-#	2010.08.12 windyakin ★
-#	 -> ２重かきこの規制を選択性にしたので変更
-#	 -> 規制ユーザーホスト表示時のの仕様変更
-#
-#	2010.08.13 windyakin ★
-#	 -> ログ出力形式変更による引数の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub IsRegulation
 {
-	my ($this) = @_;
-	my ($oSYS, $oSET, $oSEC);
-	my ($islocalip, $host, $addr, $koyuu, $bbs, $datPath, $capID, $from, $client, $mode);
+	my $this = shift;
 	
-	$oSYS		= $this->{'SYS'};
-	$oSET		= $this->{'SET'};
-	$oSEC		= $this->{'SECURITY'};
-	$bbs		= $this->{'FORM'}->Get('bbs');
-	$from		= $this->{'FORM'}->Get('FROM');
-	$capID		= $oSYS->Get('CAPID');
-	$datPath	= $oSYS->Get('DATPATH');
-	$client		= $oSYS->Get('CLIENT');
-	$mode		= $oSYS->Get('AGENT');
-	$koyuu		= $oSYS->Get('KOYUU');
-	$host		= $ENV{'REMOTE_HOST'};
-	$addr		= $ENV{'REMOTE_ADDR'};
-	$islocalip	= 0;
+	my $oSYS = $this->{'SYS'};
+	my $oSET = $this->{'SET'};
+	my $oSEC = $this->{'SECURITY'};
 	
-	$islocalip = 1 if ($addr =~ /^(127|172|192)\./);
+	my $bbs = $this->{'FORM'}->Get('bbs');
+	my $from = $this->{'FORM'}->Get('FROM');
+	my $capID = $oSYS->Get('CAPID', '');
+	my $datPath = $oSYS->Get('DATPATH');
+	my $client = $oSYS->Get('CLIENT');
+	my $mode = $oSYS->Get('AGENT');
+	my $koyuu = $oSYS->Get('KOYUU');
+	my $host = $ENV{'REMOTE_HOST'};
+	my $addr = $ENV{'REMOTE_ADDR'};
+	my $islocalip = 0;
+	
+	$islocalip = 1 if ($addr =~ /^(127|172|192|10)\./);
 	
 	# レス書き込みモード時のみ
 	if ($oSYS->Equal('MODE', 2)) {
 		require './module/gondor.pl';
 		
 		# 移転スレッド
-		if (ARAGORN::IsMoved($datPath)) {
-			return 202;
-		}
+		return 202 if (ARAGORN::IsMoved($datPath));
+		
 		# レス最大数
-		if ($oSYS->Get('RESMAX') < ARAGORN::GetNumFromFile($datPath)) {
-			return 201;
-		}
+		return 201 if ($oSYS->Get('RESMAX') < ARAGORN::GetNumFromFile($datPath));
+		
 		# datファイルサイズ制限
 		if ($oSET->Get('BBS_DATMAX')) {
 			my $datSize = int((stat $datPath)[7] / 1024);
-			if ($oSET->Get('BBS_DATMAX') < $datSize) {
-				return 206;
-			}
+			return 206 if ($oSET->Get('BBS_DATMAX') < $datSize);
 		}
 	}
 	# REFERERチェック
 	if ($oSET->Equal('BBS_REFERER_CHECK', 'checked')) {
-		if ($this->{'CONV'}->IsReferer($this->{'SYS'}, \%ENV)) {
-			return 998;
-		}
+		return 998 if ($this->{'CONV'}->IsReferer($this->{'SYS'}, \%ENV));
 	}
 	# PROXYチェック
-	if (! $islocalip && ! $oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
+	if (!$islocalip && !$oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
-			if (! $oSEC->IsAuthority($capID, 19, $bbs)){
-				return 997;
-			}
+			return 997 if (!$oSEC->IsAuthority($capID, 19, $bbs));
 		}
 	}
 	# 読取専用
-	if (! $oSET->Equal('BBS_READONLY', 'none')) {
-		if (! $oSEC->IsAuthority($capID, 13, $bbs)) {
-			return 203;
-		}
+	if (!$oSET->Equal('BBS_READONLY', 'none')) {
+		return 203 if (!$oSEC->IsAuthority($capID, 13, $bbs));
 	}
 	# JPホスト以外規制
-	if (! $islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
-		unless ($host =~ /\.(jp|JP)$/) {
-			return 207;
-		}
+	if (!$islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
+		return 207 unless ($host =~ /\.jp$/i);
 	}
 	
 	# スレッド作成モード
@@ -490,45 +422,34 @@ sub IsRegulation
 		# スレッドキーが重複しないようにする
 		my $tPath = $oSYS->Get('BBSPATH') . '/' . $oSYS->Get('BBS') . '/dat/';
 		my $key = $oSYS->Get('KEY');
-		while (-e "$tPath$key.dat") {
-			$key++;
-		}
+		$key++ while (-e "$tPath$key.dat");
 		$oSYS->Set('KEY', $key);
 		$datPath = "$tPath$key.dat";
 		
 		# スレッド作成(携帯から)
 		if ($client & $ZP::C_MOBILE) {
-			if (! $oSEC->IsAuthority($capID, 16, $bbs)) {
-				return 204;
-			}
+			return 204 if (!$oSEC->IsAuthority($capID, 16, $bbs));
 		}
 		# スレッド作成(キャップのみ)
 		if ($oSET->Equal('BBS_THREADCAPONLY', 'checked')) {
-			if (! $oSEC->IsAuthority($capID, 9, $bbs)) {
-				return 504;
-			}
+			return 504 if (!$oSEC->IsAuthority($capID, 9, $bbs));
 		}
 		# スレッド作成(スレッド立てすぎ)
 		require './module/peregrin.pl';
 		my $LOG = PEREGRIN->new;
 		$LOG->Load($oSYS, 'THR');
-		if (! $oSEC->IsAuthority($capID, 8, $bbs)) {
-			my ($tateHour, $tateCount, $checkCount);
-			$tateHour = $oSET->Get('BBS_TATESUGI_HOUR', '0') - 0;
-			$tateCount = $oSET->Get('BBS_TATESUGI_COUNT', '0') - 0;
-			$checkCount = $oSET->Get('BBS_THREAD_TATESUGI', '0') - 0;
-			if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount) {
-				return 500;
-			}
-			if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount)) {
-				return 500;
-			}
+		if (!$oSEC->IsAuthority($capID, 8, $bbs)) {
+			my $tateHour = $oSET->Get('BBS_TATESUGI_HOUR', '0') - 0;
+			my $tateCount = $oSET->Get('BBS_TATESUGI_COUNT', '0') - 0;
+			my $checkCount = $oSET->Get('BBS_THREAD_TATESUGI', '0') - 0;
+			return 500 if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount);
+			return 500 if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount));
 		}
 		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu, undef, $mode);
 		$LOG->Save($oSYS);
 		
 		# Sambaログ
-		if (! $oSEC->IsAuthority($capID, 18, $bbs) || ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+		if (!$oSEC->IsAuthority($capID, 18, $bbs) || !$oSEC->IsAuthority($capID, 12, $bbs)) {
 			my $LOGs = PEREGRIN->new;
 			$LOGs->Load($oSYS, 'SMB');
 			$LOGs->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
@@ -539,26 +460,25 @@ sub IsRegulation
 	else {
 		require './module/peregrin.pl';
 		
-		if (! $oSEC->IsAuthority($capID, 18, $bbs) || ! $oSEC->IsAuthority($capID, 12, $bbs)) {
-			my ($LOGs, $LOGh, $Samba, $Houshi, $Holdtm);
-			$LOGs = PEREGRIN->new;
+		if (!$oSEC->IsAuthority($capID, 18, $bbs) || !$oSEC->IsAuthority($capID, 12, $bbs)) {
+			my $LOGs = PEREGRIN->new;
 			$LOGs->Load($oSYS, 'SMB');
 			
-			$LOGh = PEREGRIN->new;
+			my $LOGh = PEREGRIN->new;
 			$LOGh->Load($oSYS, 'SBH');
 			
-			my ($n, $tm) = (0, 0);
-			$Samba = int ($oSET->Get('BBS_SAMBATIME', '') eq '' ? $oSYS->Get('DEFSAMBA') : $oSET->Get('BBS_SAMBATIME'));
-			$Houshi = int ($oSET->Get('BBS_HOUSHITIME', '') eq '' ? $oSYS->Get('DEFHOUSHI') : $oSET->Get('BBS_HOUSHITIME'));
-			$Holdtm = int $oSYS->Get('SAMBATM');
+			my $n = 0;
+			my $tm = 0;
+			my $Samba = int($oSET->Get('BBS_SAMBATIME', '') eq '' ? $oSYS->Get('DEFSAMBA') : $oSET->Get('BBS_SAMBATIME'));
+			my $Houshi = int($oSET->Get('BBS_HOUSHITIME', '') eq '' ? $oSYS->Get('DEFHOUSHI') : $oSET->Get('BBS_HOUSHITIME'));
+			my $Holdtm = int($oSYS->Get('SAMBATM'));
 			
 			# Samba
-			if ($Samba && ! $oSEC->IsAuthority($capID, 18, $bbs)) {
+			if ($Samba && !$oSEC->IsAuthority($capID, 18, $bbs)) {
 				if ($Houshi) {
 					my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $koyuu);
 					if ($ishoushi) {
 						$oSYS->Set('WAIT', $htm);
-						#$oSYS->Set('WAIT', $Houshi);
 						return 507;
 					}
 				}
@@ -567,7 +487,7 @@ sub IsRegulation
 			}
 				
 			# 短時間投稿 (Samba優先)
-			if (! $n && $Holdtm && ! $oSEC->IsAuthority($capID, 12, $bbs)) {
+			if (!$n && $Holdtm && !$oSEC->IsAuthority($capID, 12, $bbs)) {
 				$tm = $LOGs->IsTime($Holdtm, $koyuu);
 			}
 			
@@ -593,23 +513,20 @@ sub IsRegulation
 		}
 		
 		# レス書き込み(連続投稿)
-		if (! $oSEC->IsAuthority($capID, 10, $bbs)) {
+		if (!$oSEC->IsAuthority($capID, 10, $bbs)) {
 			if ($oSET->Get('timeclose') && $oSET->Get('timecount') ne '') {
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'HST');
-				if ($LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount')) >= $oSET->Get('timeclose')) {
-					return 501;
-				}
+				my $cnt = $LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount'));
+				return 501 if ($cnt >= $oSET->Get('timeclose'));
 			}
 		}
 		# レス書き込み(二重投稿)
-		if (! $oSEC->IsAuthority($capID, 11, $bbs)) {
+		if (!$oSEC->IsAuthority($capID, 11, $bbs)) {
 			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
-				if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
-					return 502;
-				}
+				return 502 if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE')));
 			}
 		}
 		
@@ -627,57 +544,43 @@ sub IsRegulation
 #
 #	名前・メール欄の正規化
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	なし
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
-#
-#	2010.08.12 windyakin ★
-#	 -> トリップ変換処理の順番を変更(禁則文字,fusianasan変換の前へ)
-#	 -> 文字列変換処理の順番を変更(文字数チェックの前へ)
-#
-#	2010.08.15 色々
-#	 -> プラグイン互換性維持につき処理順序の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationNameMail
 {
-	my ($this) = @_;
-	my ($Form, $oSEC, $oSET, $Sys);
-	my ($name, $mail, $subject, $bbs, $capName, $capID, $capColor, $key, $host);
+	my $this = shift;
 	
-	$Sys		= $this->{'SYS'};
-	$Form		= $this->{'FORM'};
-	$oSEC		= $this->{'SECURITY'};
-	$oSET		= $this->{'SET'};
+	my $Sys = $this->{'SYS'};
+	my $Form = $this->{'FORM'};
+	my $oSEC = $this->{'SECURITY'};
+	my $oSET = $this->{'SET'};
 	
-	$name		= $Form->Get('FROM');
-	$mail		= $Form->Get('mail');
-	$subject	= $Form->Get('subject');
-	$bbs		= $Form->Get('bbs');
-	$host		= $ENV{'REMOTE_HOST'};
+	my $name = $Form->Get('FROM');
+	my $mail = $Form->Get('mail');
+	my $subject = $Form->Get('subject');
+	my $bbs = $Form->Get('bbs');
+	my $host = $ENV{'REMOTE_HOST'};
 	
 	# キャップ情報取得
-	$capID = $Sys->Get('CAPID');
+	my $capID = $Sys->Get('CAPID', '');
+	my $capName = '';
+	my $capColor = '';
 	if ($capID && $oSEC->IsAuthority($capID, 17, $bbs)) {
 		$capName = $oSEC->Get($capID, 'NAME', 1, '');
 		$capColor = $oSEC->Get($oSEC->{'GROUP'}->GetBelong($capID), 'COLOR', 0, '');
-		if ($capColor eq '') {
-			$capColor = $oSET->Get('BBS_CAP_COLOR', '');
-		}
+		$capColor = $oSET->Get('BBS_CAP_COLOR', '') if ($capColor eq '');
 	}
 	
 	# ＃ -> #
 	$this->{'CONV'}->ConvertCharacter0(\$name);
 	
-	# トリップキーを切り離す
+	# トリップ変換
+	my $trip = '';
 	if ($name =~ /\#(.*)$/x) {
-		$key = $1;
-		
-		# トリップ変換
-		$key = $this->{'CONV'}->ConvertTrip(\$key, $oSET->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
-	}
-	else {
-		$key = '';
+		$trip = $this->{'CONV'}->ConvertTrip(\$1, $oSET->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
 	}
 	
 	# 特殊文字変換 フォーム情報再設定
@@ -687,19 +590,19 @@ sub NormalizationNameMail
 	$Form->Set('FROM', $name);
 	$Form->Set('mail', $mail);
 	$Form->Set('subject', $subject);
-	$Form->Set('TRIPKEY', $key);
+	$Form->Set('TRIPKEY', $trip);
 	
 	# プラグイン実行 フォーム情報再取得
 	$this->ExecutePlugin($Sys->Get('MODE'));
-	$name		= $Form->Get('FROM', '');
-	$mail		= $Form->Get('mail', '');
-	$subject	= $Form->Get('subject', '');
-	$bbs		= $Form->Get('bbs');
-	$host		= $Form->Get('HOST');
-	$key		= $Form->Get('TRIPKEY', '???');
+	$name = $Form->Get('FROM', '');
+	$mail = $Form->Get('mail', '');
+	$subject = $Form->Get('subject', '');
+	$bbs = $Form->Get('bbs');
+	$host = $Form->Get('HOST');
+	$trip = $Form->Get('TRIPKEY', '???');
 	
 	# 2ch互換
-	$name = substr($name, 1) if (index($name, ' ') == 0);
+	$name =~ s/^ //;
 	
 	# 禁則文字変換
 	$this->{'CONV'}->ConvertCharacter2(\$name, 0);
@@ -707,13 +610,13 @@ sub NormalizationNameMail
 	$this->{'CONV'}->ConvertCharacter2(\$subject, 3);
 	
 	# トリップと名前を結合する
-	$name =~ s|\#.*$| </b>◆$key <b>|x if ($key ne '');
+	$name =~ s|\#.*$| </b>◆$trip <b>|x if ($trip ne '');
 	
 	# fusiana変換 2ch互換
 	$this->{'CONV'}->ConvertFusianasan(\$name, $host);
 	
 	# キャップ名結合
-	if (defined $capName && $capName ne '') {
+	if ($capName ne '') {
 		$name = ($name ne '' ? "$name＠" : '');
 		if ($capColor eq '') {
 			$name .= "$capName ★";
@@ -726,34 +629,24 @@ sub NormalizationNameMail
 	
 	# スレッド作成時
 	if ($Sys->Equal('MODE', 1)) {
-		if ($subject eq '') {
-			return 150;
-		}
+		return 150 if ($subject eq '');
 		# サブジェクト欄の文字数確認
-		if (! $oSEC->IsAuthority($capID, 1, $bbs)) {
-			if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject)) {
-				return 101;
-			}
+		if (!$oSEC->IsAuthority($capID, 1, $bbs)) {
+			return 101 if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject));
 		}
 	}
 	
 	# 名前欄の文字数確認
 	if (! $oSEC->IsAuthority($capID, 2, $bbs)) {
-		if ($oSET->Get('BBS_NAME_COUNT') < length($name)) {
-			return 101;
-		}
+		return 101 if ($oSET->Get('BBS_NAME_COUNT') < length($name));
 	}
 	# メール欄の文字数確認
 	if (! $oSEC->IsAuthority($capID, 3, $bbs)) {
-		if ($oSET->Get('BBS_MAIL_COUNT') < length($mail)) {
-			return 102;
-		}
+		return 102 if ($oSET->Get('BBS_MAIL_COUNT') < length($mail));
 	}
 	# 名前欄の入力確認
 	if (! $oSEC->IsAuthority($capID, 7, $bbs)) {
-		if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '') {
-			return 152;
-		}
+		return 152 if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '');
 	}
 	
 	# 正規化した内容を再度設定
@@ -768,65 +661,54 @@ sub NormalizationNameMail
 #
 #	テキスト欄の正規化
 #	-------------------------------------------------------------------------------------
-#	@param	$this
+#	@param	なし
 #	@return	規制通過なら0を返す
 #			規制チェックにかかったらエラーコードを返す
-#
-#	2010.08.15 色々
-#	 -> プラグイン互換性維持につき処理順序の変更
 #
 #------------------------------------------------------------------------------------------------------------
 sub NormalizationContents
 {
-	my ($Sys) = @_;
-	my ($Form, $oSEC, $oSET);
-	my ($text, $bbs, $host, $ln, $cl, $capID);
+	my $this = shift;
 	
-	$Form		= $Sys->{'FORM'};
-	$oSEC		= $Sys->{'SECURITY'};
-	$oSET		= $Sys->{'SET'};
-	$bbs		= $Form->Get('bbs');
-	$text		= $Form->Get('MESSAGE');
-	$host		= $Form->Get('HOST');
-	$capID		= $Sys->{'SYS'}->Get('CAPID');
+	my $Form = $this->{'FORM'};
+	my $oSEC = $this->{'SECURITY'};
+	my $oSET = $this->{'SET'};
+	my $oSYS = $this->{'SYS'};
+	my $oConv = $this->{'CONV'};
+	
+	my $bbs = $Form->Get('bbs');
+	my $text = $Form->Get('MESSAGE');
+	my $host = $Form->Get('HOST');
+	my $capID = $this->{'SYS'}->Get('CAPID', '');
 	
 	# 禁則文字変換
-	$Sys->{'CONV'}->ConvertCharacter2(\$text, 2);
+	$oConv->ConvertCharacter2(\$text, 2);
 	
-	($ln, $cl)	= $Sys->{'CONV'}->GetTextInfo(\$text);
+	my ($ln, $cl) = $oConv->GetTextInfo(\$text);
 	
 	# 本文が無い
-	if ($text eq '') {
-		return 151;
-	}
+	return 151 if ($text eq '');
+	
 	# 本文が長すぎ
-	if (! $oSEC->IsAuthority($capID, 4, $bbs)) {
-		if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text)) {
-			return 103;
-		}
+	if (!$oSEC->IsAuthority($capID, 4, $bbs)) {
+		return 103 if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text));
 	}
 	# 改行が多すぎ
-	if (! $oSEC->IsAuthority($capID, 5, $bbs)) {
-		if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln) {
-			return 105;
-		}
+	if (!$oSEC->IsAuthority($capID, 5, $bbs)) {
+		return 105 if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln);
 	}
 	# 1行が長すぎ
-	if (! $oSEC->IsAuthority($capID, 6, $bbs)) {
-		if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl) {
-			return 104;
-		}
+	if (!$oSEC->IsAuthority($capID, 6, $bbs)) {
+		return 104 if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl);
 	}
 	# アンカーが多すぎ
-	if ($Sys->{'SYS'}->Get('ANKERS')) {
-		if ($Sys->{'CONV'}->IsAnker(\$text, $Sys->{'SYS'}->Get('ANKERS'))) {
-			return 106;
-		}
+	if ($oSYS->Get('ANKERS')) {
+		return 106 if ($oConv->IsAnker(\$text, $oSYS->Get('ANKERS')));
 	}
 	
 	# 本文ホスト表示
-	if (! $oSEC->IsAuthority($capID, 15, $bbs)) {
-		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->{'SYS'}->Equal('MODE', 1)) {
+	if (!$oSEC->IsAuthority($capID, 15, $bbs)) {
+		if ($oSET->Equal('BBS_RAWIP_CHECK', 'checked') && $oSYS->Equal('MODE', 1)) {
 			$text .= ' <hr> <font color=tomato face=Arial><b>';
 			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";
 		}
@@ -847,26 +729,24 @@ sub NormalizationContents
 #------------------------------------------------------------------------------------------------------------
 sub Get1001Data
 {
+	
 	my ($Sys, $data) = @_;
+	
 	my $endPath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/1000.txt';
 	
 	# 1000.txtが存在すればその内容、無ければデフォルトの1001を使用する
-	if (open(my $f_last, '<', $endPath)) {
-		flock($f_last, 2);
-		while (<$f_last>) {
-			$$data = $_;
-			last;
-		}
-		close($f_last);
+	if (open(my $fh, '<', $endPath)) {
+		flock($fh, 2);
+		$$data = <$fh>;
+		close($fh);
 	}
 	else {
-		my ($resmax, $resmax1, $resmaxz, $resmaxz1);
-		$resmax		= $Sys->Get('RESMAX');
-		$resmax1	= $resmax + 1;
-		$resmaxz	= $resmax;
-		$resmaxz1	= $resmax1;
-		$resmaxz	=~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
-		$resmaxz1	=~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
+		my $resmax = $Sys->Get('RESMAX');
+		my $resmax1 = $resmax + 1;
+		my $resmaxz = $resmax;
+		my $resmaxz1 = $resmax1;
+		$resmaxz =~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
+		$resmaxz1 =~ s/([0-9])/"\x82".chr(0x4f+$1)/eg; # 全角数字
 		
 		$$data = "$resmaxz1<><>Over $resmax Thread<>このスレッドは$resmaxzを超えました。<br>";
 		$$data .= 'もう書けないので、新しいスレッドを立ててくださいです。。。<>' . "\n";
@@ -883,14 +763,14 @@ sub Get1001Data
 #------------------------------------------------------------------------------------------------------------
 sub SaveHost
 {
+	
 	my ($Sys, $Form) = @_;
-	my ($Logger, $bbs, $host, $agent, $koyuu);
 	
-	$bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	my $bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	
-	$host = $ENV{'REMOTE_HOST'};
-	$agent = $Sys->Get('AGENT');
-	$koyuu = $Sys->Get('KOYUU');
+	my $host = $ENV{'REMOTE_HOST'};
+	my $agent = $Sys->Get('AGENT');
+	my $koyuu = $Sys->Get('KOYUU');
 	
 	if ($agent ne '0') {
 		if ($agent eq 'P') {
@@ -902,7 +782,7 @@ sub SaveHost
 	}
 	
 	require './module/imrahil.pl';
-	$Logger = IMRAHIL->new;
+	my $Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/log/HOST", 500, 2 | 4) == 0) {
 		$Logger->Put($host, $Sys->Get('KEY'), $Sys->Get('MODE'));
@@ -921,16 +801,16 @@ sub SaveHost
 #------------------------------------------------------------------------------------------------------------
 sub SaveHistory
 {
-	my ($Sys, $Form, $resNum) = @_;
-	my ($Logger, $bbs, $threadInfo, $name, $content);
 	
-	$bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
-	$threadInfo = $Sys->Get('BBS') . ',' . $Sys->Get('KEY');
-	$name = $Form->Get('FROM');
-	$content = $Form->Get('MESSAGE');
+	my ($Sys, $Form, $resNum) = @_;
+	
+	my $bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
+	my $threadInfo = $Sys->Get('BBS') . ',' . $Sys->Get('KEY');
+	my $name = $Form->Get('FROM');
+	my $content = $Form->Get('MESSAGE');
 	
 	require './module/imrahil.pl';
-	$Logger = IMRAHIL->new;
+	my $Logger = IMRAHIL->new;
 	
 	if ($Logger->Open("$bbs/info/history", $Sys->Get('HISMAX'), 2 | 4) == 0) {
 		$Logger->Put($threadInfo, $resNum, $content, $name);

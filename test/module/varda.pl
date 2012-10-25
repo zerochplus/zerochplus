@@ -1,13 +1,6 @@
 #============================================================================================================
 #
-#	bbs.cgi支援モジュール(VARDA)
-#	varda.pl
-#	---------------------------------------------
-#	2003.02.06 start
-#	2004.03.31 内容変更
-#
-#	ぜろちゃんねるプラス
-#	2010.08.12 システム改変に伴う変更
+#	bbs.cgi支援モジュール
 #
 #============================================================================================================
 package	VARDA;
@@ -25,18 +18,17 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my $obj = {};
+	my $class = shift;
 	
-	$obj = {
+	my $obj = {
 		'SYS'		=> undef,
 		'SET'		=> undef,
 		'THREADS'	=> undef,
 		'CONV'		=> undef,
 		'BANNER'	=> undef,
-		'CODE'		=> undef
+		'CODE'		=> undef,
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -60,13 +52,13 @@ sub Init
 	require './module/denethor.pl';
 	
 	# 使用モジュールを設定
-	$this->{'SYS'}		= $Sys;
-	$this->{'THREADS'}	= BILBO->new;
-	$this->{'CONV'}		= GALADRIEL->new;
-	$this->{'BANNER'}	= DENETHOR->new;
-	$this->{'CODE'}		= 'sjis';
+	$this->{'SYS'} = $Sys;
+	$this->{'THREADS'} = BILBO->new;
+	$this->{'CONV'} = GALADRIEL->new;
+	$this->{'BANNER'} = DENETHOR->new;
+	$this->{'CODE'} = 'sjis';
 	
-	if (! defined $Setting) {
+	if (!defined $Setting) {
 		require './module/isildur.pl';
 		$this->{'SET'} = ISILDUR->new;
 		$this->{'SET'}->Load($Sys);
@@ -91,12 +83,10 @@ sub Init
 sub CreateIndex
 {
 	my $this = shift;
-	my ($Sys, $Threads, $bbsSetting, $Index, $Caption);
-	my ($path, $i);
 	
-	$Sys		= $this->{'SYS'};
-	$Threads 	= $this->{'THREADS'};
-	$bbsSetting	= $this->{'SET'};
+	my $Sys = $this->{'SYS'};
+	my $Threads = $this->{'THREADS'};
+	my $bbsSetting = $this->{'SET'};
 	
 	# CREATEモード、またはスレッドがindex表示範囲内の場合のみindexを更新する
 	if ($Sys->Equal('MODE', 'CREATE')
@@ -104,15 +94,15 @@ sub CreateIndex
 		
 		require './module/thorin.pl';
 		require './module/legolas.pl';
-		$Index = THORIN->new;
-		$Caption = LEGOLAS->new;
+		my $Index = THORIN->new;
+		my $Caption = LEGOLAS->new;
 		
 		PrintIndexHead($this, $Index, $Caption);
 		PrintIndexMenu($this, $Index);
 		PrintIndexPreview($this, $Index);
 		PrintIndexFoot($this, $Index, $Caption);
 		
-		$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/index.html';
+		my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/index.html';
 		$Index->Flush(1, $Sys->Get('PM-TXT'), $path);
 		
 		return 1;
@@ -131,30 +121,20 @@ sub CreateIndex
 sub CreateIIndex
 {
 	my $this = shift;
-	my ($Sys, $Threads, $bbsSetting, $oConv, $Page);
-	my ($path, $i, $name, $key, $res, $cgiPath, $title, $menuNum, $code, $bbs);
-	my (@threadSet);
 	
 	require './module/thorin.pl';
-	$Page = THORIN->new;
+	my $Page = THORIN->new;
 	
 	# 前準備
-	$Sys		= $this->{'SYS'};
-	$Threads 	= $this->{'THREADS'};
-	$bbsSetting	= $this->{'SET'};
-	$oConv		= $this->{'CONV'};
-	
-	$cgiPath	= $Sys->Get('CGIPATH');
-	$title		= $bbsSetting->Get('BBS_TITLE');
-	$menuNum	= $bbsSetting->Get('BBS_MAX_MENU_THREAD');
-	$code		= $this->{'CODE'};
-	$i			= 1;
-	$bbs		= $Sys->Get('BBS');
-	
-	# 全スレッドを取得
-	$Threads->GetKeySet('ALL', '', \@threadSet);
+	my $Sys = $this->{'SYS'};
+	my $Threads = $this->{'THREADS'};
+	my $bbsSetting = $this->{'SET'};
+	my $oConv = $this->{'CONV'};
+	my $bbs = $Sys->Get('BBS');
 	
 	# HTMLヘッダの出力
+	my $title = $bbsSetting->Get('BBS_TITLE');
+	my $code = $this->{'CODE'};
 	$Page->Print("<html><!--nobanner--><head><title>$title</title>");
 	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
 	$Page->Print("</head><body><center>$title</center>");
@@ -163,28 +143,28 @@ sub CreateIIndex
 	$this->{'BANNER'}->Print($Page, 100, 1, 1);
 	$Page->Print('<hr></center>');
 	
+	# 全スレッドを取得
+	my @threadSet = ();
+	$Threads->GetKeySet('ALL', '', \@threadSet);
+	
 	# スレッド分だけループをまわす
-	foreach $key (@threadSet) {
-		if ($i > $menuNum) {
-			last;
-		}
-		$name = $Threads->Get('SUBJECT', $key);
-		$res = $Threads->Get('RES', $key);
-		$path = $oConv->CreatePath($Sys, 1, $bbs, $key, 'l10');
+	my $menuNum = $bbsSetting->Get('BBS_MAX_MENU_THREAD');
+	my $i = 0;
+	foreach my $key (@threadSet) {
+		last if (++$i > $menuNum);
+		
+		my $name = $Threads->Get('SUBJECT', $key);
+		my $res = $Threads->Get('RES', $key);
+		my $path = $oConv->CreatePath($Sys, 1, $bbs, $key, 'l10');
 		
 		$Page->Print("<a href=\"$path\">$i: $name($res)</a><br> \n");
-		$i++;
 	}
 	
 	# フッタ部分の出力
-	if ($Sys->Get('PATHKIND')) {
-		$path = "$cgiPath/p.cgi?bbs=$bbs&st=$i";
-	}
-	else {
-		$path = "$cgiPath/p.cgi/$bbs/$i";
-	}
+	my $cgiPath = $Sys->Get('CGIPATH');
+	my $pathf = "$cgiPath/p.cgi" . ($Sys->Get('PATHKIND') ? "?bbs=$bbs&st=$i" : "/$bbs/$i");
 	$Page->Print("<hr>");
-	$Page->Print("<a href=\"$path\">続き</a>\n");
+	$Page->Print("<a href=\"$pathf\">続き</a>\n");
 	$Page->Print("<form action=\"$cgiPath/bbs.cgi\" method=\"POST\" utn>");
 	$Page->Print("<input type=hidden name=bbs value=$bbs>");
 	$Page->Print("<input type=hidden name=mb value=on>");
@@ -193,8 +173,8 @@ sub CreateIIndex
 	$Page->Print("</form><hr></body></html>\n");
 	
 	# i/index.htmlに書き込み
-	$path = $Sys->Get('BBSPATH') . "/$bbs";
-	$Page->Flush(1, $Sys->Get('PM-TXT'), "$path/i/index.html");
+	my $pathi = $Sys->Get('BBSPATH') . "/$bbs";
+	$Page->Flush(1, $Sys->Get('PM-TXT'), "$pathi/i/index.html");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -204,41 +184,26 @@ sub CreateIIndex
 #	@param	なし
 #	@return	なし
 #
-#	2010.08.12 windyakin ★
-#	 -> 告知欄表示が任意設定できるようになったので変更
-#
 #------------------------------------------------------------------------------------------------------------
 sub CreateSubback
 {
 	my $this = shift;
-	my ($Sys, $Threads, $bbsSetting, $oConv, $Page);
-	my ($path, $i, $name, $key, $res, $cgipath, $title, $code, $bbs);
-	my (@threadSet, $max, $Caption, $version);
 	
 	require './module/thorin.pl';
-	$Page = THORIN->new;
+	my $Page = THORIN->new;
 	
-	$Sys		= $this->{'SYS'};
-	$Threads 	= $this->{'THREADS'};
-	$bbsSetting	= $this->{'SET'};
-	$oConv		= $this->{'CONV'};
-	
-	$cgipath	= $Sys->Get('CGIPATH');
-	$title		= $bbsSetting->Get('BBS_TITLE');
-	$code		= $this->{'CODE'};
-	$i			= 1;
-	$bbs		= $Sys->Get('BBS');
-	$max		= $Sys->Get('SUBMAX');
-	$version	= $Sys->Get('VERSION');
-	
-	# 全スレッドを取得
-	$Threads->GetKeySet('ALL', '', \@threadSet);
+	my $Sys = $this->{'SYS'};
+	my $Threads = $this->{'THREADS'};
+	my $bbsSetting = $this->{'SET'};
+	my $oConv = $this->{'CONV'};
 	
 	require './module/legolas.pl';
-	$Caption = LEGOLAS->new;
+	my $Caption = LEGOLAS->new;
 	$Caption->Load($Sys, 'META');
 	
 	# HTMLヘッダの出力
+	my $title = $bbsSetting->Get('BBS_TITLE');
+	my $code = $this->{'CODE'};
 	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
@@ -259,20 +224,27 @@ HTML
 	$Page->Print("<div class=\"threads\">");
 	$Page->Print("<small>\n");
 	
+	# 全スレッドを取得
+	my @threadSet = ();
+	$Threads->GetKeySet('ALL', '', \@threadSet);
+	
 	# スレッド分だけループをまわす
-	foreach $key (@threadSet) {
-		if ($i > $max) {
-			last;
-		}
-		$name = $Threads->Get('SUBJECT', $key);
-		$res = $Threads->Get('RES', $key);
-		$path = $oConv->CreatePath($Sys, 0, $bbs, $key, 'l50');
+	my $bbs = $Sys->Get('BBS');
+	my $max = $Sys->Get('SUBMAX');
+	my $i = 0;
+	foreach my $key (@threadSet) {
+		last if (++$i > $max);
+		
+		my $name = $Threads->Get('SUBJECT', $key);
+		my $res = $Threads->Get('RES', $key);
+		my $path = $oConv->CreatePath($Sys, 0, $bbs, $key, 'l50');
 		
 		$Page->Print("<a href=\"$path\" target=\"_blank\">$i: $name($res)</a>&nbsp;&nbsp;\n");
-		$i++;
 	}
 	
 	# フッタ部分の出力
+	my $cgipath = $Sys->Get('CGIPATH');
+	my $version = $Sys->Get('VERSION');
 	$Page->Print(<<HTML);
 </small>
 </div>
@@ -293,8 +265,8 @@ $version
 HTML
 	
 	# subback.htmlに書き込み
-	$path = $Sys->Get('BBSPATH') . "/$bbs";
-	$Page->Flush(1, $Sys->Get('PM-TXT'), "$path/subback.html");
+	my $paths = $Sys->Get('BBSPATH') . "/$bbs";
+	$Page->Flush(1, $Sys->Get('PM-TXT'), "$paths/subback.html");
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -308,14 +280,14 @@ HTML
 #------------------------------------------------------------------------------------------------------------
 sub PrintIndexHead
 {
-	my ($this, $Page, $Caption) = @_;
-	my ($title, $link, $image, $code);
+	my $this = shift;
+	my ($Page, $Caption) = @_;
 	
 	$Caption->Load($this->{'SYS'}, 'META');
-	$title	= $this->{'SET'}->Get('BBS_TITLE');
-	$link	= $this->{'SET'}->Get('BBS_TITLE_LINK');
-	$image	= $this->{'SET'}->Get('BBS_TITLE_PICTURE');
-#	$code	= $this->{'CODE'};
+	my $title = $this->{'SET'}->Get('BBS_TITLE');
+	my $link = $this->{'SET'}->Get('BBS_TITLE_LINK');
+	my $image = $this->{'SET'}->Get('BBS_TITLE_PICTURE');
+#	my $code = $this->{'CODE'};
 	
 	# HTMLヘッダの出力
 	$Page->Print(<<HEAD);
@@ -341,7 +313,7 @@ HEAD
 	
 	# <body>タグ出力
 	{
-		my @work;
+		my @work = ();
 		$work[0] = $this->{'SET'}->Get('BBS_BG_COLOR');
 		$work[1] = $this->{'SET'}->Get('BBS_TEXT_COLOR');
 		$work[2] = $this->{'SET'}->Get('BBS_LINK_COLOR');
@@ -382,18 +354,11 @@ HEAD
 #------------------------------------------------------------------------------------------------------------
 sub PrintIndexMenu
 {
-	my ($this, $Page) = @_;
-	my ($Conv, $menuCol, $menuNum, $prevNum, $i);
-	my (@threadSet, $key, $name, $res, $path, $max);
+	my $this = shift;
+	my ($Page) = @_;
 	
-	$Conv		= $this->{'CONV'};
-	$menuCol	= $this->{'SET'}->Get('BBS_MENU_COLOR');
-	$menuNum	= $this->{'SET'}->Get('BBS_MAX_MENU_THREAD');
-	$prevNum	= $this->{'SET'}->Get('BBS_THREAD_NUMBER');
-	$i			= 1;
-	$max		= $this->{'SYS'}->Get('SUBMAX');
-	
-	$this->{'THREADS'}->GetKeySet('ALL', '', \@threadSet);
+	my $Conv = $this->{'CONV'};
+	my $menuCol = $this->{'SET'}->Get('BBS_MENU_COLOR');
 	
 	# バナーの表示
 	$this->{'BANNER'}->Print($Page, 95, 0, 0);
@@ -407,14 +372,20 @@ sub PrintIndexMenu
   <small>
 MENU
 	
+	my @threadSet = ();
+	$this->{'THREADS'}->GetKeySet('ALL', '', \@threadSet);
+	
 	# スレッド分だけループをまわす
-	foreach $key (@threadSet) {
-		if (($i > $menuNum) || ($i > $max)) {
-			last;
-		}
-		$name = $this->{'THREADS'}->Get('SUBJECT', $key);
-		$res = $this->{'THREADS'}->Get('RES', $key);
-		$path = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
+	my $prevNum = $this->{'SET'}->Get('BBS_THREAD_NUMBER');
+	my $menuNum = $this->{'SET'}->Get('BBS_MAX_MENU_THREAD');
+	my $max = $this->{'SYS'}->Get('SUBMAX');
+	my $i = 0;
+	foreach my $key (@threadSet) {
+		last if ((++$i > $menuNum) || ($i > $max));
+		
+		my $name = $this->{'THREADS'}->Get('SUBJECT', $key);
+		my $res = $this->{'THREADS'}->Get('RES', $key);
+		my $path = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
 		
 		# プレビュースレッドの場合はプレビューへのリンクを貼る
 		if ($i <= $prevNum) {
@@ -424,7 +395,6 @@ MENU
 		else {
 			$Page->Print("  <a href=\"$path\" target=\"body\">$i: $name($res)</a>　\n");
 		}
-		$i++;
 	}
 	$Page->Print(<<MENU);
   </small>
@@ -451,21 +421,20 @@ MENU
 #------------------------------------------------------------------------------------------------------------
 sub PrintIndexPreview
 {
-	my ($this, $Page) = @_;
-	my ($oDat, $oConv, @threadSet, $Plugin);
-	my ($prevNum, $threadNum, $prevT, $nextT, $tblCol, $ttlCol);
-	my ($basePath, $datPath, $cnt, $subject, $res, $key, $max);
+	my $this = shift;
+	my ($Page) = @_;
 	
 	# 拡張機能ロード
 	require './module/athelas.pl';
-	$Plugin = ATHELAS->new;
+	my $Plugin = ATHELAS->new;
 	$Plugin->Load($this->{'SYS'});
 	
 	# 有効な拡張機能一覧を取得
-	my (@pluginSet, @commands, $id, $count);
+	my @commands = ();
+	my @pluginSet = ();
 	$Plugin->GetKeySet('VALID', 1, \@pluginSet);
-	$count = 0;
-	foreach $id (@pluginSet) {
+	my $count = 0;
+	foreach my $id (@pluginSet) {
 		# タイプがread.cgiの場合はロードして実行
 		if ($Plugin->Get('TYPE', $id) & 8) {
 			my $file = $Plugin->Get('FILE', $id);
@@ -473,36 +442,35 @@ sub PrintIndexPreview
 			if (-e "./plugin/$file") {
 				require "./plugin/$file";
 				my $Config = PLUGINCONF->new($Plugin, $id);
-				$commands[$count] = $className->new($Config);
-				$count++;
+				$commands[$count++] = $className->new($Config);
 			}
 		}
 	}
 	
 	require './module/gondor.pl';
-	$oDat = ARAGORN->new;
+	my $oDat = ARAGORN->new;
 	
+	my @threadSet = ();
 	$this->{'THREADS'}->GetKeySet('ALL', '', \@threadSet);
 	
 	# 前準備
-	$prevNum	= $this->{'SET'}->Get('BBS_THREAD_NUMBER');
-	$threadNum	= (@threadSet > $prevNum ? $prevNum : @threadSet);
-	$tblCol		= $this->{'SET'}->Get('BBS_THREAD_COLOR');
-	$ttlCol		= $this->{'SET'}->Get('BBS_SUBJECT_COLOR');
-	$prevT		= $threadNum;
-	$nextT		= ($threadNum > 1 ? 2 : 1);
-	$oConv		= $this->{'CONV'};
-	$basePath	= $this->{'SYS'}->Get('BBSPATH') . '/' . $this->{'SYS'}->Get('BBS');
-	$cnt		= 1;
-	$max		= $this->{'SYS'}->Get('SUBMAX');
+	my $prevNum = $this->{'SET'}->Get('BBS_THREAD_NUMBER');
+	my $threadNum = (scalar(@threadSet) > $prevNum ? $prevNum : scalar(@threadSet));
+	my $tblCol = $this->{'SET'}->Get('BBS_THREAD_COLOR');
+	my $ttlCol = $this->{'SET'}->Get('BBS_SUBJECT_COLOR');
+	my $prevT = $threadNum;
+	my $nextT = ($threadNum > 1 ? 2 : 1);
+	my $oConv = $this->{'CONV'};
+	my $basePath = $this->{'SYS'}->Get('BBSPATH') . '/' . $this->{'SYS'}->Get('BBS');
+	my $max = $this->{'SYS'}->Get('SUBMAX');
 	
-	foreach $key (@threadSet) {
-		if ($cnt > $prevNum || $cnt > $max) {
-			last;
-		}
-		$subject	= $this->{'THREADS'}->Get('SUBJECT', $key);
-		$res		= $this->{'THREADS'}->Get('RES', $key);
-		$nextT		= 1 if ($cnt == $threadNum);
+	my $cnt = 0;
+	foreach my $key (@threadSet) {
+		last if (++$cnt > $prevNum || $cnt > $max);
+		
+		my $subject = $this->{'THREADS'}->Get('SUBJECT', $key);
+		my $res = $this->{'THREADS'}->Get('RES', $key);
+		$nextT = 1 if ($cnt == $threadNum);
 		
 		# ヘッダ部分の表示
 		$Page->Print(<<THREAD);
@@ -516,20 +484,17 @@ sub PrintIndexPreview
 THREAD
 		
 		# プレビューの表示
-		$datPath = "$basePath/dat/$key.dat";
+		my $datPath = "$basePath/dat/$key.dat";
 		$oDat->Load($this->{'SYS'}, $datPath, 1);
 		$this->{'SYS'}->Set('KEY', $key);
 		PrintThreadPreviewOne($this, $Page, $oDat, \@commands);
 		$oDat->Close();
 		
 		# フッタ部分の表示
-		{
-			my ($allPath, $lastPath, $numPath);
-			
-			$allPath	= $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '');
-			$lastPath	= $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
-			$numPath	= $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '1-100');
-			$Page->Print(<<KAKIKO);
+		my $allPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '');
+		my $lastPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
+		my $numPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '1-100');
+		$Page->Print(<<KAKIKO);
     <div style="font-weight:bold;">
      <a href="$allPath">全部読む</a>
      <a href="$lastPath">最新50</a>
@@ -545,14 +510,11 @@ THREAD
 </table>
 
 KAKIKO
-			
-		}
 		
 		# カウンタの更新
 		$nextT++;
 		$prevT++;
 		$prevT = 1 if ($cnt == 1);
-		$cnt++;
 	}
 }
 
@@ -564,25 +526,24 @@ KAKIKO
 #	@param	$Caption	
 #	@return	なし
 #
-#	2010.08.12 windyakin ★
-#	 -> Samba値の表示
-#
 #------------------------------------------------------------------------------------------------------------
 sub PrintIndexFoot
 {
-	my ($this, $Page, $Caption) = @_;
-	my ($SYS, $tblCol, $cgipath, $bbs, $ver, $tm, $samba);
+	my $this = shift;
+	my ($Page, $Caption) = @_;
 	
-	$SYS		= $this->{'SYS'};
-	$tblCol		= $this->{'SET'}->Get('BBS_MAKETHREAD_COLOR');
-	$cgipath	= $SYS->Get('CGIPATH');
-	$bbs		= $SYS->Get('BBS');
-	$ver		= $SYS->Get('VERSION');
-	$samba		= int ($this->{'SET'}->Get('BBS_SAMBATIME', '') eq '' ? $SYS->Get('DEFSAMBA') : $this->{'SET'}->Get('BBS_SAMBATIME'));
-	$tm			= time;
+	my $Sys = $this->{'SYS'};
+	my $Set = $this->{'SET'};
+	my $tblCol = $Set->Get('BBS_MAKETHREAD_COLOR');
+	my $cgipath = $Sys->Get('CGIPATH');
+	my $bbs = $Sys->Get('BBS');
+	my $ver = $Sys->Get('VERSION');
+	my $samba = int ($Set->Get('BBS_SAMBATIME', '') eq ''
+					? $Sys->Get('DEFSAMBA') : $Set->Get('BBS_SAMBATIME'));
+	my $tm = time;
 	
 	# スレッド作成画面を別画面で表示
-	if ($this->{'SET'}->Equal('BBS_PASSWORD_CHECK', 'checked')) {
+	if ($Set->Equal('BBS_PASSWORD_CHECK', 'checked')) {
 		$Page->Print(<<FORM);
 <table border="1" cellspacing="7" cellpadding="3" width="95%" bgcolor="$tblCol" align="center">
  <tr>
@@ -618,17 +579,17 @@ FORM
 	}
 	
 	# footの表示
-	$Caption->Load($this->{'SYS'}, 'FOOT');
-	$Caption->Print($Page, $this->{'SET'});
+	$Caption->Load($Sys, 'FOOT');
+	$Caption->Print($Page, $Set);
 	
 	$Page->Print(<<FOOT);
 <div style="margin-top:1.2em;">
 <a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 <a href="http://0ch.mine.nu/">ぜろちゃんねる</a> <a href="http://zerochplus.sourceforge.jp/">プラス</a>
 BBS.CGI - $ver (Perl)
-@{[ $SYS->Get('BBQ') ? '+<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>' : '' ]}
-@{[ $SYS->Get('BBX') ? '+BBX' : '' ]}
-@{[ $SYS->Get('SPAMCH') ? '+<a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">スパムちゃんぷるー</a>' : '' ]}
+@{[ $Sys->Get('BBQ') ? '+<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>' : '' ]}
+@{[ $Sys->Get('BBX') ? '+BBX' : '' ]}
+@{[ $Sys->Get('SPAMCH') ? '+<a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">スパムちゃんぷるー</a>' : '' ]}
 +Samba24=$samba<br>
 ページのおしまいだよ。。と</div>
 
@@ -641,35 +602,34 @@ FOOT
 #
 #	index.html生成(スレッドプレビュー部分)
 #	-------------------------------------------------------------------------------------
-#	@param	$this	
-#	@param	$Page	
-#	@param	$oDat	
+#	@param	$Page		
+#	@param	$oDat		
+#	@param	$commands	
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintThreadPreviewOne
 {
-	my ($this, $Page, $oDat, $commands) = @_;
-	my ($pDat, $contNum, $start, $end, $i, $cgiPath, $bbs, $tm, $key);
+	my $this = shift;
+	my ($Page, $oDat, $commands) = @_;
+	
+	my $Sys = $this->{'SYS'};
 	
 	# 前準備
-	$contNum	= $this->{'SET'}->Get('BBS_CONTENTS_NUMBER');
-	$cgiPath	= $this->{'SYS'}->Get('SERVER') . $this->{'SYS'}->Get('CGIPATH');
-	$bbs		= $this->{'SYS'}->Get('BBS');
-	$key		= $this->{'SYS'}->Get('KEY');
-	$tm			= time;
+	my $contNum = $this->{'SET'}->Get('BBS_CONTENTS_NUMBER');
+	my $cgiPath = $Sys->Get('SERVER') . $Sys->Get('CGIPATH');
+	my $bbs = $Sys->Get('BBS');
+	my $key = $Sys->Get('KEY');
+	my $tm = time;
 	
 	# 表示数の正規化
-	($start, $end) = $this->{'CONV'}->RegularDispNum(
-						$this->{'SYS'}, $oDat, 1, $contNum, $contNum);
-	if ($start == 1) {
-		$start++;
-	}
+	my ($start, $end) = $this->{'CONV'}->RegularDispNum($Sys, $oDat, 1, $contNum, $contNum);
+	$start++ if ($start == 1);
 	
 	# 1の表示
 	PrintResponse($this, $Page, $oDat, $commands, 1);
 	# 残りの表示
-	for ($i = $start ; $i <= $end ; $i++) {
+	for (my $i = $start; $i <= $end; $i++) {
 		PrintResponse($this, $Page, $oDat, $commands, $i);
 	}
 	
@@ -694,36 +654,38 @@ KAKIKO
 #
 #	index.html生成(レス表示部分)
 #	-------------------------------------------------------------------------------------
-#	@param	$this	
-#	@param	$Page	
-#	@param	$oDat	
-#	@param	$n		
+#	@param	$Page		
+#	@param	$oDat		
+#	@param	$commands	
+#	@param	$n			
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintResponse
 {
-	my ($this, $Page, $oDat, $commands, $n) = @_;
-	my ($oConv, @elem, $contLen, $contLine, $nameCol, $dispLine);
-	my ($pDat, $command);
+	my $this = shift;
+	my ($Page, $oDat, $commands, $n) = @_;
 	
-	$oConv		= $this->{'CONV'};
-	$pDat		= $oDat->Get($n - 1);
-	return if (! defined $pDat);
-	@elem		= split(/<>/, $$pDat);
-	$contLen	= length $elem[3];
-	$contLine	= $oConv->GetTextLine(\$elem[3]);
-	$nameCol	= $this->{'SET'}->Get('BBS_NAME_COLOR');
-	$dispLine	= $this->{'SET'}->Get('BBS_LINE_NUMBER');
+	my $Sys = $this->{'SYS'};
+	my $oConv = $this->{'CONV'};
+	
+	my $pDat = $oDat->Get($n - 1);
+	return if (!defined $pDat);
+	
+	my @elem = split(/<>/, $$pDat, -1);
+	my $contLen = length $elem[3];
+	my $contLine = $oConv->GetTextLine(\$elem[3]);
+	my $nameCol = $this->{'SET'}->Get('BBS_NAME_COLOR');
+	my $dispLine = $this->{'SET'}->Get('BBS_LINE_NUMBER');
 	
 	# URLと引用個所の適応
-	$oConv->ConvertURL($this->{'SYS'}, $this->{'SET'}, 0, \$elem[3]);
-	$oConv->ConvertQuotation($this->{'SYS'}, \$elem[3], 0);
+	$oConv->ConvertURL($Sys, $this->{'SET'}, 0, \$elem[3]);
+	$oConv->ConvertQuotation($Sys, \$elem[3], 0);
 	
 	# 拡張機能を実行
-	$this->{'SYS'}->Set('_DAT_', \@elem);
-	$this->{'SYS'}->Set('_NUM_', $n);
-	foreach $command (@$commands) {
+	$Sys->Set('_DAT_', \@elem);
+	$Sys->Set('_NUM_', $n);
+	foreach my $command (@$commands) {
 		$command->execute($this->{'SYS'}, undef, 8);
 	}
 	
@@ -744,14 +706,11 @@ sub PrintResponse
 	}
 	# 表示行数を超えたら省略表示を付加する
 	else {
-		my (@dispBuff, $path, $k);
-		
-		@dispBuff = split(/<br>|<BR>/, $elem[3]);
-		$path = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'),
-											$this->{'SYS'}->Get('KEY'), "${n}n");
+		my @dispBuff = split(/<br>/i, $elem[3]);
+		my $path = $oConv->CreatePath($Sys, 0, $Sys->Get('BBS'), $Sys->Get('KEY'), "${n}n");
 		
 		$Page->Print("：$elem[2]</dt>\n    <dd>");
-		for ($k = 0 ; $k < $dispLine ; $k++) {
+		for (my $k = 0; $k < $dispLine; $k++) {
 			$Page->Print("$dispBuff[$k]<br>");
 		}
 		$Page->Print("<font color=\"green\">（省略されました・・全てを読むには");
