@@ -225,7 +225,9 @@ sub Set
 	my ($id, $kind, $val) = @_;
 	
 	if (exists $this->{$kind}->{$id}) {
-		$val = $this->GetStrictPass($val, $id) if ($kind eq 'PASS');
+		if ($kind eq 'PASS') {
+			$val = $this->GetStrictPass($val, $id);
+		}
 		$this->{$kind}->{$id} = $val;
 	}
 }
@@ -597,13 +599,15 @@ sub GetBelong
 	
 	my $ret = '';
 	
-	GRPS:
 	foreach my $group (keys %{$this->{'CAPS'}}) {
 		my @users = split(/\,/, $this->{'CAPS'}->{$group});
 		foreach my $user (@users) {
 			if ($id eq $user) {
 				$ret = $group;
-				last GRPS if ($this->{'ISCOMMON'}->{$group});
+				# ‹¤’ÊƒOƒ‹[ƒv‚ğ—Dæ
+				if ($this->{'ISCOMMON'}->{$group}) {
+					return $ret;
+				}
 			}
 		}
 	}
@@ -709,7 +713,9 @@ sub GetCapID
 	$Cap->GetKeySet('ALL', '', \@capSet);
 	foreach my $id (@capSet) {
 		my $capPass = $Cap->GetStrictPass($pass, $id);
-		return $id if ($capPass eq $Cap->Get('PASS', $id));
+		if ($capPass eq $Cap->Get('PASS', $id)) {
+			return $id;
+		}
 	}
 	return '';
 }

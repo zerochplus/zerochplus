@@ -89,7 +89,7 @@ sub Save
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
-		print $fh $_ foreach (@{$this->{'HEAD'}});
+		print $fh @{$this->{'HEAD'}};
 		truncate($fh, tell($fh));
 		close($fh);
 	}
@@ -168,7 +168,9 @@ sub Print
     <td colspan="2">
 HEAD
 		
-		$Page->Print("    $_") foreach (@{$this->{'HEAD'}});
+		foreach (@{$this->{'HEAD'}}) {
+			$Page->Print("    $_");
+		}
 		
 		$Page->Print("    </td>\n");
 		$Page->Print("   </tr>\n");
@@ -187,12 +189,16 @@ HEAD
 	}
 	# META.txtはインデント
 	elsif ($this->{'FILE'} eq 'meta.txt') {
-		$Page->Print(" $_") foreach (@{$this->{'HEAD'}});
+		foreach (@{$this->{'HEAD'}}) {
+			$Page->Print(" $_");
+		}
 		$Page->Print("\n");
 	}
 	# その他は内容をそのまま表示
 	else {
-		$Page->Print($_) foreach (@{$this->{'HEAD'}});
+		foreach (@{$this->{'HEAD'}}) {
+			$Page->Print($_);
+		}
 	}
 }
 

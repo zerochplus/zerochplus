@@ -279,8 +279,10 @@ sub ReadyBeforeWrite
 		
 		my $koyuu2 = ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef);
 		my $check = $vUser->Check($host, $addr, $koyuu2);
-		return 601 if ($check == 4);
-		if ($check == 2) {
+		if ($check == 4) {
+			return 601;
+		}
+		elsif ($check == 2) {
 			return 601 if ($from !~ /$host/i); # $hostは正規表現
 			$Form->Set('FROM', "</b>[´･ω･｀] <b>$from");
 		}
@@ -292,9 +294,15 @@ sub ReadyBeforeWrite
 		my @checkKey = ('FROM', 'mail', 'MESSAGE');
 		
 		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
-		return 600 if ($check == 3);
-		$ngWord->Method($Form, \@checkKey) if ($check == 1);
-		$Form->Set('FROM', "</b>[´+ω+｀] $host <b>$from") if ($check == 2);
+		if ($check == 3) {
+			return 600;
+		}
+		elsif ($check == 1) {
+			$ngWord->Method($Form, \@checkKey);
+		}
+		elsif ($check == 2) {
+			$Form->Set('FROM', "</b>[´+ω+｀] $host <b>$from");
+		}
 	}
 	
 	# pluginに渡す値を設定
@@ -311,7 +319,7 @@ sub ReadyBeforeWrite
 	
 	# 名無し設定
 	$from = $Form->Get('FROM');
-	unless ($from) {
+	if (!$from) {
 		$from = $this->{'SET'}->Get('BBS_NONAME_NAME');
 		$Form->Set('FROM', $from);
 	}
@@ -344,6 +352,7 @@ sub ExecutePlugin
 		if ($Plugin->Get('TYPE', $id) & $type) {
 			my $file = $Plugin->Get('FILE', $id);
 			my $className = $Plugin->Get('CLASS', $id);
+			
 			require "./plugin/$file";
 			my $Config = PLUGINCONF->new($Plugin, $id);
 			my $command = $className->new($Config);
@@ -395,27 +404,37 @@ sub IsRegulation
 		# datファイルサイズ制限
 		if ($oSET->Get('BBS_DATMAX')) {
 			my $datSize = int((stat $datPath)[7] / 1024);
-			return 206 if ($oSET->Get('BBS_DATMAX') < $datSize);
+			if ($oSET->Get('BBS_DATMAX') < $datSize) {
+				return 206;
+			}
 		}
 	}
 	# REFERERチェック
 	if ($oSET->Equal('BBS_REFERER_CHECK', 'checked')) {
-		return 998 if ($this->{'CONV'}->IsReferer($this->{'SYS'}, \%ENV));
+		if ($this->{'CONV'}->IsReferer($this->{'SYS'}, \%ENV)) {
+			return 998;
+		}
 	}
 	# PROXYチェック
 	if (!$islocalip && !$oSET->Equal('BBS_PROXY_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
-			return 997 if (!$oSEC->IsAuthority($capID, 19, $bbs));
+			if (!$oSEC->IsAuthority($capID, 19, $bbs)) {
+				return 997;
+			}
 		}
 	}
 	# 読取専用
 	if (!$oSET->Equal('BBS_READONLY', 'none')) {
-		return 203 if (!$oSEC->IsAuthority($capID, 13, $bbs));
+		if (!$oSEC->IsAuthority($capID, 13, $bbs)) {
+			return 203;
+		}
 	}
 	# JPホスト以外規制
 	if (!$islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
-		return 207 unless ($host =~ /\.jp$/i);
+		if ($host !~ /\.jp$/i) {
+			return 207;
+		}
 	}
 	
 	# スレッド作成モード
@@ -429,11 +448,15 @@ sub IsRegulation
 		
 		# スレッド作成(携帯から)
 		if ($client & $ZP::C_MOBILE) {
-			return 204 if (!$oSEC->IsAuthority($capID, 16, $bbs));
+			if (!$oSEC->IsAuthority($capID, 16, $bbs)) {
+				return 204;
+			}
 		}
 		# スレッド作成(キャップのみ)
 		if ($oSET->Equal('BBS_THREADCAPONLY', 'checked')) {
-			return 504 if (!$oSEC->IsAuthority($capID, 9, $bbs));
+			if (!$oSEC->IsAuthority($capID, 9, $bbs)) {
+				return 504;
+			}
 		}
 		# スレッド作成(スレッド立てすぎ)
 		require './module/peregrin.pl';
@@ -443,8 +466,12 @@ sub IsRegulation
 			my $tateHour = $oSET->Get('BBS_TATESUGI_HOUR', '0') - 0;
 			my $tateCount = $oSET->Get('BBS_TATESUGI_COUNT', '0') - 0;
 			my $checkCount = $oSET->Get('BBS_THREAD_TATESUGI', '0') - 0;
-			return 500 if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount);
-			return 500 if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount));
+			if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount) {
+				return 500;
+			}
+			if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount)) {
+				return 500;
+			}
 		}
 		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu, undef, $mode);
 		$LOG->Save($oSYS);
@@ -519,7 +546,9 @@ sub IsRegulation
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'HST');
 				my $cnt = $LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount'));
-				return 501 if ($cnt >= $oSET->Get('timeclose'));
+				if ($cnt >= $oSET->Get('timeclose')) {
+					return 501;
+				}
 			}
 		}
 		# レス書き込み(二重投稿)
@@ -527,7 +556,9 @@ sub IsRegulation
 			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
-				return 502 if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE')));
+				if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
+					return 502;
+				}
 			}
 		}
 		
@@ -633,21 +664,29 @@ sub NormalizationNameMail
 		return 150 if ($subject eq '');
 		# サブジェクト欄の文字数確認
 		if (!$oSEC->IsAuthority($capID, 1, $bbs)) {
-			return 101 if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject));
+			if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject)) {
+				return 101;
+			}
 		}
 	}
 	
 	# 名前欄の文字数確認
-	if (! $oSEC->IsAuthority($capID, 2, $bbs)) {
-		return 101 if ($oSET->Get('BBS_NAME_COUNT') < length($name));
+	if (!$oSEC->IsAuthority($capID, 2, $bbs)) {
+		if ($oSET->Get('BBS_NAME_COUNT') < length($name)) {
+			return 101;
+		}
 	}
 	# メール欄の文字数確認
-	if (! $oSEC->IsAuthority($capID, 3, $bbs)) {
-		return 102 if ($oSET->Get('BBS_MAIL_COUNT') < length($mail));
+	if (!$oSEC->IsAuthority($capID, 3, $bbs)) {
+		if ($oSET->Get('BBS_MAIL_COUNT') < length($mail)) {
+			return 102;
+		}
 	}
 	# 名前欄の入力確認
-	if (! $oSEC->IsAuthority($capID, 7, $bbs)) {
-		return 152 if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '');
+	if (!$oSEC->IsAuthority($capID, 7, $bbs)) {
+		if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '') {
+			return 152;
+		}
 	}
 	
 	# 正規化した内容を再度設定
@@ -692,19 +731,27 @@ sub NormalizationContents
 	
 	# 本文が長すぎ
 	if (!$oSEC->IsAuthority($capID, 4, $bbs)) {
-		return 103 if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text));
+		if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text)) {
+			return 103;
+		}
 	}
 	# 改行が多すぎ
 	if (!$oSEC->IsAuthority($capID, 5, $bbs)) {
-		return 105 if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln);
+		if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln) {
+			return 105;
+		}
 	}
 	# 1行が長すぎ
 	if (!$oSEC->IsAuthority($capID, 6, $bbs)) {
-		return 104 if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl);
+		if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl) {
+			return 104;
+		}
 	}
 	# アンカーが多すぎ
 	if ($oSYS->Get('ANKERS')) {
-		return 106 if ($oConv->IsAnker(\$text, $oSYS->Get('ANKERS')));
+		if ($oConv->IsAnker(\$text, $oSYS->Get('ANKERS'))) {
+			return 106;
+		}
 	}
 	
 	# 本文ホスト表示

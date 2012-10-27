@@ -434,7 +434,9 @@ sub IsMoved
 		close($fh);
 		
 		my @elem = split(/<>/, $line, -1);
-		return 0 if ($elem[2] ne 'ˆÚ“]');
+		if ($elem[2] ne 'ˆÚ“]') {
+			return 0;
+		}
 	}
 	
 	return 1;

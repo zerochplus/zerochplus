@@ -351,7 +351,9 @@ sub GetTextInfo
 	
 	my $mx = 0;
 	foreach (@lines) {
-		$mx = length($_) if ($mx < length($_));
+		if ($mx < length($_)) {
+			$mx = length($_);
+		}
 	}
 	
 	return (scalar(@lines), $mx);
@@ -502,7 +504,9 @@ sub CIDRHIT
 		my $ipaddr = unpack("B$length", pack('C*', split(/\./, $ho)));
 		$target = unpack("B$length", pack('C*', split(/\./, $target)));
 		
-		return 1 if ($target eq $ipaddr);
+		if ($target eq $ipaddr) {
+			return 1;
+		}
 	}
 	
 	return 0;
@@ -657,7 +661,7 @@ sub ConvertTrip
 	$column *= -1;
 	
 	my $trip = '';
-	$$key = '' if (! defined $$key);
+	$$key = '' if (!defined $$key);
 	
 	if (length($$key) >= 12) {
 		# 先頭1文字の取得
@@ -691,7 +695,7 @@ sub ConvertTrip
 	# 従来のトリップ生成方式
 	if ($trip eq '') {
 		my $salt = substr($$key, 1, 2);
-		$salt = '' if (! defined $salt);
+		$salt = '' if (!defined $salt);
 		$salt .= 'H.';
 		$salt =~ s/[^\.-z]/\./go;
 		$salt =~ tr/:;<=>?@[\\]^_`/ABCDEFGabcdef/;
@@ -717,7 +721,7 @@ sub ConvertOption
 {
 	my ($opt) = @_;
 	
-	$opt = '' if (! defined $opt);
+	$opt = '' if (!defined $opt);
 	
 	# 初期値
 	my @ret = (
@@ -899,7 +903,7 @@ sub GetDateFromSerial
 	my $this = shift;
 	my ($serial, $mode) = @_;
 	
-	$ENV{'TZ'} = "JST-9";
+	$ENV{'TZ'} = 'JST-9';
 	my @info = localtime $serial;
 	$info[5] += 1900;
 	$info[4] += 1;
@@ -1022,7 +1026,7 @@ sub ConvertCharacter0
 	my $this = shift;
 	my ($data) = @_;
 	
-	$$data = '' if (! defined $$data);
+	$$data = '' if (!defined $$data);
 	
 	$$data =~ s/^($ZP::RE_SJIS*?)＃/$1#/g;
 }
@@ -1041,7 +1045,7 @@ sub ConvertCharacter1
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
-	$$data = '' if (! defined $$data);
+	$$data = '' if (!defined $$data);
 	
 	# all
 	$$data =~ s/</&lt;/g;
@@ -1076,7 +1080,7 @@ sub ConvertCharacter2
 	my $this = shift;
 	my ($data, $mode) = @_;
 	
-	$$data = '' if (! defined $$data);
+	$$data = '' if (!defined $$data);
 	
 	# name mail
 	if ($mode == 0 || $mode == 1) {
@@ -1107,7 +1111,7 @@ sub ConvertFusianasan
 	my $this = shift;
 	my ($data, $host) = @_;
 	
-	$$data = '' if (! defined $$data);
+	$$data = '' if (!defined $$data);
 	
 	$$data =~ s/山崎渉/fusianasan/g;
 	$$data =~ s|^($ZP::RE_SJIS*?)fusianasan|$1</b>$host<b>|g;
@@ -1205,7 +1209,7 @@ sub CheckDNSBL
 {
 	my ($host) = @_;
 	
-	eval {
+	my $ret = eval {
 		require Net::DNS;
 		my $res = Net::DNS::Resolver->new;
 		$res->tcp_timeout(1);
@@ -1215,12 +1219,16 @@ sub CheckDNSBL
 		if ((my $query = $res->query($host))) {
 			my @ans = $query->answer;
 			
-			return $_->address foreach (@ans);
+			foreach (@ans) {
+				return $_->address;
+			}
 		}
 		if ($res->errorstring eq 'query timed out') {
 			return '127.0.0.0';
 		}
 	};
+	
+	return $ret if (defined $ret);
 	
 	if ($@) {
 		require Net::DNS::Lite;

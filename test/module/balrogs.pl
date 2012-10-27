@@ -72,7 +72,7 @@ sub Create
 			my $dir = $BBSs->Get('DIR', $bbsID);
 			
 			# 板ディレクトリに.0ch_hiddenというファイルがあれば読み飛ばす
-			next if ( -e "$BBSpath/$dir/.0ch_hidden" );
+			next if (-e "$BBSpath/$dir/.0ch_hidden");
 			
 			$Sys->Set('BBS', $dir);
 			my $Threads = BILBO->new;
@@ -139,7 +139,7 @@ sub Run
 		my ($bbs, $key) = split(/<>/, $_);
 		$this->{'SYS'}->Set('BBS', $bbs);
 		$this->{'SYS'}->Set('KEY', $key);
-		Search($this, $word);
+		$this->Search($word);
 	}
 	return $this->{'RESULTSET'};
 }
@@ -163,14 +163,14 @@ sub GetResultSet
 #
 #	検索実装部
 #	-------------------------------------------------------------------------------------
-#	@param	$this : thisオブジェクト
 #	@param	$word : 検索ワード
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Search
 {
-	my ($this, $word) = @_;
+	my $this = shift;
+	my ($word) = @_;
 	
 	my $bbs = $this->{'SYS'}->Get('BBS');
 	my $key = $this->{'SYS'}->Get('KEY');

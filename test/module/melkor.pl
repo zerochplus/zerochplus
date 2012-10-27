@@ -304,7 +304,7 @@ sub InitSystemValue
 		BBQ			BBX			SPAMCH		UPCHECK
 	);
 	
-	pop @$pKey while (scalar(@$pKey));
+	splice @$pKey, 0, scalar(@$pKey);
 	push @$pKey, @key;
 }
 

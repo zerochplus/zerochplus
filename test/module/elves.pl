@@ -543,7 +543,9 @@ sub GetBelong
 	foreach my $group (keys %$Users) {
 		my @users = split(/\,/, $Users->{$group});
 		foreach my $user (@users) {
-			return $group if ($id eq $user);
+			if ($id eq $user) {
+				return $group;
+			}
 		}
 	}
 	
@@ -634,7 +636,9 @@ sub IsLogin
 	foreach my $id (@keySet) {
 		my $lPass = $User->Get('PASS', $id);
 		my $hash = $User->GetStrictPass($pass, $id);
-		return $id if ($lPass eq $hash);
+		if ($lPass eq $hash) {
+			return $id;
+		}
 	}
 	return 0;
 }
@@ -689,7 +693,9 @@ sub IsAuthority
 	my $auth = $this->{'GROUP'}->Get('AUTH', $group);
 	my @authors = split(/\,/, $auth, -1);
 	foreach my $auth (@authors) {
-		return 1 if ($auth eq $author);
+		if ($auth eq $author) {
+			return 1;
+		}
 	}
 	
 	return 0;

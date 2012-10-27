@@ -274,7 +274,9 @@ sub UpdateInfo
 		foreach my $file (@fileList) {
 			my @elem = split(/\./, $file);
 			my $subj = GetThreadSubject("$path/$dir/$file");
-			Add($this, $elem[0], $subj, time, $dir) if ($subj ne '');
+			if ($subj ne '') {
+				Add($this, $elem[0], $subj, time, $dir);
+			}
 		}
 	}
 }
@@ -351,6 +353,7 @@ sub UpdateIndex
 #------------------------------------------------------------------------------------------------------------
 sub GetSubFolders
 {
+	
 	my ($base, $pDirs, $pList) = @_;
 	
 	foreach my $dir (@$pDirs) {
@@ -370,6 +373,7 @@ sub GetSubFolders
 #------------------------------------------------------------------------------------------------------------
 sub GetThreadSubject
 {
+	
 	my ($path) = @_;
 	my $title = '';
 	
@@ -407,6 +411,7 @@ sub GetThreadSubject
 #------------------------------------------------------------------------------------------------------------
 sub OutputIndex
 {
+	
 	my ($Sys, $Page, $Banner, $pInfo, $base, $path, $Set) = @_;
 	
 	my $cgipath	= $Sys->Get('CGIPATH');

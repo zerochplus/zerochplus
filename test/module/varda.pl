@@ -219,7 +219,9 @@ HTML
 	$Page->Print("</head>\n<body>\n\n");
 	
 	# バナー表示
-	$this->{'BANNER'}->Print($Page, 100, 2, 0) if ($Sys->Get('BANNER'));
+	if ($Sys->Get('BANNER')) {
+		$this->{'BANNER'}->Print($Page, 100, 2, 0);
+	}
 	
 	$Page->Print("<div class=\"threads\">");
 	$Page->Print("<small>\n");

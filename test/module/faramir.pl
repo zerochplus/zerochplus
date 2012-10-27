@@ -86,7 +86,9 @@ sub Save
 		binmode($fh);
 		
 		print $fh "$this->{'TYPE'}<>$this->{'METHOD'}\n";
-		print $fh "$_\n" foreach (@{$this->{'USER'}});
+		foreach (@{$this->{'USER'}}) {
+			print $fh "$_\n";
+		}
 		
 		truncate($fh, tell($fh));
 		close($fh);

@@ -172,7 +172,9 @@ sub IsInput
 	
 	foreach (@$pKeyList) {
 		my $val = $this->{'FORM'}->{$_};
-		return 0 if (!defined $val || $val eq '');
+		if (!defined $val || $val eq '') {
+			return 0;
+		}
 	}
 	return 1;
 }
@@ -190,7 +192,9 @@ sub IsInputAll
 	my $this = shift;
 	
 	foreach (values %{$this->{'FORM'}}) {
-		return 0 if ($_ eq '');
+		if ($_ eq '') {
+			return 0;
+		}
 	}
 	return 1;
 }
@@ -264,7 +268,9 @@ sub IsNumber
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9]/);
+		if ($this->{'FORM'}->{$_} =~ /[^0-9]/) {
+			return 0;
+		}
 	}
 	return 1;
 }
@@ -283,7 +289,9 @@ sub IsAlphabet
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/);
+		if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z_@]/) {
+			return 0;
+		}
 	}
 	return 1;
 }
@@ -323,7 +331,9 @@ sub IsBBSDir
 	my ($pKeys) = @_;
 	
 	foreach (@$pKeys) {
-		return 0 if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z\_\-]/);
+		if ($this->{'FORM'}->{$_} =~ /[^0-9a-zA-Z\_\-]/) {
+			return 0;
+		}
 	}
 	return 1;
 }

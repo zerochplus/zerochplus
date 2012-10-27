@@ -143,12 +143,18 @@ sub Print
 		my $msg = $Form->Get('MESSAGE');
 		
 		# cookieî•ñ‚Ìo—Í
-		$Cookie->Set('NAME', $name) if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
-		$Cookie->Set('MAIL', $mail) if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+		if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked')) {
+			$Cookie->Set('NAME', $name);
+		}
+		if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked')) {
+			$Cookie->Set('MAIL', $mail);
+		}
 		$Cookie->Out($Page, $Set->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");
-		$Page->Print(<<HTML) if ($err < 505 || $err > 508);
+		
+		if ($err < 505 || $err > 508) {
+			$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
 <head>
@@ -181,8 +187,8 @@ $msg
 </body>
 </html>
 HTML
-		
-		if ($err >= 505 && $err <= 508) {
+		}
+		else {
 			my $sambaerr = {
 				'505' => '593',
 				'506' => '599',

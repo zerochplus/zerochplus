@@ -57,7 +57,9 @@ sub DESTROY
 	my $this = shift;
 	
 	my $handle = $this->{'HANDLE'};
-	close($handle) if ($handle);
+	if ($handle) {
+		close($handle);
+	}
 	$this->{'HANDLE'} = undef;
 }
 
@@ -107,7 +109,9 @@ sub Close
 	my $this = shift;
 	
 	my $handle = $this->{'HANDLE'};
-	close($handle) if ($handle);
+	if ($handle) {
+		close($handle);
+	}
 	$this->{'HANDLE'} = undef;
 	#chmod $Sys->Get('PM-TXT'), $path;
 }
@@ -165,10 +169,11 @@ sub Save
 	my ($Sys) = @_;
 	
 	my $fh = $this->Open($Sys) or return;
+	my $subject = $this->{'SUBJECT'};
 	
 	foreach (@{$this->{'SORT'}}) {
-		next if (! defined $this->{'SUBJECT'}->{$_});
-		print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
+		next if (!defined $subject->{$_});
+		print $fh "$_.dat<>$subject->{$_} ($this->{'RES'}->{$_})\n";
 	}
 	
 	truncate($fh, tell($fh));
@@ -192,7 +197,8 @@ sub OnDemand
 	my $this = shift;
 	my ($Sys, $id, $val, $age) = @_;
 	
-	$this->{'SUBJECT'} = {};
+	my $subject = {};
+	$this->{'SUBJECT'} = $subject;
 	$this->{'RES'} = {};
 	$this->{'SORT'} = [];
 	
@@ -205,7 +211,7 @@ sub OnDemand
 		next if ($_ eq '');
 		
 		if ($_ =~ /^(.+?)\.dat<>(.*?) ?\(([0-9]+)\)$/) {
-			$this->{'SUBJECT'}->{$1} = $2;
+			$subject->{$1} = $2;
 			$this->{'RES'}->{$1} = $3;
 			push @{$this->{'SORT'}}, $1;
 			$num++;
@@ -237,8 +243,8 @@ sub OnDemand
 	seek($fh, 0, 0);
 	
 	foreach (@{$this->{'SORT'}}) {
-		next if (! defined $this->{'SUBJECT'}->{$_});
-		print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
+		next if (!defined $subject->{$_});
+		print $fh "$_.dat<>$subject->{$_} ($this->{'RES'}->{$_})\n";
 	}
 	
 	truncate($fh, tell($fh));
@@ -550,7 +556,9 @@ sub GetPosition
 	
 	my $sort = $this->{'SORT'};
 	for (my $i = 0; $i < scalar(@$sort); $i++) {
-		return $i if ($id eq $sort->[$i]);
+		if ($id eq $sort->[$i]) {
+			return $i;
+		}
 	}
 	
 	return -1;
@@ -654,9 +662,10 @@ sub Save
 		seek($fh, 0, 0);
 		binmode($fh);
 		
+		my $subject = $this->{'SUBJECT'};
 		foreach (@{$this->{'SORT'}}) {
-			next if (! defined $this->{'SUBJECT'}->{$_});
-			print $fh "$_.dat<>$this->{'SUBJECT'}->{$_} ($this->{'RES'}->{$_})\n";
+			next if (!defined $subject->{$_});
+			print $fh "$_.dat<>$subject->{$_} ($this->{'RES'}->{$_})\n";
 		}
 		
 		truncate($fh, tell($fh));

@@ -84,7 +84,9 @@ sub Save
 		binmode($fh);
 		
 		print $fh "$this->{'METHOD'}<>$this->{'SUBSTITUTE'}\n";
-		print $fh "$_\n" foreach (@{$this->{'NGWORD'}});
+		foreach (@{$this->{'NGWORD'}}) {
+			print $fh "$_\n";
+		}
 		
 		truncate($fh, tell($fh));
 		close($fh);
@@ -180,9 +182,15 @@ sub Check
 		foreach my $key (@$pList) {
 			my $work = $Form->Get($key);
 			if ($work =~ /\Q$word\E/) {
-				return 2 if ($this->{'METHOD'} eq 'host');
-				return 3 if ($this->{'METHOD'} eq 'disable');
-				return 1;
+				if ($this->{'METHOD'} eq 'host') {
+					return 2;
+				}
+				elsif ($this->{'METHOD'} eq 'disable') {
+					return 3;
+				}
+				else {
+					return 1;
+				}
 			}
 		}
 	}

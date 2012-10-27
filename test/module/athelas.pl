@@ -427,8 +427,10 @@ sub Delete
 	delete $this->{'CONFTYPE'}->{$id};
 	
 	my $order = $this->{'ORDER'};
-	for (my $i = 0 ; $i < scalar(@$order) ; $i++) {
-		splice(@$order, $i--, 1) if ($order->[$i] eq $id);
+	for my $i (reverse(0 .. $#$order)) {
+		if ($order->[$i] eq $id) {
+			splice(@$order, $i, 1);
+		}
 	}
 }
 
@@ -495,7 +497,9 @@ sub Update
 					last;
 				}
 			}
-			$this->Delete($id) if ($exist == 0);
+			if ($exist == 0) {
+				$this->Delete($id);
+			}
 		}
 	}
 }

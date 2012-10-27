@@ -63,12 +63,12 @@ sub Load
 	
 	my $file = '';
 	my $kind = 0;
-	   if ($log eq 'ERR') { $file = 'errs.cgi';		$kind = 1; }	# エラーログ
-	elsif ($log eq 'THR') { $file = 'IP.cgi';		$kind = 2; }	# スレッド作成ログ
-	elsif ($log eq 'WRT') { $file = "$key.cgi";		$kind = 3; }	# 書き込みログ
-	elsif ($log eq 'HST') { $file = "HOST.cgi";		$kind = 5; }	# ホストログ
-	elsif ($log eq 'SMB') { $file = "samba.cgi";	$kind = 6; }	# Sambaログ
-	elsif ($log eq 'SBH') { $file = "houshi.cgi";	$kind = 7; }	# Samba規制ログ
+	if ($log eq 'ERR') { $file = 'errs.cgi';	$kind = 1; }	# エラーログ
+	if ($log eq 'THR') { $file = 'IP.cgi';		$kind = 2; }	# スレッド作成ログ
+	if ($log eq 'WRT') { $file = "$key.cgi";	$kind = 3; }	# 書き込みログ
+	if ($log eq 'HST') { $file = "HOST.cgi";	$kind = 5; }	# ホストログ
+	if ($log eq 'SMB') { $file = "samba.cgi";	$kind = 6; }	# Sambaログ
+	if ($log eq 'SBH') { $file = "houshi.cgi";	$kind = 7; }	# Samba規制ログ
 	
 	$this->{'KIND'} = $kind;
 	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log';
@@ -106,7 +106,7 @@ sub Save
 		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
-			print $fh $_ foreach (@{$this->{'LOG'}});
+			print $fh @{$this->{'LOG'}};
 			truncate($fh, tell($fh));
 			close $fh;
 		}
@@ -181,11 +181,11 @@ sub Set
 		my $nm = ++$this->{'NUM'};
 		
 		my $bf = 0;
-		   if ($kind == 1) { $bf = $nm - $this->{'MAX'}; }			# エラーログ
-		elsif ($kind == 2) { $bf = $nm - $this->{'MAXS'}; }			# スレッドログ
-	#	elsif ($kind == 3) { $bf = $nm - $I->Get('timecount'); }	# 書き込みログ
-		elsif ($kind == 6) { $bf = $nm - $this->{'MAX'}; }			# samba
-		elsif ($kind == 7) { $bf = $nm - $this->{'MAX'}; }			# houshi
+		if ($kind == 1) { $bf = $nm - $this->{'MAX'}; }			# エラーログ
+		if ($kind == 2) { $bf = $nm - $this->{'MAXS'}; }		# スレッドログ
+	#	if ($kind == 3) { $bf = $nm - $I->Get('timecount'); }	# 書き込みログ
+		if ($kind == 6) { $bf = $nm - $this->{'MAX'}; }			# samba
+		if ($kind == 7) { $bf = $nm - $this->{'MAX'}; }			# houshi
 		
 		# 先頭ログの削除
 		splice @$log, 0, $bf;
@@ -255,12 +255,15 @@ sub Search
 	# data1で検索
 	if ($f == 1) {
 		my $num = @{$this->{'LOG'}};
-		for (my $i = $num - 1; $i >= 0; $i--) {
-			$_ = $this->{'LOG'}->[$i];
-			$_ =~ s/[\r\n]+\z//;
-			my ($key, $val) = (split /<>/, $_, -1)[$kind == 3 ? (5, 7) : (1, 3)];
+		for my $i ($num - 1 .. 0) {
+			my $log = $this->{'LOG'}->[$i];
+			$log =~ s/[\r\n]+\z//;
+			
+			my ($key, $val) = (split /<>/, $log, -1)[$kind == 3 ? (5, 7) : (1, 3)];
 			$key =~ s/^.*?(\(.*\)).*?$/$1/;
-			return $val if ($data eq $key);
+			if ($data eq $key) {
+				return $val;
+			}
 		}
 	}
 	else {
@@ -276,28 +279,40 @@ sub Search
 		# host出現数
 		if ($f == 2) {
 			my $num = 0;
-			my $max = scalar(@{$this->{'LOG'}});
-			$count = $max if (! defined $count);
-			for (my $i = $max - 1; $i >= $max - $count && $i >= 0; $i--) {
-				$_ = $this->{'LOG'}->[$i];
-				$_ =~ s/[\r\n]+\z//;
-				my $key = (split /<>/, $_, -1)[$kind == 3 ? 5 : $kind == 5 ? 1 : 3];
+			my $max = scalar(@{$this->{'LOG'}}) - 1;
+			$count = $max if (!defined $count);
+			my $min = 1 + $max - $count;
+			$min = 0 if ($min < 0);
+			
+			for my $i ($max .. $min) {
+				my $log = $this->{'LOG'}->[$i];
+				$log =~ s/[\r\n]+\z//;
+				
+				my $key = (split /<>/, $log, -1)[$kind == 3 ? 5 : $kind == 5 ? 1 : 3];
 				$key =~ s/^.*?\((.*)\).*?$/$1/;
-				$num++ if ($data eq $key);
+				if ($data eq $key) {
+					$num++;
+				}
 			}
 			return $num;
 		}
 		# THR
 		elsif ($f == 3) {
 			my $num = 0;
-			my $max = scalar(@{$this->{'LOG'}});
+			my $max = scalar(@{$this->{'LOG'}}) - 1;
 			$count = $max if (! defined $count);
-			for (my $i = $max - 1; $i >= $max - $count && $i >= 0; $i--) {
-				$_ = $this->{'LOG'}->[$i];
-				$_ =~ s/[\r\n]+\z//;
-				my ($key, $val) = (split /<>/, $_, -1)[1, 3];
+			my $min = 1 + $max - $count;
+			$min = 0 if ($min < 0);
+			
+			for my $i ($max - 1 .. $min) {
+				my $log = $this->{'LOG'}->[$i];
+				$log =~ s/[\r\n]+\z//;
+				
+				my ($key, $val) = (split /<>/, $log, -1)[1, 3];
 				$key =~ s/^.*?(\(.*\)).*?$/$1/;
-				$num++ if ($data eq $val);
+				if ($data eq $val) {
+					$num++;
+				}
 			}
 			return $num;
 		}
@@ -327,12 +342,16 @@ sub IsTime
 	my $nw = time;
 	my $n = scalar(@{$this->{'LOG'}});
 	
-	for (my $i = $n - 1; $i >= 0; $i--) {
-		$_ = $this->{'LOG'}->[$i];
-		$_ =~ s/[\r\n]+\z//;
-		my ($tm, undef, undef, $val) = split(/<>/, $_, -1);
-		next if ($host ne $val);
-		return (($_ = $tmn - ($nw - $tm)) > 0 ? $_ : 0);	# 残り秒数を返す
+	for my $i ($n - 1 .. 0) {
+		my $log = $this->{'LOG'}->[$i];
+		$log =~ s/[\r\n]+\z//;
+		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
+		if ($host eq $val) {
+			# 残り秒数を返す
+			my $rem = $tmn - ($nw - $tm);
+			$rem = 0 if ($rem < 0);
+			return $rem;
+		}
 	}
 	return 0;
 }
@@ -359,23 +378,25 @@ sub IsSamba
 	my $nw = time;
 	my $n = scalar(@{$this->{'LOG'}});
 	my @iplist = ();
+	my $ptm = $nw;
 	
-	for (my $i = $n - 1, my $j = $nw; $i >= 0; $i--) {
-		$_ = $this->{'LOG'}->[$i];
-		$_ =~ s/[\r\n]+\z//;
-		my ($tm, undef, undef, $val) = split(/<>/, $_, -1);
+	for my $i ($n - 1 .. 0) {
+		my $log = $this->{'LOG'}->[$i];
+		$log =~ s/[\r\n]+\z//;
+		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
+		
 		next if ($host ne $val);
-		if ($sb > $j - $tm) {
-			push @iplist, $tm;
-			$j = $tm;
-		}
-		else {
-			last;
-		}
+		last if ($sb <= $ptm - $tm);
+		
+		push @iplist, $tm;
+		$ptm = $tm;
 	}
 	
 	$n = scalar(@iplist);
-	return ($n, ($nw - $iplist[0])) if ($n);
+	if ($n) {
+		return ($n, ($nw - $iplist[0]));
+	}
+	
 	return (0, 0);
 }
 
@@ -401,17 +422,17 @@ sub IsHoushi
 	my $nw = time;
 	my $n = scalar(@{$this->{'LOG'}});
 	
-	for (my $i = $n - 1; $i >= 0; $i--) {
-		$_ = $this->{'LOG'}->[$i];
-		$_ =~ s/[\r\n]+\z//;
-		my ($tm, undef, undef, $val) = split(/<>/, $_, -1);
+	for my $i ($n - 1 .. 0) {
+		my $log = $this->{'LOG'}->[$i];
+		$log =~ s/[\r\n]+\z//;
+		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
+		
 		next if ($host ne $val);
-		if ($houshi * 60 > ($_ = $nw - $tm)) {
-			return (1, $houshi - ($_ - ($_ % 60 || 60)) / 60);
-		}
-		else {
-			last;
-		}
+		
+		my $intv = $nw - $tm;
+		last if ($houshi * 60 <= $intv);
+		
+		return (1, $houshi - ($intv - ($intv % 60 || 60)) / 60);
 	}
 	return (0, 0);
 }
@@ -437,16 +458,14 @@ sub IsTatesugi
 	my $n = scalar(@{$this->{'LOG'}});
 	my $count = 0;
 	
-	for (my $i = $n - 1; $i >= 0; $i--) {
-		$_ = $this->{'LOG'}->[$i];
-		$_ =~ s/[\r\n]+\z//;
-		my $tm = (split(/<>/, $_, -1))[0];
-		if ($hour * 3600 > $nw - $tm) {
-			$count++;
-		}
-		else {
-			last;
-		}
+	for my $i ($n - 1 .. 0) {
+		my $log = $this->{'LOG'}->[$i];
+		$log =~ s/[\r\n]+\z//;
+		
+		my $tm = (split(/<>/, $log, -1))[0];
+		last if ($hour * 3600 <= $nw - $tm);
+		
+		$count++;
 	}
 	return $count;
 }

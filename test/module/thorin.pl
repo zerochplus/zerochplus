@@ -84,7 +84,7 @@ sub Flush
 		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
-			print $fh $_ foreach (@{$this->{'BUFF'}});
+			print $fh @{$this->{'BUFF'}};
 			truncate($fh, tell($fh));
 			close($fh);
 		}
@@ -92,7 +92,7 @@ sub Flush
 	}
 	# •W€o—Í‚Éo—Í
 	else {
-		print $_ foreach (@{$this->{'BUFF'}});
+		print @{$this->{'BUFF'}};
 	}
 }
 

@@ -96,7 +96,9 @@ sub Save
 	my ($Sys) = @_;
 	
 	foreach my $id (keys %{$this->{'TO'}}) {
-		$this->Delete($id) if ($this->IsLimitOut($id));
+		if ($this->IsLimitOut($id)) {
+			$this->Delete($id);
+		}
 	}
 	
 	my $path = '.' . $Sys->Get('INFO') . '/notice.cgi';
@@ -269,7 +271,9 @@ sub IsInclude
 	
 	my @users = split(/\, ?/, $this->{'TO'}->{$id});
 	foreach (@users) {
-		return 1 if ($_ eq $user);
+		if ($_ eq $user) {
+			return 1;
+		}
 	}
 	return 0;
 }
@@ -319,7 +323,9 @@ sub RemoveToUser
 	my @users = split(/\, ?/, $this->{'TO'}->{$id});
 	my @news = ();
 	foreach (@users) {
-		push(@news, $_) if ($_ ne $user);
+		if ($_ ne $user) {
+			push(@news, $_);
+		}
 	}
 	
 	# すべての通知先ユーザが削除されたら、その通知は破棄する
