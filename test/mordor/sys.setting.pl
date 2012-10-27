@@ -221,7 +221,57 @@ sub PrintSystemInfo
 	
 	$SYS->Set('_TITLE', '0ch+ Administrator Information');
 	
+	require Module::CoreList;
+	
+	my $version = $];
+	my $perlpath = $^X;
+	my $filename = $ENV{'SCRIPT_FILENAME'} || $0;
+	my $serverhost = $ENV{'HTTP_HOST'};
+	my $servername = $ENV{'SERVER_NAME'};
+	my $serversoft = $ENV{'SERVER_SOFTWARE'};
+	my $core = $Module::CoreList::version{$version};
+	my @checklist = (qw(
+		Encode
+		Time::HiRes
+		Time::Local
+		Socket
+	), qw(
+		Digest::SHA::PurePerl
+		Net::DNS::Lite
+		List::MoreUtils
+		LWP::UserAgent
+		XML::Simple
+	), qw(
+		Net::DNS
+	));
+	
 	$Page->Print("<br><b>0ch+ BBS - Administrator Script</b>");
+	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	
+	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Å°Perl Version</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Version</td><td>$version</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Perl Path</td><td>$perlpath</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Server Software</td><td>$serversoft</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Server Name</td><td>$servername</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Server Host</td><td>$serverhost</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Script Path</td><td>$filename</td></tr>\n");
+	
+	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Å°Perl Packages (include perllib)</td></tr>\n");
+	foreach my $pkg (@checklist) {
+		my $var = eval("require $pkg;return \${${pkg}::VERSION};");
+		$var = 'undefined' if ($@ || !defined $var);
+		$var = "<b>$var</b>" if (!defined $core->{$pkg} || $core->{$pkg} ne $var);
+		$Page->Print("<tr><td class=\"DetailTitle\">$pkg</td><td>$var</td></tr>\n");
+	}
+	
+	$Page->Print("<tr><td colspan=2></td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\"></td><td></td></tr>\n");
+	
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	
+	$Page->Print("</table>");
+	
 }
 
 #------------------------------------------------------------------------------------------------------------

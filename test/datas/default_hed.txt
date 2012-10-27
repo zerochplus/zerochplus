@@ -6,5 +6,5 @@
 <blockquote style="margin-top:0;font-weight:bold;">
 ･転んでも泣かない<br>
 ･出されたものは残さず食べる<br>
-･Perl使いをを尊重する<br>
+･Perl使いを尊重する<br>
 </blockquote>

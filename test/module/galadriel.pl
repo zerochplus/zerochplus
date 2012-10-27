@@ -876,7 +876,7 @@ sub GetDate
 	my $str = '';
 	$str .= sprintf('%04d/%02d/%02d', $info[5], $info[4], $info[3]);
 	$str .= "($week)" if ($week ne '');
-	$str .= sprintf('%02d:%02d:%02d', $info[2], $info[1], $info[0]);
+	$str .= sprintf(' %02d:%02d:%02d', $info[2], $info[1], $info[0]);
 	
 	# msec�̎擾
 	if ($msect) {

@@ -603,8 +603,8 @@ sub PrintBBSJump
 	# PC—p•\Ž¦
 	else {
 		my $bbsPath = $Conv->MakePath($Sys->Get('BBS_REL'));
-		my $name = $Sys->{'FORM'}->Get('NAME', '');
-		my $mail = $Sys->{'FORM'}->Get('MAIL', '');
+		my $name = $Form->Get('NAME', '');
+		my $mail = $Form->Get('MAIL', '');
 		
 		$Cookie->Set('NAME', $name)	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
 		$Cookie->Set('MAIL', $mail)	if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
