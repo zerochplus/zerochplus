@@ -37,6 +37,10 @@ sub AdminCGI
 	$Sys->Set('BBS', '');
 	$CGI->{'SECINFO'}->Init($Sys);
 	
+	# 夢が広がりんぐ
+	$Sys->Set('ADMIN', $CGI);
+	$Sys->Set('MainCGI', $CGI);
+	
 	# フォーム情報を取得
 	require "./module/samwise.pl";
 	my $Form = SAMWISE->new(0);
@@ -100,8 +104,6 @@ sub SystemSetting
 		'AD_DAT'	=> undef,		# dat情報オブジェクト
 		'USER'		=> undef,		# ログインユーザID
 		'NEWRELEASE'=> undef,		# バージョンチェック
-		'ADMIN'		=> $CGI,		# 夢が広がりんぐ
-		'MainCGI'	=> $CGI,		# 夢が広がりんぐ
 	);
 	
 	require './module/elves.pl';

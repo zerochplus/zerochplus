@@ -96,12 +96,14 @@ sub Initialize
 		'CONV'		=> $Conv,
 		'DAT'		=> $Dat,
 		'PAGE'		=> $Page,
-		'MainCGI'	=> $CGI,
 		'CODE'		=> 'Shift_JIS',
 	);
 	
 	# システム初期化
 	$Sys->Init();
+	
+	# 夢が広がりんぐ
+	$Sys->Set('MainCGI', $CGI);
 	
 	# 起動パラメータの解析
 	my @elem = $Conv->GetArgument(\%ENV);

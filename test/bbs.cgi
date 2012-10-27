@@ -133,8 +133,10 @@ sub Initialize
 		'CONV'		=> $Conv,
 		'PAGE'		=> $Page,
 		'FORM'		=> $Form,
-		'MainCGI'	=> $CGI,		# –²‚ªL‚ª‚è‚ñ‚®
 	);
+	
+	# –²‚ªL‚ª‚è‚ñ‚®
+	$Sys->Set('MainCGI', $CGI);
 	
 	# formî•ñÝ’è
 	$Form->DecodeForm(1);
