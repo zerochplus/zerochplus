@@ -254,13 +254,13 @@ sub Search
 	
 	# data1‚ÅŒŸõ
 	if ($f == 1) {
-		my $num = @{$this->{'LOG'}};
-		for my $i ($num - 1 .. 0) {
+		my $max = scalar(@{$this->{'LOG'}}) - 1;
+		for my $i (reverse(0 .. $max)) {
 			my $log = $this->{'LOG'}->[$i];
 			$log =~ s/[\r\n]+\z//;
 			
 			my ($key, $val) = (split /<>/, $log, -1)[$kind == 3 ? (5, 7) : (1, 3)];
-			$key =~ s/^.*?(\(.*\)).*?$/$1/;
+			$key = $1 if ($key =~ /\((.*)\)/);
 			if ($data eq $key) {
 				return $val;
 			}
@@ -280,16 +280,16 @@ sub Search
 		if ($f == 2) {
 			my $num = 0;
 			my $max = scalar(@{$this->{'LOG'}}) - 1;
-			$count = $max if (!defined $count);
+			$count = $max + 1 if (!defined $count);
 			my $min = 1 + $max - $count;
 			$min = 0 if ($min < 0);
 			
-			for my $i ($max .. $min) {
+			for my $i (reverse($min .. $max)) {
 				my $log = $this->{'LOG'}->[$i];
 				$log =~ s/[\r\n]+\z//;
 				
 				my $key = (split /<>/, $log, -1)[$kind == 3 ? 5 : $kind == 5 ? 1 : 3];
-				$key =~ s/^.*?\((.*)\).*?$/$1/;
+				$key = $1 if ($key =~ /\((.*)\)/);
 				if ($data eq $key) {
 					$num++;
 				}
@@ -300,16 +300,16 @@ sub Search
 		elsif ($f == 3) {
 			my $num = 0;
 			my $max = scalar(@{$this->{'LOG'}}) - 1;
-			$count = $max if (! defined $count);
+			$count = $max + 1 if (! defined $count);
 			my $min = 1 + $max - $count;
 			$min = 0 if ($min < 0);
 			
-			for my $i ($max - 1 .. $min) {
+			for my $i (reverse($min .. $max)) {
 				my $log = $this->{'LOG'}->[$i];
 				$log =~ s/[\r\n]+\z//;
 				
 				my ($key, $val) = (split /<>/, $log, -1)[1, 3];
-				$key =~ s/^.*?(\(.*\)).*?$/$1/;
+				$key = $1 if ($key =~ /\((.*)\)/);
 				if ($data eq $val) {
 					$num++;
 				}
@@ -342,7 +342,7 @@ sub IsTime
 	my $nw = time;
 	my $n = scalar(@{$this->{'LOG'}});
 	
-	for my $i ($n - 1 .. 0) {
+	for my $i (reverse(0 .. $n - 1)) {
 		my $log = $this->{'LOG'}->[$i];
 		$log =~ s/[\r\n]+\z//;
 		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
@@ -380,7 +380,7 @@ sub IsSamba
 	my @iplist = ();
 	my $ptm = $nw;
 	
-	for my $i ($n - 1 .. 0) {
+	for my $i (reverse(0 .. $n - 1)) {
 		my $log = $this->{'LOG'}->[$i];
 		$log =~ s/[\r\n]+\z//;
 		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
@@ -422,7 +422,7 @@ sub IsHoushi
 	my $nw = time;
 	my $n = scalar(@{$this->{'LOG'}});
 	
-	for my $i ($n - 1 .. 0) {
+	for my $i (reverse(0 .. $n - 1)) {
 		my $log = $this->{'LOG'}->[$i];
 		$log =~ s/[\r\n]+\z//;
 		my ($tm, undef, undef, $val) = split(/<>/, $log, -1);
@@ -458,7 +458,7 @@ sub IsTatesugi
 	my $n = scalar(@{$this->{'LOG'}});
 	my $count = 0;
 	
-	for my $i ($n - 1 .. 0) {
+	for my $i (reverse(0 .. $n - 1)) {
 		my $log = $this->{'LOG'}->[$i];
 		$log =~ s/[\r\n]+\z//;
 		
