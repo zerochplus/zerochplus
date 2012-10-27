@@ -2,18 +2,16 @@
 #============================================================================================================
 #
 #	システム管理CGI
-#	admin.cgi
-#	---------------------------------------------------------------------------
-#	2004.01.31 start
 #
 #============================================================================================================
 
+use lib './perllib';
+
 use strict;
 use warnings;
-#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 no warnings 'once';
+#use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 
-BEGIN { use lib './perllib'; }
 
 # CGIの実行結果を終了コードとする
 exit(AdminCGI());
@@ -23,68 +21,62 @@ exit(AdminCGI());
 #	admin.cgiメイン
 #	-------------------------------------------------------------------------------------
 #	@param	なし
-#	@return	なし
+#	@return	エラー番号
 #
 #------------------------------------------------------------------------------------------------------------
 sub AdminCGI
 {
-	my ($Sys, $Form, %SYS);
-	my ($oModule, $modName, $userID, $name, $pass, $upcheck);
-	
 	# システム初期設定
-	SystemSetting(\%SYS);
+	my $CGI = {};
+	SystemSetting($CGI);
 	
 	# 0chシステム情報を取得
 	require "./module/melkor.pl";
-	$Sys = new MELKOR;
+	my $Sys = MELKOR->new;
 	$Sys->Init();
-	$Sys->Set('ADMIN', \%SYS);
-	$SYS{'SECINFO'}->Init($Sys);
-	
 	$Sys->Set('BBS', '');
+	$CGI->{'SECINFO'}->Init($Sys);
 	
 	# フォーム情報を取得
 	require "./module/samwise.pl";
-	$Form = SAMWISE->new(0);
+	my $Form = SAMWISE->new(0);
 	$Form->DecodeForm(0);
 	$Form->Set('FALSE', 0);
 	
-	$name = $Form->Get('UserName', '');
-	$pass = $Form->Get('PassWord', '');
-	
 	# ログインユーザ設定
-	$userID = $SYS{'SECINFO'}->IsLogin($name, $pass);
-	$SYS{'USER'} = $userID;
-	
-	# 処理モジュール名を取得
-	$modName = $Form->Get('MODULE', 'login');
-	$modName = 'login' if (! $userID);
+	my $name = $Form->Get('UserName', '');
+	my $pass = $Form->Get('PassWord', '');
+	my $userID = $CGI->{'SECINFO'}->IsLogin($name, $pass);
+	$CGI->{'USER'} = $userID;
 	
 	# バージョンチェック
-	$upcheck = $Sys->Get('UPCHECK', 1) - 0;
-	$SYS{'NEWRELEASE'}->Init($Sys);
+	my $upcheck = $Sys->Get('UPCHECK', 1) - 0;
+	$CGI->{'NEWRELEASE'}->Init($Sys);
 	if ($upcheck) {
-		$SYS{'NEWRELEASE'}->Set('Interval', 24*60*60*$upcheck);
-		$SYS{'NEWRELEASE'}->Check;
+		$CGI->{'NEWRELEASE'}->Set('Interval', 24*60*60*$upcheck);
+		$CGI->{'NEWRELEASE'}->Check;
 	}
 	
 	# 処理モジュールオブジェクトの生成
+	my $modName = $Form->Get('MODULE', 'login');
+	$modName = 'login' if (!$userID);
 	require "./mordor/$modName.pl";
-	$oModule = new MODULE;
+	my $oModule = MODULE->new;
 	
 	# 表示モード
 	if ($Form->Get('MODE', '') eq 'DISP') {
-		$oModule->DoPrint($Sys, $Form, \%SYS);
+		$oModule->DoPrint($Sys, $Form, $CGI);
 	}
 	# 機能モード
 	elsif ($Form->Get('MODE', '') eq 'FUNC') {
-		$oModule->DoFunction($Sys, $Form, \%SYS);
+		$oModule->DoFunction($Sys, $Form, $CGI);
 	}
 	# ログイン
 	else {
-		$oModule->DoPrint($Sys, $Form, \%SYS);
+		$oModule->DoPrint($Sys, $Form, $CGI);
 	}
-	$SYS{'LOGGER'}->Write();
+	
+	$CGI->{'LOGGER'}->Write();
 	
 	return 0;
 }
@@ -99,24 +91,26 @@ sub AdminCGI
 #------------------------------------------------------------------------------------------------------------
 sub SystemSetting
 {
-	my ($pSYS) = @_;
+	my ($CGI) = @_;
 	
-	%$pSYS = (
+	%$CGI = (
 		'SECINFO'	=> undef,		# セキュリティ情報
 		'LOGGER'	=> undef,		# ログオブジェクト
 		'AD_BBS'	=> undef,		# BBS情報オブジェクト
 		'AD_DAT'	=> undef,		# dat情報オブジェクト
 		'USER'		=> undef,		# ログインユーザID
 		'NEWRELEASE'=> undef,		# バージョンチェック
+		'ADMIN'		=> $CGI,		# 夢が広がりんぐ
+		'MainCGI'	=> $CGI,		# 夢が広がりんぐ
 	);
 	
 	require './module/elves.pl';
 	require './module/imrahil.pl';
 	require './module/newrelease.pl';
 	
-	$pSYS->{'SECINFO'}	= new ARWEN;
-	$pSYS->{'LOGGER'}	= new IMRAHIL;
-	$pSYS->{'LOGGER'}->Open('./info/AdminLog', 100, 2 | 4);
-	$pSYS->{'NEWRELEASE'} = ZP_NEWRELEASE->new;
+	$CGI->{'SECINFO'} = ARWEN->new;
+	$CGI->{'LOGGER'} = IMRAHIL->new;
+	$CGI->{'LOGGER'}->Open('./info/AdminLog', 100, 2 | 4);
+	$CGI->{'NEWRELEASE'} = ZP_NEWRELEASE->new;
 }
 
