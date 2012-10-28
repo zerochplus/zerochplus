@@ -221,15 +221,12 @@ sub PrintSystemInfo
 	
 	$SYS->Set('_TITLE', '0ch+ Administrator Information');
 	
-	require Module::CoreList;
-	
 	my $version = $];
 	my $perlpath = $^X;
 	my $filename = $ENV{'SCRIPT_FILENAME'} || $0;
 	my $serverhost = $ENV{'HTTP_HOST'};
 	my $servername = $ENV{'SERVER_NAME'};
 	my $serversoft = $ENV{'SERVER_SOFTWARE'};
-	my $core = $Module::CoreList::version{$version};
 	my @checklist = (qw(
 		Encode
 		Time::HiRes
@@ -244,6 +241,12 @@ sub PrintSystemInfo
 	), qw(
 		Net::DNS
 	));
+	
+	my $core = {};
+	eval {
+		require Module::CoreList;
+		$core = $Module::CoreList::version{$version};
+	};
 	
 	$Page->Print("<br><b>0ch+ BBS - Administrator Script</b>");
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
