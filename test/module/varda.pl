@@ -155,7 +155,7 @@ sub CreateIIndex
 		
 		my $name = $Threads->Get('SUBJECT', $key);
 		my $res = $Threads->Get('RES', $key);
-		my $path = $oConv->CreatePath($Sys, 1, $bbs, $key, 'l10');
+		my $path = $oConv->CreatePath($Sys, 'O', $bbs, $key, 'l10');
 		
 		$Page->Print("<a href=\"$path\">$i: $name($res)</a><br> \n");
 	}
