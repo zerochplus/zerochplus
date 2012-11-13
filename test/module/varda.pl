@@ -327,18 +327,20 @@ HEAD
 		$Page->Print("alink=\"$work[3]\" vlink=\"$work[4]\" background=\"$work[5]\">\n");
 
 	}
-	$Page->Print("<a name=\"top\"></a>\n<div align=\"center\">");
+	$Page->Print("<a name=\"top\"></a>\n");
 	
 	# 看板画像表示あり
 	if ($image ne '') {
+		$Page->Print("<div align=\"center\">");
 		# 看板画像からのリンクあり
 		if ($link ne '') {
-			$Page->Print("<a href=\"$link\"><img src=\"$image\" border=\"0\" alt=\"$link\"></a></div>\n");
+			$Page->Print("<a href=\"$link\"><img src=\"$image\" border=\"0\" alt=\"$link\"></a>");
 		}
 		# 看板画像にリンクはなし
 		else {
-			$Page->Print("<img src=\"$image\" border=\"0\" alt=\"$link\"></div>\n");
+			$Page->Print("<img src=\"$image\" border=\"0\" alt=\"$link\">");
 		}
+		$Page->Print("</div>\n");
 	}
 	
 	# ヘッダテーブルの表示
