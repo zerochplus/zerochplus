@@ -119,9 +119,9 @@ test/
 　perllibに含めてあるパッケージについては後述。
 
 ■バージョンアップについて
-　バージョンアップにあたってはこちら側からは何もアプローチすることはできないので、こまめ
-に公式サイトを見ていただいてアップデートしていただく形になります。
-　皆様にはお手数をお掛けしますが、よろしくおねがいします。
+　0.7.0からバージョンアップの際には管理画面にて通知するようになりました。
+　セキュリティ修正を含むアップデートも多々ありますのでお手数かと思いますが、こまめなアッ
+プデートをよろしくおねがいします。
 
 
 ■ヘルプ・サポート
@@ -164,7 +164,7 @@ a pure-perl DNS resolver with support for timeout
     Author:     Kazuho Oku <kazuhooku@gmail.com>
     License:    Artistic License
     CPAN:       http://search.cpan.org/dist/Net-DNS-Lite-0.09/
-    
+
 List-MoreUtils
 Provide the stuff missing in List::Util
     Version:    0.33
