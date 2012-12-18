@@ -258,7 +258,6 @@ HTML
 <hr>
 
 <div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $version
 </div>
 
@@ -588,8 +587,7 @@ FORM
 	
 	$Page->Print(<<FOOT);
 <div style="margin-top:1.2em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
-<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> <a href="http://zerochplus.sourceforge.jp/">プラス</a>
+<a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 BBS.CGI - $ver (Perl)
 @{[ $Sys->Get('BBQ') ? '+<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>' : '' ]}
 @{[ $Sys->Get('BBX') ? '+BBX' : '' ]}

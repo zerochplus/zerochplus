@@ -462,9 +462,8 @@ HTML
 	
 	$Page->Print(<<HTML);
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $ver<br>
-<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
+<a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
 
 </body>
@@ -586,9 +585,8 @@ sub PrintReadSearch
 	
 	$Page->Print(<<HTML);
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $var<br>
-<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
+<a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
 
 </body>
@@ -689,9 +687,8 @@ sub PrintDiscovery
 <hr>
 
 <div style="margin-top:4em;">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 READ.CGI - $ver<br>
-<a href="http://0ch.mine.nu/">ぜろちゃんねる</a> :: <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
+<a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 </div>
 
 </body>

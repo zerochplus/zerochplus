@@ -273,7 +273,7 @@ sub InitSystemValue
 		'DEFHOUSHI'	=> 60,										# Samba奉仕時間(分)デフォルト値
 		'BANNER'	=> 1,										# read.cgi他の告知欄の表示
 		'KAKIKO'	=> 1,										# 2重かきこですか？？
-		'COUNTER'	=> '1002000420550000',						# ofuda.cc アカウント
+		'COUNTER'	=> '',										# ofuda.cc アカウント
 		'PRTEXT'	=> 'ぜろちゃんねるプラス',					# PR欄の表示文字列
 		'PRLINK'	=> 'http://zerochplus.sourceforge.jp/',		# PR欄のリンクURL
 		'TRIP12'	=> 1,										# 12桁トリップを変換するかどうか
