@@ -286,7 +286,7 @@ sub PrintGroupSetting
 		@user = split(/\,/, (defined ($_ = $Group->Get('CAPS', $Form->Get('SELECT_CAPGROUP'))) ? $_ : ''));
 		
 		# 権限番号マッピング配列を作成
-		for ($i = 0 ; $i < 19 ; $i++) {
+		for ($i = 0 ; $i < 20 ; $i++) {
 			$authNum[$i] = '';
 		}
 		foreach $num (@auth) {
@@ -298,7 +298,7 @@ sub PrintGroupSetting
 		$name = '';
 		$expl = '';
 		$color = '';
-		for ($i = 0 ; $i < 19 ; $i++) {
+		for ($i = 0 ; $i < 20 ; $i++) {
 			$authNum[$i] = '';
 		}
 	}
@@ -338,6 +338,7 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_FIXHANLDLE $authNum[16] value=on>コテハン★表\示<br>");
 	$Page->Print("<input type=checkbox name=C_SAMBA $authNum[17] value=on>Samba規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_PROXY $authNum[18] value=on>プロキシ規制解除<br>");
+	$Page->Print("<input type=checkbox name=C_JPHOST $authNum[19] value=on>海外ホスト規制解除<br>");
 	$Page->Print("</td>\n<td valign=top>");
 	
 	# 所属ユーザ一覧表示
@@ -535,10 +536,11 @@ sub FunctionGroupSetting
 	$authNum[16]	= $Form->Equal('C_FIXHANLDLE', 'on') ? 1 : 0;
 	$authNum[17]	= $Form->Equal('C_SAMBA', 'on') ? 1 : 0;
 	$authNum[18]	= $Form->Equal('C_PROXY', 'on') ? 1 : 0;
+	$authNum[19]	= $Form->Equal('C_JPHOST', 'on') ? 1 : 0;
 	
-	for ($i = 1 ; $i < 20 ; $i++) {
-		if ($authNum[$i - 1]){
-			$auth .= "$i,";
+	for ($i = 0 ; $i < 20 ; $i++) {
+		if ($authNum[$i]){
+			$auth .= ''.($i+1).',';
 		}
 	}
 	$auth = substr($auth, 0, length($auth) - 1);

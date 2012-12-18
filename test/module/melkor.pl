@@ -284,7 +284,7 @@ sub InitSystemValue
 		
 		# DNSBLÝ’è
 		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
-		'BBX'		=> 1,										# BBX(bbx.2ch.net)
+		'BBX'		=> 0,										# BBX(bbx.2ch.net)
 		'SPAMCH'	=> 1,										# ƒXƒpƒ€‚¿‚á‚ñ‚Õ‚é[
 	);
 	

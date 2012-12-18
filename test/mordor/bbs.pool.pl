@@ -241,8 +241,8 @@ sub PrintThreadList
 	$Page->Print("<input type=button value=\"　更新　\" $common2,'UPDATE')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\" 全更新 \" $common2,'UPDATEALL')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　復帰　\" $common,'REPARE')\"> ")		if ($isRepare);
-	$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\"> ")		if ($isDelete);
 	$Page->Print("<input type=button value=\"過去ログ化\" $common2,'CREATE')\"> ")	if ($isCreate);
+	$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\"> ")		if ($isDelete);
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 	

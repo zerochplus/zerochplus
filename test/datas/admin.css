@@ -181,3 +181,7 @@ div.LoginForm	{
 					text-decoration: underline;
 				}
 
+input.delete	{
+					float: right;
+					color: red;
+				}

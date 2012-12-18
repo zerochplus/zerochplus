@@ -433,7 +433,9 @@ sub IsRegulation
 	# JPホスト以外規制
 	if (!$islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
 		if ($host !~ /\.jp$/i) {
-			return 207;
+			if (!$oSEC->IsAuthority($capID, 20, $bbs)) {
+				return 207;
+			}
 		}
 	}
 	

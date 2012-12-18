@@ -230,7 +230,7 @@ sub PrintKakoLogList
 	$Page->Print("<tr><td colspan=4 align=right>");
 	$Page->Print("<input type=button value=\"情報更新\" $common,'UPDATEINFO')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"index更新\" $common,'UPDATEIDX')\"> ")	if ($isUpdate);
-	$Page->Print("<input type=button value=\"　削除　\" $common,'REMOVE')\"> ")		if ($isDelete);
+	$Page->Print("<input type=button value=\"　削除　\" $common,'REMOVE')\" class=\"delete\"> ")		if ($isDelete);
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 }

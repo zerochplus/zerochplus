@@ -264,7 +264,7 @@ sub PrintBBSList
 	$Page->Print("<input type=button value=\"カテゴリ変更\" $common2,'CATCHANGE')\"> ")	if (1);
 	$Page->Print("<input type=button value=\"情報更新\" $common1,'UPDATE')\"> ")		if ($isSysad);
 	$Page->Print("<input type=button value=\"index更新\" $common1,'UPDATEBBS')\"> ")	if (1);
-	$Page->Print("<input type=button value=\"　削除　\" $common2,'DELETE')\">")			if ($isSysad);
+	$Page->Print("<input type=button value=\"　削除　\" $common2,'DELETE')\" class=\"delete\"> ")		if ($isSysad);
 	$Page->Print("</td></tr></table>\n");
 }
 
