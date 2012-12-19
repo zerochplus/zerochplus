@@ -226,11 +226,11 @@ sub GetFolderHierarchy
 		if (-d "$path/$elem" && $elem ne '.' && $elem ne '..') {
 			my %folders = ();
 			GetFolderHierarchy("$path/$elem", \%folders);
-			if (keys(%folders) > 0) {
+			if (scalar(keys(%folders)) > 0) {
 				$pHash->{$elem} = \%folders;
 			}
 			else {
-				delete $pHash->{$elem};
+				$pHash->{$elem} = undef; # don't delete
 			}
 		}
 	}

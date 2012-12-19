@@ -271,7 +271,7 @@ sub UpdateInfo
 		my @fileList = ();
 		EARENDIL::GetFileList("$path/$dir", \@fileList, '([0-9]+)\.html');
 		Add($this, 0, 0, 0, $dir);
-		foreach my $file (@fileList) {
+		foreach my $file (sort @fileList) {
 			my @elem = split(/\./, $file);
 			my $subj = GetThreadSubject("$path/$dir/$file");
 			if ($subj ne '') {
@@ -481,6 +481,7 @@ HTML
 <hr>
 
 <div align="right">
+<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $version
 </div>
 </body>
