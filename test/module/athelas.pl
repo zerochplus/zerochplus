@@ -87,6 +87,7 @@ sub Load
 			$this->{'CONFIG'}->{$id} = {};
 			$this->{'CONFTYPE'}->{$id} = {};
 			push @{$this->{'ORDER'}}, $id;
+			$this->SetDefaultConfig($id);
 			$this->LoadConfig($id);
 		}
 	}
@@ -225,7 +226,7 @@ sub SetDefaultConfig
 	my $file = $this->{'FILE'}->{$id};
 	my $className = undef;
 	
-	if ($file =~ /^(0ch_.*)\.pl$/) {
+	if ($file =~ /^0ch_(.*)\.pl$/) {
 		$className = "ZPL_$1";
 	}
 	else {

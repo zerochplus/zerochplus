@@ -751,7 +751,7 @@ sub PrintPluginOptionSetting
 {
 	my ($Page, $SYS, $Form) = @_;
 	my ($common, $Plugin, $Config, %conftype);
-	my ($id, $file, $className, $plugin, $conf);
+	my ($id, $file, $className, $conf);
 	
 	$id = $Form->Get('PLGID');
 	
@@ -767,8 +767,8 @@ sub PrintPluginOptionSetting
 	require "./plugin/$file";
 	$file =~ /^0ch_(.*)\.pl$/;
 	$className = "ZPL_$1";
-	$plugin = new $className;
 	if ($className->can('getConfig')) {
+		my $plugin = $className->new;
 		$conf = $plugin->getConfig();
 	}
 	
