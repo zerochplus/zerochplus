@@ -36,7 +36,7 @@ sub ReadCGI
 	$Page = new THORIN;
 	
 	# 初期化・準備に成功したら内容表示
-	if (($err = Initialize(\%SYS, $Page)) == 0) {
+	if (($err = Initialize(\%SYS, $Page)) == $ZP::E_SUCCESS) {
 		# ヘッダ表示
 		PrintReadHead(\%SYS, $Page);
 		
@@ -52,7 +52,7 @@ sub ReadCGI
 	# 初期化に失敗したらエラー表示
 	else {
 		# 対象スレッドが見つからなかった場合は探索画面を表示する
-		if ($err == 1003) {
+		if ($err == $ZP::E_PAGE_FINDTHREAD) {
 			PrintReadSearch(\%SYS, $Page, $err);
 		}
 		# それ以外は通常エラー
@@ -112,12 +112,12 @@ sub Initialize
 	
 	# BBS指定がおかしい
 	if (! defined $elem[0] || $elem[0] eq '') {
-		return 1001;
+		return $ZP::E_READ_R_INVALIDBBS;
 	}
 	# スレッドキー指定がおかしい
 	elsif (! defined $elem[1] || $elem[1] eq '' || ($elem[1] =~ /[^0-9]/) ||
 			(length($elem[1]) != 10 && length($elem[1]) != 9)) {
-		return 1002;
+		return $ZP::E_READ_R_INVALIDKEY;
 	}
 	
 	# システム変数設定
@@ -134,13 +134,13 @@ sub Initialize
 	
 	# datファイルの読み込みに失敗
 	if ($oDAT->Load($oSYS, $path, 1) == 0) {
-		return 1003;
+		return $ZP::E_READ_FAILEDLOADDAT;
 	}
 	$oDAT->Close();
 	
 	# 設定ファイルの読み込みに失敗
 	if ($oSET->Load($oSYS) == 0) {
-		return 1004;
+		return $ZP::E_READ_FAILEDLOADSET;
 	}
 	
 	# 表示開始終了位置の設定
@@ -148,7 +148,7 @@ sub Initialize
 				$oSYS, $oDAT, $elem[2], $elem[3], $elem[4]);
 	$oSYS->SetOption($elem[2], $regs[0], $regs[1], $elem[5], $elem[6]);
 	
-	return 0;
+	return $ZP::E_SUCCESS;
 }
 
 #------------------------------------------------------------------------------------------------------------

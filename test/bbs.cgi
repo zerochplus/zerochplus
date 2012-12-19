@@ -35,7 +35,7 @@ sub BBSCGI
 	my $err = Initialize($CGI, $Page);
 	
 	# 初期化に成功したら書き込み処理を開始
-	if ($err == 0) {
+	if ($err == $ZP::E_SUCCESS) {
 		my $oSys = $CGI->{'SYS'};
 		my $oForm = $CGI->{'FORM'};
 		my $oSet = $CGI->{'SET'};
@@ -47,7 +47,7 @@ sub BBSCGI
 		
 		$err = $WriteAid->Write();
 		# 書き込みに成功したら掲示板構成要素を更新する
-		if ($err == 0) {
+		if ($err == $ZP::E_SUCCESS) {
 			if (!$oSys->Equal('FASTMODE', 1)) {
 				require './module/varda.pl';
 				my $BBSAid = VARDA->new;
@@ -65,24 +65,24 @@ sub BBSCGI
 	}
 	else {
 		# スレッド作成画面表示
-		if ($err == 9000) {
+		if ($err == $ZP::E_PAGE_THREAD) {
 			PrintBBSThreadCreate($CGI, $Page);
-			$err = 0;
+			$err = $ZP::E_SUCCESS;
 		}
 		# cookie確認画面表示
-		elsif ($err == 9001) {
+		elsif ($err == $ZP::E_PAGE_COOKIE) {
 			PrintBBSCookieConfirm($CGI, $Page);
-			$err = 0;
+			$err = $ZP::E_SUCCESS;
 		}
 		# 書き込み確認画面表示
-		elsif ($err == 9002) {
+		elsif ($err == $ZP::E_PAGE_WRITE) {
 			PrintBBSWriteConfirm($CGI, $Page);
-			$err = 0;
+			$err = $ZP::E_SUCCESS;
 		}
 		# 携帯からのスレッド作成画面表示
-		elsif ($err == 9003) {
+		elsif ($err == $ZP::E_PAGE_THREADMOBILE) {
 			PrintBBSMobileThreadCreate($CGI, $Page);
-			$err = 0;
+			$err = $ZP::E_SUCCESS;
 		}
 		# エラー画面表示
 		else {
@@ -122,7 +122,7 @@ sub Initialize
 	my $Cookie = RADAGAST->new;
 	
 	# システム情報設定
-	return 990 if ($Sys->Init());
+	return $ZP::E_SYSTEM_ERROR if ($Sys->Init());
 	
 	my $Form = SAMWISE->new($Sys->Get('BBSGET'));
 	
@@ -165,7 +165,7 @@ sub Initialize
 		my $product = $Conv->GetProductInfo($client);
 		
 		if (!defined $product) {
-			return 950;
+			return $ZP::E_POST_NOPRODUCT;
 		}
 		
 		$Sys->Set('KOYUU', $product);
@@ -173,23 +173,23 @@ sub Initialize
 	
 	# SETTING.TXTの読み込み
 	if (!$Set->Load($Sys)) {
-		return 999;
+		return $ZP::E_POST_NOTEXISTBBS;
 	}
 	
 	# 携帯からのスレッド作成フォーム表示
 	# $S->Equal('AGENT', 'O') && 
 	if ($Form->Equal('mb', 'on') && $Form->Equal('thread', 'on')) {
-		return 9003;
+		return $ZP::E_PAGE_THREADMOBILE;
 	}
 	
 	# form情報にkeyが存在したらレス書き込み
 	if ($Form->IsExist('key'))	{ $Sys->Set('MODE', 2); }
-	else								{ $Sys->Set('MODE', 1); }
+	else						{ $Sys->Set('MODE', 1); }
 	
 	# スレッド作成モードでMESSAGEが無い：スレッド作成画面
 	if ($Sys->Equal('MODE', 1)) {
 		if (!$Form->IsExist('MESSAGE')) {
-			return 9000;
+			return $ZP::E_PAGE_THREAD;
 		}
 		$Form->Set('key', time);
 		$Sys->Set('KEY', $Form->Get('key'));
@@ -200,21 +200,21 @@ sub Initialize
 		if ($Set->Equal('SUBBBS_CGI_ON', 1)) {
 			# 環境変数取得失敗
 			if (!$Cookie->Init()) {
-				return 9001;
+				return $ZP::E_PAGE_COOKIE;
 			}
 			
 			# 名前欄cookie
 			if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked') && !$Cookie->IsExist('NAME')) {
-				return 9001;
+				return $ZP::E_PAGE_COOKIE;
 			}
 			# メール欄cookie
 			if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked') && !$Cookie->IsExist('MAIL')) {
-				return 9001;
+				return $ZP::E_PAGE_COOKIE;
 			}
 		}
 	}
 	
-	return 0;
+	return $ZP::E_SUCCESS;
 }
 
 #------------------------------------------------------------------------------------------------------------

@@ -101,16 +101,16 @@ sub Write
 	# 書き込み前準備
 	$this->ReadyBeforeCheck();
 	
-	my $err = 0;
+	my $err = $ZP::E_SUCCESS;
 	
 	# 入力内容チェック(名前、メール)
-	return $err if ($err = $this->NormalizationNameMail());
+	return $err if (($err = $this->NormalizationNameMail()) != $ZP::E_SUCCESS);
 	
 	# 入力内容チェック(本文)
-	return $err if ($err = $this->NormalizationContents());
+	return $err if (($err = $this->NormalizationContents()) != $ZP::E_SUCCESS);
 	
 	# 規制チェック
-	return $err if ($err = $this->IsRegulation());
+	return $err if (($err = $this->IsRegulation()) != $ZP::E_SUCCESS);
 	
 	
 	# データの書き込み
@@ -123,13 +123,13 @@ sub Write
 	
 	# 書き込み直前処理
 	$err = $this->ReadyBeforeWrite(ARAGORN::GetNumFromFile($oSys->Get('DATPATH')) + 1);
-	return $err if ($err);
+	return $err if ($err != $ZP::E_SUCCESS);
 	
 	# レス要素の取得
 	my @elem = ();
 	$oForm->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 	
-	$err = 0;
+	$err = $ZP::E_SUCCESS;
 	my $id	 = $oConv->MakeID($oSys->Get('SERVER'), $oSys->Get('CLIENT'), $oSys->Get('KOYUU'), $oSys->Get('BBS'), 8);
 	my $date = $oConv->GetDate($oSet, $oSys->Get('MSEC'));
 	$date .= $oConv->GetIDPart($oSet, $oForm, $this->{'SECURITY'}, $id, $oSys->Get('CAPID'), $oSys->Get('KOYUU'), $oSys->Get('AGENT'));
@@ -154,8 +154,8 @@ sub Write
 	
 	# datファイルへ直接書き込み
 	my $resNum = 0;
-	$err = ARAGORN::DirectAppend($oSys, $datPath, $data2);
-	if ($err == 0) {
+	my $err2 = ARAGORN::DirectAppend($oSys, $datPath, $data2);
+	if ($err2 == 0) {
 		# レス数が最大数を超えたらover設定をする
 		$resNum = ARAGORN::GetNumFromFile($datPath);
 		if ($resNum >= $oSys->Get('RESMAX')) {
@@ -168,12 +168,14 @@ sub Write
 		SaveHistory($oSys, $oForm, ARAGORN::GetNumFromFile($datPath));
 	}
 	# datファイル追記失敗
-	else {
-		$err = 999 if ($err == 1);
-		$err = 200 if ($err == 2);
+	elsif ($err2 == 1) {
+		$err = $ZP::E_POST_NOTEXISTDAT;
+	}
+	elsif ($err2 == 2) {
+		$err = $ZP::E_LIMIT_STOPPEDTHREAD;
 	}
 	
-	if ($err == 0) {
+	if ($err == $ZP::E_SUCCESS) {
 		# subject.txtの更新
 		# スレッド作成モードなら新規に追加する
 		if ($oSys->Equal('MODE', 1)) {
@@ -280,10 +282,10 @@ sub ReadyBeforeWrite
 		my $koyuu2 = ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef);
 		my $check = $vUser->Check($host, $addr, $koyuu2);
 		if ($check == 4) {
-			return 601;
+			return $ZP::E_REG_NGUSER;
 		}
 		elsif ($check == 2) {
-			return 601 if ($from !~ /$host/i); # $hostは正規表現
+			return $ZP::E_REG_NGUSER if ($from !~ /$host/i); # $hostは正規表現
 			$Form->Set('FROM', "</b>[´･ω･｀] <b>$from");
 		}
 		
@@ -295,7 +297,7 @@ sub ReadyBeforeWrite
 		
 		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
 		if ($check == 3) {
-			return 600;
+			return $ZP::E_REG_NGWORD;
 		}
 		elsif ($check == 1) {
 			$ngWord->Method($Form, \@checkKey);
@@ -396,23 +398,23 @@ sub IsRegulation
 		require './module/gondor.pl';
 		
 		# 移転スレッド
-		return 202 if (ARAGORN::IsMoved($datPath));
+		return $ZP::E_LIMIT_MOVEDTHREAD if (ARAGORN::IsMoved($datPath));
 		
 		# レス最大数
-		return 201 if ($oSYS->Get('RESMAX') < ARAGORN::GetNumFromFile($datPath));
+		return $ZP::E_LIMIT_OVERMAXRES if ($oSYS->Get('RESMAX') < ARAGORN::GetNumFromFile($datPath));
 		
 		# datファイルサイズ制限
 		if ($oSET->Get('BBS_DATMAX')) {
 			my $datSize = int((stat $datPath)[7] / 1024);
 			if ($oSET->Get('BBS_DATMAX') < $datSize) {
-				return 206;
+				return $ZP::E_LIMIT_OVERDATSIZE;
 			}
 		}
 	}
 	# REFERERチェック
 	if ($oSET->Equal('BBS_REFERER_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsReferer($this->{'SYS'}, \%ENV)) {
-			return 998;
+			return $ZP::E_POST_INVALIDREFERER;
 		}
 	}
 	# PROXYチェック
@@ -420,21 +422,21 @@ sub IsRegulation
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			if (!$oSEC->IsAuthority($capID, 19, $bbs)) {
-				return 997;
+				return $ZP::E_POST_DNSBL;
 			}
 		}
 	}
 	# 読取専用
 	if (!$oSET->Equal('BBS_READONLY', 'none')) {
 		if (!$oSEC->IsAuthority($capID, 13, $bbs)) {
-			return 203;
+			return $ZP::E_LIMIT_READONLY;
 		}
 	}
 	# JPホスト以外規制
 	if (!$islocalip && $oSET->Equal('BBS_JP_CHECK', 'checked')) {
 		if ($host !~ /\.jp$/i) {
 			if (!$oSEC->IsAuthority($capID, 20, $bbs)) {
-				return 207;
+				return $ZP::E_REG_NOTJPHOST;
 			}
 		}
 	}
@@ -451,13 +453,13 @@ sub IsRegulation
 		# スレッド作成(携帯から)
 		if ($client & $ZP::C_MOBILE) {
 			if (!$oSEC->IsAuthority($capID, 16, $bbs)) {
-				return 204;
+				return $ZP::E_LIMIT_MOBILETHREAD;
 			}
 		}
 		# スレッド作成(キャップのみ)
 		if ($oSET->Equal('BBS_THREADCAPONLY', 'checked')) {
 			if (!$oSEC->IsAuthority($capID, 9, $bbs)) {
-				return 504;
+				return $ZP::E_REG_THREADCAPONLY;
 			}
 		}
 		# スレッド作成(スレッド立てすぎ)
@@ -469,10 +471,10 @@ sub IsRegulation
 			my $tateCount = $oSET->Get('BBS_TATESUGI_COUNT', '0') - 0;
 			my $checkCount = $oSET->Get('BBS_THREAD_TATESUGI', '0') - 0;
 			if ($tateHour ne 0 && $LOG->IsTatesugi($tateHour) ge $tateCount) {
-				return 500;
+				return $ZP::E_REG_MANYTHREAD;
 			}
 			if ($LOG->Search($koyuu, 3, $mode, $host, $checkCount)) {
-				return 500;
+				return $ZP::E_REG_MANYTHREAD;
 			}
 		}
 		$LOG->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu, undef, $mode);
@@ -509,7 +511,7 @@ sub IsRegulation
 					my ($ishoushi, $htm) = $LOGh->IsHoushi($Houshi, $koyuu);
 					if ($ishoushi) {
 						$oSYS->Set('WAIT', $htm);
-						return 507;
+						return $ZP::E_REG_SAMBA_STILL;
 					}
 				}
 				
@@ -528,17 +530,17 @@ sub IsRegulation
 				$LOGh->Set($oSET, $oSYS->Get('KEY'), $oSYS->Get('VERSION'), $koyuu);
 				$LOGh->Save($oSYS);
 				$oSYS->Set('WAIT', $Houshi);
-				return 507;
+				return $ZP::E_REG_SAMBA_LISTED;
 			}
 			elsif ($n) {
 				$oSYS->Set('SAMBATIME', $Samba);
 				$oSYS->Set('WAIT', $tm);
 				$oSYS->Set('SAMBA', $n);
-				return ($n > 3 && $Houshi ? 506 : 505);
+				return ($n > 3 && $Houshi ? $ZP::E_REG_SAMBA_WARNING : $ZP::E_REG_SAMBA_CAUTION);
 			}
 			elsif ($tm > 0) {
 				$oSYS->Set('WAIT', $tm);
-				return 503;
+				return $ZP::E_REG_NOTIMEPOST;
 			}
 		}
 		
@@ -549,7 +551,7 @@ sub IsRegulation
 				$LOG->Load($oSYS, 'HST');
 				my $cnt = $LOG->Search($koyuu, 2, $mode, $host, $oSET->Get('timecount'));
 				if ($cnt >= $oSET->Get('timeclose')) {
-					return 501;
+					return $ZP::E_REG_NOBREAKPOST;
 				}
 			}
 		}
@@ -559,7 +561,7 @@ sub IsRegulation
 				my $LOG = PEREGRIN->new;
 				$LOG->Load($oSYS, 'WRT', $oSYS->Get('KEY'));
 				if ($LOG->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
-					return 502;
+					return $ZP::E_REG_DOUBLEPOST;
 				}
 			}
 		}
@@ -571,7 +573,7 @@ sub IsRegulation
 	# パスを保存
 	$oSYS->Set('DATPATH', $datPath);
 	
-	return 0;
+	return $ZP::E_SUCCESS;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -663,11 +665,11 @@ sub NormalizationNameMail
 	
 	# スレッド作成時
 	if ($Sys->Equal('MODE', 1)) {
-		return 150 if ($subject eq '');
+		return $ZP::E_FORM_NOSUBJECT if ($subject eq '');
 		# サブジェクト欄の文字数確認
 		if (!$oSEC->IsAuthority($capID, 1, $bbs)) {
 			if ($oSET->Get('BBS_SUBJECT_COUNT') < length($subject)) {
-				return 101;
+				return $ZP::E_FORM_LONGSUBJECT;
 			}
 		}
 	}
@@ -675,19 +677,19 @@ sub NormalizationNameMail
 	# 名前欄の文字数確認
 	if (!$oSEC->IsAuthority($capID, 2, $bbs)) {
 		if ($oSET->Get('BBS_NAME_COUNT') < length($name)) {
-			return 101;
+			return $ZP::E_FORM_LONGNAME;
 		}
 	}
 	# メール欄の文字数確認
 	if (!$oSEC->IsAuthority($capID, 3, $bbs)) {
 		if ($oSET->Get('BBS_MAIL_COUNT') < length($mail)) {
-			return 102;
+			return $ZP::E_FORM_LONGMAIL;
 		}
 	}
 	# 名前欄の入力確認
 	if (!$oSEC->IsAuthority($capID, 7, $bbs)) {
 		if ($oSET->Equal('NANASHI_CHECK', 'checked') && $name eq '') {
-			return 152;
+			return $ZP::E_FORM_NONAME;
 		}
 	}
 	
@@ -696,7 +698,7 @@ sub NormalizationNameMail
 	$Form->Set('mail', $mail);
 	$Form->Set('subject', $subject);
 	
-	return 0;
+	return $ZP::E_SUCCESS;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -729,30 +731,30 @@ sub NormalizationContents
 	my ($ln, $cl) = $oConv->GetTextInfo(\$text);
 	
 	# 本文が無い
-	return 151 if ($text eq '');
+	return $ZP::E_FORM_NOTEXT if ($text eq '');
 	
 	# 本文が長すぎ
 	if (!$oSEC->IsAuthority($capID, 4, $bbs)) {
 		if ($oSET->Get('BBS_MESSAGE_COUNT') < length($text)) {
-			return 103;
+			return $ZP::E_FORM_LONGTEXT;
 		}
 	}
 	# 改行が多すぎ
 	if (!$oSEC->IsAuthority($capID, 5, $bbs)) {
 		if (($oSET->Get('BBS_LINE_NUMBER') * 2) < $ln) {
-			return 105;
+			return $ZP::E_FORM_MANYLINE;
 		}
 	}
 	# 1行が長すぎ
 	if (!$oSEC->IsAuthority($capID, 6, $bbs)) {
 		if ($oSET->Get('BBS_COLUMN_NUMBER') < $cl) {
-			return 104;
+			return $ZP::E_FORM_LONGLINE;
 		}
 	}
 	# アンカーが多すぎ
 	if ($oSYS->Get('ANKERS')) {
 		if ($oConv->IsAnker(\$text, $oSYS->Get('ANKERS'))) {
-			return 106;
+			return $ZP::E_FORM_MANYANCHOR;
 		}
 	}
 	
@@ -766,7 +768,7 @@ sub NormalizationContents
 	
 	$Form->Set('MESSAGE', $text);
 	
-	return 0;
+	return $ZP::E_SUCCESS;
 }
 
 #------------------------------------------------------------------------------------------------------------
