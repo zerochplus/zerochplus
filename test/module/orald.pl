@@ -111,8 +111,14 @@ sub Print
 	my $message = $this->{'MESSAGE'}->{$err};
 	
 	# エラーメッセージの置換
+	my $sanitize = sub {
+		$_[0] =~ s/&/&amp;/g;
+		$_[0] =~ s/</&lt;/g;
+		$_[0] =~ s/>/&gt;/g;
+		return $_[0];
+	};
 	$message =~ s/\\n/\n/g;
-	$message =~ s/{!(.*?)!}/$Sys->Get($1, '')/ge;
+	$message =~ s/{!(.*?)!}/&$sanitize($Sys->Get($1, ''))/ge;
 	
 	# リモートホストの取得
 	my $koyuu = $Sys->Get('KOYUU');
