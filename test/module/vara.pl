@@ -422,7 +422,7 @@ sub IsRegulation
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			if (!$oSEC->IsAuthority($capID, 19, $bbs)) {
-				return $ZP::E_POST_DNSBL;
+				return $ZP::E_REG_DNSBL;
 			}
 		}
 	}
@@ -459,7 +459,7 @@ sub IsRegulation
 		# スレッド作成(キャップのみ)
 		if ($oSET->Equal('BBS_THREADCAPONLY', 'checked')) {
 			if (!$oSEC->IsAuthority($capID, 9, $bbs)) {
-				return $ZP::E_REG_THREADCAPONLY;
+				return $ZP::E_LIMIT_THREADCAPONLY;
 			}
 		}
 		# スレッド作成(スレッド立てすぎ)
