@@ -128,12 +128,12 @@ sub CreateIIndex
 	# 前準備
 	my $Sys = $this->{'SYS'};
 	my $Threads = $this->{'THREADS'};
-	my $bbsSetting = $this->{'SET'};
-	my $oConv = $this->{'CONV'};
+	my $Set = $this->{'SET'};
+	my $Conv = $this->{'CONV'};
 	my $bbs = $Sys->Get('BBS');
 	
 	# HTMLヘッダの出力
-	my $title = $bbsSetting->Get('BBS_TITLE');
+	my $title = $Set->Get('BBS_TITLE');
 	my $code = $this->{'CODE'};
 	$Page->Print("<html><!--nobanner--><head><title>$title</title>");
 	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
@@ -148,14 +148,14 @@ sub CreateIIndex
 	$Threads->GetKeySet('ALL', '', \@threadSet);
 	
 	# スレッド分だけループをまわす
-	my $menuNum = $bbsSetting->Get('BBS_MAX_MENU_THREAD');
+	my $menuNum = $Set->Get('BBS_MAX_MENU_THREAD');
 	my $i = 0;
 	foreach my $key (@threadSet) {
 		last if (++$i > $menuNum);
 		
 		my $name = $Threads->Get('SUBJECT', $key);
 		my $res = $Threads->Get('RES', $key);
-		my $path = $oConv->CreatePath($Sys, 'O', $bbs, $key, 'l10');
+		my $path = $Conv->CreatePath($Sys, 'O', $bbs, $key, 'l10');
 		
 		$Page->Print("<a href=\"$path\">$i: $name($res)</a><br> \n");
 	}
@@ -194,15 +194,15 @@ sub CreateSubback
 	
 	my $Sys = $this->{'SYS'};
 	my $Threads = $this->{'THREADS'};
-	my $bbsSetting = $this->{'SET'};
-	my $oConv = $this->{'CONV'};
+	my $Set = $this->{'SET'};
+	my $Conv = $this->{'CONV'};
 	
 	require './module/legolas.pl';
 	my $Caption = LEGOLAS->new;
 	$Caption->Load($Sys, 'META');
 	
 	# HTMLヘッダの出力
-	my $title = $bbsSetting->Get('BBS_TITLE');
+	my $title = $Set->Get('BBS_TITLE');
 	my $code = $this->{'CODE'};
 	$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -239,7 +239,7 @@ HTML
 		
 		my $name = $Threads->Get('SUBJECT', $key);
 		my $res = $Threads->Get('RES', $key);
-		my $path = $oConv->CreatePath($Sys, 0, $bbs, $key, 'l50');
+		my $path = $Conv->CreatePath($Sys, 0, $bbs, $key, 'l50');
 		
 		$Page->Print("<a href=\"$path\" target=\"_blank\">$i: $name($res)</a>&nbsp;&nbsp;\n");
 	}
@@ -451,7 +451,7 @@ sub PrintIndexPreview
 	}
 	
 	require './module/gondor.pl';
-	my $oDat = ARAGORN->new;
+	my $Dat = ARAGORN->new;
 	
 	my @threadSet = ();
 	$this->{'THREADS'}->GetKeySet('ALL', '', \@threadSet);
@@ -463,7 +463,7 @@ sub PrintIndexPreview
 	my $ttlCol = $this->{'SET'}->Get('BBS_SUBJECT_COLOR');
 	my $prevT = $threadNum;
 	my $nextT = ($threadNum > 1 ? 2 : 1);
-	my $oConv = $this->{'CONV'};
+	my $Conv = $this->{'CONV'};
 	my $basePath = $this->{'SYS'}->Get('BBSPATH') . '/' . $this->{'SYS'}->Get('BBS');
 	my $max = $this->{'SYS'}->Get('SUBMAX');
 	
@@ -488,15 +488,15 @@ THREAD
 		
 		# プレビューの表示
 		my $datPath = "$basePath/dat/$key.dat";
-		$oDat->Load($this->{'SYS'}, $datPath, 1);
+		$Dat->Load($this->{'SYS'}, $datPath, 1);
 		$this->{'SYS'}->Set('KEY', $key);
-		PrintThreadPreviewOne($this, $Page, $oDat, \@commands);
-		$oDat->Close();
+		PrintThreadPreviewOne($this, $Page, $Dat, \@commands);
+		$Dat->Close();
 		
 		# フッタ部分の表示
-		my $allPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '');
-		my $lastPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
-		my $numPath = $oConv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '1-100');
+		my $allPath = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '');
+		my $lastPath = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, 'l50');
+		my $numPath = $Conv->CreatePath($this->{'SYS'}, 0, $this->{'SYS'}->Get('BBS'), $key, '1-100');
 		$Page->Print(<<KAKIKO);
     <div style="font-weight:bold;">
      <a href="$allPath">全部読む</a>
@@ -605,7 +605,7 @@ FOOT
 #	index.html生成(スレッドプレビュー部分)
 #	-------------------------------------------------------------------------------------
 #	@param	$Page		
-#	@param	$oDat		
+#	@param	$Dat		
 #	@param	$commands	
 #	@return	なし
 #
@@ -613,7 +613,7 @@ FOOT
 sub PrintThreadPreviewOne
 {
 	my $this = shift;
-	my ($Page, $oDat, $commands) = @_;
+	my ($Page, $Dat, $commands) = @_;
 	
 	my $Sys = $this->{'SYS'};
 	
@@ -625,14 +625,14 @@ sub PrintThreadPreviewOne
 	my $tm = time;
 	
 	# 表示数の正規化
-	my ($start, $end) = $this->{'CONV'}->RegularDispNum($Sys, $oDat, 1, $contNum, $contNum);
+	my ($start, $end) = $this->{'CONV'}->RegularDispNum($Sys, $Dat, 1, $contNum, $contNum);
 	$start++ if ($start == 1);
 	
 	# 1の表示
-	PrintResponse($this, $Page, $oDat, $commands, 1);
+	PrintResponse($this, $Page, $Dat, $commands, 1);
 	# 残りの表示
 	for (my $i = $start; $i <= $end; $i++) {
-		PrintResponse($this, $Page, $oDat, $commands, $i);
+		PrintResponse($this, $Page, $Dat, $commands, $i);
 	}
 	
 	# 書き込みフォームの表示
@@ -657,7 +657,7 @@ KAKIKO
 #	index.html生成(レス表示部分)
 #	-------------------------------------------------------------------------------------
 #	@param	$Page		
-#	@param	$oDat		
+#	@param	$Dat		
 #	@param	$commands	
 #	@param	$n			
 #	@return	なし
@@ -666,23 +666,23 @@ KAKIKO
 sub PrintResponse
 {
 	my $this = shift;
-	my ($Page, $oDat, $commands, $n) = @_;
+	my ($Page, $Dat, $commands, $n) = @_;
 	
 	my $Sys = $this->{'SYS'};
-	my $oConv = $this->{'CONV'};
+	my $Conv = $this->{'CONV'};
 	
-	my $pDat = $oDat->Get($n - 1);
-	return if (!defined $pDat);
+	my $pdat = $Dat->Get($n - 1);
+	return if (!defined $pdat);
 	
-	my @elem = split(/<>/, $$pDat, -1);
+	my @elem = split(/<>/, $$pdat, -1);
 	my $contLen = length $elem[3];
-	my $contLine = $oConv->GetTextLine(\$elem[3]);
+	my $contLine = $Conv->GetTextLine(\$elem[3]);
 	my $nameCol = $this->{'SET'}->Get('BBS_NAME_COLOR');
 	my $dispLine = $this->{'SET'}->Get('BBS_LINE_NUMBER');
 	
 	# URLと引用個所の適応
-	$oConv->ConvertURL($Sys, $this->{'SET'}, 0, \$elem[3]);
-	$oConv->ConvertQuotation($Sys, \$elem[3], 0);
+	$Conv->ConvertURL($Sys, $this->{'SET'}, 0, \$elem[3]);
+	$Conv->ConvertQuotation($Sys, \$elem[3], 0);
 	
 	# 拡張機能を実行
 	$Sys->Set('_DAT_', \@elem);
@@ -709,7 +709,7 @@ sub PrintResponse
 	# 表示行数を超えたら省略表示を付加する
 	else {
 		my @dispBuff = split(/<br>/i, $elem[3]);
-		my $path = $oConv->CreatePath($Sys, 0, $Sys->Get('BBS'), $Sys->Get('KEY'), "${n}n");
+		my $path = $Conv->CreatePath($Sys, 0, $Sys->Get('BBS'), $Sys->Get('KEY'), "${n}n");
 		
 		$Page->Print("：$elem[2]</dt>\n    <dd>");
 		for (my $k = 0; $k < $dispLine; $k++) {

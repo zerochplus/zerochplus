@@ -603,8 +603,8 @@ sub Init
 	
 	# 2重ロード防止
 	if (! defined $this->{'USER'}) {
-		$this->{'USER'} = new GLORFINDEL;
-		$this->{'GROUP'} = new GILDOR;
+		$this->{'USER'} = GLORFINDEL->new;
+		$this->{'GROUP'} = GILDOR->new;
 		$this->{'USER'}->Load($Sys);
 	}
 }
@@ -653,13 +653,15 @@ sub SetGroupInfo
 	my $this = shift;
 	my ($bbs) = @_;
 	
-	my $oldBBS = $this->{'SYS'}->Get('BBS');
-	$this->{'SYS'}->Set('BBS', $bbs);
+	my $Sys = $this->{'SYS'};
+	
+	my $oldbbs = $Sys->Get('BBS');
+	$Sys->Set('BBS', $bbs);
 	$this->{'BBS'} = $bbs;
 	
-	$this->{'GROUP'}->Load($this->{'SYS'});
+	$this->{'GROUP'}->Load($Sys);
 	
-	$this->{'SYS'}->Set('BBS', $oldBBS);
+	$Sys->Set('BBS', $oldbbs);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -703,40 +705,40 @@ sub IsAuthority
 #	所属掲示板リスト取得
 #	-------------------------------------------------------------------------------------
 #	@param	$id		ユーザID
-#	@param	$oBBS	NAZGULオブジェクト
-#	@param	$pBBS	結果格納用配列の参照
+#	@param	$BBS	NAZGULオブジェクト
+#	@param	$pList	結果格納用配列の参照
 #	@return	所属掲示板数
 #
 #------------------------------------------------------------------------------------------------------------
 sub GetBelongBBSList
 {
 	my $this = shift;
-	my ($id, $oBBS, $pBBS) = @_;
+	my ($id, $Bbs, $pList) = @_;
 	
 	my $n = 0;
 	
 	# システム管理ユーザは全てのBBSに所属とする
 	if ($this->{'USER'}->Get('SYSAD', $id)) {
-		$oBBS->GetKeySet('ALL', '', $pBBS);
-		$n = scalar @$pBBS;
+		$Bbs->GetKeySet('ALL', '', $pList);
+		$n = scalar @$pList;
 	}
 	# 一般ユーザは所属グループから判断する
 	else {
-		my $origBBS = $this->{'BBS'};
+		my $origbbs = $this->{'BBS'};
 		my @keySet = ();
-		$oBBS->GetKeySet('ALL', '', \@keySet);
+		$Bbs->GetKeySet('ALL', '', \@keySet);
 		
 		foreach my $bbsID (@keySet) {
-			my $bbsDir = $oBBS->Get('DIR', $bbsID);
+			my $bbsDir = $Bbs->Get('DIR', $bbsID);
 			SetGroupInfo($this, $bbsDir);
 			if ($this->{'GROUP'}->GetBelong($id) ne '') {
-				$n += push @$pBBS, $bbsID;
+				$n += push @$pList, $bbsID;
 			}
 		}
 		
 		# 後処理
-		if (defined $origBBS) {
-			SetGroupInfo($this, $origBBS);
+		if (defined $origbbs) {
+			SetGroupInfo($this, $origbbs);
 		}
 	}
 	return $n;

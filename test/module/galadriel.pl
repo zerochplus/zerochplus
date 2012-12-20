@@ -852,7 +852,7 @@ sub CreatePath
 #
 #	日付取得 - GetDate
 #	--------------------------------------
-#	引　数：$oSet  : SETTING.TXT
+#	引　数：$Set  : SETTING.TXT
 #			$msect : msec on/off
 #	戻り値：日付文字列
 #
@@ -860,7 +860,7 @@ sub CreatePath
 sub GetDate
 {
 	my $this = shift;
-	my ($oSet, $msect) = @_;
+	my ($Set, $msect) = @_;
 	
 	$ENV{'TZ'} = 'JST-9';
 	my @info = localtime time;
@@ -869,8 +869,8 @@ sub GetDate
 	
 	# 曜日の取得
 	my $week = ('日', '月', '火', '水', '木', '金', '土')[$info[6]];
-	if (defined $oSet && ! $oSet->Equal('BBS_YMD_WEEKS', '')) {
-		$week = (split(/\//, $oSet->Get('BBS_YMD_WEEKS')))[$info[6]];
+	if (defined $Set && ! $Set->Equal('BBS_YMD_WEEKS', '')) {
+		$week = (split(/\//, $Set->Get('BBS_YMD_WEEKS')))[$info[6]];
 	}
 	
 	my $str = '';
@@ -1166,7 +1166,7 @@ sub IsReferer
 #	プロクシチェック - IsProxy
 #	--------------------------------------
 #	引　数：$Sys   : MELKOR
-#			$oForm : 
+#			$Form  : 
 #			$from  : 名前欄
 #			$mode  : エージェント
 #	戻り値：プロクシなら対象ポート番号
@@ -1175,7 +1175,7 @@ sub IsReferer
 sub IsProxy
 {
 	my $this = shift;
-	my ($Sys, $oForm, $from, $mode) = @_;
+	my ($Sys, $Form, $from, $mode) = @_;
 	
 	# 携帯, iPhone(3G回線) はプロキシ規制を回避する
 	return 0 if ($mode eq 'O' || $mode eq 'i');
@@ -1189,7 +1189,7 @@ sub IsProxy
 	my $addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
 	foreach my $dnsbl (@dnsbls) {
 		if (CheckDNSBL("$addr.$dnsbl") eq '127.0.0.2') {
-			$oForm->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
+			$Form->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
 			return ($mode eq 'P' ? 0 : 1);
 		}
 	}

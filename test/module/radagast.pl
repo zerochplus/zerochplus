@@ -128,7 +128,7 @@ sub IsExist
 #
 #	cookie出力
 #	-------------------------------------------------------------------------------------
-#	@param	$oOut	出力モジュール
+#	@param	$Page	出力モジュール
 #	@param	$path	cookieパス
 #	@param	$limit	有効期限
 #	@return	なし
@@ -137,7 +137,7 @@ sub IsExist
 sub Out
 {
 	my $this = shift;
-	my ($oOut, $path, $limit) = @_;
+	my ($Page, $path, $limit) = @_;
 	
 	# 日付情報の設定
 	my @gmt = gmtime(time + $limit * 60);
@@ -154,7 +154,7 @@ sub Out
 		my $value = $this->{'COOKIE'}->{$key};
 		Encode::from_to($value, 'sjis', 'utf8');
 		$value =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
-		$oOut->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");
+		$Page->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");
 	}
 }
 
@@ -162,16 +162,16 @@ sub Out
 #
 #	cookie取得用javascript出力
 #	-------------------------------------------------------------------------------------
-#	@param	$oOut	出力モジュール
+#	@param	$Page	出力モジュール
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Print
 {
 	my $this = shift;
-	my ($oOut) = @_;
+	my ($Page) = @_;
 	
-	$oOut->Print(<<JavaScript);
+	$Page->Print(<<JavaScript);
 <script language="JavaScript" type="text/javascript">
 <!--
 function l(e) {
