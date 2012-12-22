@@ -717,8 +717,14 @@ sub PrintPluginSetting
 			$Page->Print("<tr><td><input type=text name=PLUGIN_${id}_ORDER value=@{[$i+1]} size=3></td>");
 			$Page->Print("<td><input type=checkbox name=PLUGIN_VALID value=$id $valid> $name</td>");
 			$Page->Print("<td>$expl</td><td>$file</td>");
-			$Page->Print("<td><a href=\"javascript:SetOption('PLGID','$id');");
-			$Page->Print("DoSubmit('sys.setting','DISP','PLUGINCONF');\">ŒÂ•Êİ’è</a></td></tr>\n");
+			if ($class->can('getConfig') && scalar(keys %{$class->getConfig()}) > 0) {
+				$Page->Print("<td><a href=\"javascript:SetOption('PLGID','$id');");
+				$Page->Print("DoSubmit('sys.setting','DISP','PLUGINCONF');\">ŒÂ•Êİ’è</a></td>");
+			}
+			else {
+				$Page->Print("<td></td>");
+			}
+			$Page->Print("</tr>\n");
 		}
 		$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
 		$Page->Print("<tr><td colspan=5 align=right>");

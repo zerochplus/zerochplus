@@ -388,6 +388,11 @@ sub Add
 	}
 	
 	require "./plugin/$file";
+	if (!$className->can('new')) {
+		warn "invalid plugin file name: $file";
+		return undef;
+	}
+	
 	my $plugin = $className->new;
 	$this->{'FILE'}->{$id} = $file;
 	$this->{'CLASS'}->{$id} = $className;
