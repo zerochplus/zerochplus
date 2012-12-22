@@ -71,10 +71,13 @@ our $E_REG_MANYTHREAD		= 500;
 our $E_REG_NOBREAKPOST		= 501;
 our $E_REG_DOUBLEPOST		= 502;
 our $E_REG_NOTIMEPOST		= 503;
-our $E_REG_SAMBA_CAUTION	= 505;
-our $E_REG_SAMBA_WARNING	= 506;
-our $E_REG_SAMBA_LISTED		= 507;
-our $E_REG_SAMBA_STILL		= 508;
+our $E_REG_SAMBA_CAUTION	= 505; # continuously
+our $E_REG_SAMBA_WARNING	= 506; # 505+1
+our $E_REG_SAMBA_LISTED		= 507; # 505+2
+our $E_REG_SAMBA_STILL		= 508; # 505+3
+our $E_REG_SAMBA_2CH1		= 593; # 2ch errnum
+our $E_REG_SAMBA_2CH2		= 599; # 2ch errnum
+our $E_REG_SAMBA_2CH3		= 594; # 2ch errnum
 our $E_REG_NGWORD			= 600;
 our $E_REG_NGUSER			= 601;
 our $E_REG_NOTJPHOST		= 207;
@@ -95,12 +98,12 @@ our $E_POST_INVALIDFORM		= 999;
 our $E_POST_NOTEXISTBBS		= $E_POST_INVALIDFORM;
 our $E_POST_NOTEXISTDAT		= $E_POST_INVALIDFORM;
 #  read.cgi用エラー
-our $E_READ_R_INVALIDBBS	= 1001;
-our $E_READ_R_INVALIDKEY	= 1002;
-our $E_READ_FAILEDLOADDAT	= 1003;
-our $E_READ_FAILEDLOADSET	= 1004;
-our $E_READ_INVALIDBBS		= 2011;
-our $E_READ_INVALIDKEY		= 3001;
+our $E_READ_R_INVALIDBBS	= 1001; # 2ch errnum
+our $E_READ_R_INVALIDKEY	= 1002; # 2ch errnum
+our $E_READ_FAILEDLOADDAT	= 1003; # 2ch errnum
+our $E_READ_FAILEDLOADSET	= 1004; # 2ch errnum
+our $E_READ_INVALIDBBS		= 2011; # 2ch errnum
+our $E_READ_INVALIDKEY		= 3001; # 2ch errnum
 #  システム・その他のエラー
 our $E_SYSTEM_ERROR			= 990;
 #  ページ表示用番号

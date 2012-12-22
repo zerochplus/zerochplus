@@ -159,7 +159,7 @@ sub Print
 		
 		$Page->Print("Content-type: text/html\n\n");
 		
-		if ($err < 505 || $err > 508) {
+		if ($err < $ZP::E_REG_SAMBA_CAUTION || $err > $ZP::E_REG_SAMBA_STILL) {
 			$Page->Print(<<HTML);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ja">
@@ -196,10 +196,10 @@ HTML
 		}
 		else {
 			my $sambaerr = {
-				'505' => '593',
-				'506' => '599',
-				'507' => '594',
-				'508' => '594',
+				$ZP::E_REG_SAMBA_CAUTION	=> $ZP::E_REG_SAMBA_2CH1,
+				$ZP::E_REG_SAMBA_WARNING	=> $ZP::E_REG_SAMBA_2CH2,
+				$ZP::E_REG_SAMBA_LISTED		=> $ZP::E_REG_SAMBA_2CH3,
+				$ZP::E_REG_SAMBA_STILL		=> $ZP::E_REG_SAMBA_2CH3,
 			}->{$err};
 			
 			$Page->Print(<<HTML);

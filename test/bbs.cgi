@@ -32,27 +32,28 @@ sub BBSCGI
 	my $Page = THORIN->new;
 	
 	my $CGI = {};
-	my $err = Initialize($CGI, $Page);
+	my $err = $ZP::E_SUCCESS;
 	
+	$err = Initialize($CGI, $Page);
 	# 初期化に成功したら書き込み処理を開始
 	if ($err == $ZP::E_SUCCESS) {
-		my $oSys = $CGI->{'SYS'};
-		my $oForm = $CGI->{'FORM'};
-		my $oSet = $CGI->{'SET'};
-		my $oConv = $CGI->{'CONV'};
+		my $Sys = $CGI->{'SYS'};
+		my $Form = $CGI->{'FORM'};
+		my $Set = $CGI->{'SET'};
+		my $Conv = $CGI->{'CONV'};
 		
 		require './module/vara.pl';
 		my $WriteAid = VARA->new;
-		$WriteAid->Init($oSys, $oForm, $oSet, undef, $oConv);
+		$WriteAid->Init($Sys, $Form, $Set, undef, $Conv);
 		
 		$err = $WriteAid->Write();
 		# 書き込みに成功したら掲示板構成要素を更新する
 		if ($err == $ZP::E_SUCCESS) {
-			if (!$oSys->Equal('FASTMODE', 1)) {
+			if (!$Sys->Equal('FASTMODE', 1)) {
 				require './module/varda.pl';
 				my $BBSAid = VARDA->new;
 				
-				$BBSAid->Init($oSys, $oSet);
+				$BBSAid->Init($Sys, $Set);
 				$BBSAid->CreateIndex();
 				$BBSAid->CreateIIndex();
 				$BBSAid->CreateSubback();
@@ -143,7 +144,7 @@ sub Initialize
 	
 	# ホスト情報設定(DNS逆引き)
 	#変数初期化チェックを挿入。
-	if(!defined $ENV{'REMOTE_HOST'} || $ENV{REMOTE_HOST} eq '') {
+	if(!defined $ENV{'REMOTE_HOST'} || $ENV{'REMOTE_HOST'} eq '') {
 		$ENV{'REMOTE_HOST'} = $Conv->GetRemoteHost();
 	}
 	$Form->Set('HOST', $ENV{'REMOTE_HOST'});
