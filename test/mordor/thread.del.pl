@@ -132,8 +132,8 @@ sub DoFunction
 	$subMode	= $Form->Get('MODE_SUB');
 	$err		= 9999;
 	
-	if ($subMode eq 'REPARE') {													# 削除レス復活
-		$err = FunctionResRepare($Sys, $Form, $DAT, $this->{'LOG'});
+	if ($subMode eq 'DELETE') {													# レス完全削除
+		$err = FunctionResDelete($Sys, $Form, $DAT, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
@@ -231,7 +231,7 @@ sub PrintResList
 	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.del','FUNC'";
 		$Page->Print("<tr><td colspan=2 align=right>");
-		$Page->Print("<input type=button value=\"　復活　\" $common,'REPARE')\"> ");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\"> ");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table></dl><br>");
@@ -248,7 +248,7 @@ sub PrintResList
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintResReapre
+sub PrintResDelete
 {
 	my ($Page, $Sys, $Form, $Dat, $mode) = @_;
 	my (@resSet, @elem, $pRes, $num, $common, $isAbone);
@@ -262,7 +262,7 @@ sub PrintResReapre
 	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td>以下の削除レスを元に戻します。</td></tr>\n");
+	$Page->Print("<tr><td>以下の削除レスを完全に削除します。</td></tr>\n");
 	$Page->Print("<tr><td><hr></td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">Contents</td></tr>\n");
 	
@@ -362,7 +362,7 @@ sub PrintError
 
 #------------------------------------------------------------------------------------------------------------
 #
-#	レス復活
+#	レス完全削除
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
@@ -371,10 +371,10 @@ sub PrintError
 #	@return	エラーコード
 #
 #------------------------------------------------------------------------------------------------------------
-sub FunctionResRepare
+sub FunctionResDelete
 {
 	my ($Sys, $Form, $Dat, $pLog) = @_;
-	my (@resSet, $pRes, $abone, $path, $tm, $user, $delCnt, $num);
+	my (@resSet, $abone, $path, $delCnt);
 	
 	# 権限チェック
 	{
@@ -387,39 +387,24 @@ sub FunctionResRepare
 	}
 	
 	# 各値を設定
-	@resSet	= $Form->GetAtArray('RESS');
+	@resSet	= $Form->GetAtArray('DEL_RESS');
 	$path	= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/log/del_' . $Sys->Get('KEY') . '.cgi';
-	$tm		= time;
-	$user	= $Form->Get('UserName');
-	$delCnt	= 0;
+	my @dellist = ();
 	
-=pod
-	# 削除と同時に削除ログへ削除した内容を保存する
-	if (open(my $f_dellog, '>>', $path)) {
-		flock($f_dellog, 2);
-		foreach $num (@resSet){
-			$pRes = $Dat->Get($num - $delCnt);
-			print $f_dellog "$tm<>$user<>$num<>$$pRes";
-			if ($mode){
-				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
-			}
-			else {
-				$Dat->Delete($num - $delCnt);
-				$delCnt ++;
-			}
-		}
-		close($f_dellog);
-		
-		# 保存
-		#$Dat->Save($Sys);
+	$Dat->Close();
+	$Dat->Load($Sys, $path, 0);
+	
+	foreach my $num (reverse sort @resSet) {
+		push @dellist, (split(/<>/, ${$Dat->Get($num)}, -1))[2];
+		$Dat->Delete($num);
 	}
-=cut
+	$Dat->Save($Sys);
 	
 	# ログの設定
 	$delCnt = 0;
 	$abone	= '';
-	push @$pLog, '以下のレスを復活しました。';
-	foreach (@resSet) {
+	push @$pLog, '以下の削除レスを完全に削除しました。';
+	foreach (@dellist) {
 		if ($delCnt > 5) {
 			push @$pLog, $abone;
 			$abone = '';

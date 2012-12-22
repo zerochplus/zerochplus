@@ -254,7 +254,7 @@ sub PrintResList
 		$pRes	= $Dat->Get($i);
 		@elem	= split(/<>/, $$pRes);
 		$log = $Logger->Get($logsize - 1 + $i - $lastnum);
-		@logs	= split(/<>/,$log) if (defined $log);
+		@logs	= split(/<>/,$log,-1) if (defined $log);
 		
 		$Page->Print("<tr><td class=\"Response\" valign=top>");
 		
@@ -581,7 +581,7 @@ sub FunctionResDelete
 	if (open(my $f_dellog, '>>', $path)) {
 		flock($f_dellog, 2);
 		binmode($f_dellog);
-		foreach $num (@resSet) {
+		foreach $num (sort @resSet) {
 			next if ($num == 0);
 			$pRes = $Dat->Get($num - $delCnt);
 			print $f_dellog "$tm<>$user<>$num<>$mode<>$$pRes";
