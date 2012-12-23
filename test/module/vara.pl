@@ -616,7 +616,8 @@ sub NormalizationNameMail
 	# トリップ変換
 	my $trip = '';
 	if ($name =~ /\#(.*)$/x) {
-		$trip = $this->{'CONV'}->ConvertTrip(\$1, $Set->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
+		my $key = $1;
+		$trip = $this->{'CONV'}->ConvertTrip(\$key, $Set->Get('BBS_TRIPCOLUMN'), $Sys->Get('TRIP12'));
 	}
 	
 	# 特殊文字変換 フォーム情報再設定
