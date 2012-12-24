@@ -249,8 +249,8 @@ HTML
 	
 $Page->Print(<<HTML);
    <tr>
-    <td colspan="4" align="right">
-    <input type="button" value="　削除　" onclick="DoSubmit('sys.top','FUNC','DELETE')">
+    <td colspan="4" align="left">
+    <input type="button" class="delete" value="　削除　" onclick="DoSubmit('sys.top','FUNC','DELETE')">
     </td>
    </tr>
   </table>
@@ -340,7 +340,7 @@ $Page->Print(<<HTML);
     </td>
    </tr>
    <tr>
-    <td colspan="2" align="right">
+    <td colspan="2" align="left">
     <input type="button" value="　送信　" onclick="DoSubmit('sys.top','FUNC','CREATE')">
     </td>
    </tr>
@@ -420,7 +420,7 @@ $Page->Print(<<HTML);
    </tr>
    <tr>
     <td colspan="4" align="right">
-    <input type="button" value="ログの削除" onclick="DoSubmit('sys.top','FUNC','LOG_REMOVE')">
+    <input type="button" value="ログの削除" onclick="DoSubmit('sys.top','FUNC','LOG_REMOVE')" class=\"delete\">
     </td>
    </tr>
   </table>

@@ -237,7 +237,7 @@ sub PrintThreadList
 	$common2	= "onclick=\"DoSubmit('bbs.pool','FUNC'";
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<tr><td colspan=4 align=left>");
 	$Page->Print("<input type=button value=\"　更新　\" $common2,'UPDATE')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\" 全更新 \" $common2,'UPDATEALL')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　復帰　\" $common,'REPARE')\"> ")		if ($isRepare);
@@ -294,7 +294,7 @@ sub PrintThreadRepare
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：DAT落ちしたスレッドは[DAT落ちスレッド]画面で復帰できます。</b><br>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=3 align=right>");
+	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print("<input type=button value=\"　復帰　\" onclick=\"$common\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
@@ -345,8 +345,8 @@ sub PrintThreadDelete
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：削除したスレッドを元に戻すことはできません。</b><br>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=3 align=right>");
-	$Page->Print("<input type=button value=\"　削除　\" onclick=\"$common\"> ");
+	$Page->Print("<tr><td colspan=3 align=left>");
+	$Page->Print("<input type=button value=\"　削除　\" onclick=\"$common\" class=\"delete\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 }

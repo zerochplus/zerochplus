@@ -339,7 +339,7 @@ sub PrintBasicSetting
 	$Page->Print("　例1: .jp/test/info → <span class=\"UnderLine\">/datas</span><br>");
 	$Page->Print("<td><input type=text size=60 name=DATA value=\"$data\" ></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 }
@@ -396,7 +396,7 @@ sub PrintPermissionSetting
 	$Page->Print("<td><input type=text size=10 name=PERM_LOG_DIR value=\"$logDP\" ></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 }
@@ -447,7 +447,7 @@ sub PrintLimitterSetting
 	$Page->Print("<td><input type=text size=10 name=ADMMAX value=\"$vSYS[5]\" ></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 }
@@ -514,7 +514,6 @@ sub PrintOtherSetting
 	
 	$Page->Print("<tr><td colpan=2><input type=checkbox name=FASTMODE $fastMode value=on>");
 	$Page->Print("高速書き込みモード</td>");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
 	$Page->Print("<tr bgcolor=silver><td colspan=2 class=\"DetailTitle\">bbs.cgiのGETメソ\ッド</td></tr>\n");
 	$Page->Print("<tr><td>bbs.cgiでGETメソ\ッドを使用する</td>");
@@ -524,7 +523,8 @@ sub PrintOtherSetting
 	$Page->Print("<tr><td>更新チェックの間隔</td>");
 	$Page->Print("<td><input type=text size=2 name=UPCHECK value=\"$upCheck\">日(0でチェック無効)</td></tr>\n");
 	
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	
 	$Page->Print("</table>");
@@ -585,7 +585,7 @@ sub PrintPlusViewSetting
 	$Page->Print("<td><input type=checkbox name=MSEC $msec value=on></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 	
@@ -664,7 +664,7 @@ sub PrintPlusSecSetting
 	$Page->Print("</td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 	
@@ -727,7 +727,7 @@ sub PrintPluginSetting
 			$Page->Print("</tr>\n");
 		}
 		$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
-		$Page->Print("<tr><td colspan=5 align=right>");
+		$Page->Print("<tr><td colspan=5 align=left>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'SET_PLUGIN');\"> ");
 	}
 	else {
@@ -735,10 +735,10 @@ sub PrintPluginSetting
 		$Page->Print("<tr><td><hr></td></tr>\n");
 		$Page->Print("<tr><td><b>プラグインは存在しません。</b></td></tr>\n");
 		$Page->Print("<tr><td><hr></td></tr>\n");
-		$Page->Print("<tr><td align=right>");
+		$Page->Print("<tr><td align=left>");
 	}
-	$Page->Print("<input type=hidden name=PLGID value=\"\">");
-	$Page->Print("<input type=button value=\"　更新　\" $common,'UPDATE_PLUGIN');\">");
+		$Page->Print("<input type=hidden name=PLGID value=\"\">");
+		$Page->Print("<input type=button value=\"　更新　\" $common,'UPDATE_PLUGIN');\">");
 	$Page->Print("</td></tr>");
 	$Page->Print("</table>");
 }
@@ -814,7 +814,7 @@ sub PrintPluginOptionSetting
 	}
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<tr><td colspan=4 align=left>");
 	$Page->Print("<input type=hidden name=PLGID value=\"$id\">");
 	$Page->Print("<input type=button value=\"　設定　\" $common,'SET_PLUGINCONF');\">");
 	

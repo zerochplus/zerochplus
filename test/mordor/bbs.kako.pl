@@ -227,7 +227,7 @@ sub PrintKakoLogList
 	$common = "onclick=\"DoSubmit('bbs.kako','FUNC'";
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<tr><td colspan=4 align=left>");
 	$Page->Print("<input type=button value=\"情報更新\" $common,'UPDATEINFO')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"index更新\" $common,'UPDATEIDX')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　削除　\" $common,'REMOVE')\" class=\"delete\"> ")		if ($isDelete);

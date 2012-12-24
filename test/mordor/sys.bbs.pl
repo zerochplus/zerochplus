@@ -260,7 +260,7 @@ sub PrintBBSList
 	$common2 = "onclick=\"DoSubmit('sys.bbs','DISP'";
 	
 	$Page->HTMLInput('hidden', 'TARGET_BBS', '');
-	$Page->Print("<tr><td colspan=4 align=right><hr>");
+	$Page->Print("<tr><td colspan=4 align=left><hr>");
 	$Page->Print("<input type=button value=\"カテゴリ変更\" $common2,'CATCHANGE')\"> ")	if (1);
 	$Page->Print("<input type=button value=\"情報更新\" $common1,'UPDATE')\"> ")		if ($isSysad);
 	$Page->Print("<input type=button value=\"index更新\" $common1,'UPDATEBBS')\"> ")	if (1);
@@ -324,7 +324,7 @@ sub PrintBBSCreate
 	}
 	$Page->Print("</select></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"　作成　\" ");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"　作成　\" ");
 	$Page->Print("onclick=\"DoSubmit('sys.bbs','FUNC','CREATE')\"></td></tr>");
 	$Page->Print("</table>");
 }
@@ -379,8 +379,8 @@ sub PrintBBSDelete
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：削除した掲示板を元に戻すことはできません。</b></td></tr>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>");
-	$Page->Print("<tr><td colspan=3 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('sys.bbs','FUNC','DELETE')\"></td></tr>");
+	$Page->Print("<tr><td colspan=3 align=left><input type=button value=\"　削除　\" ");
+	$Page->Print("onclick=\"DoSubmit('sys.bbs','FUNC','DELETE')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 
@@ -491,9 +491,9 @@ sub PrintCategoryList
 	$common = "onclick=\"DoSubmit('sys.bbs','DISP'";
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
-	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<tr><td colspan=4 align=left>");
 	$Page->Print("<input type=button value=\"　追加　\" $common,'CATEGORYADD')\"> ");
-	$Page->Print("<input type=button value=\"　削除　\" $common,'CATEGORYDEL')\"> ");
+	$Page->Print("<input type=button value=\"　削除　\" $common,'CATEGORYDEL')\" class=\"delete\"> ");
 	$Page->Print("</td></tr></table>");
 }
 
@@ -521,7 +521,7 @@ sub PrintCategoryAdd
 	$Page->Print("<tr><td class=\"DetailTitle\">カテゴリ名称</td><td><input type=text name=NAME size=60></td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">カテゴリ説明</td><td><input type=text name=SUBJ size=60></td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　追加　\" $common>");
 	$Page->Print("</td></tr></table>");
 }
@@ -571,8 +571,8 @@ sub PrintCategoryDelete
 	$Page->Print("※注：削除したカテゴリを元に戻すことはできません。</b><br>");
 	$Page->Print("※注：所属している掲示板のカテゴリは強制的に「一般」になります。</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('sys.bbs','FUNC','CATDEL')\"></td></tr>");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"　削除　\" ");
+	$Page->Print("onclick=\"DoSubmit('sys.bbs','FUNC','CATDEL')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 

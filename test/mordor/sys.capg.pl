@@ -206,8 +206,8 @@ sub PrintGroupList
 	
 	# 権限によって表示を抑制
 	if ($isAuth) {
-		$Page->Print("<tr><td colspan=5 align=right>");
-		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
+		$Page->Print("<tr><td colspan=5 align=left>");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table>");
@@ -331,7 +331,7 @@ sub PrintGroupSetting
 	$Page->HTMLInput('hidden', 'SELECT_CAPGROUP', $Form->Get('SELECT_CAPGROUP'));
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=submit value=\"　設定　\" $common></td></tr>");
 	$Page->Print("</table><br>");
 }
@@ -382,8 +382,8 @@ sub PrintGroupDelete
 	$Page->Print("※注：削除したグループを元に戻すことはできません。</b><br>");
 	$Page->Print("※注：削除するグループに所属しているキャップはすべて未所属状態になります。</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('sys.capg','FUNC','DELETE')\"></td></tr>");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"　削除　\" ");
+	$Page->Print("onclick=\"DoSubmit('sys.capg','FUNC','DELETE')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 

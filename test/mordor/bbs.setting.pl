@@ -284,7 +284,7 @@ sub PrintBaseSetting
 	$Page->Print("<tr><td class=\"DetailTitle\">削除文言</td><td>");
 	$Page->Print("<input type=text size=80 name=BBS_DELETE_NAME value=\"$setAbone\"></td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"　設定　\"");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETBASE');\"></td></tr></table>");
 }
 
@@ -394,11 +394,11 @@ sub PrintColorSetting
 		$Page->Print("</td></tr>");
 		$Page->Print("<tr><td colspan=6><hr></td></tr>");
 	}
-	$Page->Print("<tr><td colspan=6 align=right>");
-	$Page->Print("<input type=button value=\"　確認　\" onclick=\"DoSubmit");
-	$Page->Print("('bbs.setting','DISP','SETCOLORC');\"> ");
+	$Page->Print("<tr><td colspan=6 align=left>");
 	$Page->Print("<input type=button value=\"　設定　\" onclick=\"DoSubmit");
-	$Page->Print("('bbs.setting','FUNC','SETCOLOR');\">");
+	$Page->Print("('bbs.setting','FUNC','SETCOLOR');\"> ");
+	$Page->Print("<input type=button value=\"　確認　\" onclick=\"DoSubmit");
+	$Page->Print("('bbs.setting','DISP','SETCOLORC');\">");
 	$Page->Print("</td></tr></table><br>");
 }
 
@@ -485,7 +485,7 @@ sub PrintLimitSetting
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP3 $dispsiberia>発信元表\示(siberia)<br>");
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
-	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
+	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETLIMIT');\"></td></tr></table>");
 }
 
@@ -556,7 +556,7 @@ sub PrintOtherSetting
 	$Page->Print("<input type=text size=20 name=BBS_YMD_WEEKS value=\"$setWeek\"></td></tr>");
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
-	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
+	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETOTHER');\"></td></tr></table>");
 }
 
@@ -631,7 +631,7 @@ sub PrintOriginalSetting
 	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_COUNT value=\"$setItem[11]\">");
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
-	$Page->Print("<tr><td colspan=4 align=right><input type=button value=\"　設定　\"");
+	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETORIGIN');\"></td></tr></table>");
 }
 
@@ -673,7 +673,7 @@ sub PrintSettingImport
 	$Page->Print("<input type=radio name=IMPORT_KIND value=FROM_DIRECT>直接インポート</td>");
 	$Page->Print("<td><textarea rows=10 cols=60 wrap=off name=IMPORT_DIRECT></textarea></td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"インポート\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETIMPORT');\"></td></tr></table>");
 }
 

@@ -263,9 +263,9 @@ sub PrintHeaderEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
-		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','HEAD')\"> ");
-		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','HEAD')\">");
+		$Page->Print("<tr><td colspan=2 align=left>");
+		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','HEAD')\"> ");
+		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','HEAD')\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table><br>");
@@ -331,9 +331,9 @@ sub PrintFooterEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
-		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','FOOT')\"> ");
-		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','FOOT')\">");
+		$Page->Print("<tr><td colspan=2 align=left>");
+		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','FOOT')\"> ");
+		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','FOOT')\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table><br>");
@@ -383,7 +383,7 @@ sub PrintMETAEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
+		$Page->Print("<tr><td colspan=2 align=left>");
 		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','META')\">");
 		$Page->Print("</td></tr>\n");
 	}
@@ -447,7 +447,7 @@ sub PrintValidUserEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
+		$Page->Print("<tr><td colspan=2 align=left>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','USER')\">");
 		$Page->Print("</td></tr>\n");
 	}
@@ -510,7 +510,7 @@ sub PrintNGWordsEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
+		$Page->Print("<tr><td colspan=2 align=left>");
 		$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','NGWORD')\">");
 		$Page->Print("</td></tr>\n");
 	}
@@ -623,9 +623,9 @@ sub PrintLastEdit
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.edit'";
-		$Page->Print("<tr><td colspan=2 align=right>");
-		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','LAST')\"> ");
-		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','LAST')\">");
+		$Page->Print("<tr><td colspan=2 align=left>");
+		$Page->Print("<input type=button value=\"　変更　\" $common,'FUNC','LAST')\"> ");
+		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','LAST')\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table><br>");

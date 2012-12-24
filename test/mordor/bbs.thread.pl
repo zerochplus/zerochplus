@@ -283,7 +283,7 @@ sub PrintThreadList
 	$common2	= "onclick=\"DoSubmit('bbs.thread','FUNC'";
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
+	$Page->Print("<tr><td colspan=4 align=left>");
 #	$Page->Print("<input type=button value=\" コピー \" $common2,'COPY')\"> ");
 #	$Page->Print("<input type=button value=\"　移動　\" $common2,'MOVE')\"> ");
 	$Page->Print("<input type=button value=\"subject更新\" $common2,'UPDATE')\"> ")			if ($isUpdate);
@@ -349,7 +349,7 @@ sub PrintThreadStop
 		$Page->Print("※注：停止したスレッドは[再開]で停止状態を解除できます。</b><br>");
 		$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
 	}
-	$Page->Print("<tr><td colspan=3 align=right>");
+	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print('<input type=button value="　' . $text . "　\" onclick=\"$common;\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
@@ -400,7 +400,7 @@ sub PrintThreadPooling
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：DAT落ちしたスレッドは[DAT落ちスレッド]画面で復帰できます。</b><br>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=3 align=right>");
+	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print("<input type=button value=\"DAT落ち\" onclick=\"$common\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
@@ -451,8 +451,8 @@ sub PrintThreadDelete
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：削除したスレッドを元に戻すことはできません。</b><br>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=3 align=right>");
-	$Page->Print("<input type=button value=\"　削除　\" onclick=\"$common\"> ");
+	$Page->Print("<tr><td colspan=3 align=left>");
+	$Page->Print("<input type=button value=\"　削除　\" onclick=\"$common\" class=\"delete\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 }
@@ -499,7 +499,7 @@ sub PrintThreadAutoPooling
 	$common = "DoSubmit('bbs.thread','FUNC','AUTOPOOL')";
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=button value=\"　実行　\" onclick=\"$common\">");
 	$Page->Print("</td></tr></td></tr></table>");
 }

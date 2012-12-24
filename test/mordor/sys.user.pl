@@ -227,8 +227,8 @@ sub PrintUserList
 	
 	# システム権限有無による表示抑制
 	if ($isAuth) {
-		$Page->Print("<tr><td colspan=4 align=right>");
-		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
+		$Page->Print("<tr><td colspan=4 align=left>");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table>");
@@ -300,7 +300,7 @@ sub PrintUserSetting
 	$common = "onclick=\"DoSubmit('sys.user','FUNC',$common)\"";
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=center>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 }
@@ -356,8 +356,8 @@ sub PrintUserDelete
 	$Page->Print("※注：削除したユーザを元に戻すことはできません。</b><br>");
 	$Page->Print("※注：Administratorと自分自身は削除できません。</td></tr>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>");
-	$Page->Print("<tr><td colspan=3 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('sys.user','FUNC','DELETE')\"></td></tr>");
+	$Page->Print("<tr><td colspan=3 align=left><input type=button value=\"　削除　\" ");
+	$Page->Print("onclick=\"DoSubmit('sys.user','FUNC','DELETE')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 

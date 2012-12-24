@@ -230,8 +230,8 @@ sub PrintResList
 	# システム権限有無による表示抑制
 	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.del','FUNC'";
-		$Page->Print("<tr><td colspan=2 align=right>");
-		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\"> ");
+		$Page->Print("<tr><td colspan=2 align=left>");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\"> ");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table></dl><br>");
@@ -282,7 +282,7 @@ sub PrintResDelete
 	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.res','FUNC','";
 		$common .= ($mode ? 'ABONE' : 'DELETE') . "')\"";
-		$Page->Print("<tr><td align=right>");
+		$Page->Print("<tr><td align=left>");
 		$Page->Print("<input type=button value=\"　実行　\" $common> ");
 		$Page->Print("</td></tr>\n");
 	}

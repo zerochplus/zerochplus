@@ -458,7 +458,7 @@ sub PrintResLumpDelete
 	if ($isAbone) {
 		$common = "onclick=\"DoSubmit('thread.res'";
 		$Page->Print("<tr><td align=right colspan=2>");
-		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','DELLUMP')\"> ");
+		$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','DELLUMP')\" style=\"float: left;\"> ");
 		$Page->Print("<input type=button value=\"あぼ～ん\" $common,'FUNC','ABONE')\"> ");
 		$Page->Print("<input type=button value=\"透明あぼ～ん\" $common,'FUNC','DELETE')\"> ");
 		$Page->Print("</td></tr>\n");

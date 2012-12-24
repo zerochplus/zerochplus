@@ -235,8 +235,8 @@ sub PrintGroupList
 	# 権限によって表示を抑制
 	if ($isAuth) {
 		$common = "onclick=\"DoSubmit('bbs.user','DISP'";
-		$Page->Print("<tr><td colspan=4 align=right>");
-		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
+		$Page->Print("<tr><td colspan=4 align=left>");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table>");
@@ -354,7 +354,7 @@ sub PrintGroupSetting
 	$Page->HTMLInput('hidden', 'SELECT_GROUP', $Form->Get('SELECT_GROUP'));
 	$Page->Print("</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=left>");
 	$Page->Print("<input type=submit value=\"　設定　\" $common></td></tr>");
 	$Page->Print("</table><br>");
 }
@@ -408,7 +408,7 @@ sub PrintGroupDelete
 	$Page->Print("※注：削除するグループに所属しているユーザはすべて未所属状態になります。</td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
 	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','DELETE')\"></td></tr>");
+	$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','DELETE')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 
@@ -446,7 +446,7 @@ sub PrintGroupImport
 	
 	$Page->Print("</select></td></tr>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>");
-	$Page->Print("<tr><td colspan=2 align=right><input type=button value=\"インポート\"");
+	$Page->Print("<tr><td colspan=2 align=left><input type=button value=\"インポート\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.user','FUNC','IMPORT');\"></td></tr></table>");
 }
 

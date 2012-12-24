@@ -304,8 +304,8 @@ sub PrintLogs
 	$common = "onclick=\"DoSubmit('bbs.log','FUNC'";
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=right>");
-	$Page->Print("<input type=button value=\"　削除　\" $common,'REMOVE_" . $Form->Get('MODE_SUB') . "')\"> ");
+	$Page->Print("<tr><td colspan=4 align=left>");
+	$Page->Print("<input type=button value=\"　削除　\" $common,'REMOVE_" . $Form->Get('MODE_SUB') . "')\" class=\"delete\"> ");
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 	$Page->HTMLInput('hidden', $keySt, '');

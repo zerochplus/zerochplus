@@ -225,8 +225,8 @@ sub PrintCapList
 	
 	# システム権限有無による表示抑制
 	if ($isAuth) {
-		$Page->Print("<tr><td colspan=4 align=right>");
-		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\">");
+		$Page->Print("<tr><td colspan=4 align=left>");
+		$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\">");
 		$Page->Print("</td></tr>\n");
 	}
 	$Page->Print("</table>");
@@ -298,7 +298,7 @@ sub PrintCapSetting
 	$common = "onclick=\"DoSubmit('sys.cap','FUNC',$common)\"";
 	
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=right>");
+	$Page->Print("<tr><td colspan=2 align=center>");
 	$Page->Print("<input type=button value=\"　設定　\" $common></td></tr>\n");
 	$Page->Print("</table>");
 }
@@ -352,8 +352,8 @@ sub PrintCapDelete
 	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
 	$Page->Print("※注：削除したキャップを元に戻すことはできません。</td></tr>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>");
-	$Page->Print("<tr><td colspan=3 align=right><input type=button value=\"　削除　\" ");
-	$Page->Print("onclick=\"DoSubmit('sys.cap','FUNC','DELETE')\"></td></tr>");
+	$Page->Print("<tr><td colspan=3 align=left><input type=button value=\"　削除　\" ");
+	$Page->Print("onclick=\"DoSubmit('sys.cap','FUNC','DELETE')\" class=\"delete\"></td></tr>");
 	$Page->Print("</table>");
 }
 
