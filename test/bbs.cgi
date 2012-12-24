@@ -323,7 +323,7 @@ sub PrintBBSThreadCreate
 </table>
 
 <p>
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a> $ver
+$ver
 </p>
 HTML
 	}
