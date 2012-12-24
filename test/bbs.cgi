@@ -391,13 +391,22 @@ sub PrintBBSCookieConfirm
 	my $Set = $CGI->{'SET'};
 	my $Cookie = $CGI->{'COOKIE'};
 	
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		s/"/&#34;/g;
+		return $_;
+	};
 	my $code = $Sys->Get('ENCODE');
-	my $bbs = $Form->Get('bbs');
-	my $tm = $Form->Get('time');
-	my $name = $Form->Get('FROM');
-	my $mail = $Form->Get('mail');
-	my $msg = $Form->Get('MESSAGE');
-	my $subject = $Form->Get('subject');
+	my $bbs = &$sanitize($Form->Get('bbs'));
+	my $tm = &$sanitize($Form->Get('time'));
+	my $name = &$sanitize($Form->Get('FROM'));
+	my $mail = &$sanitize($Form->Get('mail'));
+	my $msg = &$sanitize($Form->Get('MESSAGE'));
+	my $subject = &$sanitize($Form->Get('subject'));
+	my $key = &$sanitize($Form->Get('key'));
 	
 	# cookie情報の出力
 	$Cookie->Set('NAME', $name)	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
@@ -464,7 +473,7 @@ HTML
 	
 	# レス書き込みモードの場合はkeyを設定する
 	if ($Sys->Equal('MODE', 2)) {
-		$Page->HTMLInput('hidden', 'key', $Form->Get('key'));
+		$Page->HTMLInput('hidden', 'key', $key);
 	}
 	
 	$Page->Print(<<HTML);
@@ -502,12 +511,21 @@ sub PrintBBSWriteConfirm
 	my $Form = $CGI->{'FORM'};
 	my $Set = $CGI->{'SET'};
 	
-	my $bbs = $Form->Get('bbs');
-	my $tm = $Form->Get('time');
-	my $subject = $Form->Get('subject');
-	my $name = $Form->Get('FROM');
-	my $mail = $Form->Get('mail');
-	my $msg = $Form->Get('MESSAGE');
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		s/"/&#34;/g;
+		return $_;
+	};
+	my $bbs = &$sanitize($Form->Get('bbs'));
+	my $tm = &$sanitize($Form->Get('time'));
+	my $name = &$sanitize($Form->Get('FROM'));
+	my $mail = &$sanitize($Form->Get('mail'));
+	my $msg = &$sanitize($Form->Get('MESSAGE'));
+	my $subject = &$sanitize($Form->Get('subject'));
+	my $key = &$sanitize($Form->Get('key'));
 	
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print(<<HTML);
@@ -533,6 +551,8 @@ HTML
 		$Page->Print("<body bgcolor=\"$work[0]\" text=\"$work[1]\" link=\"$work[2]\" ");
 		$Page->Print("alink=\"$work[3]\" vlink=\"$work[4]\">\n");
 	}
+	
+	$msg =~ s/\n/<br>/g;
 	
 	$Page->Print(<<HTML);
 <font size="+1" color="#FF0000">書き込み確認。</font><br>
@@ -560,7 +580,7 @@ HTML
 	
 	# レス書き込みモードの場合はkeyを設定する
 	if ($Sys->Equal('MODE', 2)) {
-		$Page->HTMLInput('hidden', 'key', $Form->Get('key'));
+		$Page->HTMLInput('hidden', 'key', $key);
 	}
 	$Page->Print(<<HTML);
 <br>
