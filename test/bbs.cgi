@@ -75,11 +75,6 @@ sub BBSCGI
 			PrintBBSCookieConfirm($CGI, $Page);
 			$err = $ZP::E_SUCCESS;
 		}
-		# 書き込み確認画面表示
-		elsif ($err == $ZP::E_PAGE_WRITE) {
-			PrintBBSWriteConfirm($CGI, $Page);
-			$err = $ZP::E_SUCCESS;
-		}
 		# 携帯からのスレッド作成画面表示
 		elsif ($err == $ZP::E_PAGE_THREADMOBILE) {
 			PrintBBSMobileThreadCreate($CGI, $Page);
@@ -489,105 +484,6 @@ HTML
 <font size="2">(cookieを設定するとこの画面はでなくなります。)</font><br>
 </p>
 
-</body>
-</html>
-HTML
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	bbs.cgi書き込み確認ページ表示
-#	-------------------------------------------------------------------------------------
-#	@param	$CGI
-#	@param	$Page
-#	@return	なし
-#
-#------------------------------------------------------------------------------------------------------------
-sub PrintBBSWriteConfirm
-{
-	my ($CGI, $Page) = @_;
-	
-	my $Sys = $CGI->{'SYS'};
-	my $Form = $CGI->{'FORM'};
-	my $Set = $CGI->{'SET'};
-	
-	my $sanitize = sub {
-		$_ = shift;
-		s/&/&amp;/g;
-		s/</&lt;/g;
-		s/>/&gt;/g;
-		s/"/&#34;/g;
-		return $_;
-	};
-	my $bbs = &$sanitize($Form->Get('bbs'));
-	my $tm = &$sanitize($Form->Get('time'));
-	my $name = &$sanitize($Form->Get('FROM'));
-	my $mail = &$sanitize($Form->Get('mail'));
-	my $msg = &$sanitize($Form->Get('MESSAGE'));
-	my $subject = &$sanitize($Form->Get('subject'));
-	my $key = &$sanitize($Form->Get('key'));
-	
-	$Page->Print("Content-type: text/html\n\n");
-	$Page->Print(<<HTML);
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<!-- 2ch_X:cookie -->
-<head>
-	<title>■ 書き込み確認 ■</title>
-<META http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
-</head>
-<!--nobanner-->
-HTML
-
-	# <body>タグ出力
-	{
-		my @work;
-		$work[0] = $Set->Get('BBS_THREAD_COLOR');
-		$work[1] = $Set->Get('BBS_TEXT_COLOR');
-		$work[2] = $Set->Get('BBS_LINK_COLOR');
-		$work[3] = $Set->Get('BBS_ALINK_COLOR');
-		$work[4] = $Set->Get('BBS_VLINK_COLOR');
-		
-		$Page->Print("<body bgcolor=\"$work[0]\" text=\"$work[1]\" link=\"$work[2]\" ");
-		$Page->Print("alink=\"$work[3]\" vlink=\"$work[4]\">\n");
-	}
-	
-	$msg =~ s/\n/<br>/g;
-	
-	$Page->Print(<<HTML);
-<font size="+1" color="#FF0000">書き込み確認。</font><br>
-<br>
-書き込みに関して様々なログ情報が記録されています。<br>
-公序良俗に反したり、他人に迷惑をかける書き込みは控えて下さい<br>
-<form method="POST" action="./subbbs.cgi">
-タイトル：$subject<br>
-名前：$name<br>
-E-mail ： $mail<br>
-内容：
-<blockquote>
-$msg
-</blockquote>
-HTML
-	
-	$msg =~ s/<br>/\n/g;
-	
-	$Page->HTMLInput('hidden', 'subject', $subject);
-	$Page->HTMLInput('hidden', 'FROM', $name);
-	$Page->HTMLInput('hidden', 'mail', $mail);
-	$Page->HTMLInput('hidden', 'MESSAGE', $msg);
-	$Page->HTMLInput('hidden', 'bbs', $bbs);
-	$Page->HTMLInput('hidden', 'time', $tm);
-	
-	# レス書き込みモードの場合はkeyを設定する
-	if ($Sys->Equal('MODE', 2)) {
-		$Page->HTMLInput('hidden', 'key', $key);
-	}
-	$Page->Print(<<HTML);
-<br>
-<br>
-<input type="submit" value="全責任を負うことを承諾して書き込む"><br>
-変更する場合は戻るボタンで戻って書き直して下さい。<br>
-</form>
 </body>
 </html>
 HTML
