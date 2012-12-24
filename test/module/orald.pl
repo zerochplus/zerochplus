@@ -146,7 +146,7 @@ sub Print
 		
 		my $name = &$sanitize($Form->Get('NAME'));
 		my $mail = &$sanitize($Form->Get('MAIL'));
-		my $msg = &$sanitize($Form->Get('MESSAGE'));
+		my $msg = $Form->Get('MESSAGE');
 		
 		# cookieî•ñ‚Ìo—Í
 		if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked')) {
