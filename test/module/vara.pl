@@ -266,6 +266,9 @@ sub ReadyBeforeWrite
 	
 	my $Sys = $this->{'SYS'};
 	my $Form = $this->{'FORM'};
+	my $Sec = $this->{'SECURITY'};
+	my $capID = $Sys->Get('CAPID', '');
+	my $bbs = $Form->Get('bbs');
 	my $from = $Form->Get('FROM');
 	my $koyuu = $Sys->Get('KOYUU');
 	my $client = $Sys->Get('CLIENT');
@@ -275,35 +278,39 @@ sub ReadyBeforeWrite
 	# ãKêßÉÜÅ[ÉUÅENGÉèÅ[ÉhÉ`ÉFÉbÉN
 	{
 		# ãKêßÉÜÅ[ÉU
-		require './module/faramir.pl';
-		my $vUser = FARAMIR->new;
-		$vUser->Load($Sys);
-		
-		my $koyuu2 = ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef);
-		my $check = $vUser->Check($host, $addr, $koyuu2);
-		if ($check == 4) {
-			return $ZP::E_REG_NGUSER;
-		}
-		elsif ($check == 2) {
-			return $ZP::E_REG_NGUSER if ($from !~ /$host/i); # $hostÇÕê≥ãKï\åª
-			$Form->Set('FROM', "</b>[ÅL•É÷•ÅM] <b>$from");
+		if (!$Sec->IsAuthority($capID, 21, $bbs)) {
+			require './module/faramir.pl';
+			my $vUser = FARAMIR->new;
+			$vUser->Load($Sys);
+			
+			my $koyuu2 = ($client & $ZP::C_MOBILE_IDGET & ~$ZP::C_P2 ? $koyuu : undef);
+			my $check = $vUser->Check($host, $addr, $koyuu2);
+			if ($check == 4) {
+				return $ZP::E_REG_NGUSER;
+			}
+			elsif ($check == 2) {
+				return $ZP::E_REG_NGUSER if ($from !~ /$host/i); # $hostÇÕê≥ãKï\åª
+				$Form->Set('FROM', "</b>[ÅL•É÷•ÅM] <b>$from");
+			}
 		}
 		
 		# NGÉèÅ[Éh
-		require './module/wormtongue.pl';
-		my $ngWord = WORMTONGUE->new;
-		$ngWord->Load($Sys);
-		my @checkKey = ('FROM', 'mail', 'MESSAGE');
-		
-		$check = $ngWord->Check($this->{'FORM'}, \@checkKey);
-		if ($check == 3) {
-			return $ZP::E_REG_NGWORD;
-		}
-		elsif ($check == 1) {
-			$ngWord->Method($Form, \@checkKey);
-		}
-		elsif ($check == 2) {
-			$Form->Set('FROM', "</b>[ÅL+É÷+ÅM] $host <b>$from");
+		if (!$Sec->IsAuthority($capID, 22, $bbs)) {
+			require './module/wormtongue.pl';
+			my $ngWord = WORMTONGUE->new;
+			$ngWord->Load($Sys);
+			my @checkKey = ('FROM', 'mail', 'MESSAGE');
+			
+			my $check = $ngWord->Check($this->{'FORM'}, \@checkKey);
+			if ($check == 3) {
+				return $ZP::E_REG_NGWORD;
+			}
+			elsif ($check == 1) {
+				$ngWord->Method($Form, \@checkKey);
+			}
+			elsif ($check == 2) {
+				$Form->Set('FROM', "</b>[ÅL+É÷+ÅM] $host <b>$from");
+			}
 		}
 	}
 	
