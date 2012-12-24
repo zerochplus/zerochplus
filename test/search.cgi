@@ -68,10 +68,19 @@ sub PrintHead
 	my ($pBBS, $bbs, $name, $dir, $Banner);
 	my ($sMODE, $sBBS, $sKEY, $sWORD, @sTYPE, @cTYPE, $types, $BBSpath, @bbsSet, $id);
 	
-	$sMODE	= $Form->Get('MODE', '');
-	$sBBS	= $Form->Get('BBS', '');
-	$sKEY	= $Form->Get('KEY', '');
-	$sWORD	= $Form->Get('WORD');
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		s/"/&#34;/g;#"
+		return $_;
+	};
+	
+	$sMODE	= &$sanitize($Form->Get('MODE', ''));
+	$sBBS	= &$sanitize($Form->Get('BBS', ''));
+	$sKEY	= &$sanitize($Form->Get('KEY', ''));
+	$sWORD	= &$sanitize($Form->Get('WORD'));
 	@sTYPE	= $Form->GetAtArray('TYPE', 0);
 	
 	$types = ($sTYPE[0] || 0) | ($sTYPE[1] || 0) | ($sTYPE[2] || 0);
@@ -255,9 +264,17 @@ sub Search
 	@types = $Form->GetAtArray('TYPE', 0);
 	$Type = ($types[0] || 0) | ($types[1] || 0) | ($types[2] || 0);
 	
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		return $_;
+	};
+	
 	# 検索オブジェクトの設定と検索の実行
 	$Search->Create($Sys, $Mode, $Type, $Form->Get('BBS', ''), $Form->Get('KEY', ''));
-	$Search->Run($Form->Get('WORD'));
+	$Search->Run(&$sanitize($Form->Get('WORD')));
 	
 	if ($@ ne '') {
 		PrintSystemError($Page, $@);
