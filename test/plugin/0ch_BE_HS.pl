@@ -78,8 +78,8 @@ sub getType
 #
 #	拡張機能実行インタフェイス
 #	-------------------------------------------------------------------------------------
-#	@param	$sys	MELKOR
-#	@param	$form	SAMWISE
+#	@param	$Sys	MELKOR
+#	@param	$Form	SAMWISE
 #	@return	正常終了の場合は0
 #
 #------------------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ sub execute
 	use strict;
 	use warnings;
 	my $this = shift;
-	my ($sys, $form, $type) = @_;
+	my ($Sys, $Form, $type) = @_;
 	
 	#--------------------------------------------------------------------------------------------------------
 	#	ユーザー設定項目
@@ -101,12 +101,12 @@ sub execute
 	
 	
 	# 名前欄を取得
-	my $name = $form->Get('FROM');
+	my $name = $Form->Get('FROM');
 	
 	# 悪さ対策でとりあえず空にする
-	$form->Set('BEID', '');
-	$form->Set('BEBASE', '0');
-	$form->Set('BERANK', '0');
+	$Form->Set('BEID', '');
+	$Form->Set('BEBASE', '0');
+	$Form->Set('BERANK', '0');
 	
 	if ( $name =~ /!BE.+!HS/ ) {
 		
@@ -121,36 +121,37 @@ sub execute
 			$key = $2;
 		}
 		
-		my ($CONV, $SET, $trip, $key2, $column, @ct_arg);
-		if (defined $sys->{'MainCGI'}) {
-			$CONV = $sys->{'MainCGI'}->{'CONV'};
-			$SET = $sys->{'MainCGI'}->{'SET'};
-			$column = $SET->Get('BBS_TRIPCOLUMN');
-			$trip = $CONV->ConvertTrip(\$key, $column, $sys->Get('TRIP12'));
+		my ($Conv, $Set, $trip, $key2, $column, @ct_arg, $CGI);
+		$CGI = $Sys->Get('MainCGI');
+		if (defined $CGI) {
+			$Conv = $CGI->{'CONV'};
+			$Set = $CGI->{'SET'};
+			$column = $Set->Get('BBS_TRIPCOLUMN');
+			$trip = $Conv->ConvertTrip(\$key, $column, $Sys->Get('TRIP12'));
 		}
 		else {
 			require './module/galadriel.pl';
-			$CONV = GALADRIEL->new;
+			$Conv = GALADRIEL->new;
 			require './module/isildur.pl';
-			$SET = ISILDUR->new;
-			$SET->Load($sys);
-			$column = $SET->Get('BBS_TRIPCOLUMN');
+			$Set = ISILDUR->new;
+			$Set->Load($Sys);
+			$column = $Set->Get('BBS_TRIPCOLUMN');
 			$key = "#$key";
-			$CONV->ConvertTrip(\$key, $column);
+			$Conv->ConvertTrip(\$key, $column);
 			$key =~ m|◆([A-Za-z0-9\.]+)|;
 			$trip = $1;
 		}
 		
 		# とりあえず消す
 		$name =~ s/!BE.+!HS//;
-		if ($form->IsExist('TRIPKEY') && $name =~ /#(.+)$/) {
+		if ($Form->IsExist('TRIPKEY') && $name =~ /#(.+)$/) {
 			$key2 = $1;
 			$ct_arg[0] = \$key2;
-			$key2 = $CONV->ConvertTrip(\$key2, $column, $sys->Get('TRIP12'));
-			$form->Set('TRIPKEY', $key2);
+			$key2 = $Conv->ConvertTrip(\$key2, $column, $Sys->Get('TRIP12'));
+			$Form->Set('TRIPKEY', $key2);
 		}
 		
-		$form->Set('FROM', $name);
+		$Form->Set('FROM', $name);
 		
 		# BEプロフのURLですね！
 		my $beprof = "http://be.2ch.net/test/p.php?i=$beid";
@@ -160,9 +161,9 @@ sub execute
 		
 		# HTML解析
 		if ( $code ne 200 ) {
-			#$form->Set('BEID', "BE:取得エラー($code)");
-			$sys->Set('CODE', $code);
-			PrintBBSError( $sys, $form, 891 );
+			#$Form->Set('BEID', "BE:取得エラー($code)");
+			$Sys->Set('CODE', $code);
+			PrintBBSError( $Sys, $Form, 891 );
 			return 0;
 		}
 		
@@ -182,7 +183,7 @@ sub execute
 				
 				# ポイント取得
 				if ( $content =~ m/<p><b>be.{8}<\/b>:([0-9]+)<\/p>/ ) {
-					$point = BeRank($form, $1);
+					$point = BeRank($Form, $1);
 				}
 				else {
 					# おかしかったらみんな０ポイント
@@ -190,32 +191,32 @@ sub execute
 				}
 				
 				# 基礎BE番号取得+セット
-				$form->Set('BEBASE', ID2BASE($beid) );
+				$Form->Set('BEBASE', ID2BASE($beid) );
 				
 				# BEポイントセット
-				$form->Set('BEID', "BE:$beid-$point");
+				$Form->Set('BEID', "BE:$beid-$point");
 				
 				# アイコンとってくるよ！
-				if ( $be_icon && $form->Get('MESSAGE') ne "" ) {
+				if ( $be_icon && $Form->Get('MESSAGE') ne "" ) {
 					
 					if ( $content =~ m|<img .+ alt="icon:([^\"]+)" />\n\n|i ) {
-						$form->Set('MESSAGE', "sssp://img.2ch.net/ico/$1<br>".$form->Get('MESSAGE'));
+						$Form->Set('MESSAGE', "sssp://img.2ch.net/ico/$1<br>".$Form->Get('MESSAGE'));
 					}
 					
 				}
 				
 			}
 			else {
-				#$form->Set('BEID', "BE:認証エラー($trip:$name)");
-				$sys->Set('CHK', "◆".$trip);
-				PrintBBSError( $sys, $form, 892 );
+				#$Form->Set('BEID', "BE:認証エラー($trip:$name)");
+				$Sys->Set('CHK', "◆".$trip);
+				PrintBBSError( $Sys, $Form, 892 );
 				return 0;
 			}
 			
 		}
 		else {
-			#$form->Set('BEID', '取得エラー(-1)');
-			PrintBBSError( $sys, $form, 890 );
+			#$Form->Set('BEID', '取得エラー(-1)');
+			PrintBBSError( $Sys, $Form, 890 );
 			return 0;
 		}
 		
@@ -259,7 +260,7 @@ sub BeGet
 #
 #	BE会員ランク取得
 #	-------------------------------------------------------------------------------------
-#	@param	$form	$form
+#	@param	$Form	$Form
 #	@param	$point	ポイント
 #	@return	ランク表示形式 2BP(0)
 #
@@ -267,31 +268,31 @@ sub BeGet
 sub BeRank
 {
 	
-	my ( $form, $point ) = @_;
+	my ( $Form, $point ) = @_;
 	
 	if ( $point < 10000 ) {
 		$point = "2BP($point)";
-		$form->Set('BERANK', 1);
+		$Form->Set('BERANK', 1);
 	}
 	elsif ( $point < 12000 ) {
 		$point = "BRZ($point)";
-		$form->Set('BERANK', 2);
+		$Form->Set('BERANK', 2);
 	}
 	elsif ( $point < 100000 ) {
 		$point = "PLT($point)";
-		$form->Set('BERANK', 3);
+		$Form->Set('BERANK', 3);
 	}
 	elsif ( $point < 500000 ) {
 		$point = "DIA($point)";
-		$form->Set('BERANK', 4);
+		$Form->Set('BERANK', 4);
 	}
 	elsif ( $point >= 500000 ) {
 		$point = "S★($point)";
-		$form->Set('BERANK', 5);
+		$Form->Set('BERANK', 5);
 	}
 	else {
 		$point = "2BP(0)";
-		$form->Set('BERANK', 1);
+		$Form->Set('BERANK', 1);
 	}
 	
 	return $point;
@@ -351,8 +352,8 @@ sub BASE2ID
 #
 #	なんちゃってbbs.cgiエラーページ表示
 #	-------------------------------------------------------------------------------------
-#	@param	$sys	MELKOR
-#	@param	$form	SAMWISE
+#	@param	$Sys	MELKOR
+#	@param	$Form	SAMWISE
 #	@param	$err	エラー番号
 #	@return	なし
 #	exit	エラー番号
@@ -360,26 +361,26 @@ sub BASE2ID
 #------------------------------------------------------------------------------------------------------------
 sub PrintBBSError
 {
-	my ($sys,$form,$err) = @_;
-	my $SYS;
+	my ($Sys,$Form,$err) = @_;
+	my $CGI;
 	
 	require('./module/radagast.pl');
 	require('./module/isildur.pl');
 	require('./module/thorin.pl');
 	
-	$SYS->{'SYS'}		= $sys;
-	$SYS->{'FORM'}		= $form;
-	$SYS->{'COOKIE'}	= new RADAGAST;
-	$SYS->{'COOKIE'}->Init();
-	$SYS->{'SET'}		= new ISILDUR;
-	$SYS->{'SET'}->Load($sys);
-	my $Page = new THORIN;
+	$CGI->{'SYS'}		= $Sys;
+	$CGI->{'FORM'}		= $Form;
+	$CGI->{'COOKIE'}	= RADAGAST->new;
+	$CGI->{'COOKIE'}->Init();
+	$CGI->{'SET'}		= ISILDUR->new;
+	$CGI->{'SET'}->Load($Sys);
+	my $Page = THORIN->new;
 	
 	require('./module/orald.pl');
-	$ERROR = new ORALD;
-	$ERROR->Load($sys);
+	$ERROR = ORALD->new;
+	$ERROR->Load($Sys);
 	
-	$ERROR->Print($SYS,$Page,$err,$sys->Get('AGENT'));
+	$ERROR->Print($CGI,$Page,$err,$Sys->Get('AGENT'));
 	
 	$Page->Flush('',0,0);
 	
