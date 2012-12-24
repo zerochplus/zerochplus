@@ -112,7 +112,7 @@ sub Print
 	
 	# エラーメッセージの置換
 	my $sanitize = sub {
-		$_[0] =~ s/&/&amp;/g;
+		#$_[0] =~ s/&/&amp;/g;
 		$_[0] =~ s/</&lt;/g;
 		$_[0] =~ s/>/&gt;/g;
 		return $_[0];
@@ -144,9 +144,9 @@ sub Print
 		my $Cookie = $CGI->{'COOKIE'};
 		my $Set = $CGI->{'SET'};
 		
-		my $name = $Form->Get('NAME');
-		my $mail = $Form->Get('MAIL');
-		my $msg = $Form->Get('MESSAGE');
+		my $name = &$sanitize($Form->Get('NAME'));
+		my $mail = &$sanitize($Form->Get('MAIL'));
+		my $msg = &$sanitize($Form->Get('MESSAGE'));
 		
 		# cookie情報の出力
 		if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked')) {
