@@ -445,8 +445,16 @@ sub PrintReadFoot
 			require './module/radagast.pl';
 			my $Cookie = RADAGAST->new;
 			$Cookie->Init();
-			$cookName = $Cookie->Get('NAME', '');
-			$cookMail = $Cookie->Get('MAIL', '');
+			my $sanitize = sub {
+				$_ = shift;
+				s/&/&amp;/g;
+				s/</&lt;/g;
+				s/>/&gt;/g;
+				s/"/&#34;/g;
+				return $_;
+			};
+			$cookName = &$sanitize($Cookie->Get('NAME', ''));
+			$cookMail = &$sanitize($Cookie->Get('MAIL', ''));
 		}
 		
 		$Page->Print(<<HTML);
