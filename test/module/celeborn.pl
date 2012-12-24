@@ -444,7 +444,7 @@ HTML
 HTML
 	
 	# ’m—“o—Í
-	$Banner->Print($Page, 100, 2, 0);
+	$Banner->Print($Page, 100, 2, 0) if ($Sys->Get('BANNER'));
 	
 	$Page->Print(<<HTML);
 
@@ -481,7 +481,6 @@ HTML
 <hr>
 
 <div align="right">
-<a href="http://validator.w3.org/check?uri=referer"><img src="$cgipath/datas/html.gif" alt="Valid HTML 4.01 Transitional" height="15" width="80" border="0"></a>
 $version
 </div>
 </body>
