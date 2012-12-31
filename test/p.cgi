@@ -141,7 +141,7 @@ sub PrintThreadList
 	
 	foreach (@{$pList}) {
 		@elem = split(/<>/, $_);
-		$path = $Conv->CreatePath($Sys, 'O', $Sys->Get('BBS'), $elem[1], 'l10');
+		$path = $Conv->CreatePath($Sys, 1, $Sys->Get('BBS'), $elem[1], 'l10');
 		$Page->Print("$elem[0]: <a href=\"$path\">$elem[2]($elem[3])</a><br>\n");
 	}
 }

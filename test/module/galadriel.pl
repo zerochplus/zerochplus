@@ -806,7 +806,7 @@ sub ConvertOption
 #	パス生成 - CreatePath
 #	-------------------------------------------
 #	引　数：$Sys  : MELKOR
-#			$mode : エージェント
+#			$mode : 0:read 1:r
 #			$bbs  : BBSキー
 #			$key  : スレッドキー
 #			$opt  : オプション
@@ -818,7 +818,7 @@ sub CreatePath
 	my $this = shift;
 	my ($Sys, $mode, $bbs, $key, $opt) = @_;
 	
-	my $path = $Sys->Get('SERVER') . $Sys->Get('CGIPATH') . ($mode ne 'O' ? '/read.cgi' : '/r.cgi');
+	my $path = $Sys->Get('SERVER') . $Sys->Get('CGIPATH') . ($mode eq 0 ? '/read.cgi' : '/r.cgi');
 	
 	# QUERY_STRINGパス生成
 	if ($Sys->Get('PATHKIND')) {
