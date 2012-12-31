@@ -297,7 +297,7 @@ sub Update
 				# SETTING.TXT‚©‚ç•K—v‚Èî•ñ‚ğæ“¾‚·‚é
 				my $f = 0;
 				foreach (@lines) {
-					next if ($_ =~ /^(.+?)=(.*)$/);
+					next if ($_ !~ /^(.+?)=(.*)$/);
 					my ($key, $dat) = ($1, $2);
 					if ($key eq $skey) {
 						$this->{'NAME'}->{$id} = $dat;
