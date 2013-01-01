@@ -356,7 +356,9 @@ sub GetSubFolders
 	
 	my ($base, $pDirs, $pList) = @_;
 	
-	foreach my $dir (@$pDirs) {
+	# foreach my $dir ‚Æ‚·‚é‚Æ$pDir‚ª”j‰ó‚³‚ê‚é
+	foreach (@$pDirs) {
+		my $dir = $_;
 		if ($dir =~ s|^\Q$base/\E|| && $dir !~ m|/|) {
 			push @$pList, $dir;
 		}
