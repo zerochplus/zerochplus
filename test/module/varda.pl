@@ -155,7 +155,7 @@ sub CreateIIndex
 		
 		my $name = $Threads->Get('SUBJECT', $key);
 		my $res = $Threads->Get('RES', $key);
-		my $path = $Conv->CreatePath($Sys, 1, $bbs, $key, 'l10');
+		my $path = $Conv->CreatePath($Sys, 'O', $bbs, $key, 'l10');
 		
 		$Page->Print("<a href=\"$path\">$i: $name($res)</a><br> \n");
 	}
@@ -678,7 +678,7 @@ sub PrintResponse
 	my $contLen = length $elem[3];
 	my $contLine = $Conv->GetTextLine(\$elem[3]);
 	my $nameCol = $this->{'SET'}->Get('BBS_NAME_COLOR');
-	my $dispLine = $this->{'SET'}->Get('BBS_LINE_NUMBER');
+	my $dispLine = $this->{'SET'}->Get('BBS_INDEX_LINE_NUMBER');
 	
 	# URL‚Æˆø—pŒÂŠ‚Ì“K‰ž
 	$Conv->ConvertURL($Sys, $this->{'SET'}, 0, \$elem[3]);

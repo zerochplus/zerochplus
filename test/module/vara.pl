@@ -477,10 +477,10 @@ sub IsRegulation
 			my $tateHour = $Set->Get('BBS_TATESUGI_HOUR', '0') - 0;
 			my $tateCount = $Set->Get('BBS_TATESUGI_COUNT', '0') - 0;
 			my $checkCount = $Set->Get('BBS_THREAD_TATESUGI', '0') - 0;
-			if ($tateHour ne 0 && $Log->IsTatesugi($tateHour) ge $tateCount) {
+			if ($tateHour ne 0 && $Log->IsTatesugi($tateHour) >= $tateCount) {
 				return $ZP::E_REG_MANYTHREAD;
 			}
-			if ($Log->Search($koyuu, 3, $mode, $host, $checkCount)) {
+			if ($checkCount ne 0 && $Log->Search($koyuu, 3, $mode, $host, $checkCount)) {
 				return $ZP::E_REG_MANYTHREAD;
 			}
 		}

@@ -416,7 +416,7 @@ sub PrintLimitSetting
 {
 	my ($Page, $SYS, $Form) = @_;
 	my ($Setting);
-	my ($setSubjectMax, $setNameMax, $setMailMax, $setContMax, $setThreadMax, $setWriteMax);
+	my ($setSubjectMax, $setNameMax, $setMailMax, $setContMax, $setLineMax, $setWriteMax);
 	my ($setContinueMax, $setNoName, $setProxy, $setOverSea, $setIPSave, $setTomato);
 	my ($setIDForce, $setIDNone, $setIDHost, $setIDDisp);
 	my ($disphost, $dispsakhalin, $dispsiberia);
@@ -432,7 +432,7 @@ sub PrintLimitSetting
 	$setNameMax		= $Setting->Get('BBS_NAME_COUNT');
 	$setMailMax		= $Setting->Get('BBS_MAIL_COUNT');
 	$setContMax		= $Setting->Get('BBS_MESSAGE_COUNT');
-	$setThreadMax	= $Setting->Get('BBS_THREAD_TATESUGI');
+	$setLineMax		= $Setting->Get('BBS_LINE_NUMBER') *2;
 	$setWriteMax	= $Setting->Get('timecount')||0;
 	$setContinueMax	= $Setting->Get('timeclose')||0;
 	$setNoName		= $Setting->Get('NANASHI_CHECK');
@@ -468,8 +468,8 @@ sub PrintLimitSetting
 	$Page->Print("<input type=text size=10 name=BBS_MESSAGE_COUNT value=\"$setContMax\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">海外ホスト規制</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_JP_CHECK $setOverSea value=on>規制有り</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成待機数</td><td>");
-	$Page->Print("<input type=text size=10 name=BBS_THREAD_TATESUGI value=\"$setThreadMax\"></td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">書き込み可能\行数(2未満切り上げ)</td><td>");
+	$Page->Print("<input type=text size=10 name=BBS_LINE_NUMBER value=\"$setLineMax\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">トマト</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_RAWIP_CHECK $setTomato value=on>トマト表\示</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">書き込みログ保存数</td><td>");
@@ -484,6 +484,8 @@ sub PrintLimitSetting
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP2 $dispsakhalin>発信元表\示(sakhalin)<br>");
 	$Page->Print("<input type=radio name=ID_DISP value=BBS_DISP_IP3 $dispsiberia>発信元表\示(siberia)<br>");
 	$Page->Print("</td></tr>");
+	$Page->Print("<tr><td colspan=4><hr></td></tr>");
+	$Page->Print('<tr><td colspan=4>注: スレッド立てすぎは、0chオリジナル設定に移動しました</td></tr>');
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETLIMIT');\"></td></tr></table>");
@@ -514,7 +516,7 @@ sub PrintOtherSetting
 	
 	$setThreadNum	= $Setting->Get('BBS_THREAD_NUMBER');
 	$setContentNum	= $Setting->Get('BBS_CONTENTS_NUMBER');
-	$setContentLine	= $Setting->Get('BBS_LINE_NUMBER');
+	$setContentLine	= $Setting->Get('BBS_INDEX_LINE_NUMBER');
 	$setThreadMenu	= $Setting->Get('BBS_MAX_MENU_THREAD');
 	$setUnicode		= $Setting->Get('BBS_UNICODE');
 	$setCookie		= $Setting->Get('SUBBBS_CGI_ON');
@@ -539,8 +541,8 @@ sub PrintOtherSetting
 	$Page->Print("<input type=text size=8 name=BBS_CONTENTS_NUMBER value=\"$setContentNum\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">　　名前cookie保存</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_NAMECOOKIE_CHECK $setNameCookie value=on>保存</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">indexレス内容表\示行数</td><td>");
-	$Page->Print("<input type=text size=8 name=BBS_LINE_NUMBER value=\"$setContentLine\"></td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">indexレス内容表\示行数(注)</td><td>");
+	$Page->Print("<input type=text size=8 name=BBS_INDEX_LINE_NUMBER value=\"$setContentLine\"></td>");
 	$Page->Print("<td class=\"DetailTitle\">　　メールcookie保存</td><td>");
 	$Page->Print("<input type=checkbox name=BBS_MAILCOOKIE_CHECK $setMailCookie value=on>保存</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">indexメニュー数</td><td>");
@@ -555,6 +557,8 @@ sub PrintOtherSetting
 	$Page->Print("<tr><td class=\"DetailTitle\">曜日文字</td><td colspan=3>");
 	$Page->Print("<input type=text size=20 name=BBS_YMD_WEEKS value=\"$setWeek\"></td></tr>");
 	
+	$Page->Print("<tr><td colspan=4><hr></td></tr>");
+	$Page->Print('<tr><td colspan=4>注: 書き込み可能行数の設定とは分離し、そちらは制限設定に移動しました</td></tr>');
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETOTHER');\"></td></tr></table>");
@@ -591,8 +595,9 @@ sub PrintOriginalSetting
 	$setItem[7]	= $Setting->Get('BBS_THREADCAPONLY');
 	$setItem[8]	= $Setting->Get('BBS_SAMBATIME');
 	$setItem[9]	= $Setting->Get('BBS_HOUSHITIME');
-	$setItem[10]= $Setting->Get('BBS_TATESUGI_HOUR');
-	$setItem[11]= $Setting->Get('BBS_TATESUGI_COUNT');
+	$setItem[10]= $Setting->Get('BBS_THREAD_TATESUGI');
+	$setItem[11]= $Setting->Get('BBS_TATESUGI_HOUR');
+	$setItem[12]= $Setting->Get('BBS_TATESUGI_COUNT');
 	
 	$readOnly[0] = ($setItem[5] eq 'none' ? 'checked' : '');
 	$readOnly[1] = ($setItem[5] eq 'caps' ? 'checked' : '');
@@ -618,18 +623,30 @@ sub PrintOriginalSetting
 	$Page->Print("<input type=radio name=BBS_READONLY value=caps $readOnly[1]>キャップのみ書き込み可<br>");
 	$Page->Print("<input type=radio name=BBS_READONLY value=none $readOnly[0]>書き込み可<br>");
 	$Page->Print("</td></tr>");
+# Samba
 	$Page->Print("<tr><td class=\"DetailTitle\">Samba待機秒数</td><td colspan=3>");
 	$Page->Print("<input type=text size=8 name=BBS_SAMBATIME value=\"$setItem[8]\">");
 	$Page->Print("(0でSamba無効、無記入でデフォルト値)</td></tr>");
 	$Page->Print("<tr><td class=\"DetailTitle\">Samba奉仕時間(分)</td><td colspan=3>");
 	$Page->Print("<input type=text size=8 name=BBS_HOUSHITIME value=\"$setItem[9]\">");
 	$Page->Print("(無記入でデフォルト値)</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成数規制(時間)</td><td colspan=3>");
-	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_HOUR value=\"$setItem[10]\">");
+# BBS_THREAD_TATESUGI
+	$Page->Print("<tr><td colspan=4><hr></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">(時間経過によらない)スレッド立てすぎ規制</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_THREAD_TATESUGI value=\"$setItem[10]\">");
 	$Page->Print("(0で無効)</td></tr>");
-	$Page->Print("<tr><td class=\"DetailTitle\">スレッド作成数規制(数)</td><td colspan=3>");
-	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_COUNT value=\"$setItem[11]\">");
-	$Page->Print("</td></tr>");
+	$Page->Print("<tr><td colspan=4>一度スレッドを立てた人は、ここで設定された数だけ新たなスレッドが、他の人たちにより立てられるまで、新たにスレッドを立てられません。</td></tr>");
+	$Page->Print("<tr><td colspan=4>下の項目と、両方同時に有効にできます。片方しか使わない場合はどちらかを無効化してください。</td></tr>");
+# tateHour
+	$Page->Print("<tr><td colspan=4><br></td></tr>");
+	$Page->Print("<tr><td class=\"DetailTitle\">設定時間内に立てることのできるスレッドの最大数</td><td colspan=3>");
+	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_HOUR value=\"$setItem[11]\">");
+	$Page->Print("時間に ");
+	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_COUNT value=\"$setItem[12]\">");
+	$Page->Print("スレッド まで</td></tr>");
+	$Page->Print("<tr><td colspan=4>誰かここに書くいいかんじの説明を考えてください^^;</td></tr>");
+	$Page->Print("<tr><td colspan=4>(0時間にすると無効にできます)</td></tr>");
+# /ここまで
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
 	$Page->Print("<tr><td colspan=4 align=left><input type=button value=\"　設定　\"");
 	$Page->Print("onclick=\"DoSubmit('bbs.setting','FUNC','SETORIGIN');\"></td></tr></table>");
@@ -813,9 +830,13 @@ sub FunctionLimitSetting
 	}
 	# 入力チェック
 	{
-		
+		my $bbsLN;
+		$bbsLN = $Form->Get('BBS_LINE_NUMBER') /2;
+		$bbsLN = ( $bbsLN == int($bbsLN) ? $bbsLN : int($bbsLN+1) );
+		$Form->Set( 'BBS_LINE_NUMBER', $bbsLN );
+
 		my @inList = ('BBS_SUBJECT_COUNT', 'BBS_NAME_COUNT', 'BBS_MAIL_COUNT', 'BBS_MESSAGE_COUNT',
-						'BBS_THREAD_TATESUGI', 'timecount', 'timeclose');
+						'BBS_LINE_NUMBER', 'timecount', 'timeclose');
 		# 入力有無
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
@@ -841,7 +862,7 @@ sub FunctionLimitSetting
 	$Setting->Set('BBS_NAME_COUNT', $Form->Get('BBS_NAME_COUNT'));
 	$Setting->Set('BBS_MAIL_COUNT', $Form->Get('BBS_MAIL_COUNT'));
 	$Setting->Set('BBS_MESSAGE_COUNT', $Form->Get('BBS_MESSAGE_COUNT'));
-	$Setting->Set('BBS_THREAD_TATESUGI', $Form->Get('BBS_THREAD_TATESUGI'));
+	$Setting->Set('BBS_LINE_NUMBER',$Form->Get('BBS_LINE_NUMBER'));
 	$Setting->Set('timecount', $Form->Get('timecount'));
 	$Setting->Set('timeclose', $Form->Get('timeclose'));
 	$Setting->Set('NANASHI_CHECK', ($Form->Equal('NANASHI_CHECK', 'on') ? 'checked' : ''));
@@ -931,7 +952,7 @@ sub FunctionOtherSetting
 	}
 	# 入力チェック
 	{
-		my @inList = ('BBS_THREAD_NUMBER', 'BBS_CONTENTS_NUMBER', 'BBS_LINE_NUMBER', 'BBS_MAX_MENU_THREAD');
+		my @inList = ('BBS_THREAD_NUMBER', 'BBS_CONTENTS_NUMBER', 'BBS_INDEX_LINE_NUMBER', 'BBS_MAX_MENU_THREAD');
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
@@ -945,7 +966,7 @@ sub FunctionOtherSetting
 	
 	$Setting->Set('BBS_THREAD_NUMBER', $Form->Get('BBS_THREAD_NUMBER'));
 	$Setting->Set('BBS_CONTENTS_NUMBER', $Form->Get('BBS_CONTENTS_NUMBER'));
-	$Setting->Set('BBS_LINE_NUMBER', $Form->Get('BBS_LINE_NUMBER'));
+	$Setting->Set('BBS_INDEX_LINE_NUMBER', $Form->Get('BBS_INDEX_LINE_NUMBER'));
 	$Setting->Set('BBS_MAX_MENU_THREAD', $Form->Get('BBS_MAX_MENU_THREAD'));
 	$Setting->Set('BBS_UNICODE', ($Form->Equal('BBS_UNICODE', 'on') ? 'pass' : 'change'));
 	$Setting->Set('SUBBBS_CGI_ON', ($Form->Equal('SUBBBS_CGI_ON', 'on') ? '1' : ''));
@@ -986,7 +1007,7 @@ sub FunctionOriginalSetting
 	}
 	# 入力チェック
 	{
-		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER', 'BBS_TATESUGI_HOUR', 'BBS_TATESUGI_COUNT');
+		my @inList = ('BBS_DATMAX', 'BBS_TRIPCOLUMN', 'BBS_COLUMN_NUMBER', 'BBS_THREAD_TATESUGI', 'BBS_TATESUGI_HOUR', 'BBS_TATESUGI_COUNT');
 		if (! $Form->IsInput(\@inList)) {
 			return 1001;
 		}
@@ -997,6 +1018,9 @@ sub FunctionOriginalSetting
 	
 	if ( $Form->Get('BBS_TATESUGI_HOUR') - 0 eq 0) {
 		$Form->Set('BBS_TATESUGI_HOUR' ,'0');
+	}
+	if ( $Form->Get('BBS_THREAD_TATESUGI') - 0 eq 0) {
+		$Form->Set('BBS_THREAD_TATESUGI' ,'0');
 	}
 	
 	require './module/isildur.pl';
@@ -1012,6 +1036,7 @@ sub FunctionOriginalSetting
 	$Setting->Set('BBS_THREADCAPONLY', ($Form->Equal('BBS_THREADCAPONLY', 'on') ? 'checked' : ''));
 	$Setting->Set('BBS_SAMBATIME', $Form->Get('BBS_SAMBATIME'));
 	$Setting->Set('BBS_HOUSHITIME', $Form->Get('BBS_HOUSHITIME'));
+	$Setting->Set('BBS_THREAD_TATESUGI', $Form->Get('BBS_THREAD_TATESUGI'));
 	$Setting->Set('BBS_TATESUGI_HOUR', $Form->Get('BBS_TATESUGI_HOUR'));
 	$Setting->Set('BBS_TATESUGI_COUNT', $Form->Get('BBS_TATESUGI_COUNT'));
 	

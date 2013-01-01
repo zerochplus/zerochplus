@@ -338,6 +338,7 @@ sub InitSettingData
 		'BBS_CAP_COLOR'			=> '',
 		'BBS_TATESUGI_HOUR'		=> '0',
 		'BBS_TATESUGI_COUNT'	=> '5',
+		'BBS_INDEX_LINE_NUMBER'		=> 12,
 	);
 	
 	while (my ($key, $val) = each(%set)) {
