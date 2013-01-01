@@ -309,7 +309,7 @@ sub Search
 				$log =~ s/[\r\n]+\z//;
 				
 				my ($key, $val) = (split /<>/, $log, -1)[1, 3];
-				$key = $1 if ($key =~ /\((.*)\)/);
+				$val = $1 if ($val =~ /\((.*)\)/);
 				if ($data eq $val) {
 					$num++;
 				}
