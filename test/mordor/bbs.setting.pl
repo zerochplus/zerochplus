@@ -644,7 +644,6 @@ sub PrintOriginalSetting
 	$Page->Print("時間に ");
 	$Page->Print("<input type=text size=8 name=BBS_TATESUGI_COUNT value=\"$setItem[12]\">");
 	$Page->Print("スレッド まで</td></tr>");
-	$Page->Print("<tr><td colspan=4>誰かここに書くいいかんじの説明を考えてください^^;</td></tr>");
 	$Page->Print("<tr><td colspan=4>(0時間にすると無効にできます)</td></tr>");
 # /ここまで
 	$Page->Print("<tr><td colspan=4><hr></td></tr>");
