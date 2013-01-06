@@ -8,12 +8,13 @@
 #
 #============================================================================================================
 
+use lib './perllib';
+
 use strict;
 use warnings;
 #use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 no warnings 'once';
 
-BEGIN { use lib './perllib'; }
 
 # CGIの実行結果を終了コードとする
 exit(ReadCGI());
@@ -53,7 +54,8 @@ sub ReadCGI
 	else {
 		# 対象スレッドが見つからなかった場合は探索画面を表示する
 		if ($err == $ZP::E_PAGE_FINDTHREAD) {
-			PrintReadSearch(\%SYS, $Page, $err);
+			#PrintReadSearch(\%SYS, $Page, $err);
+			PrintReadError(\%SYS, $Page, $err);
 		}
 		# それ以外は通常エラー
 		else {
