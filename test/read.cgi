@@ -589,6 +589,9 @@ sub PrintReadSearch
 		$Page->Print("ÅF$elem[2]</dt>\n  <dd>$elem[3]<br><br></dd>\n");
 	}
 	$Page->Print("</dl>\n\n");
+	
+	$Dat->Close();
+	
 	$Page->Print("<hr>\n\n");
 	
 	$Page->Print(<<HTML);
