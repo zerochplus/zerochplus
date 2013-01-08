@@ -54,8 +54,7 @@ sub ReadCGI
 	else {
 		# 対象スレッドが見つからなかった場合は探索画面を表示する
 		if ($err == $ZP::E_PAGE_FINDTHREAD) {
-			#PrintReadSearch(\%SYS, $Page, $err);
-			PrintReadError(\%SYS, $Page, $err);
+			PrintReadSearch(\%SYS, $Page, $err);
 		}
 		# それ以外は通常エラー
 		else {
@@ -404,7 +403,13 @@ sub PrintResponse
 #------------------------------------------------------------------------------------------------------------
 sub PrintReadSearch
 {
-	my ($Sys, $Page) = @_;
+	my ($Sys, $Page, $err) = @_;
+	
+	# 存在しないので404を返す。
+	$Page->Print("Status: 404 Not Found\n");
+	
+	# 仮エラーページ
+	PrintReadError(\%SYS, $Page, $err);
 }
 
 #------------------------------------------------------------------------------------------------------------

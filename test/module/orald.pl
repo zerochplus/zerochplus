@@ -132,9 +132,12 @@ sub Print
 	$Log->Set('', $err, $version, $koyuu, $mode);
 	$Log->Save($Sys);
 	
+	#$Page->Print("Status: 412 Precondition Failed\n");
+	
 	if ($mode eq 'O') {
 		my $subject = $this->{'SUBJECT'}->{$err};
-		$Page->Print("Content-type: text/html\n\n<html><head><title>");
+		$Page->Print("Content-type: text/html\n\n");
+		$Page->Print("<html><head><title>");
 		$Page->Print("‚d‚q‚q‚n‚qI</title></head><!--nobanner-->\n");
 		$Page->Print("<body><font color=red>ERROR:$subject</font><hr>");
 		$Page->Print("$message<hr><a href=\"$bbsPath/i/\">‚±‚¿‚ç</a>");
