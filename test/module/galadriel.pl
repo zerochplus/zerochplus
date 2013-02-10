@@ -880,9 +880,11 @@ sub GetDate
 	
 	# msec�̎擾
 	if ($msect) {
-		use Time::HiRes;
-		my $times = Time::HiRes::time;
-		$str .= sprintf(".%02d", ($times * 100) % 100);
+		eval {
+			use Time::HiRes;
+			my $times = Time::HiRes::time;
+			$str .= sprintf(".%02d", ($times * 100) % 100);
+		};
 	}
 	
 	return $str;
