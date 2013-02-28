@@ -140,8 +140,7 @@ sub CreateIIndex
 	$Page->Print("</head><body><center>$title</center>");
 	
 	# バナー表示
-	$this->{'BANNER'}->Print($Page, 100, 1, 1);
-	$Page->Print('<hr></center>');
+	$this->{'BANNER'}->Print($Page, 100, 3, 1);
 	
 	# 全スレッドを取得
 	my @threadSet = ();
