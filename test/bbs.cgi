@@ -299,7 +299,7 @@ sub PrintBBSThreadCreate
   <td>
   <b>スレッド新規作成</b><br>
   <center>
-  <form method="POST" action="./bbs.cgi">
+  <form method="POST" action="./bbs.cgi?guid=ON">
   <input type="hidden" name="bbs" value="$bbs"><input type="hidden" name="time" value="$tm">
   <table border="0">
    <tr>
@@ -352,7 +352,7 @@ sub PrintBBSMobileThreadCreate
 	
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print("<html><head><title>$title</title></head><!--nobanner-->");
-	$Page->Print("\n<body><form action=\"./bbs.cgi\" method=\"POST\" utn><center>$title<hr>");
+	$Page->Print("\n<body><form action=\"./bbs.cgi?guid=ON\" method=\"POST\"><center>$title<hr>");
 	
 	$Banner->Print($Page, 100, 2, 1);
 	
@@ -454,7 +454,7 @@ HTML
 ・投稿者は、掲示板運営者が指定する第三者に対して、著作物の利用許諾を一切しないことを承諾します。<br>
 </div>
 
-<form method="POST" action="./bbs.cgi">
+<form method="POST" action="./bbs.cgi?guid=ON">
 HTML
 	
 	$msg =~ s/<br>/\n/g;

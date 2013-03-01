@@ -108,7 +108,7 @@ sub PrintHead
 	$Page->Print('<html><!--nobanner--><head><title>i-mode 0ch</title>');
 	$Page->Print("<meta http-equiv=Content-Type content=\"text/html;charset=$code\">");
 	$Page->Print('</head>');
-	$Page->Print("<body><form action=\"$path/$bbs\" method=\"POST\" utn>");
+	$Page->Print("<body><form action=\"$path/$bbs\" method=\"POST\">");
 	
 	if ($Sys->Get('PATHKIND')) {
 		$Page->Print("<a href=\"$path?bbs=$bbs&st=$st\">‘O</a> ");

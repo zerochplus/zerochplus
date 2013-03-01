@@ -321,7 +321,7 @@ sub PrintReadFoot
 $Page->Print(<<HTML);
 <hr>
 <a name=res></a>
-<form method="POST" action="$cgipath/bbs.cgi?guid=ON" utn>
+<form method="POST" action="$cgipath/bbs.cgi?guid=ON">
 <input type="hidden" name="bbs" value="$bbs">
 <input type="hidden" name="key" value="$key">
 <input type="hidden" name="mb" value="on">
