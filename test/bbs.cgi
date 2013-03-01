@@ -187,7 +187,7 @@ sub Initialize
 		if (!$Form->IsExist('MESSAGE')) {
 			return $ZP::E_PAGE_THREAD;
 		}
-		$Form->Set('key', time);
+		$Form->Set('key', int(time));
 		$Sys->Set('KEY', $Form->Get('key'));
 	}
 	
@@ -290,7 +290,7 @@ sub PrintBBSThreadCreate
 		my $name = $Cookie->Get('NAME', '');
 		my $mail = $Cookie->Get('MAIL', '');
 		my $bbs = $Form->Get('bbs');
-		my $tm = $Form->Get('time');
+		my $tm = int(time);
 		my $ver = $Sys->Get('VERSION');
 		
 		$Page->Print(<<HTML);
@@ -348,7 +348,7 @@ sub PrintBBSMobileThreadCreate
 	
 	my $title = $Set->Get('BBS_TITLE');
 	my $bbs = $Sys->Get('BBS');
-	my $tm = time;
+	my $tm = int(time);
 	
 	$Page->Print("Content-type: text/html\n\n");
 	$Page->Print("<html><head><title>$title</title></head><!--nobanner-->");
@@ -396,7 +396,7 @@ sub PrintBBSCookieConfirm
 	};
 	my $code = $Sys->Get('ENCODE');
 	my $bbs = &$sanitize($Form->Get('bbs'));
-	my $tm = &$sanitize($Form->Get('time'));
+	my $tm = int(time);
 	my $name = &$sanitize($Form->Get('FROM'));
 	my $mail = &$sanitize($Form->Get('mail'));
 	my $msg = &$sanitize($Form->Get('MESSAGE'));

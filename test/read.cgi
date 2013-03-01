@@ -438,7 +438,7 @@ sub PrintReadFoot
 	if ($rmax > $Dat->Size()) {
 		my $cookName = '';
 		my $cookMail = '';
-		my $tm = time;
+		my $tm = int(time);
 		
 		# cookieÝ’èONŽž‚Ícookie‚ðŽæ“¾‚·‚é
 		if (($Sys->Get('CLIENT') & $ZP::C_PC) && $Set->Equal('SUBBBS_CGI_ON', 1)) {
