@@ -79,6 +79,12 @@ sub DoPrint
 	elsif ($subMode eq 'RESTART') {													# スレッド停止解除確認画面
 		PrintThreadStop($Page, $Sys, $Form, 0);
 	}
+	elsif ($subMode eq 'FLOAT') {													# スレッド浮上確認画面
+		PrintThreadFloat($Page, $Sys, $Form, 1);
+	}
+	elsif ($subMode eq 'DEFLOAT') {													# スレッド浮上解除確認画面
+		PrintThreadFloat($Page, $Sys, $Form, 0);
+	}
 	elsif ($subMode eq 'POOL') {													# スレッドDAT落ち確認画面
 		PrintThreadPooling($Page, $Sys, $Form);
 	}
@@ -136,6 +142,12 @@ sub DoFunction
 	}
 	elsif ($subMode eq 'RESTART') {													# 再開
 		$err = FunctionThreadStop($Sys, $Form, $this->{'LOG'}, 0);
+	}
+	elsif ($subMode eq 'FLOAT') {													# 浮上
+		$err = FunctionThreadFloat($Sys, $Form, $this->{'LOG'}, 1);
+	}
+	elsif ($subMode eq 'DEFLOAT') {													# 浮上解除
+		$err = FunctionThreadFloat($Sys, $Form, $this->{'LOG'}, 0);
 	}
 	elsif ($subMode eq 'POOL') {													# DAT落ち
 		$err = FunctionThreadPooling($Sys, $Form, $this->{'LOG'});
@@ -236,17 +248,18 @@ sub PrintThreadList
 	$common = "DoSubmit('bbs.thread','DISP','LIST');";
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2><b><a href=\"javascript:SetOption('DISPST', " . ($dispSt - $dispNum));
+	$Page->Print("<tr><td colspan=3><b><a href=\"javascript:SetOption('DISPST', " . ($dispSt - $dispNum));
 	$Page->Print(");$common\">&lt;&lt; PREV</a> | <a href=\"javascript:SetOption('DISPST', ");
 	$Page->Print("" . ($dispSt + $dispNum) . ");$common\">NEXT &gt;&gt;</a></b>");
 	$Page->Print("</td><td colspan=2 align=right>");
 	$Page->Print("表\示数<input type=text name=DISPNUM size=4 value=$dispNum>");
 	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><th style=\"width:30\">　</th>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">Thread Title</td>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Thread Key</td>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:50\">Res</td></tr>\n");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
+	$Page->Print("<tr><th style=\"width:30px\">　</th>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:250px\">Thread Title</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:30px\">Thread Key</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:20px\">Res</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:100px\">Attribute</td></tr>\n");
 	
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$n		= $i + 1;
@@ -256,9 +269,11 @@ sub PrintThreadList
 		
 		my $permt = ARAGORN::GetPermission("$base/$id.dat");
 		my $perms = $SYS->Get('PM-STOP');
+		my $isstop = $permt == $perms;
 		
 		# 表示背景色設定
-		if ($permt eq $perms) {						$bgColor = '#ffcfff'; }	# 停止スレッド
+		#if ($Threads->GetAttr($id, 'stop')) { # use from 0.8.x
+		if ($isstop) {								$bgColor = '#ffcfff'; }	# 停止スレッド
 		elsif ($res > $SYS->Get('RESMAX')) {		$bgColor = '#cfffff'; }	# 最大数スレッド
 		elsif (ARAGORN::IsMoved("$base/$id.dat")) {	$bgColor = '#ffffcf'; }	# 移転スレッド
 		else {										$bgColor = '#ffffff'; }	# 通常スレッド
@@ -277,19 +292,25 @@ sub PrintThreadList
 		else {
 			$Page->Print("<td>$n: $subj</td>");
 		}
-		$Page->Print("<td align=center>$id</td><td align=center>$res</td></tr>\n");
+		$Page->Print("<td align=center>$id</td><td align=center>$res</td>");
+		my @attrstr = ();
+		push @attrstr, '停止' if ($isstop);
+		push @attrstr, '浮上' if ($Threads->GetAttr($id, 'float'));
+		$Page->Print("<td>@attrstr</td></tr>\n");
 	}
 	$common		= "onclick=\"DoSubmit('bbs.thread','DISP'";
 	$common2	= "onclick=\"DoSubmit('bbs.thread','FUNC'";
 	
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=left>");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=5 align=left>");
 #	$Page->Print("<input type=button value=\" コピー \" $common2,'COPY')\"> ");
 #	$Page->Print("<input type=button value=\"　移動　\" $common2,'MOVE')\"> ");
 	$Page->Print("<input type=button value=\"subject更新\" $common2,'UPDATE')\"> ")			if ($isUpdate);
 	$Page->Print("<input type=button value=\"subject再作成\" $common2,'UPDATEALL')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　停止　\" $common,'STOP')\"> ")				if ($isStop);
 	$Page->Print("<input type=button value=\"　再開　\" $common,'RESTART')\"> ")			if ($isStop);
+	$Page->Print("<input type=button value=\"　浮上　\" $common,'FLOAT')\"> ")				if ($isStop);
+	$Page->Print("<input type=button value=\"浮上解除\" $common,'DEFLOAT')\"> ")			if ($isStop);
 	$Page->Print("<input type=button value=\"DAT落ち\" $common,'POOL')\"> ")				if ($isPool);
 	$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\"> ")				if ($isDelete);
 	$Page->Print("</td></tr>\n");
@@ -349,6 +370,57 @@ sub PrintThreadStop
 		$Page->Print("※注：停止したスレッドは[再開]で停止状態を解除できます。</b><br>");
 		$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
 	}
+	$Page->Print("<tr><td colspan=3 align=left>");
+	$Page->Print('<input type=button value="　' . $text . "　\" onclick=\"$common;\"> ");
+	$Page->Print("</td></tr>\n");
+	$Page->Print("</table><br>");
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド浮上確認表示
+#	-------------------------------------------------------------------------------------
+#	@param	$Page	ページコンテキスト
+#	@param	$SYS	システム変数
+#	@param	$Form	フォーム変数
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintThreadFloat
+{
+	my ($Page, $SYS, $Form, $mode) = @_;
+	my (@threadList, $Threads, $id, $subj, $res);
+	my ($common, $text);
+	
+	$SYS->Set('_TITLE', ($mode ? 'Thread Float' : 'Thread De-float'));
+	$text = ($mode ? '浮上' : '浮上解除');
+	
+	require './module/baggins.pl';
+	$Threads = BILBO->new;
+	
+	$Threads->Load($SYS);
+	@threadList = $Form->GetAtArray('THREADS');
+	
+	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=3>以下のスレッドを$textします。</td></tr>");
+	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
+	$Page->Print("<tr>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">Thread Title</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Thread Key</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:50\">Res</td></td>\n");
+	
+	foreach $id (@threadList) {
+		$subj	= $Threads->Get('SUBJECT', $id);
+		$res	= $Threads->Get('RES', $id);
+		
+		$Page->Print("<tr><td>$subj</a></td>");
+		$Page->Print("<td align=center>$id</td><td align=center>$res</td></tr>\n");
+		$Page->HTMLInput('hidden', 'THREADS', $id);
+	}
+	$common = "DoSubmit('bbs.thread','FUNC','" . ($mode ? 'FLOAT' : 'DEFLOAT') . "')";
+	
+	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
+	
 	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print('<input type=button value="　' . $text . "　\" onclick=\"$common;\"> ");
 	$Page->Print("</td></tr>\n");
@@ -529,14 +601,18 @@ sub FunctionThreadStop
 		}
 	}
 	require './module/gondor.pl';
+	#require './module/baggins.pl'; # use from 0.8.x
 	
 	$Thread		= ARAGORN->new;
-	@threadList = $Form->GetAtArray('THREADS');
+	#my $Threads	= BILBO->new; # use from 0.8.x
+	@threadList	= $Form->GetAtArray('THREADS');
 	$base		= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat';
+	#$Threads->LoadAttr($Sys);
 	
 	# スレッドの停止
 	if ($mode) {
 		foreach $id (@threadList) {
+			#$Threads->SetAttr($id, 'stop', 1); # use from 0.8.x
 			$path = "$base/$id.dat";
 			if ($Thread->Load($Sys, $path, 0)) {
 				$subj = $Thread->GetSubject();
@@ -553,6 +629,7 @@ sub FunctionThreadStop
 	# スレッドの再開
 	else {
 		foreach $id (@threadList) {
+			#$Threads->SetAttr($id, 'stop', ''); # use from 0.8.x
 			$path = "$base/$id.dat";
 			if ($Thread->Load($Sys, $path, 0)) {
 				$subj = $Thread->GetSubject();
@@ -566,6 +643,62 @@ sub FunctionThreadStop
 			push @$pLog, "スレッド「$subj/$id」の再開に失敗しました。";
 		}
 	}
+	
+	#$Threads->SaveAttr($Sys); # use from 0.8.x
+	
+	return 0;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド浮上／解除
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	システム変数
+#	@param	$Form	フォーム変数
+#	@param	$pLog	ログ用
+#	@return	エラーコード
+#
+#------------------------------------------------------------------------------------------------------------
+sub FunctionThreadFloat
+{
+	my ($Sys, $Form, $pLog, $mode) = @_;
+	my (@threadList, $Thread, $path, $base, $id, $subj);
+	
+	# 権限チェック
+	{
+		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
+		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
+			return 1000;
+		}
+	}
+	require './module/baggins.pl';
+	
+	my $Threads	= BILBO->new;
+	$Threads->Load($Sys);
+	@threadList	= $Form->GetAtArray('THREADS');
+	
+	# スレッドの浮上
+	if ($mode) {
+		foreach $id (sort { $Threads->GetPosition($b) <=> $Threads->GetPosition($a) } @threadList) {
+			$Threads->SetAttr($id, 'float', 1);
+			$Threads->AGE($id);
+			$subj = $Threads->Get('SUBJECT', $id, '');
+			push @$pLog, "スレッド「$subj」を浮上。";
+		}
+		
+	}
+	# スレッドの浮上解除
+	else {
+		foreach $id (@threadList) {
+			$Threads->SetAttr($id, 'float', '');
+			$subj = $Threads->Get('SUBJECT', $id, '');
+			push @$pLog, "スレッド「$subj」を浮上解除。";
+		}
+	}
+	
+	$Threads->Save($Sys);
 	
 	return 0;
 }
@@ -658,6 +791,7 @@ sub FunctionThreadDelete
 		next if (! defined $Threads->Get('SUBJECT', $id));
 		push @$pLog, 'スレッド「' . $Threads->Get('SUBJECT', $id) . '」を削除';
 		$Threads->Delete($id);
+		$Threads->DeleteAttr($id);
 		unlink "$path/dat/$id.dat";
 		unlink "$path/log/$id.cgi";
 		unlink "$path/log/del_$id.cgi";

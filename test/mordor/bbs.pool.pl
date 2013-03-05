@@ -204,17 +204,18 @@ sub PrintThreadList
 	$common		= "DoSubmit('bbs.pool','DISP','LIST');";
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td colspan=2><b><a href=\"javascript:SetOption('DISPST', " . ($dispSt - $dispNum));
+	$Page->Print("<tr><td colspan=3><b><a href=\"javascript:SetOption('DISPST', " . ($dispSt - $dispNum));
 	$Page->Print(");$common\">&lt;&lt; PREV</a> | <a href=\"javascript:SetOption('DISPST', ");
 	$Page->Print("" . ($dispSt + $dispNum) . ");$common\">NEXT &gt;&gt;</a></b>");
 	$Page->Print("</td><td colspan=2 align=right>");
 	$Page->Print("表\示数<input type=text name=DISPNUM size=4 value=$dispNum>");
 	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td style=\"width:30\">　</td>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">Thread Title</td>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Thread Key</td>");
-	$Page->Print("<td class=\"DetailTitle\" style=\"width:50\">Res</td></tr>\n");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
+	$Page->Print("<tr><th style=\"width:30px\">　</th>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:250px\">Thread Title</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:30px\">Thread Key</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:20px\">Res</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:100px\">Attribute</td></tr>\n");
 	
 	# 権限取得
 	my ($isRepare, $isDelete, $isUpdate, $isCreate);
@@ -231,13 +232,18 @@ sub PrintThreadList
 		
 		$Page->Print("<tr><td><input type=checkbox name=THREADS value=$id></td>");
 		$Page->Print("<td>$subj</td>");
-		$Page->Print("<td align=center>$id</td><td align=center>$res</td></tr>\n");
+		$Page->Print("<td align=center>$id</td><td align=center>$res</td>");
+		
+		my @attrstr = ();
+		#push @attrstr, '停止' if ($Threads->GetAttr($id, 'stop'));
+		push @attrstr, '浮上' if ($Threads->GetAttr($id, 'float'));
+		$Page->Print("<td>@attrstr</td></tr>\n");
 	}
 	$common		= "onclick=\"DoSubmit('bbs.pool','DISP'";
 	$common2	= "onclick=\"DoSubmit('bbs.pool','FUNC'";
 	
-	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=4 align=left>");
+	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=5 align=left>");
 	$Page->Print("<input type=button value=\"　更新　\" $common2,'UPDATE')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\" 全更新 \" $common2,'UPDATEALL')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　復帰　\" $common,'REPARE')\"> ")		if ($isRepare);
@@ -290,9 +296,6 @@ sub PrintThreadRepare
 	}
 	$common = "DoSubmit('bbs.pool','FUNC','REPARE')";
 	
-	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
-	$Page->Print("<tr><td bgcolor=yellow colspan=3><b><font color=red>");
-	$Page->Print("※注：DAT落ちしたスレッドは[DAT落ちスレッド]画面で復帰できます。</b><br>");
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print("<input type=button value=\"　復帰　\" onclick=\"$common\"> ");
@@ -438,6 +441,7 @@ sub FunctionThreadDelete
 		next if (! defined $Pools->Get('SUBJECT', $id));
 		push @$pLog, 'POOLスレッド「' . $Pools->Get('SUBJECT', $id) . '」を削除';
 		$Pools->Delete($id);
+		$Pools->DeleteAttr($id);
 		unlink "$path/pool/$id.cgi";
 		unlink "$path/log/$id.cgi";
 		unlink "$path/log/del_$id.cgi";

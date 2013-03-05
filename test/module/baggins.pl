@@ -38,6 +38,7 @@ sub new
 		'SORT'		=> undef,
 		'NUM'		=> undef,
 		'HANDLE'	=> undef,
+		'ATTR'		=> undef,
 	};
 	bless $obj, $class;
 	
@@ -153,6 +154,8 @@ sub Load
 		}
 	}
 	$this->{'NUM'} = $num;
+	
+	$this->LoadAttr($Sys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -171,6 +174,8 @@ sub Save
 	my $fh = $this->Open($Sys) or return;
 	my $subject = $this->{'SUBJECT'};
 	
+	#$this->CustomizeOrder();
+	
 	foreach (@{$this->{'SORT'}}) {
 		next if (!defined $subject->{$_});
 		print $fh "$_.dat<>$subject->{$_} ($this->{'RES'}->{$_})\n";
@@ -179,6 +184,8 @@ sub Save
 	truncate($fh, tell($fh));
 	
 	$this->Close();
+	
+	$this->SaveAttr($Sys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -228,16 +235,8 @@ sub OnDemand
 		$this->{'RES'}->{$id} = $val;
 	}
 	
-	if ($age) {
-		my $sort = $this->{'SORT'};
-		for (my $i = 0; $i < scalar(@$sort); $i++) {
-			if ($id eq $sort->[$i]) {
-				splice @$sort, $i, 1;
-				unshift @$sort, $id;
-				last;
-			}
-		}
-	}
+	$this->AGE($id) if ($age);
+	$this->CustomizeOrder();
 	
 	# subject書き込み
 	seek($fh, 0, 0);
@@ -361,6 +360,8 @@ sub Delete
 	
 	delete $this->{'SUBJECT'}->{$id};
 	delete $this->{'RES'}->{$id};
+	# for pool
+	#delete $this->{'ATTR'}->{$id};
 	
 	my $sort = $this->{'SORT'};
 	for (my $i = 0; $i < scalar(@$sort); $i++) {
@@ -370,6 +371,178 @@ sub Delete
 			last;
 		}
 	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報読み込み
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub LoadAttr
+{
+	my $this = shift;
+	my ($Sys) = @_;
+	
+	$this->{'ATTR'} = {};
+	
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/info/attr.cgi';
+	
+	if (open(my $fh, '<', $path)) {
+		flock($fh, 2);
+		my @lines = <$fh>;
+		close($fh);
+		map { s/[\r\n]+\z// } @lines;
+		
+		foreach (@lines) {
+			next if ($_ eq '');
+			
+			my @elem = split(/<>/, $_, -1);
+			if (scalar(@elem) < 2) {
+				warn "invalid line in $path";
+				next;
+			}
+			
+			my $id = $elem[0];
+			# for pool, don't skip
+			#next if (!defined $this->{'SUBJECT'}->{$id});
+			
+			my $hash = {};
+			foreach (split /[&;]/, $elem[1]) {
+				my ($key, $val) = split(/=/, $_, 2);
+				$key =~ tr/+/ /;
+				$key =~ s/%([0-9a-f][0-9a-f])/pack('C', hex($1))/egi;
+				$val =~ tr/+/ /;
+				$val =~ s/%([0-9a-f][0-9a-f])/pack('C', hex($1))/egi;
+				$hash->{$key} = $val if ($val ne '');
+			}
+			
+			$this->{'ATTR'}->{$id} = $hash;
+		}
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報保存
+#	-------------------------------------------------------------------------------------
+#	@param	$Sys	MELKOR
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub SaveAttr
+{
+	my $this = shift;
+	my ($Sys) = @_;
+	
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/info/attr.cgi';
+	
+	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		flock($fh, 2);
+		binmode($fh);
+		seek($fh, 0, 0);
+		
+		my $Attr = $this->{'ATTR'};
+		foreach my $id (keys %$Attr) {
+			my $hash = $Attr->{$id};
+			next if (!defined $hash);
+			
+			my $attrs = '';
+			while (my ($key, $val) = each %$hash) {
+				next if (!defined $val || $val eq '');
+				$key =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
+				$val =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
+				$attrs .= "$key=$val&";
+			}
+			
+			next if ($attrs eq '');
+			
+			my $data = join('<>',
+				$id,
+				$attrs,
+			);
+			
+			print $fh "$data\n";
+		}
+		
+		truncate($fh, tell($fh));
+		close($fh);
+		chmod $Sys->Get('PM-ADM'), $path;
+	}
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報取得
+#	-------------------------------------------------------------------------------------
+#	@param	$key		スレッドID
+#	@param	$attr		属性名
+#	@return	スレッド属性情報
+#
+#------------------------------------------------------------------------------------------------------------
+sub GetAttr
+{
+	my $this = shift;
+	my ($key, $attr) = @_;
+	
+	if (!defined $this->{'ATTR'}) {
+		warn "Attr info is not loaded.";
+		return;
+	}
+	my $Attr = $this->{'ATTR'};
+	
+	my $val = undef;
+	$val = $Attr->{$key}->{$attr} if (defined $Attr->{$key});
+	
+	# undef => empty string
+	return (defined $val ? $val : '');
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報設定
+#	-------------------------------------------------------------------------------------
+#	@param	$key		スレッドID
+#	@param	$attr		属性名
+#	@param	$val		属性値
+#
+#------------------------------------------------------------------------------------------------------------
+sub SetAttr
+{
+	my $this = shift;
+	my ($key, $attr, $val) = @_;
+	
+	if (!defined $this->{'ATTR'}) {
+		warn "Attr info is not loaded.";
+		return;
+	}
+	my $Attr = $this->{'ATTR'};
+	
+	$Attr->{$key} = {} if (!defined $Attr->{$key});
+	$Attr->{$key}->{$attr} = $val;
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報削除
+#	-------------------------------------------------------------------------------------
+#	@param	$key		スレッドID
+#
+#------------------------------------------------------------------------------------------------------------
+sub DeleteAttr
+{
+	my $this = shift;
+	my ($key) = @_;
+	
+	if (!defined $this->{'ATTR'}) {
+		warn "Attr info is not loaded.";
+		return;
+	}
+	my $Attr = $this->{'ATTR'};
+	
+	delete $Attr->{$key};
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -405,6 +578,32 @@ sub GetLastID
 
 #------------------------------------------------------------------------------------------------------------
 #
+#	スレッド順調整
+#	-------------------------------------------------------------------------------------
+#	@param	なし
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub CustomizeOrder
+{
+	my $this = shift;
+	
+	my @float = ();
+	my @sort = ();
+	
+	foreach my $id (@{$this->{'SORT'}}) {
+		if ($this->GetAttr($id, 'float')) {
+			push @float, $id;
+		} else {
+			push @sort, $id;
+		}
+	}
+	
+	$this->{'SORT'} = [@float, @sort];
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
 #	スレッドあげ
 #	-------------------------------------------------------------------------------------
 #	@param	スレッドID
@@ -420,7 +619,7 @@ sub AGE
 	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
-			unshift @$sort, $sort->[$i];
+			unshift @$sort, $id;
 			last;
 		}
 	}
@@ -443,7 +642,7 @@ sub DAME
 	for (my $i = 0; $i < scalar(@$sort); $i++) {
 		if ($id eq $sort->[$i]) {
 			splice @$sort, $i, 1;
-			push @$sort, $sort->[$i];
+			push @$sort, $id;
 			last;
 		}
 	}
@@ -463,6 +662,8 @@ sub Update
 	my ($Sys) = @_;
 	
 	my $base = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat';
+	
+	$this->CustomizeOrder();
 	
 	foreach my $id (@{$this->{'SORT'}}) {
 		if (open(my $fh, '<', "$base/$id.dat")) {
@@ -539,6 +740,8 @@ sub UpdateAll
 	foreach my $id (sort keys %$idhash) {
 		unshift @{$this->{'SORT'}}, $id;
 	}
+	
+	$this->CustomizeOrder();
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -592,6 +795,7 @@ sub new
 		'RES'		=> undef,
 		'SORT'		=> undef,
 		'NUM'		=> undef,
+		'ATTR'		=> undef,
 	};
 	bless $obj, $class;
 	
@@ -640,6 +844,8 @@ sub Load
 		}
 		$this->{'NUM'} = $num;
 	}
+	
+	$this->LoadAttr($Sys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -675,6 +881,8 @@ sub Save
 		warn "can't save subject: $path";
 	}
 	chmod $Sys->Get('PM-TXT'), $path;
+	
+	$this->SaveAttr($Sys);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -810,6 +1018,36 @@ sub GetNum
 	my $this = shift;
 	
 	return $this->{'NUM'};
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	スレッド属性情報関連
+#
+#------------------------------------------------------------------------------------------------------------
+sub LoadAttr
+{
+	return BILBO::LoadAttr(@_);
+}
+
+sub SaveAttr
+{
+	return BILBO::SaveAttr(@_);
+}
+
+sub GetAttr
+{
+	return BILBO::GetAttr(@_);
+}
+
+sub SetAttr
+{
+	return BILBO::SetAttr(@_);
+}
+
+sub DeleteAttr
+{
+	return BILBO::DeleteAttr(@_);
 }
 
 #------------------------------------------------------------------------------------------------------------
