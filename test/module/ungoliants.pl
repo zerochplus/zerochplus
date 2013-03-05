@@ -769,7 +769,7 @@ sub IsAuthority
 	my $authors = $this->{'GROUP'}->Get('AUTH', $group);
 	my @authors = split(/\,/, $authors);
 	foreach my $auth (@authors) {
-		return 1 if ($auth eq $author);
+		return 1 if ($auth == $author);
 	}
 	return 0;
 }

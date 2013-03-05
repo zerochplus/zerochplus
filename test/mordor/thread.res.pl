@@ -7,7 +7,7 @@
 #
 #============================================================================================================
 package	MODULE;
-use CGI::Carp qw(fatalsToBrowser);
+
 use strict;
 use warnings;
 
@@ -192,11 +192,11 @@ sub SetMenuList
 	$Base->SetMenu('レス一覧', "'thread.res','DISP','LIST'");
 	
 	# レス削除権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 12, $bbs)){
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_RESDELETE, $bbs)){
 		$Base->SetMenu('レス一括削除', "'thread.res','DISP','DELLUMP'");
 	}
 	# 管理グループ権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 1, $bbs)){
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_USERGROUP, $bbs)){
 	#	$Base->SetMenu('<hr>', '');
 	#	$Base->SetMenu('書き込みログ', "'thread.res','DISP','LOG_THREAD_WRITE'");
 	}
@@ -222,7 +222,7 @@ sub PrintResList
 {
 	my ($Page, $Sys, $Form, $Dat,$Logger) = @_;
 	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
-	my ($pRes, $isAbone, $isEdit, $format);
+	my ($pRes, $isAbone, $isEdit, $isAccessUser, $format);
 	my ($log, @logs, $lastnum, $logsize);
 	
 	$Sys->Set('_TITLE', 'Res List');
@@ -241,8 +241,9 @@ sub PrintResList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:300\">Contents</td></tr>\n");
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
-	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 13, $Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'));
+	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESEDIT, $Sys->Get('BBS'));
+	$isAccessUser = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_ACCESUSER, $Sys->Get('BBS'));
 	
 	$lastnum = $Dat->Size() - 1;
 	$logsize = $Logger->Size();
@@ -277,8 +278,8 @@ sub PrintResList
 			$Page->Print('' . ($i + 1));
 		}
 		$Page->Print("：<font color=forestgreen><b>$elem[0]</b></font>[$elem[1]]");
-		$Page->Print("：$elem[2]</dt><dd>$elem[3]<br><br>");
-		$Page->Print("<hr>HOST:$logs[5]<br>IP:$logs[6]<br>UA:$logs[8]") if (defined $log);
+		$Page->Print("：$elem[2]</dt><dd>$elem[3]");
+		$Page->Print("<br><br><hr>HOST:$logs[5]<br>IP:$logs[6]<br>UA:$logs[8]") if (defined $log && $isAccessUser);
 		$Page->Print("</dd></td></tr>\n");
 	}
 	$Page->HTMLInput('hidden', 'SELECT_RES', '');
@@ -313,7 +314,7 @@ sub PrintResEdit
 	
 	$Sys->Set('_TITLE', 'Res Edit');
 	
-	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 13, $Sys->Get('BBS'));
+	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESEDIT, $Sys->Get('BBS'));
 	$pRes	= $Dat->Get($Form->Get('SELECT_RES'));
 	@elem	= split(/<>/, $$pRes);
 	
@@ -373,7 +374,7 @@ sub PrintResDelete
 	@resSet = $Form->GetAtArray('RESS');
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td>以下のレスを" . ($mode ? 'あぼ～ん' : '削除') . "します。</td></tr>\n");
@@ -430,7 +431,7 @@ sub PrintResLumpDelete
 	}
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -487,7 +488,7 @@ sub FunctionResEdit
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
-		if (($SEC->IsAuthority($chkID, 13, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_RESEDIT, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -544,7 +545,7 @@ sub FunctionResDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $Sys->Get('ADMIN')->{'USER'};
 		
-		if (($SEC->IsAuthority($chkID, 12, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

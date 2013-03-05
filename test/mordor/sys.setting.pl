@@ -191,7 +191,7 @@ sub SetMenuList
 	$Base->SetMenu('情報', "'sys.setting','DISP','INFO'");
 	
 	# システム管理権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
 		$Base->SetMenu('<hr>', '');
 		$Base->SetMenu('基本設定', "'sys.setting','DISP','BASIC'");
 		$Base->SetMenu('パーミッション設定', "'sys.setting','DISP','PERMISSION'");
@@ -843,7 +843,7 @@ sub FunctionPluginOptionSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -897,7 +897,7 @@ sub FunctionBasicSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -952,7 +952,7 @@ sub FunctionPermissionSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1006,7 +1006,7 @@ sub FunctionLimitterSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1056,7 +1056,7 @@ sub FunctionOtherSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1115,7 +1115,7 @@ sub FunctionPlusViewSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1165,7 +1165,7 @@ sub FunctionPlusSecSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1217,7 +1217,7 @@ sub FunctionPluginSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -1275,7 +1275,7 @@ sub FunctionPluginUpdate
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}

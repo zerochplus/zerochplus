@@ -184,7 +184,7 @@ sub SetMenuList
 	$Base->SetMenu('設定情報', "'bbs.setting','DISP','SETINFO'");
 	
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 9, $bbs)){
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_BBSSETTING, $bbs)){
 		$Base->SetMenu('<hr>', '');
 		$Base->SetMenu('基本設定', "'bbs.setting','DISP','SETBASE'");
 		$Base->SetMenu('カラー設定', "'bbs.setting','DISP','SETCOLOR'");
@@ -713,7 +713,7 @@ sub FunctionBaseSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -763,7 +763,7 @@ sub FunctionColorSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -823,7 +823,7 @@ sub FunctionLimitSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -945,7 +945,7 @@ sub FunctionOtherSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -1000,7 +1000,7 @@ sub FunctionOriginalSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -1064,7 +1064,7 @@ sub FunctionSettingImport
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 9, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSSETTING, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

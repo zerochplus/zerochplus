@@ -183,12 +183,12 @@ sub SetMenuList
 	$Base->SetMenu('<hr>', '');
 	
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 11, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_ACCESUSER, $bbs)) {
 		$Base->SetMenu("規制ユーザの編集","'bbs.edit','DISP','USER'");
 		$bAuth = 1;
 	}
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 10, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_NGWORDS, $bbs)) {
 		$Base->SetMenu("NGワードの編集","'bbs.edit','DISP','NGWORD'");
 		$bAuth = 1;
 	}
@@ -225,7 +225,7 @@ sub PrintHeaderEdit
 	$Setting->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_BBSEDIT, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
@@ -293,7 +293,7 @@ sub PrintFooterEdit
 	$Foot->Load($SYS, 'FOOT');
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_BBSEDIT, $SYS->Get('BBS'));
 	
 	$Page->Print("<table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
@@ -364,7 +364,7 @@ sub PrintMETAEdit
 	$data = join '', @$pMeta;
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_BBSEDIT, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
@@ -412,7 +412,7 @@ sub PrintValidUserEdit
 	$vUsers->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 11, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_ACCESUSER, $SYS->Get('BBS'));
 	$pUsers = $vUsers->Get('USER');
 	
 	$kind[0] = $vUsers->Get('TYPE') eq 'disable' ? '' : 'selected';
@@ -476,7 +476,7 @@ sub PrintNGWordsEdit
 	$Words->Load($SYS);
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 10, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_NGWORDS, $SYS->Get('BBS'));
 	$pWords = $Words->Get('NGWORD');
 	
 	$kind[0] = $Words->Get('METHOD', '') eq 'disable' ? 'selected' : '';
@@ -585,7 +585,7 @@ sub PrintLastEdit
 	}
 	
 	# 権限取得
-	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 14, $SYS->Get('BBS'));
+	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_BBSEDIT, $SYS->Get('BBS'));
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>");
@@ -652,7 +652,7 @@ sub FunctionTextEdit
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 14, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSEDIT, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -707,7 +707,7 @@ sub FunctionValidUserEdit
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 11, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_ACCESUSER, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -753,7 +753,7 @@ sub FunctionNGWordEdit
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 10, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_NGWORDS, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -798,7 +798,7 @@ sub FunctionLastEdit
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 14, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSEDIT, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

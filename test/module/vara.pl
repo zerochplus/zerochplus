@@ -7,7 +7,6 @@ package	VARA;
 
 use strict;
 use warnings;
-no warnings qw(once);
 
 #------------------------------------------------------------------------------------------------------------
 #
@@ -278,7 +277,7 @@ sub ReadyBeforeWrite
 	# 規制ユーザ・NGワードチェック
 	{
 		# 規制ユーザ
-		if (!$Sec->IsAuthority($capID, 21, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_NGUSER, $bbs)) {
 			require './module/faramir.pl';
 			my $vUser = FARAMIR->new;
 			$vUser->Load($Sys);
@@ -295,7 +294,7 @@ sub ReadyBeforeWrite
 		}
 		
 		# NGワード
-		if (!$Sec->IsAuthority($capID, 22, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_NGWORD, $bbs)) {
 			require './module/wormtongue.pl';
 			my $ngWord = WORMTONGUE->new;
 			$ngWord->Load($Sys);
@@ -428,21 +427,21 @@ sub IsRegulation
 	if (!$islocalip && !$Set->Equal('BBS_PROXY_CHECK', 'checked')) {
 		if ($this->{'CONV'}->IsProxy($this->{'SYS'}, $this->{'FORM'}, $from, $mode)) {
 			#$this->{'FORM'}->Set('FROM', "</b> [―\{}\@{}\@{}-] <b>$from");
-			if (!$Sec->IsAuthority($capID, 19, $bbs)) {
+			if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_DNSBL, $bbs)) {
 				return $ZP::E_REG_DNSBL;
 			}
 		}
 	}
 	# 読取専用
 	if (!$Set->Equal('BBS_READONLY', 'none')) {
-		if (!$Sec->IsAuthority($capID, 13, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_LIMIT_READONLY, $bbs)) {
 			return $ZP::E_LIMIT_READONLY;
 		}
 	}
 	# JPホスト以外規制
 	if (!$islocalip && $Set->Equal('BBS_JP_CHECK', 'checked')) {
 		if ($host !~ /\.jp$/i) {
-			if (!$Sec->IsAuthority($capID, 20, $bbs)) {
+			if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_NOTJPHOST, $bbs)) {
 				return $ZP::E_REG_NOTJPHOST;
 			}
 		}
@@ -459,13 +458,13 @@ sub IsRegulation
 		
 		# スレッド作成(携帯から)
 		if ($client & $ZP::C_MOBILE) {
-			if (!$Sec->IsAuthority($capID, 16, $bbs)) {
+			if (!$Sec->IsAuthority($capID, $ZP::CAP_LIMIT_MOBILETHREAD, $bbs)) {
 				return $ZP::E_LIMIT_MOBILETHREAD;
 			}
 		}
 		# スレッド作成(キャップのみ)
 		if ($Set->Equal('BBS_THREADCAPONLY', 'checked')) {
-			if (!$Sec->IsAuthority($capID, 9, $bbs)) {
+			if (!$Sec->IsAuthority($capID, $ZP::CAP_LIMIT_THREADCAPONLY, $bbs)) {
 				return $ZP::E_LIMIT_THREADCAPONLY;
 			}
 		}
@@ -473,14 +472,14 @@ sub IsRegulation
 		require './module/peregrin.pl';
 		my $Log = PEREGRIN->new;
 		$Log->Load($Sys, 'THR');
-		if (!$Sec->IsAuthority($capID, 8, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_MANYTHREAD, $bbs)) {
 			my $tateHour = $Set->Get('BBS_TATESUGI_HOUR', '0') - 0;
 			my $tateCount = $Set->Get('BBS_TATESUGI_COUNT', '0') - 0;
 			my $checkCount = $Set->Get('BBS_THREAD_TATESUGI', '0') - 0;
-			if ($tateHour ne 0 && $Log->IsTatesugi($tateHour) >= $tateCount) {
+			if ($tateHour != 0 && $Log->IsTatesugi($tateHour) >= $tateCount) {
 				return $ZP::E_REG_MANYTHREAD;
 			}
-			if ($checkCount ne 0 && $Log->Search($koyuu, 3, $mode, $host, $checkCount)) {
+			if ($checkCount != 0 && $Log->Search($koyuu, 3, $mode, $host, $checkCount)) {
 				return $ZP::E_REG_MANYTHREAD;
 			}
 		}
@@ -488,7 +487,7 @@ sub IsRegulation
 		$Log->Save($Sys);
 		
 		# Sambaログ
-		if (!$Sec->IsAuthority($capID, 18, $bbs) || !$Sec->IsAuthority($capID, 12, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_SAMBA, $bbs) || !$Sec->IsAuthority($capID, $ZP::CAP_REG_NOTIMEPOST, $bbs)) {
 			my $Logs = PEREGRIN->new;
 			$Logs->Load($Sys, 'SMB');
 			$Logs->Set($Set, $Sys->Get('KEY'), $Sys->Get('VERSION'), $koyuu);
@@ -499,7 +498,7 @@ sub IsRegulation
 	else {
 		require './module/peregrin.pl';
 		
-		if (!$Sec->IsAuthority($capID, 18, $bbs) || !$Sec->IsAuthority($capID, 12, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_SAMBA, $bbs) || !$Sec->IsAuthority($capID, $ZP::CAP_REG_NOTIMEPOST, $bbs)) {
 			my $Logs = PEREGRIN->new;
 			$Logs->Load($Sys, 'SMB');
 			
@@ -513,7 +512,7 @@ sub IsRegulation
 			my $Holdtm = int($Sys->Get('SAMBATM'));
 			
 			# Samba
-			if ($Samba && !$Sec->IsAuthority($capID, 18, $bbs)) {
+			if ($Samba && !$Sec->IsAuthority($capID, $ZP::CAP_REG_SAMBA, $bbs)) {
 				if ($Houshi) {
 					my ($ishoushi, $htm) = $Logh->IsHoushi($Houshi, $koyuu);
 					if ($ishoushi) {
@@ -526,7 +525,7 @@ sub IsRegulation
 			}
 				
 			# 短時間投稿 (Samba優先)
-			if (!$n && $Holdtm && !$Sec->IsAuthority($capID, 12, $bbs)) {
+			if (!$n && $Holdtm && !$Sec->IsAuthority($capID, $ZP::CAP_REG_NOTIMEPOST, $bbs)) {
 				$tm = $Logs->IsTime($Holdtm, $koyuu);
 			}
 			
@@ -552,7 +551,7 @@ sub IsRegulation
 		}
 		
 		# レス書き込み(連続投稿)
-		if (!$Sec->IsAuthority($capID, 10, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_NOBREAKPOST, $bbs)) {
 			if ($Set->Get('timeclose') && $Set->Get('timecount') ne '') {
 				my $Log = PEREGRIN->new;
 				$Log->Load($Sys, 'HST');
@@ -563,8 +562,8 @@ sub IsRegulation
 			}
 		}
 		# レス書き込み(二重投稿)
-		if (!$Sec->IsAuthority($capID, 11, $bbs)) {
-			if ($this->{'SYS'}->Get('KAKIKO') eq 1) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_REG_DOUBLEPOST, $bbs)) {
+			if ($this->{'SYS'}->Get('KAKIKO') == 1) {
 				my $Log = PEREGRIN->new;
 				$Log->Load($Sys, 'WRT', $Sys->Get('KEY'));
 				if ($Log->Search($koyuu, 1) - 2 == length($this->{'FORM'}->Get('MESSAGE'))) {
@@ -611,7 +610,7 @@ sub NormalizationNameMail
 	my $capID = $Sys->Get('CAPID', '');
 	my $capName = '';
 	my $capColor = '';
-	if ($capID && $Sec->IsAuthority($capID, 17, $bbs)) {
+	if ($capID && $Sec->IsAuthority($capID, $ZP::CAP_DISP_HANLDLE, $bbs)) {
 		$capName = $Sec->Get($capID, 'NAME', 1, '');
 		$capColor = $Sec->Get($Sec->{'GROUP'}->GetBelong($capID), 'COLOR', 0, '');
 		$capColor = $Set->Get('BBS_CAP_COLOR', '') if ($capColor eq '');
@@ -675,7 +674,7 @@ sub NormalizationNameMail
 	if ($Sys->Equal('MODE', 1)) {
 		return $ZP::E_FORM_NOSUBJECT if ($subject eq '');
 		# サブジェクト欄の文字数確認
-		if (!$Sec->IsAuthority($capID, 1, $bbs)) {
+		if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_LONGSUBJECT, $bbs)) {
 			if ($Set->Get('BBS_SUBJECT_COUNT') < length($subject)) {
 				return $ZP::E_FORM_LONGSUBJECT;
 			}
@@ -683,19 +682,19 @@ sub NormalizationNameMail
 	}
 	
 	# 名前欄の文字数確認
-	if (!$Sec->IsAuthority($capID, 2, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_LONGNAME, $bbs)) {
 		if ($Set->Get('BBS_NAME_COUNT') < length($name)) {
 			return $ZP::E_FORM_LONGNAME;
 		}
 	}
 	# メール欄の文字数確認
-	if (!$Sec->IsAuthority($capID, 3, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_LONGMAIL, $bbs)) {
 		if ($Set->Get('BBS_MAIL_COUNT') < length($mail)) {
 			return $ZP::E_FORM_LONGMAIL;
 		}
 	}
 	# 名前欄の入力確認
-	if (!$Sec->IsAuthority($capID, 7, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_NONAME, $bbs)) {
 		if ($Set->Equal('NANASHI_CHECK', 'checked') && $name eq '') {
 			return $ZP::E_FORM_NONAME;
 		}
@@ -742,19 +741,19 @@ sub NormalizationContents
 	return $ZP::E_FORM_NOTEXT if ($text eq '');
 	
 	# 本文が長すぎ
-	if (!$Sec->IsAuthority($capID, 4, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_LONGTEXT, $bbs)) {
 		if ($Set->Get('BBS_MESSAGE_COUNT') < length($text)) {
 			return $ZP::E_FORM_LONGTEXT;
 		}
 	}
 	# 改行が多すぎ
-	if (!$Sec->IsAuthority($capID, 5, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_MANYLINE, $bbs)) {
 		if (($Set->Get('BBS_LINE_NUMBER') * 2) < $ln) {
 			return $ZP::E_FORM_MANYLINE;
 		}
 	}
 	# 1行が長すぎ
-	if (!$Sec->IsAuthority($capID, 6, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_FORM_LONGLINE, $bbs)) {
 		if ($Set->Get('BBS_COLUMN_NUMBER') < $cl) {
 			return $ZP::E_FORM_LONGLINE;
 		}
@@ -767,7 +766,7 @@ sub NormalizationContents
 	}
 	
 	# 本文ホスト表示
-	if (!$Sec->IsAuthority($capID, 15, $bbs)) {
+	if (!$Sec->IsAuthority($capID, $ZP::CAP_DISP_NOHOST, $bbs)) {
 		if ($Set->Equal('BBS_RAWIP_CHECK', 'checked') && $Sys->Equal('MODE', 1)) {
 			$text .= ' <hr> <font color=tomato face=Arial><b>';
 			$text .= "$ENV{'REMOTE_ADDR'} , $host , </b></font><br>";

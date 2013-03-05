@@ -168,7 +168,7 @@ sub SetMenuList
 	$Base->SetMenu('グループ一覧', "'bbs.user','DISP','LIST'");
 	
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 1, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_USERGROUP, $bbs)) {
 		$Base->SetMenu('グループ登録', "'bbs.user','DISP','CREATE'");
 		$Base->SetMenu('グループインポート', "'bbs.user','DISP','IMPORT'");
 	}
@@ -208,7 +208,7 @@ sub PrintGroupList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Users</td></tr>\n");
 	
 	# 権限取得
-	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 1, $Sys->Get('BBS'));
+	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'));
 	
 	# グループ一覧を出力
 	foreach $id (@groupSet) {
@@ -472,7 +472,7 @@ sub FunctionGroupSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -496,29 +496,30 @@ sub FunctionGroupSetting
 	$expl = $Form->Get('GROUPSUBS');
 	
 	# 権限情報の生成
-	$auth = '';
-	$authNum[0]		= $Form->Equal('A_USERGROUP', 'on') ? 1 : 0;
-	$authNum[1]		= $Form->Equal('A_CAPGROUP', 'on') ? 1 : 0;
-	$authNum[2]		= $Form->Equal('A_THREADSTOP', 'on') ? 1 : 0;
-	$authNum[3]		= $Form->Equal('A_THREADPOOL', 'on') ? 1 : 0;
-	$authNum[4]		= $Form->Equal('A_TREADDELETE', 'on') ? 1 : 0;
-	$authNum[5]		= $Form->Equal('A_THREADINFO', 'on') ? 1 : 0;
-	$authNum[6]		= $Form->Equal('A_PASTCREATE', 'on') ? 1 : 0;
-	$authNum[7]		= $Form->Equal('A_PASTDELETE', 'on') ? 1 : 0;
-	$authNum[8]		= $Form->Equal('A_BBSSETTING', 'on') ? 1 : 0;
-	$authNum[9]		= $Form->Equal('A_NGWORDS', 'on') ? 1 : 0;
-	$authNum[10]	= $Form->Equal('A_ACCESUSER', 'on') ? 1 : 0;
-	$authNum[11]	= $Form->Equal('A_RESABONE', 'on') ? 1 : 0;
-	$authNum[12]	= $Form->Equal('A_RESEDIT', 'on') ? 1 : 0;
-	$authNum[13]	= $Form->Equal('A_BBSEDIT', 'on') ? 1 : 0;
-	$authNum[14]	= $Form->Equal('A_LOGVIEW', 'on') ? 1 : 0;
-	
-	for ($i = 1 ; $i < 16 ; $i++) {
-		if ($authNum[$i - 1]) {
-			$auth .= "$i,";
+	my %field2auth = (
+		'A_USERGROUP'	=> $ZP::AUTH_USERGROUP,
+		'A_CAPGROUP'	=> $ZP::AUTH_CAPGROUP,
+		'A_THREADSTOP'	=> $ZP::AUTH_THREADSTOP,
+		'A_THREADPOOL'	=> $ZP::AUTH_THREADPOOL,
+		'A_TREADDELETE'	=> $ZP::AUTH_TREADDELETE,
+		'A_THREADINFO'	=> $ZP::AUTH_THREADINFO,
+		'A_PASTCREATE'	=> $ZP::AUTH_KAKOCREATE,
+		'A_PASTDELETE'	=> $ZP::AUTH_KAKODELETE,
+		'A_BBSSETTING'	=> $ZP::AUTH_BBSSETTING,
+		'A_NGWORDS'		=> $ZP::AUTH_NGWORDS,
+		'A_ACCESUSER'	=> $ZP::AUTH_ACCESUSER,
+		'A_RESABONE'	=> $ZP::AUTH_RESDELETE,
+		'A_RESEDIT'		=> $ZP::AUTH_RESEDIT,
+		'A_BBSEDIT'		=> $ZP::AUTH_BBSEDIT,
+		'A_LOGVIEW'		=> $ZP::AUTH_LOGVIEW,
+	);
+	my @auths = ();
+	foreach (keys %field2auth) {
+		if ($Form->Equal($_, 'on')) {
+			push @auths, $field2auth{$_};
 		}
 	}
-	$auth = substr($auth, 0, length($auth) - 1);
+	$auth = join(',', @auths);
 	
 	# 所属ユーザ情報の生成
 	@belongUser = $Form->GetAtArray('BELONGUSER');
@@ -575,7 +576,7 @@ sub FunctionGroupDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -626,7 +627,7 @@ sub FunctionGroupImport
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

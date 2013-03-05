@@ -686,13 +686,13 @@ sub IsAuthority
 	
 	# 対象BBSに所属しているか確認
 	my $group = $this->{'GROUP'}->GetBelong($id);
-	return 0 if ($group eq '');;
+	return 0 if ($group eq '');
 	
 	# 権限を持っているか確認
 	my $auth = $this->{'GROUP'}->Get('AUTH', $group);
-	my @authors = split(/\,/, $auth, -1);
+	my @authors = split(/\,/, $auth);
 	foreach my $auth (@authors) {
-		if ($auth eq $author) {
+		if ($auth == $author) {
 			return 1;
 		}
 	}

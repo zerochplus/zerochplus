@@ -171,7 +171,7 @@ sub SetMenuList
 	$Base->SetMenu('グループ一覧', "'bbs.cap','DISP','LIST'");
 	
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 2, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_CAPGROUP, $bbs)) {
 		$Base->SetMenu('グループ登録', "'bbs.cap','DISP','CREATE'");
 		$Base->SetMenu('グループインポート', "'bbs.cap','DISP','IMPORT'");
 	}
@@ -212,7 +212,7 @@ sub PrintGroupList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Caps</td></tr>\n");
 	
 	# 権限取得
-	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 2, $Sys->Get('BBS'));
+	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'));
 	
 	# グループ一覧を出力
 	foreach $id (@groupSet) {
@@ -492,7 +492,7 @@ sub FunctionGroupSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -606,7 +606,7 @@ sub FunctionGroupDelete
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -651,7 +651,7 @@ sub FunctionGroupImport
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

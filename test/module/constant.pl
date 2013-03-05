@@ -114,6 +114,48 @@ our $E_PAGE_WRITE			= 9002;
 our $E_PAGE_THREADMOBILE	= 9003;
 
 
+# CAP PERMISSION
+our $CAP_FORM_LONGSUBJECT		=  1; # タイトル文字数 制限解除
+our $CAP_FORM_LONGNAME			=  2; # 名前文字数 制限解除
+our $CAP_FORM_LONGMAIL			=  3; # メール文字数 制限解除
+our $CAP_FORM_LONGTEXT			=  4; # 本文文字数 制限解除
+our $CAP_FORM_MANYLINE			=  5; # 本文行数 制限解除
+our $CAP_FORM_LONGLINE			=  6; # 本文1行文字数 制限解除
+our $CAP_FORM_NONAME			=  7; # 名無し 制限解除
+our $CAP_REG_MANYTHREAD			=  8; # スレッド作成 規制解除
+our $CAP_LIMIT_THREADCAPONLY	=  9; # スレッド作成可能
+our $CAP_REG_NOBREAKPOST		= 10; # 連続投稿 規制解除
+our $CAP_REG_DOUBLEPOST			= 11; # 二重書き込み 規制解除
+our $CAP_REG_NOTIMEPOST			= 12; # 短時間投稿 規制解除
+our $CAP_LIMIT_READONLY			= 13; # 読取専用 制限解除
+our $CAP_DISP_NOID				= 14; # ID非表示
+our $CAP_DISP_NOHOST			= 15; # 本文ホスト非表示
+our $CAP_LIMIT_MOBILETHREAD		= 16; # 携帯からのスレッド作成 制限解除
+our $CAP_DISP_HANLDLE			= 17; # コテハン★表示
+our $CAP_REG_SAMBA				= 18; # Samba 規制解除
+our $CAP_REG_DNSBL				= 19; # プロキシ 規制解除
+our $CAP_REG_NOTJPHOST			= 20; # 海外ホスト 規制解除
+our $CAP_REG_NGUSER				= 21; # ユーザー 規制解除
+our $CAP_REG_NGWORD				= 22; # NGワード 規制解除
+# USER AUTHORITY
+our $AUTH_SYSADMIN		=  0; # システム管理権限(形式的に)
+our $AUTH_USERGROUP		=  1; # 管理グループ設定
+our $AUTH_CAPGROUP		=  2; # キャップグループ設定
+our $AUTH_THREADSTOP	=  3; # スレッド停止・再開
+our $AUTH_THREADPOOL	=  4; # スレッドdat落ち・復活
+our $AUTH_TREADDELETE	=  5; # スレッド削除
+our $AUTH_THREADINFO	=  6; # スレッド情報更新
+our $AUTH_KAKOCREATE	=  7; # 過去ログ生成
+our $AUTH_KAKODELETE	=  8; # 過去ログ削除
+our $AUTH_BBSSETTING	=  9; # 掲示板設定
+our $AUTH_NGWORDS		= 10; # NGワード編集
+our $AUTH_ACCESUSER		= 11; # アクセス制限編集
+our $AUTH_RESDELETE		= 12; # レスあぼーん
+our $AUTH_RESEDIT		= 13; # レス編集
+our $AUTH_BBSEDIT		= 14; # 各種編集
+our $AUTH_LOGVIEW		= 15; # ログの閲覧・削除
+
+
 # REGEXP
 our $RE_SJIS	= '(?:[\x00-\x7f\xa1-\xdf]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc])';
 

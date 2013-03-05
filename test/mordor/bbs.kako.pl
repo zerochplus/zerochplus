@@ -208,8 +208,8 @@ sub PrintKakoLogList
 	
 	# Œ ŒÀæ“¾
 	my ($isUpdate, $isDelete);
-	$isUpdate = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 7, $SYS->Get('BBS'));
-	$isDelete = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 8, $SYS->Get('BBS'));
+	$isUpdate = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_KAKOCREATE, $SYS->Get('BBS'));
+	$isDelete = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_KAKODELETE, $SYS->Get('BBS'));
 	
 	# ‰ß‹ƒƒOˆê——‚Ì•\¦
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
@@ -255,7 +255,7 @@ sub FunctionUpdateInfo
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 7, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_KAKOCREATE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -295,7 +295,7 @@ sub FunctionUpdateIndex
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 7, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_KAKOCREATE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -333,7 +333,7 @@ sub FunctionLogDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 8, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_KAKODELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

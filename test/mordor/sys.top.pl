@@ -141,7 +141,7 @@ sub SetMenuList
 	$Base->SetMenu('ユーザ通知作成', "'sys.top','DISP','NOTICE_CREATE'");
 	
 	# システム管理権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
 		$Base->SetMenu('<hr>', '');
 		$Base->SetMenu('操作ログ閲覧', "'sys.top','DISP','ADMINLOG'");
 	}
@@ -276,7 +276,7 @@ sub PrintNoticeCreate
 	
 	$Sys->Set('_TITLE', 'User Notice Create');
 	
-	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 0, '*');
+	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
 	$User = $Sys->Get('ADMIN')->{'SECINFO'}->{'USER'};
 	$User->GetKeySet('ALL', '', \@userSet);
 	
@@ -366,7 +366,7 @@ sub PrintAdminLog
 	my ($orz, $or2);
 	
 	$Sys->Set('_TITLE', 'Operation Log');
-	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 0, '*');
+	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
 	
 	# 表示数の設定
 	$listNum	= $Logger->Size();
@@ -576,7 +576,7 @@ sub FunctionLogRemove
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}

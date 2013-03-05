@@ -141,7 +141,7 @@ sub SetMenuList
 	$Base->SetMenu('キャップ一覧', "'sys.cap','DISP','LIST'");
 	
 	# システム管理権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
 		$Base->SetMenu('キャップ登録', "'sys.cap','DISP','CREATE'");
 	}
 }
@@ -196,7 +196,7 @@ sub PrintCapList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:200\">Explanation</td></td>\n");
 	
 	# 権限取得
-	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 0, '*');
+	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
 	
 	# キャップ一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
@@ -378,7 +378,7 @@ sub FuncCapSetting
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -456,7 +456,7 @@ sub FuncCapDelete
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 0, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}

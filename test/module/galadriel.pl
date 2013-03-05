@@ -947,7 +947,7 @@ sub GetIDPart
 	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
 		
 		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
 			return " ID:???$mode";
 		}
 		
@@ -965,7 +965,7 @@ sub GetIDPart
 	if ($Set->Equal('BBS_DISP_IP', 'siberia')){
 		
 		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
 			return " 発信元:???$mode";
 		}
 		
@@ -980,7 +980,7 @@ sub GetIDPart
 	if ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
 		
 		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
 			return " 発信元:???".( $mode ne '' ? " $mode" : '' );
 		}
 		
@@ -1000,7 +1000,7 @@ sub GetIDPart
 		return ( $mode ne '' ? " $mode" : '' );
 	}
 	# ID非表示権限有り
-	if ($Sec->IsAuthority($capID, 14, $Form->Get('bbs'))) {
+	if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
 		return " ID:???$mode";
 	}
 	# 強制IDの場合

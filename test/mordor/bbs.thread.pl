@@ -182,7 +182,7 @@ sub SetMenuList
 	$Base->SetMenu('スレッド一覧', "'bbs.thread','DISP','LIST'");
 	
 	# スレッドdat落ち権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 4, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_THREADPOOL, $bbs)) {
 		$Base->SetMenu('一括DAT落ち', "'bbs.thread','DISP','AUTOPOOL'");
 	}
 	$Base->SetMenu('<hr>', '');
@@ -225,12 +225,12 @@ sub PrintThreadList
 	
 	# 権限取得
 	my ($isStop, $isPool, $isDelete, $isUpdate, $isResEdit, $isResAbone);
-	$isStop		= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 3, $SYS->Get('BBS'));
-	$isPool		= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 4, $SYS->Get('BBS'));
-	$isDelete	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 5, $SYS->Get('BBS'));
-	$isUpdate	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 6, $SYS->Get('BBS'));
-	$isResEdit	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 13, $SYS->Get('BBS'));
-	$isResAbone	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 12, $SYS->Get('BBS'));
+	$isStop		= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_THREADSTOP, $SYS->Get('BBS'));
+	$isPool		= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_THREADPOOL, $SYS->Get('BBS'));
+	$isDelete	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_TREADDELETE, $SYS->Get('BBS'));
+	$isUpdate	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_THREADINFO, $SYS->Get('BBS'));
+	$isResEdit	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESEDIT, $SYS->Get('BBS'));
+	$isResAbone	= $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $SYS->Get('BBS'));
 	
 	# ヘッダ部分の表示
 	$common = "DoSubmit('bbs.thread','DISP','LIST');";
@@ -524,7 +524,7 @@ sub FunctionThreadStop
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 3, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -590,7 +590,7 @@ sub FunctionThreadPooling
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 4, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -641,7 +641,7 @@ sub FunctionThreadDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 5, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_TREADDELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -687,7 +687,7 @@ sub FunctionUpdateSubject
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 6, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -723,7 +723,7 @@ sub FunctionUpdateSubjectAll
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 6, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -759,7 +759,7 @@ sub FunctionThreadAutoPooling
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 4, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

@@ -409,7 +409,7 @@ sub PrintReadSearch
 	$Page->Print("Status: 404 Not Found\n");
 	
 	# 仮エラーページ
-	PrintReadError(\%SYS, $Page, $err);
+	PrintReadError($Sys, $Page, $err);
 }
 
 #------------------------------------------------------------------------------------------------------------

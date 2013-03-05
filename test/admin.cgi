@@ -26,6 +26,8 @@ exit(AdminCGI());
 #------------------------------------------------------------------------------------------------------------
 sub AdminCGI
 {
+	require './module/constant.pl';
+	
 	# ƒVƒXƒeƒ€‰Šúİ’è
 	my $CGI = {};
 	SystemSetting($CGI);

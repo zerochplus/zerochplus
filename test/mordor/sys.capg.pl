@@ -139,7 +139,7 @@ sub SetMenuList
 	$Base->SetMenu('グループ一覧', "'sys.capg','DISP','LIST'");
 	
 	# 管理グループ設定権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
 		$Base->SetMenu('グループ登録', "'sys.capg','DISP','CREATE'");
 	}
 }
@@ -177,7 +177,7 @@ sub PrintGroupList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30\">Caps</td></tr>\n");
 	
 	# 権限取得
-	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 2, $Sys->Get('BBS'));
+	$isAuth = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'));
 	
 	# グループ一覧を出力
 	foreach $id (@groupSet) {
@@ -414,7 +414,7 @@ sub FunctionGroupSetting
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
@@ -440,36 +440,37 @@ sub FunctionGroupSetting
 	$color =~ s/[^\w\d\#]//ig;
 	
 	# 権限情報の生成
-	$auth = '';
-	$authNum[0]		= $Form->Equal('C_SUBJECT', 'on') ? 1 : 0;
-	$authNum[1]		= $Form->Equal('C_NAME', 'on') ? 1 : 0;
-	$authNum[2]		= $Form->Equal('C_MAIL', 'on') ? 1 : 0;
-	$authNum[3]		= $Form->Equal('C_CONTENTS', 'on') ? 1 : 0;
-	$authNum[4]		= $Form->Equal('C_CONTLINE', 'on') ? 1 : 0;
-	$authNum[5]		= $Form->Equal('C_LINECOUNT', 'on') ? 1 : 0;
-	$authNum[6]		= $Form->Equal('C_NONAME', 'on') ? 1 : 0;
-	$authNum[7]		= $Form->Equal('C_THREAD', 'on') ? 1 : 0;
-	$authNum[8]		= $Form->Equal('C_THREADCAP', 'on') ? 1 : 0;
-	$authNum[9]		= $Form->Equal('C_CONTINUAS', 'on') ? 1 : 0;
-	$authNum[10]	= $Form->Equal('C_DUPLICATE', 'on') ? 1 : 0;
-	$authNum[11]	= $Form->Equal('C_SHORTWRITE', 'on') ? 1 : 0;
-	$authNum[12]	= $Form->Equal('C_READONLY', 'on') ? 1 : 0;
-	$authNum[13]	= $Form->Equal('C_IDDISP', 'on') ? 1 : 0;
-	$authNum[14]	= $Form->Equal('C_HOSTDISP', 'on') ? 1 : 0;
-	$authNum[15]	= $Form->Equal('C_MOBILETHREAD', 'on') ? 1 : 0;
-	$authNum[16]	= $Form->Equal('C_FIXHANLDLE', 'on') ? 1 : 0;
-	$authNum[17]	= $Form->Equal('C_SAMBA', 'on') ? 1 : 0;
-	$authNum[18]	= $Form->Equal('C_PROXY', 'on') ? 1 : 0;
-	$authNum[19]	= $Form->Equal('C_JPHOST', 'on') ? 1 : 0;
-	$authNum[20]	= $Form->Equal('C_NGUSER', 'on') ? 1 : 0;
-	$authNum[21]	= $Form->Equal('C_NGWORD', 'on') ? 1 : 0;
-	
-	for ($i = 0 ; $i < 22 ; $i++) {
-		if ($authNum[$i]){
-			$auth .= ''.($i+1).',';
+	my %field2auth = (
+		'C_SUBJECT'			=> $ZP::CAP_FORM_LONGSUBJECT,
+		'C_NAME'			=> $ZP::CAP_FORM_LONGNAME,
+		'C_MAIL'			=> $ZP::CAP_FORM_LONGMAIL,
+		'C_CONTENTS'		=> $ZP::CAP_FORM_LONGTEXT,
+		'C_CONTLINE'		=> $ZP::CAP_FORM_MANYLINE,
+		'C_LINECOUNT'		=> $ZP::CAP_FORM_LONGLINE,
+		'C_NONAME'			=> $ZP::CAP_FORM_NONAME,
+		'C_THREAD'			=> $ZP::CAP_REG_MANYTHREAD,
+		'C_THREADCAP'		=> $ZP::CAP_LIMIT_THREADCAPONLY,
+		'C_CONTINUAS'		=> $ZP::CAP_REG_NOBREAKPOST,
+		'C_DUPLICATE'		=> $ZP::CAP_REG_DOUBLEPOST,
+		'C_SHORTWRITE'		=> $ZP::CAP_REG_NOTIMEPOST,
+		'C_READONLY'		=> $ZP::CAP_LIMIT_READONLY,
+		'C_IDDISP'			=> $ZP::CAP_DISP_NOID,
+		'C_HOSTDISP'		=> $ZP::CAP_DISP_NOHOST,
+		'C_MOBILETHREAD'	=> $ZP::CAP_LIMIT_MOBILETHREAD,
+		'C_FIXHANLDLE'		=> $ZP::CAP_DISP_HANLDLE,
+		'C_SAMBA'			=> $ZP::CAP_REG_SAMBA,
+		'C_PROXY'			=> $ZP::CAP_REG_DNSBL,
+		'C_JPHOST'			=> $ZP::CAP_REG_NOTJPHOST,
+		'C_NGUSER'			=> $ZP::CAP_REG_NGUSER,
+		'C_NGWORD'			=> $ZP::CAP_REG_NGWORD,
+	);
+	my @auths = ();
+	foreach (keys %field2auth) {
+		if ($Form->Equal($_, 'on')) {
+			push @auths, $field2auth{$_};
 		}
 	}
-	$auth = substr($auth, 0, length($auth) - 1);
+	$auth = join(',', @auths);
 	
 	# 所属ユーザ情報の生成
 	@belongUser = $Form->GetAtArray('BELONGUSER_CAP');
@@ -529,7 +530,7 @@ sub FunctionGroupDelete
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_CAPGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

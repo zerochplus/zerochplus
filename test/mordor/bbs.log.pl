@@ -163,7 +163,7 @@ sub SetMenuList
 	$Base->SetMenu('<hr>', '');
 	
 	# ログ閲覧権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 15, $bbs)) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_LOGVIEW, $bbs)) {
 		$Base->SetMenu('スレッド作成ログ', "'bbs.log','DISP','THREADLOG'");
 		$Base->SetMenu('ホストログ', "'bbs.log','DISP','HOSTLOG'");
 		$Base->SetMenu('エラーログ', "'bbs.log','DISP','ERRORLOG'");
@@ -334,7 +334,7 @@ sub FunctionLogDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 15, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_LOGVIEW, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}

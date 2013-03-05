@@ -166,7 +166,7 @@ sub SetMenuList
 	$Base->SetMenu('ŒfŽ¦”Âˆê——', "'sys.bbs','DISP','LIST'");
 	
 	# ƒVƒXƒeƒ€ŠÇ—Œ ŒÀ‚Ì‚Ý
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, 0, '*')) {
+	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
 		$Base->SetMenu('ŒfŽ¦”Âì¬', "'sys.bbs','DISP','CREATE'");
 		$Base->SetMenu('<hr>', '');
 		$Base->SetMenu('ŒfŽ¦”ÂƒJƒeƒSƒŠˆê——', "'sys.bbs','DISP','CATEGORY'");
@@ -203,7 +203,7 @@ sub PrintBBSList
 	$SYS->Get('ADMIN')->{'SECINFO'}->GetBelongBBSList($SYS->Get('ADMIN')->{'USER'}, $BBS, \@belongBBS);
 	
 	# ƒVƒXƒeƒ€ŠÇ—Œ ŒÀ‚ðŽæ“¾
-	$isSysad = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, 0, '*');
+	$isSysad = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
 	
 	# ŒfŽ¦”Âî•ñ‚ðŽæ“¾
 	if ($sCat eq '' || $sCat eq 'ALL') {
@@ -597,7 +597,7 @@ sub FunctionBBSCreate
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -794,7 +794,7 @@ sub FunctionBBSInfoUpdate
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -831,7 +831,7 @@ sub FunctionBBSDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -879,7 +879,7 @@ sub FunctionCategoryAdd
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -925,7 +925,7 @@ sub FunctionCategoryDelete
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}
@@ -976,7 +976,7 @@ sub FunctionCategoryChange
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
 		
-		if (($SEC->IsAuthority($chkID, 1, '*')) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
 		}
 	}

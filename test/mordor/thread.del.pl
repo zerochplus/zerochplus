@@ -201,7 +201,7 @@ sub PrintResList
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:300\">Deleted Contents</td></tr>\n");
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'));
 	
 	# レス一覧を出力
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
@@ -259,7 +259,7 @@ sub PrintResDelete
 	@resSet = $Form->GetAtArray('DEL_RESS');
 	
 	# 権限取得
-	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, 12, $Sys->Get('BBS'));
+	$isAbone = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'));
 	
 	$Page->Print("<center><dl><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td>以下の削除レスを完全に削除します。</td></tr>\n");
@@ -381,7 +381,7 @@ sub FunctionResDelete
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
 		my $chkID	= $Sys->Get('ADMIN')->{'USER'};
 		
-		if (($SEC->IsAuthority($chkID, 12, $Sys->Get('BBS'))) == 0) {
+		if (($SEC->IsAuthority($chkID, $ZP::AUTH_RESDELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
