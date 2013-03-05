@@ -35,6 +35,7 @@ sub AdminCGI
 	my $Sys = MELKOR->new;
 	$Sys->Init();
 	$Sys->Set('BBS', '');
+	$CGI->{'LOGGER'}->Open('.'.$Sys->Get('INFO').'/AdminLog', 100, 2 | 4);
 	$CGI->{'SECINFO'}->Init($Sys);
 	
 	# –²‚ªL‚ª‚è‚ñ‚®
@@ -112,7 +113,6 @@ sub SystemSetting
 	
 	$CGI->{'SECINFO'} = ARWEN->new;
 	$CGI->{'LOGGER'} = IMRAHIL->new;
-	$CGI->{'LOGGER'}->Open('.'.$Sys->Get('INFO').'/AdminLog', 100, 2 | 4);
 	$CGI->{'NEWRELEASE'} = ZP_NEWRELEASE->new;
 }
 
