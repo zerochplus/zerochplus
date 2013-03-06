@@ -49,7 +49,6 @@ sub Init
 			my ($name, $value) = split(/=/, $_, 2);
 			$value =~ s/^"|"$//g;
 			$value =~ s/%([0-9A-Fa-f][0-9A-Fa-f])/pack('H2', $1)/eg;
-			Encode::from_to($value, 'utf8', 'sjis');
 			$this->{'COOKIE'}->{$name} = $value;
 		}
 		return 1;
@@ -61,16 +60,17 @@ sub Init
 #	cookie値設定
 #	-------------------------------------------------------------------------------------
 #	@param	$key	キー
-#	@param	$value	設定値
+#	@param	$val	設定値
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub Set
 {
 	my $this = shift;
-	my ($key, $value) = @_;
+	my ($key, $val, $enc) = @_;
 	
-	$this->{'COOKIE'}->{$key} = $value;
+	Encode::from_to($val, 'sjis', $enc);
+	$this->{'COOKIE'}->{$key} = $val;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -85,9 +85,10 @@ sub Set
 sub Get
 {
 	my $this = shift;
-	my ($key, $default) = @_;
+	my ($key, $default, $enc) = @_;
 	
 	my $val = $this->{'COOKIE'}->{$key};
+	Encode::from_to($val, $enc, 'sjis') if (defined $val);
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
@@ -152,7 +153,6 @@ sub Out
 	# 設定されているcookieを全て出力する
 	foreach my $key (keys %{$this->{'COOKIE'}}) {
 		my $value = $this->{'COOKIE'}->{$key};
-		Encode::from_to($value, 'sjis', 'utf8');
 		$value =~ s/([^\w])/'%'.unpack('H2', $1)/eg;
 		$Page->Print("Set-Cookie: $key=\"$value\"; expires=$date; path=$path\n");
 	}

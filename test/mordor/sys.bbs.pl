@@ -669,25 +669,14 @@ sub FunctionBBSCreate
 	$Sys->Set('BBS', $bbsDir);
 	$bbsSetting->Load($Sys);
 	
-	my $createPath2 = $Sys->Get('CGIPATH') . "/$createPath";
-	{
-		my @pathparse = split /\//, $createPath2;
-		for (my $i = 0 ; $i <= $#pathparse ; $i++) {
-			if ($pathparse[$i] eq '.') {
-				splice @pathparse, $i, 1;
-				redo if ($i <= $#pathparse);
-			}
-			if ($pathparse[$i] eq '..' && $i > 0 && $pathparse[$i - 1] ne '..') {
-				splice @pathparse, $i - 1, 2;
-				redo if ($i <= $#pathparse);
-			}
-		}
-		$createPath2 = join '/', @pathparse;
-	}
+	require './module/galadriel.pl';
+	my $createPath2 = GALADRIEL::MakePath($Sys->Get('CGIPATH'), $createPath);
+	my $cookiePath = GALADRIEL::MakePath($Sys->Get('CGIPATH'), $Sys->Get('BBSPATH'));
 	$bbsSetting->Set('BBS_TITLE', $bbsName);
 	$bbsSetting->Set('BBS_SUBTITLE', $bbsExplanation);
 	$bbsSetting->Set('BBS_BG_PICTURE', "$createPath2/ba.gif");
 	$bbsSetting->Set('BBS_TITLE_PICTURE', "$createPath2/kanban.gif");
+	$bbsSetting->Set('BBS_COOKIEPATH', "$cookiePath/");
 	
 	$bbsSetting->Save($Sys);
 	

@@ -523,8 +523,8 @@ sub PrintBBSJump
 		my $name = $Form->Get('NAME', '');
 		my $mail = $Form->Get('MAIL', '');
 		
-		$Cookie->Set('NAME', $name)	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
-		$Cookie->Set('MAIL', $mail)	if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+		$Cookie->Set('NAME', $name, 'utf8')	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+		$Cookie->Set('MAIL', $mail, 'utf8')	if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
 		$Cookie->Out($Page, $Set->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
 		$Page->Print("Content-type: text/html\n\n");

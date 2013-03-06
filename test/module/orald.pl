@@ -153,10 +153,10 @@ sub Print
 		
 		# cookieî•ñ‚Ìo—Í
 		if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked')) {
-			$Cookie->Set('NAME', $name);
+			$Cookie->Set('NAME', $name, 'utf8');
 		}
 		if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked')) {
-			$Cookie->Set('MAIL', $mail);
+			$Cookie->Set('MAIL', $mail, 'utf8');
 		}
 		$Cookie->Out($Page, $Set->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 		
