@@ -582,6 +582,7 @@ sub new
 		'USER'	=> undef,
 		'GROUP'	=> undef,
 		'BBS'	=> undef,
+		'SOPT'	=> undef,
 	};
 	bless $obj, $class;
 	
@@ -608,6 +609,14 @@ sub Init
 		$this->{'USER'} = GLORFINDEL->new;
 		$this->{'GROUP'} = GILDOR->new;
 		$this->{'USER'}->Load($Sys);
+		
+		my $infopath = $Sys->Get('INFO');
+		$this->{'SOPT'} = {
+			'min'		=> 30,
+			'driver'	=> 'driver:File;serializer:storable',
+			'option'	=> { Directory => ".$infopath/.session/" },
+		};
+		
 		$this->CleanSessions;
 	}
 }
@@ -622,7 +631,6 @@ sub Init
 #	@return	³Ž®‚Èƒ†[ƒU‚È‚ç1‚ð•Ô‚·
 #
 #------------------------------------------------------------------------------------------------------------
-our $smin = 30;
 
 sub IsLogin
 {
@@ -634,6 +642,8 @@ sub IsLogin
 	$User->GetKeySet('NAME', $name, \@keySet);
 	
 	return (0, '') if (!scalar(@keySet));
+	
+	my $opt = $this->{'SOPT'};
 	
 	if (defined $pass && $pass ne '') {
 		my $userid = undef;
@@ -648,15 +658,15 @@ sub IsLogin
 		
 		return (0, '') if (!$userid);
 		
-		my $session = CGI::Session->new('driver:File', undef, { Directory => './info/.session/' });
+		my $session = CGI::Session->new($opt->{'driver'}, undef, $opt->{'option'});
 		$session->param('addr', $ENV{'REMOTE_ADDR'});
 		$session->param('user', $name);
 		$session->param('uid', $userid);
-		$session->expire("+${smin}m");
+		$session->expire("+$opt->{'min'}m");
 		
 		return ($userid, $session->id());
 	} elsif (defined $sid && $sid ne '') {
-		my $session = CGI::Session->new('driver:File', $sid, { Directory => './info/.session/' });
+		my $session = CGI::Session->new($opt->{'driver'}, $sid, $opt->{'option'});
 		
 		$_ = $session->param('addr');
 		if (!defined $_ || $_ ne $ENV{'REMOTE_ADDR'}) {
@@ -684,7 +694,7 @@ sub IsLogin
 			return (0, '');
 		}
 		
-		$session->expire("+${smin}m");
+		$session->expire("+$opt->{'min'}m");
 		
 		return ($userid, $session->id());
 	} else {
@@ -697,7 +707,8 @@ sub Logout
 	my $this = shift;
 	my ($sid) = @_;
 	
-	my $session = CGI::Session->new('driver:File', $sid, { Directory => './info/.session/' });
+	my $opt = $this->{'SOPT'};
+	my $session = CGI::Session->new($opt->{'driver'}, $sid, $opt->{'option'});
 	$session->delete();
 }
 
@@ -705,13 +716,13 @@ sub CleanSessions
 {
 	my $this = shift;
 	
-	CGI::Session->find('driver:File', sub {
+	my $opt = $this->{'SOPT'};
+	CGI::Session->find($opt->{'driver'}, sub {
 		my ($session) = @_;
-		next if $session->is_empty;
-		if ($session->atime + 60*$smin <= time) {
+		if ($session->is_empty || $session->atime + 60*$opt->{'min'} <= time) {
 			$session->delete();
 		}
-	}, { Directory => './info/.session/' });
+	}, $opt->{'option'});
 }
 
 #------------------------------------------------------------------------------------------------------------

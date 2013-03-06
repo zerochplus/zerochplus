@@ -221,7 +221,8 @@ sub PrintSystemInfo
 	
 	$SYS->Set('_TITLE', '0ch+ Administrator Information');
 	
-	my $version = $];
+	my $zerover = $SYS->Get('VERSION');
+	my $perlver = $];
 	my $perlpath = $^X;
 	my $filename = $ENV{'SCRIPT_FILENAME'} || $0;
 	my $serverhost = $ENV{'HTTP_HOST'};
@@ -233,6 +234,8 @@ sub PrintSystemInfo
 		Time::Local
 		Socket
 	), qw(
+		CGI::Session
+		Storable
 		Digest::SHA::PurePerl
 		Net::DNS::Lite
 		List::MoreUtils
@@ -245,15 +248,18 @@ sub PrintSystemInfo
 	my $core = {};
 	eval {
 		require Module::CoreList;
-		$core = $Module::CoreList::version{$version};
+		$core = $Module::CoreList::version{$perlver};
 	};
 	
 	$Page->Print("<br><b>0ch+ BBS - Administrator Script</b>");
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
-	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Å°Perl Version</td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">Version</td><td>$version</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Å°0ch+ Information</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Version</td><td>$zerover</td></tr>\n");
+	
+	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Å°Perl Information</td></tr>\n");
+	$Page->Print("<tr><td class=\"DetailTitle\">Version</td><td>$perlver</td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">Perl Path</td><td>$perlpath</td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">Server Software</td><td>$serversoft</td></tr>\n");
 	$Page->Print("<tr><td class=\"DetailTitle\">Server Name</td><td>$servername</td></tr>\n");
