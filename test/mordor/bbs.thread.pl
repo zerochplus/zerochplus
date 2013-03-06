@@ -594,25 +594,25 @@ sub FunctionThreadStop
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
 	}
 	require './module/gondor.pl';
-	#require './module/baggins.pl'; # use from 0.8.x
+	require './module/baggins.pl'; # use from 0.8.x
 	
 	$Thread		= ARAGORN->new;
-	#my $Threads	= BILBO->new; # use from 0.8.x
+	my $Threads	= BILBO->new; # use from 0.8.x
 	@threadList	= $Form->GetAtArray('THREADS');
 	$base		= $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/dat';
-	#$Threads->LoadAttr($Sys);
+	$Threads->LoadAttr($Sys);
 	
 	# スレッドの停止
 	if ($mode) {
 		foreach $id (@threadList) {
-			#$Threads->SetAttr($id, 'stop', 1); # use from 0.8.x
+			$Threads->SetAttr($id, 'stop', 1); # use from 0.8.x
 			$path = "$base/$id.dat";
 			if ($Thread->Load($Sys, $path, 0)) {
 				$subj = $Thread->GetSubject();
@@ -629,7 +629,7 @@ sub FunctionThreadStop
 	# スレッドの再開
 	else {
 		foreach $id (@threadList) {
-			#$Threads->SetAttr($id, 'stop', ''); # use from 0.8.x
+			$Threads->SetAttr($id, 'stop', ''); # use from 0.8.x
 			$path = "$base/$id.dat";
 			if ($Thread->Load($Sys, $path, 0)) {
 				$subj = $Thread->GetSubject();
@@ -644,7 +644,7 @@ sub FunctionThreadStop
 		}
 	}
 	
-	#$Threads->SaveAttr($Sys); # use from 0.8.x
+	$Threads->SaveAttr($Sys); # use from 0.8.x
 	
 	return 0;
 }
@@ -667,7 +667,7 @@ sub FunctionThreadFloat
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -721,7 +721,7 @@ sub FunctionThreadPooling
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -772,7 +772,7 @@ sub FunctionThreadDelete
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_TREADDELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -819,7 +819,7 @@ sub FunctionUpdateSubject
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -855,7 +855,7 @@ sub FunctionUpdateSubjectAll
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -891,7 +891,7 @@ sub FunctionThreadAutoPooling
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;

@@ -380,7 +380,7 @@ sub FuncUserSetting
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
@@ -458,7 +458,7 @@ sub FuncUserDelete
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;
@@ -472,7 +472,7 @@ sub FuncUserDelete
 	$Sec->Init($Sys);
 	
 	@userSet = $Form->GetAtArray('USERS');
-	$id = $Sec->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+	($id, undef) = $Sec->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 	
 	# 選択ユーザを全削除
 	foreach (@userSet) {

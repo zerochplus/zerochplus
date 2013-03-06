@@ -470,7 +470,7 @@ sub FunctionGroupSetting
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -574,7 +574,7 @@ sub FunctionGroupDelete
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID	= $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -625,7 +625,7 @@ sub FunctionGroupImport
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $SEC->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'));
+		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_USERGROUP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
