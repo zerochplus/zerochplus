@@ -74,13 +74,11 @@ sub DoFunction
 	my ($Sys, $Form, $pSys) = @_;
 	my ($host, $Security, $Mod);
 	
-	$Security = $pSys->{'SECINFO'};
 	require './module/galadriel.pl';
 	$host = GALADRIEL::GetRemoteHost();
 	
 	# ログイン情報を確認
-	my ($userID, $SID) = $Security->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
-	if ($userID) {
+	if ($pSys->{'USER'}) {
 		require './mordor/sys.top.pl';
 		$Mod = MODULE->new;
 		$Form->Set('MODE_SUB', 'NOTICE');

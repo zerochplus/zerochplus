@@ -650,7 +650,7 @@ sub FunctionTextEdit
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSEDIT, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -705,7 +705,7 @@ sub FunctionValidUserEdit
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_ACCESUSER, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -751,7 +751,7 @@ sub FunctionNGWordEdit
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_NGWORDS, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -796,7 +796,7 @@ sub FunctionLastEdit
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_BBSEDIT, $Sys->Get('BBS'))) == 0) {
 			return 1000;

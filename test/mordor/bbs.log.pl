@@ -332,7 +332,7 @@ sub FunctionLogDelete
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_LOGVIEW, $Sys->Get('BBS'))) == 0) {
 			return 1000;

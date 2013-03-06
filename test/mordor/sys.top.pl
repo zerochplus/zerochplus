@@ -449,7 +449,7 @@ sub FunctionNoticeCreate
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if ($chkID eq '') {
 			return 1000;
@@ -519,7 +519,7 @@ sub FunctionNoticeDelete
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if ($chkID eq '') {
 			return 1000;
@@ -574,7 +574,7 @@ sub FunctionLogRemove
 	# 権限チェック
 	{
 		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef) = $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
 			return 1000;

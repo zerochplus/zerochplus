@@ -594,7 +594,7 @@ sub FunctionThreadStop
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -667,7 +667,7 @@ sub FunctionThreadFloat
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADSTOP, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -721,7 +721,7 @@ sub FunctionThreadPooling
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -772,7 +772,7 @@ sub FunctionThreadDelete
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_TREADDELETE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -819,7 +819,7 @@ sub FunctionUpdateSubject
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -855,7 +855,7 @@ sub FunctionUpdateSubjectAll
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADINFO, $Sys->Get('BBS'))) == 0) {
 			return 1000;
@@ -891,7 +891,7 @@ sub FunctionThreadAutoPooling
 	# 権限チェック
 	{
 		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my ($chkID, undef)	= $SEC->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+		my $chkID = $Sys->Get('ADMIN')->{'USER'};
 		
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_THREADPOOL, $Sys->Get('BBS'))) == 0) {
 			return 1000;
