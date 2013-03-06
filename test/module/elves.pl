@@ -563,6 +563,8 @@ package ARWEN;
 use strict;
 use warnings;
 
+use CGI::Session;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	コンストラクタ
@@ -606,6 +608,7 @@ sub Init
 		$this->{'USER'} = GLORFINDEL->new;
 		$this->{'GROUP'} = GILDOR->new;
 		$this->{'USER'}->Load($Sys);
+		$this->CleanSessions;
 	}
 }
 
@@ -615,29 +618,100 @@ sub Init
 #	-------------------------------------------------------------------------------------
 #	@param	$name	ユーザ名
 #	@param	$pass	パスワード
+#	@param	$sid	セッションID
 #	@return	正式なユーザなら1を返す
 #
 #------------------------------------------------------------------------------------------------------------
+our $smin = 30;
+
 sub IsLogin
 {
 	my $this = shift;
-	my ($name, $pass) = @_;
+	my ($name, $pass, $sid) = @_;
 	
 	my $User = $this->{'USER'};
-	
-	# ユーザ名でユーザIDセットを取得
 	my @keySet = ();
 	$User->GetKeySet('NAME', $name, \@keySet);
 	
-	# 取得したIDセットからユーザ名とパスワードが同じものを検索
-	foreach my $id (@keySet) {
-		my $lPass = $User->Get('PASS', $id);
-		my $hash = $User->GetStrictPass($pass, $id);
-		if ($lPass eq $hash) {
-			return $id;
+	return (0, '') if (!scalar(@keySet));
+	
+	if (defined $pass && $pass ne '') {
+		my $userid = undef;
+		foreach my $id (@keySet) {
+			my $lPass = $User->Get('PASS', $id);
+			my $hash = $User->GetStrictPass($pass, $id);
+			if ($lPass eq $hash) {
+				$userid = $id;
+				last;
+			}
 		}
+		
+		return (0, '') if (!$userid);
+		
+		my $session = CGI::Session->new('driver:File', undef, { Directory => './info/.session/' });
+		$session->param('addr', $ENV{'REMOTE_ADDR'});
+		$session->param('user', $name);
+		$session->param('uid', $userid);
+		$session->expire("+${smin}m");
+		
+		return ($userid, $session->id());
+	} elsif (defined $sid && $sid ne '') {
+		my $session = CGI::Session->new('driver:File', $sid, { Directory => './info/.session/' });
+		
+		$_ = $session->param('addr');
+		if (!defined $_ || $_ ne $ENV{'REMOTE_ADDR'}) {
+			$session->delete();
+			return (0, '');
+		}
+		
+		$_ = $session->param('user');
+		if (!defined $_ || $_ ne $name) {
+			$session->delete();
+			return (0, '');
+		}
+		
+		my $userid = undef;
+		$_ = $session->param('uid');
+		foreach my $id (@keySet) {
+			if ($_ eq $id) {
+				$userid = $id;
+				last;
+			}
+		}
+		
+		if (!$userid) {
+			$session->delete();
+			return (0, '');
+		}
+		
+		$session->expire("+${smin}m");
+		
+		return ($userid, $session->id());
+	} else {
+		return (0, '');
 	}
-	return 0;
+}
+
+sub Logout
+{
+	my $this = shift;
+	my ($sid) = @_;
+	
+	my $session = CGI::Session->new('driver:File', $sid, { Directory => './info/.session/' });
+	$session->delete();
+}
+
+sub CleanSessions
+{
+	my $this = shift;
+	
+	CGI::Session->find('driver:File', sub {
+		my ($session) = @_;
+		next if $session->is_empty;
+		if ($session->atime + 60*$smin <= time) {
+			$session->delete();
+		}
+	}, { Directory => './info/.session/' });
 }
 
 #------------------------------------------------------------------------------------------------------------

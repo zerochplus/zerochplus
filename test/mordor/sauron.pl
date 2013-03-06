@@ -342,17 +342,16 @@ HTML
 #
 #	共通情報出力 - PrintCommonInfo
 #	-------------------------------------------
-#	引　数：$Page   : THORINモジュール
+#	引　数：$Sys   : 
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub PrintCommonInfo
 {
 	my ($Page, $Form) = @_;
-	my ($user, $pass);
 	
-	$user = $Form->Get('UserName');
-	$pass = $Form->Get('PassWord');
+	my $user = $Form->Get('UserName', '');
+	my $sid = $Form->Get('SessionID', '');
 	
 $Page->Print(<<HTML);
   <!-- ▼こんなところに地下要塞(ry -->
@@ -360,7 +359,7 @@ $Page->Print(<<HTML);
    <input type="hidden" name="MODE" value="">
    <input type="hidden" name="MODE_SUB" value="">
    <input type="hidden" name="UserName" value="$user">
-   <input type="hidden" name="PassWord" value="$pass">
+   <input type="hidden" name="SessionID" value="$sid">
   <!-- △こんなところに地下要塞(ry -->
 HTML
 	

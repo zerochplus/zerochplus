@@ -53,8 +53,12 @@ sub AdminCGI
 	# ログインユーザ設定
 	my $name = $Form->Get('UserName', '');
 	my $pass = $Form->Get('PassWord', '');
-	my $userID = $CGI->{'SECINFO'}->IsLogin($name, $pass);
+	my $sid = $Form->Get('SessionID', '');
+	$Form->Set('PassWord', '');
+	#$Form->Set('SessionID', '');
+	my ($userID, $SID) = $CGI->{'SECINFO'}->IsLogin($name, $pass, $sid);
 	$CGI->{'USER'} = $userID;
+	$Form->Set('SessionID', $SID);
 	
 	# バージョンチェック
 	my $upcheck = $Sys->Get('UPCHECK', 1) - 0;
@@ -80,6 +84,7 @@ sub AdminCGI
 	}
 	# ログイン
 	else {
+		$CGI->{'SECINFO'}->Logout($SID);
 		$oModule->DoPrint($Sys, $Form, $CGI);
 	}
 	

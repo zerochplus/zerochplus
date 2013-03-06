@@ -79,7 +79,8 @@ sub DoFunction
 	$host = GALADRIEL::GetRemoteHost();
 	
 	# ログイン情報を確認
-	if ($Security->IsLogin($Form->Get('UserName'), $Form->Get('PassWord'))) {
+	my ($userID, $SID) = $Security->IsLogin($Form->Get('UserName'), undef, $Form->Get('SessionID'));
+	if ($userID) {
 		require './mordor/sys.top.pl';
 		$Mod = MODULE->new;
 		$Form->Set('MODE_SUB', 'NOTICE');

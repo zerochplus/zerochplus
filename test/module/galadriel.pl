@@ -586,7 +586,7 @@ sub GetRemoteHost
 	my $this = shift;
 	
 	my $host = $ENV{'REMOTE_ADDR'};
-	$host = gethostbyaddr(pack('c4', split(/\./, $host)), 2) || $host;
+	$host = gethostbyaddr(pack('C4', split(/\./, $host)), 2) || $host;
 	
 	return $host;
 }
