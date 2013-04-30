@@ -257,6 +257,15 @@ sub PrintResList
 		$log = $Logger->Get($logsize - 1 + $i - $lastnum);
 		@logs	= split(/<>/,$log,-1) if (defined $log);
 		
+		foreach (0 .. $#logs) {
+			$logs[$_] =~ s/[\x0d\x0a\0]//g;
+			$logs[$_] =~ s/&/&amp;/g;
+			$logs[$_] =~ s/"/&quot;/g;
+			$logs[$_] =~ s/'/&#39;/g;
+			$logs[$_] =~ s/</&lt;/g;
+			$logs[$_] =~ s/>/&gt;/g;
+		}
+		
 		$Page->Print("<tr><td class=\"Response\" valign=top>");
 		
 		# ÉåÉXçÌèúå†Ç…ÇÊÇÈï\é¶ó}êß
