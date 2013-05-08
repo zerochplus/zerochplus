@@ -181,13 +181,31 @@ sub Get
 #
 #	バナー出力 - Print
 #	-------------------------------------------
-#	引　数：$Page  : モジュール
-#			$width : バナー幅(%)
+#	引　数：$width : バナー幅(%)
 #			$f     : 区切り表示フラグ
 #			$mode  : モード(PC/携帯)
 #	戻り値：なし
 #
 #------------------------------------------------------------------------------------------------------------
+sub Prepare
+{
+	my $this = shift;
+	my ($width, $f, $mode) = @_;
+	
+	my $data = {
+		'tmpl'		=> ($mode ? 'mobile' : 'pc'),
+		'width'		=> $width,
+		'beforehr'	=> $f & 1,
+		'afterhr'	=> $f & 2,
+		'textpc'	=> $this->{'TEXTPC'},
+		'textmb'	=> $this->{'TEXTMB'},
+		'colorpc'	=> $this->{'COLPC'},
+		'colormb'	=> $this->{'COLMB'},
+	};
+	
+	return $data;
+}
+
 sub Print
 {
 	my $this = shift;
@@ -217,10 +235,21 @@ sub Print
 #
 #	サブバナー出力 - PrintSub
 #	-------------------------------------------
-#	引　数：$Page : モジュール
 #	戻り値：バナー出力したら1,その他は0
 #
 #------------------------------------------------------------------------------------------------------------
+sub PrepareSub
+{
+	my $this = shift;
+	
+	my $data = {
+		'tmpl'		=> 'sub',
+		'textsub'	=> $this->{'TEXTSB'},
+	};
+	
+	return $data;
+}
+
 sub PrintSub
 {
 	my $this = shift;

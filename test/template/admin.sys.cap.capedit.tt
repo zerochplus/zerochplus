@@ -1,0 +1,34 @@
+    <table border=0 cellspacing=2 align=center>
+     <tr>
+      <td colspan=2>各項目を設定して[設定]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">キャップ表示名</td>
+      <td><input type=text size=30 name=NAME value="[% cap.name %]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">パスワード</td>
+      <td><input type=password size=30 name=PASS value="[% cap.pass %]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">キャップフルネーム</td>
+      <td><input type=text size=30 name=FULL value="[% cap.full %]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">説明</td>
+      <td><input type=text size=30 name=EXPL value="[% cap.expl %]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle" colspan=2 valign=absmiddle>
+       <input type=checkbox name=SYSAD [% 'checked' IF cap.sysad %]>システム管理者権限
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=center>
+       <input type=hidden name="SELECT_CAP" value="[% selcap %]">
+       <input type=button value="　設定　" onclick="DoSubmit('sys.cap','FUNC','[% modesub %]')">
+      </td>
+     </tr>
+    </table>

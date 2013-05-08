@@ -287,8 +287,8 @@ sub PrintBBSThreadCreate
 	# スレッド作成フォームの表示
 	{
 		my $tblCol = $Set->Get('BBS_MAKETHREAD_COLOR');
-		my $name = $Cookie->Get('NAME', '');
-		my $mail = $Cookie->Get('MAIL', '');
+		my $name = $Cookie->Get('NAME', '', 'utf8');
+		my $mail = $Cookie->Get('MAIL', '', 'utf8');
 		my $bbs = $Form->Get('bbs');
 		my $tm = int(time);
 		my $ver = $Sys->Get('VERSION');
@@ -404,8 +404,8 @@ sub PrintBBSCookieConfirm
 	my $key = &$sanitize($Form->Get('key'));
 	
 	# cookie情報の出力
-	$Cookie->Set('NAME', $name)	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
-	$Cookie->Set('MAIL', $mail)	if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
+	$Cookie->Set('NAME', $name, 'utf8')	if ($Set->Equal('BBS_NAMECOOKIE_CHECK', 'checked'));
+	$Cookie->Set('MAIL', $mail, 'utf8')	if ($Set->Equal('BBS_MAILCOOKIE_CHECK', 'checked'));
 	$Cookie->Out($Page, $Set->Get('BBS_COOKIEPATH'), 60 * 24 * 30);
 	
 	$Page->Print("Content-type: text/html\n\n");

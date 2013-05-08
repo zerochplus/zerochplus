@@ -1,0 +1,31 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=4>å¬ï ê›íË</td>
+     </tr>
+     <tr><td colspan=4><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">Name</td>
+      <td class="DetailTitle">Value</td>
+      <td class="DetailTitle" width=50%>Explanation</td>
+      <td class="DetailTitle">Type</td>
+     </tr>
+[% FOREACH config IN configs -%]
+     <tr>
+      <td>[% config.key %]</td>
+[%   IF config.type == 3 -%]
+      <td><input type=checkbox name=PLUGIN_OPT_[% config.keyenc %] [% 'checked' IF config.val %]></td>
+[%   ELSE -%]
+      <td><input type=text name=PLUGIN_OPT_[% config.keyenc %] value="[% config.val | html %]" size=30></td>
+[%   END -%]
+      <td>[% config.desc %]</td>
+      <td>[% config.typestr %]</td>
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=4><hr></td></tr>
+     <tr>
+      <td colspan=4 align=left>
+       <input type=hidden name=PLGID value="[% plgid | html %]">
+       <input type=button value="Å@ê›íËÅ@" onclick="DoSubmit('sys.setting','FUNC','SET_PLUGINCONF');">
+      </td>
+     </tr>
+    </table>

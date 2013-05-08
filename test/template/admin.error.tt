@@ -1,0 +1,21 @@
+    <table border="0" cellspacing="0" cellpadding="0" width="100%" align="center">
+     <tr>
+      <td>
+      
+      <div class="xExcuted">
+       ERROR:[% errcode %] - [% errmes %]
+      </div>
+      
+[% IF log.size -%]
+      <div class="LogExport">èàóùÉçÉO</div>
+      <hr>
+      <blockquote class="LogExport">
+[%   FOREACH text IN log -%]
+       [% text %]<br>
+[%   END # FOREACH -%]
+      </blockquote>
+      <hr>
+[% END -%]
+      </td>
+     </tr>
+    </table>

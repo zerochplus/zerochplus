@@ -1,0 +1,43 @@
+    <table border=0 cellspacing=2 width=100%>
+[% IF plugins.size -%]
+     <tr>
+      <td colspan=5>有効にする機能にチェックを入れてください。</td>
+     </tr>
+     <tr><td colspan=5><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">Order</td>
+      <td class="DetailTitle">Function Name</td>
+      <td class="DetailTitle">Explanation</td>
+      <td class="DetailTitle">File</td>
+      <td class="DetailTitle">Options</td>
+     </tr>
+[%   FOREACH plugin IN plugins -%]
+     <tr>
+      <td><input type=text name=PLUGIN_[% plugin.id %]_ORDER value=[% loop.count %] size=3></td>
+      <td><input type=checkbox name=PLUGIN_VALID value=[% plugin.id %] [% 'checked' IF plugin.valid %]>[% plugin.name %]</td>
+      <td>[% plugin.expl %]</td>
+      <td>[% plugin.file %]</td>
+[%     IF plugin.hascfg -%]
+      <td><a href="javascript:SetOption('PLGID','[% plugin.id %]');DoSubmit('sys.setting','DISP','PLUGINCONF');">個別設定</a></td>
+[%     ELSE -%]
+      <td></td>
+[%     END -%]
+     </tr>
+[%   END # FOREACH -%]
+[% ELSE -%]
+     <tr><td colspan=5><hr></td></tr>
+     <tr>
+      <td colspan=5><b>プラグインは存在しません。</b></td>
+     </tr>
+[% END -%]
+     <tr><td colspan=5><hr></td></tr>
+     <tr>
+      <td colspan=5 align=left>
+       <input type=hidden name=PLGID value="">
+[% IF plugins.size -%]
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','SET_PLUGIN');">
+[% END -%]
+       <input type=button value="　更新　" onclick="DoSubmit('sys.setting','FUNC','UPDATE_PLUGIN');">
+      </td>
+     </tr>
+    </table>

@@ -1,0 +1,34 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=3>以下のユーザを削除します。</td>
+     </tr>
+     <tr><td colspan=3><hr></td></tr>
+     <tr bgcolor=silver>
+      <td class="DetailTitle" style="width:150">User Name</td>
+      <td class="DetailTitle" style="width:150">User Full Name</td>
+      <td class="DetailTitle" style="width:200">Explanation</td>
+     </tr>
+[% FOREACH user IN users -%]
+     <tr>
+      <td>[% user.name %]</td>
+      <td>[% user.full %]</td>
+      <td>[% user.expl %]</td>
+      <input type=hidden name="USERS" value="[% user.id %]">
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td bgcolor=yellow colspan=3>
+       <b><font color=red>
+        ※注：削除したユーザを元に戻すことはできません。<br>
+        ※注：Administratorと自分自身は削除できません。
+       </font></b>
+      </td>
+     </tr>
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td colspan=3 align=left>
+       <input type=button value="　削除　" onclick="DoSubmit('sys.user','FUNC','DELETE')" class="delete">
+      </td>
+     </tr>
+    </table>

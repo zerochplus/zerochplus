@@ -1,0 +1,36 @@
+    <table border="0" cellspacing="2" width="100%">
+     <tr>
+      <td></td>
+      <td>
+       <a href="javascript:SetOption('DISPST_NOTICE', [% prevnum %]);DoSubmit('sys.top','DISP','NOTICE');">&lt;&lt; PREV</a> |
+       <a href="javascript:SetOption('DISPST_NOTICE', [% nextnum %]);DoSubmit('sys.top','DISP','NOTICE');">NEXT &gt;&gt;</a>
+      </td>
+      <td align=right colspan="2">
+       表示数 <input type=text name="DISPNUM_NOTICE" size="4" value="[% dispnum %]">
+       <input type=button value="　表示　" onclick="DoSubmit('sys.top','DISP','NOTICE');">
+      </td>
+     </tr>
+     <tr>
+      <td style="width:30px;"><br></td>
+      <td colspan="3" class="DetailTitle">Notification</td>
+     </tr>
+[% FOREACH notice IN notices -%]
+     <tr>
+      <td><input type=checkbox name="NOTICES" value="[% notice.id %]"></td>
+      <td class="Response" colspan="3">
+       <dl style="margin:0px;">
+        <dt><b>[% notice.subject %]</b> <font color="blue">From：[% notice.from %]</font> [% notice.date %]</dt>
+         <dd>
+         [% notice.text %]<br>
+         <br></dd>
+       </dl>
+      </td>
+     </tr>
+[% END # FOREACH -%]
+     <tr>
+      <td colspan="4" align="left">
+      <input type="button" class="delete" value="　削除　" onclick="DoSubmit('sys.top','FUNC','DELETE')">
+      </td>
+     </tr>
+    </table>
+    <input type="hidden" name="DISPST_NOTICE" value="">

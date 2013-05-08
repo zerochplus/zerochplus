@@ -1,0 +1,38 @@
+    <center>
+     <table border=0 cellspacing=2 width=100%>
+      <tr>
+       <td class="DetailTitle" colspan=2>Preview</td>
+      </tr>
+      <tr>
+       <td colspan=2 align=center>
+[% INCLUDE "banner.tt" # | indent('    ') -%]
+       </td>
+      </tr>
+      <tr>
+       <td class="DetailTitle">背景色</td>
+       <td><input type=text size=20 name=PC_BGCOLOR value="[% bgcolor %]"></td>
+      </tr>
+      <tr>
+       <td class="DetailTitle">内容</td>
+       <td>
+        <textarea rows=10 cols=70 name=PC_CONTENT wrap=off>[% content | html %]</textarea>
+       </td>
+      </tr>
+      <tr>
+       <td colspan=2><hr></td>
+      </tr>
+      <tr>
+       <td colspan=2>
+        ※告知欄の表示は設定で消すことができます。
+        [システム設定]→[表示設定]→告知欄表示
+        (index.html以外の告知欄を表示するのチェックをOFF)
+       </td>
+      </tr>
+      <tr>
+       <td colspan=2 align=left>
+        <input type=button value="　設定　" onclick="DoSubmit('sys.edit','FUNC','BANNER_PC');">
+        <input type=button value="　確認　" onclick="DoSubmit('sys.edit','DISP','BANNER_PC');">
+       </td>
+      </tr>
+     </table>
+    </center>

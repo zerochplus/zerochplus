@@ -1,0 +1,20 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[追加]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">カテゴリ名称</td>
+      <td><input type=text name=NAME size=60></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">カテゴリ説明</td>
+      <td><input type=text name=SUBJ size=60></td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+      <input type=button value="　追加　" onclick="DoSubmit('sys.bbs','FUNC','CATADD');">
+     </td>
+     </tr>
+    </table>

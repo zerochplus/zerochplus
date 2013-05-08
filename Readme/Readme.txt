@@ -169,7 +169,7 @@ Perl implementation of SHA-1/224/256/384/512
     Version:    5.72
     Released:   2012-09-24
     Author:     Mark Shelor <mshelor@cpan.org>
-    License:    Artistic License
+    License:    The Perl 5 License (Artistic 1 & GPL 1)
     CPAN:       http://search.cpan.org/dist/Digest-SHA-PurePerl-5.72/
 
 Net-DNS-Lite
@@ -177,7 +177,7 @@ a pure-perl DNS resolver with support for timeout
     Version:    0.09
     Released:   2012-06-20
     Author:     Kazuho Oku <kazuhooku@gmail.com>
-    License:    Artistic License
+    License:    The Perl 5 License (Artistic 1 & GPL 1)
     CPAN:       http://search.cpan.org/dist/Net-DNS-Lite-0.09/
 
 List-MoreUtils
@@ -185,6 +185,22 @@ Provide the stuff missing in List::Util
     Version:    0.33
     Released:   2011-08-04
     Author:     Adam Kennedy <adamk@cpan.org>
-    License:    Artistic License
+    License:    The Perl 5 License (Artistic 1 & GPL 1)
     CPAN:       http://search.cpan.org/dist/List-MoreUtils-0.33/
+
+CGI-Session
+Persistent session data in CGI applications
+    Version:    4.48
+    Released:   2011-07-11
+    Author:     Mark Stosberg <mark@summersault.com>
+    License:    Artistic License 1.0
+    CPAN:       http://search.cpan.org/dist/CGI-Session-4.48/
+
+Template-Toolkit
+
+    Version:    2.24
+    Released:   2012-02-07
+    Author:     Andy Wardley <abw@wardley.org>
+    License:    The Perl 5 License (Artistic 1 & GPL 1)
+    CPAN:       http://search.cpan.org/dist/Template-Toolkit-2.24/
 

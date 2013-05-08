@@ -1,0 +1,42 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=4 align=right>
+       カテゴリ
+       <select name=BBS_CATEGORY>
+        <option value=ALL>すべて</option>
+[% FOREACH cat IN categories -%]
+        <option value="[% cat.id %]" [% 'selected' IF cat.id == scategory %]>[% cat.name %]</option>
+[% END # FOREACH -%]
+       </select>
+       <input type=button value="　表示　" onclick="DoSubmit('sys.bbs','DISP','LIST')">
+      </td>
+     </tr>
+     <tr>
+      <th style="width:20">　</th>
+      <th class="DetailTitle" style="width:150">BBS Name</th>
+      <th class="DetailTitle" style="width:100">Category</th>
+      <th class="DetailTitle" style="width:250">SubScription</th>
+     </tr>
+[% FOREACH board IN boards -%]
+     <tr>
+      <td><input type=checkbox name=BBSS value=[% board.id %]></td>
+      <td><a href="javascript:SetOption('TARGET_BBS','[% board.id %]');DoSubmit('bbs.thread','DISP','LIST');">[% board.name %]</a></td>
+      <td>[% board.category %]</td>
+      <td>[% board.subject %]</td>
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=4><hr></td></tr>
+     <tr>
+      <td colspan=4 align=left>
+       <input type=hidden name="TARGET_BBS" value="">
+       <input type=button value="カテゴリ変更" onclick="DoSubmit('sys.bbs','DISP','CATCHANGE')">
+[% IF issysad -%]
+       <input type=button value="情報更新" onclick="DoSubmit('sys.bbs','FUNC','UPDATE')">
+[% END -%]
+       <input type=button value="index更新" onclick="DoSubmit('sys.bbs','FUNC','UPDATEBBS')">
+[% IF issysad -%]
+       <input type=button value="　削除　" onclick="DoSubmit('sys.bbs','DISP','DELETE')" class="delete">
+[% END -%]
+      </td>
+     </tr>
+    </table>

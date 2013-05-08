@@ -72,20 +72,20 @@ sub AdminCGI
 	my $modName = $Form->Get('MODULE', 'login');
 	$modName = 'login' if (!$userID);
 	require "./mordor/$modName.pl";
-	my $oModule = MODULE->new;
+	my $Module = MODULE->new;
 	
 	# 表示モード
 	if ($Form->Get('MODE', '') eq 'DISP') {
-		$oModule->DoPrint($Sys, $Form, $CGI);
+		$Module->DoPrint($Sys, $Form, $CGI);
 	}
 	# 機能モード
 	elsif ($Form->Get('MODE', '') eq 'FUNC') {
-		$oModule->DoFunction($Sys, $Form, $CGI);
+		$Module->DoFunction($Sys, $Form, $CGI);
 	}
 	# ログイン
 	else {
 		$CGI->{'SECINFO'}->Logout($SID);
-		$oModule->DoPrint($Sys, $Form, $CGI);
+		$Module->DoPrint($Sys, $Form, $CGI);
 	}
 	
 	$CGI->{'LOGGER'}->Write();

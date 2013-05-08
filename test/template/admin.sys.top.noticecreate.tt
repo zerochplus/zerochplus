@@ -1,0 +1,50 @@
+    <table border="0" cellspacing="2" width="100%">
+      <tr>
+      <td class="DetailTitle">タイトル</td>
+      <td><input type="text" size="60" name="NOTICE_TITLE"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">本文</td>
+      <td>
+      <textarea rows="10" cols="70" name="NOTICE_CONTENT"></textarea>
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">通知先ユーザ</td>
+      <td>
+      <table width="100%" cellspacing="2">
+[% IF issysad -%]
+       <tr>
+        <td class="DetailTitle">
+         <input type="radio" name="NOTICE_KIND" value="ALL">全体通知
+        </td>
+        <td>
+         有効期限：<input type="text" name="NOTICE_LIMIT" size="10" value="30">日
+        </td>
+       </tr>
+       <tr>
+        <td class="DetailTitle">
+         <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
+        </td>
+        <td>
+[% ELSE -%]
+       <tr>
+        <td class="DetailTitle">
+         <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
+        </td>
+        <td>
+[% END -%]
+[% FOREACH user IN users -%]
+        <input type="checkbox" name="NOTICE_USERS" value="[% user.id %]"> [% user.name %]([% user.fullname %])<br>
+[% END # FOREACH -%]
+        </td>
+       </tr>
+      </table>
+      </td>
+     </tr>
+     <tr>
+      <td colspan="2" align="left">
+       <input type="button" value="　送信　" onclick="DoSubmit('sys.top','FUNC','CREATE')">
+      </td>
+     </tr>
+    </table>

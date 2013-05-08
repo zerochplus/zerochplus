@@ -1,9 +1,6 @@
 #============================================================================================================
 #
 #	システム管理 - 編集 モジュール
-#	sys.edit.pl
-#	---------------------------------------------------------------------------
-#	2004.09.15 start
 #
 #============================================================================================================
 package	MODULE;
@@ -21,13 +18,12 @@ use warnings;
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, @LOG);
+	my $class = shift;
 	
-	$obj = {
-		'LOG' => \@LOG
+	my $obj = {
+		'LOG'	=> [],
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -38,48 +34,49 @@ sub new
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	MELKOR
 #	@param	$Form	SAMWISE
-#	@param	$pSys	管理システム
+#	@param	$CGI	管理システム
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
 	my $this = shift;
-	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $BASE, $Page);
-	
-	require './mordor/sauron.pl';
-	$BASE = SAURON->new;
-	
-	# 管理情報を登録
-	$Sys->Set('ADMIN', $pSys);
+	my ($Sys, $Form, $CGI) = @_;
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys, $Form);
-	$subMode	= $Form->Get('MODE_SUB');
+	require './mordor/sauron.pl';
+	my $Base = SAURON->new;
+	$Base->Create($Sys, $Form);
+	
+	my $subMode = $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE, $pSys);
+	SetMenuList($Base, $CGI);
 	
-	if ($subMode eq 'BANNER_PC') {													# PC用告知編集画面
-		PrintBannerForPCEdit($Page, $Sys, $Form);
+	my $indata = undef;
+	
+	# PC用告知編集画面
+	if ($subMode eq 'BANNER_PC') {
+		$indata = PreparePageBannerForPCEdit($Sys, $Form);
 	}
-	elsif ($subMode eq 'BANNER_MOBILE') {											# 携帯用告知編集画面
-		PrintBannerForMobileEdit($Page, $Sys, $Form);
+	# 携帯用告知編集画面
+	elsif ($subMode eq 'BANNER_MOBILE') {
+		$indata = PreparePageBannerForMobileEdit($Sys, $Form);
 	}
-	elsif ($subMode eq 'BANNER_SUB') {												# サブ告知編集画面
-		PrintBannerForSubEdit($Page, $Sys, $Form);
+	# サブ告知編集画面
+	elsif ($subMode eq 'BANNER_SUB') {
+		$indata = PreparePageBannerForSubEdit($Sys, $Form);
 	}
-	elsif ($subMode eq 'COMPLETE') {												# システム設定完了画面
-		$Sys->Set('_TITLE', 'Process Complete');
-		$BASE->PrintComplete('システム編集処理', $this->{'LOG'});
+	# システム設定完了画面
+	elsif ($subMode eq 'COMPLETE') {
+		$indata = $Base->PreparePageComplete('システム編集処理', $this->{'LOG'});
 	}
-	elsif ($subMode eq 'FALSE') {													# システム設定失敗画面
-		$Sys->Set('_TITLE', 'Process Failed');
-		$BASE->PrintError($this->{'LOG'});
+	# システム設定失敗画面
+	elsif ($subMode eq 'FALSE') {
+		$indata = $Base->PreparePageError($this->{'LOG'});
 	}
 	
-	$BASE->Print($Sys->Get('_TITLE'), 1);
+	$Base->Print($Sys->Get('_TITLE'), 1, $indata);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -88,43 +85,43 @@ sub DoPrint
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	MELKOR
 #	@param	$Form	SAMWISE
-#	@param	$pSys	管理システム
+#	@param	$CGI	管理システム
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
 	my $this = shift;
-	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $err);
+	my ($Sys, $Form, $CGI) = @_;
 	
-	# 管理情報を登録
-	$Sys->Set('ADMIN', $pSys);
+	my $subMode = $Form->Get('MODE_SUB');
+	my $err = 0;
 	
-	$subMode	= $Form->Get('MODE_SUB');
-	$err		= 0;
-	
-	if ($subMode eq 'BANNER_PC') {														# PC用告知
+	# PC用告知
+	if ($subMode eq 'BANNER_PC') {
 		$err = FunctionBannerEdit($Sys, $Form, 1, $this->{'LOG'});
 	}
-	elsif ($subMode eq 'BANNER_MOBILE') {												# 携帯用告知
+	# 携帯用告知
+	elsif ($subMode eq 'BANNER_MOBILE') {
 		$err = FunctionBannerEdit($Sys, $Form, 2, $this->{'LOG'});
 	}
-	elsif ($subMode eq 'BANNER_SUB') {													# サブバナー
+	# サブバナー
+	elsif ($subMode eq 'BANNER_SUB') {
 		$err = FunctionBannerEdit($Sys, $Form, 3, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
 	if ($err) {
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_EDIT($subMode)", "ERROR:$err");
+		$CGI->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_EDIT($subMode)", "ERROR:$err");
 		push @{$this->{'LOG'}}, $err;
 		$Form->Set('MODE_SUB', 'FALSE');
 	}
 	else {
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_EDIT($subMode)", 'COMPLETE');
+		$CGI->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_EDIT($subMode)", 'COMPLETE');
 		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
-	$this->DoPrint($Sys, $Form, $pSys);
+	
+	$this->DoPrint($Sys, $Form, $CGI);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -132,12 +129,13 @@ sub DoFunction
 #	メニューリスト設定
 #	-------------------------------------------------------------------------------------
 #	@param	$Base	SAURON
+#	@param	$CGI	
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my ($Base, $pSys) = @_;
+	my ($Base, $CGI) = @_;
 	
 	$Base->SetMenu('告知編集(PC用)', "'sys.edit','DISP','BANNER_PC'");
 	$Base->SetMenu('告知編集(携帯用)', "'sys.edit','DISP','BANNER_MOBILE'");
@@ -148,26 +146,21 @@ sub SetMenuList
 #
 #	告知欄(PC)編集画面の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintBannerForPCEdit
+sub PreparePageBannerForPCEdit
 {
-	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $bgColor, $content, $common);
-	
-	$SYS->Set('_TITLE', 'PC Banner Edit');
+	my ($Sys, $Form) = @_;
 	
 	require './module/denethor.pl';
-	$Banner = DENETHOR->new;
-	$Banner->Load($SYS);
+	my $Banner = DENETHOR->new;
+	$Banner->Load($Sys);
 	
-	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=center>");
+	my $bgColor;
+	my $content;
 	
 	# 告知欄プレビュー表示
 	if ($Form->IsExist('PC_CONTENT')) {
@@ -182,50 +175,38 @@ sub PrintBannerForPCEdit
 	}
 	
 	# プレビューデータの作成
-	my $BannerPage = THORIN->new;
-	$Banner->Print($BannerPage, 100, 0, 0);
-	$BannerPage->{'BUFF'} = CreatePreviewData($BannerPage->{'BUFF'});
-	$Page->Merge($BannerPage);
+	my $bdata = $Banner->Prepare(100, 0, 0);
 	
-	$common = "onclick=\"DoSubmit('sys.edit'";
+	my $indata = {
+		'title'		=> 'PC Banner Edit',
+		'intmpl'	=> 'sys.edit.bannerpc',
+		'banner'	=> $bdata,
+		'bgcolor'	=> $bgColor,
+		'content'	=> $content,
+	};
 	
-	$Page->Print("</td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">背景色</td><td>");
-	$Page->Print("<input type=text size=20 name=PC_BGCOLOR value=\"$bgColor\"></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">内容</td><td>");
-	$Page->Print("<textarea rows=10 cols=70 name=PC_CONTENT wrap=off>$content</textarea></td></tr>\n");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2>※告知欄の表\示は設定で消すことができます。 [システム設定]→[表\示設定]→告知欄表\示(index.html以外の告知欄を表\示するのチェックをOFF)</td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=left>");
-	$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','BANNER_PC');\"> ");
-	$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','BANNER_PC');\">");
-	$Page->Print("</td></tr>\n</table>");
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	告知欄(携帯)編集画面の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintBannerForMobileEdit
+sub PreparePageBannerForMobileEdit
 {
-	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $bgColor, $content, $common);
-	
-	$SYS->Set('_TITLE', 'Mobile Banner Edit');
+	my ($Sys, $Form) = @_;
 	
 	require './module/denethor.pl';
-	$Banner = DENETHOR->new;
-	$Banner->Load($SYS);
+	my $Banner = DENETHOR->new;
+	$Banner->Load($Sys);
 	
-	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=center>");
+	my $bgColor;
+	my $content;
 	
 	# 告知欄プレビュー表示
 	if ($Form->IsExist('MOBILE_CONTENT')) {
@@ -240,49 +221,37 @@ sub PrintBannerForMobileEdit
 	}
 	
 	# プレビューデータの作成
-	my $BannerPage = THORIN->new;
-	$Banner->Print($BannerPage, 100, 0, 1);
-	$BannerPage->{'BUFF'} = CreatePreviewData($BannerPage->{'BUFF'});
-	$Page->Merge($BannerPage);
+	my $bdata = $Banner->Prepare(100, 0, 1);
 	
-	$common = "onclick=\"DoSubmit('sys.edit'";
+	my $indata = {
+		'title'		=> 'Mobile Banner Edit',
+		'intmpl'	=> 'sys.edit.bannermb',
+		'banner'	=> $bdata,
+		'bgcolor'	=> $bgColor,
+		'content'	=> $content,
+	};
 	
-	$Page->Print("</td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">背景色</td><td>");
-	$Page->Print("<input type=text size=20 name=MOBILE_BGCOLOR value=\"$bgColor\"></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">内容</td><td>");
-	$Page->Print("<textarea rows=10 cols=70 name=MOBILE_CONTENT wrap=off>$content</textarea></td></tr>\n");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=left>");
-	$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','BANNER_MOBILE');\"> ");
-	$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','BANNER_MOBILE');\">");
-	$Page->Print("</td></tr>\n</table>");
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	告知欄(サブ)編集画面の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintBannerForSubEdit
+sub PreparePageBannerForSubEdit
 {
-	my ($Page, $SYS, $Form) = @_;
-	my ($Banner, $content, $common);
-	
-	$SYS->Set('_TITLE', 'Sub Banner Edit');
+	my ($Sys, $Form) = @_;
 	
 	require './module/denethor.pl';
-	$Banner = DENETHOR->new;
-	$Banner->Load($SYS);
+	my $Banner = DENETHOR->new;
+	$Banner->Load($Sys);
 	
-	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
-	$Page->Print("<tr><td class=\"DetailTitle\" colspan=2>Preview</td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=center>");
+	my $content;
 	
 	# 告知欄プレビュー表示
 	if ($Form->IsExist('SUB_CONTENT')) {
@@ -294,21 +263,16 @@ sub PrintBannerForSubEdit
 	}
 	
 	# プレビューデータの作成
-	my $BannerPage = THORIN->new;
-	$Banner->PrintSub($BannerPage);
-	$BannerPage->{'BUFF'} = CreatePreviewData($BannerPage->{'BUFF'});
-	$Page->Merge($BannerPage);
+	my $bdata = $Banner->PrepareSub();
 	
-	$common = "onclick=\"DoSubmit('sys.edit'";
+	my $indata = {
+		'title'		=> 'Sub Banner Edit',
+		'intmpl'	=> 'sys.edit.bannersub',
+		'banner'	=> $bdata,
+		'content'	=> $content,
+	};
 	
-	$Page->Print("</td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">内容</td><td>");
-	$Page->Print("<textarea rows=10 cols=70 name=SUB_CONTENT wrap=off>$content</textarea></td></tr>\n");
-	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td colspan=2 align=left>");
-	$Page->Print("<input type=button value=\"　設定　\" $common,'FUNC','BANNER_SUB');\"> ");
-	$Page->Print("<input type=button value=\"　確認　\" $common,'DISP','BANNER_SUB');\">");
-	$Page->Print("</td></tr>\n</table>");
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -317,6 +281,7 @@ sub PrintBannerForSubEdit
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
+#	@param	$mode	
 #	@param	$pLog	ログ用
 #	@return	エラーコード
 #
@@ -324,30 +289,21 @@ sub PrintBannerForSubEdit
 sub FunctionBannerEdit
 {
 	my ($Sys, $Form, $mode, $pLog) = @_;
-	my ($Banner);
 	
 	# 権限チェック
-	{
-		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $Sys->Get('ADMIN')->{'USER'};
-		
-		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
-			return 1000;
-		}
-	}
+	my $Sec = $Sys->Get('ADMIN')->{'SECINFO'};
+	my $cuser = $Sys->Get('ADMIN')->{'USER'};
+	return 1000 if (!$Sec->IsAuthority($cuser, $ZP::AUTH_SYSADMIN, '*'));
+	
 	# 入力チェック
-	if ($mode != 3) {
-		my @inList;
-		
-		@inList = ('PC_CONTENT', 'PC_BGCOLOR')			if ($mode == 1);
-		@inList = ('MOBILE_CONTENT', 'MOBILE_BGCOLOR')	if ($mode == 2);
-		
-		if (! $Form->IsInput(\@inList)) {
-			return 1001;
-		}
+	if ($mode == 1) {
+		return 1001 if (!$Form->IsInput([qw(PC_CONTENT PC_BGCOLOR)]));
+	} elsif ($mode == 2) {
+		return 1001 if (!$Form->IsInput([qw(MOBILE_CONTENT MOBILE_BGCOLOR)]));
 	}
+	
 	require './module/denethor.pl';
-	$Banner = DENETHOR->new;
+	my $Banner = DENETHOR->new;
 	$Banner->Load($Sys);
 	
 	if ($mode == 1) {
@@ -369,28 +325,6 @@ sub FunctionBannerEdit
 	$Banner->Save($Sys);
 	
 	return 0;
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	プレビューデータの作成
-#	-------------------------------------------------------------------------------------
-#	@param	$pData	作成元配列の参照
-#	@return	プレビューデータの配列
-#
-#------------------------------------------------------------------------------------------------------------
-sub CreatePreviewData
-{
-	my ($pData) = @_;
-	my @temp;
-	
-	foreach (@$pData) {
-		$_ =~ s/<[fF][oO][rR][mM].*?>/<!--form--><br>/g;
-		$_ =~ s/<\/[fF][oO][rR][mM]>/<!--\/form--><br>/g;
-		$_ =~ s/[nN][aA][mM][eE].*?=/_name_=/g;
-		push @temp, $_;
-	}
-	return \@temp;
 }
 
 #============================================================================================================

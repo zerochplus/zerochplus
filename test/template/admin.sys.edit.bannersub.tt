@@ -1,0 +1,27 @@
+    <center>
+     <table border=0 cellspacing=2 width=100%>
+      <tr>
+       <td class="DetailTitle" colspan=2>Preview</td>
+      </tr>
+      <tr>
+       <td colspan=2 align=center>
+[% INCLUDE "banner.tt" # | indent('    ') -%]
+       </td>
+      </tr>
+      <tr>
+       <td class="DetailTitle">内容</td>
+       <td>
+        <textarea rows=10 cols=70 name=SUB_CONTENT wrap=off>[% content | html %]</textarea>
+       </td>
+      </tr>
+      <tr>
+       <td colspan=2><hr></td>
+      </tr>
+      <tr>
+       <td colspan=2 align=left>
+        <input type=button value="　設定　" onclick="DoSubmit('sys.edit','FUNC','BANNER_SUB');">
+        <input type=button value="　確認　" onclick="DoSubmit('sys.edit','DISP','BANNER_SUB');">
+       </td>
+      </tr>
+     </table>
+    </center>

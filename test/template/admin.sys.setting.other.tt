@@ -1,0 +1,64 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[設定]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">ヘッダ関連</td>
+     </tr>
+     <tr>
+      <td>ヘッダ下部に表示するテキスト</td>
+      <td><input type=text size=60 name=HEADTEXT value="[% headtext %]" ></td>
+     </tr>
+     <tr>
+      <td>上記テキストに貼るリンクのURL</td>
+      <td><input type=text size=60 name=HEADURL value="[% headurl %]" ></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">本文中のURL</td>
+     </tr>
+     <tr>
+      <td>本文中URLへの自動リンク</td>
+      <td><input type=checkbox name=URLLINK [% 'checked' IF urllink == 'TRUE' %] value=on></td>
+     <tr>
+      <td>リンク禁止時間帯(自動リンクOFF時のみ)</td>
+      <td>
+       <input type=text size=2 name=LINKST value="[% linkst %]" >時 ～ 
+       <input type=text size=2 name=LINKED value="[% linked %]" >時
+      </td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">動作モード(read.cgi)</td>
+     </tr>
+     <tr>
+      <td>PATH種別</td>
+      <td>
+       <input type=radio name=PATHKIND value="0" [% 'checked' IF pathkind == '0' %]>PATHINFO　
+       <input type=radio name=PATHKIND value="1" [% 'checked' IF pathkind == '1' %]>QUERYSTRING
+      </td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">動作モード(bbs.cgi)</td>
+     </tr>
+     <tr>
+      <td>高速書き込みモード</td>
+      <td><input type=checkbox name=FASTMODE [% 'checked' IF fastmode %] value=on></td>
+     </tr>
+     <tr>
+      <td>GETメソッドを受け付ける</td>
+      <td><input type=checkbox name=BBSGET [% 'checked' IF bbsget %] value=on></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">更新チェック関連</td>
+     </tr>
+     <tr>
+      <td>更新チェックの間隔</td>
+      <td><input type=text size=2 name=UPCHECK value="[% upcheck %]">日(0でチェック無効)</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','OTHER');">
+      </td>
+     </tr>
+    </table>

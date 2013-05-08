@@ -1,0 +1,61 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[設定]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">２重かきこですか？？</td>
+     </tr>
+     <tr>
+      <td>同じIPからの書き込みの文字数が変化しない場合規制する</td>
+      <td><input type=checkbox name=KAKIKO [% 'checked' IF kakiko %] value=on></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">短時間投稿規制</td>
+     </tr>
+     <tr>
+      <td>短時間投稿規制秒数を入力(0で規制無効)</td>
+      <td><input type=text size=60 name=SAMBATM value="[% samba %]"></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">Samba規制</td>
+     </tr>
+     <tr>
+      <td>
+       Samba待機秒数デフォルト値を入力(0で規制無効)<br>
+       <small>Sambaの設定は掲示板ごとに設定できます</small>
+      </td>
+      <td><input type=text size=60  name=DEFSAMBA value="[% defsamba %]"></td>
+     </tr>
+     <tr>
+      <td>Samba奉仕時間(分)デフォルト値を入力</td>
+      <td><input type=text size=60 name=DEFHOUSHI value="[% defhoushi %]"></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">新仕様トリップ</td>
+     </tr>
+     <tr>
+      <td>新仕様トリップ(12桁=SHA-1)を有効にする</td>
+      <td><input type=checkbox name=TRIP12 [% 'checked' IF trip12 %] value=on></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">DNSBL設定</td>
+     </tr>
+     <tr>
+      <td colspan=2>
+       適用するDNSBLにチェックをいれてください<br>
+       <input type=checkbox name=BBQ [% 'checked' IF bbq %] value=on>
+       <a href="http://bbq.uso800.net/" target="_blank">BBQ</a>
+       <input type=checkbox name=BBX [% 'checked' IF bbx %] value=on>
+       BBX
+       <input type=checkbox name=SPAMCH [% 'checked' IF spamch %] value=on>
+       <a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">スパムちゃんぷるー</a>
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','SEC');">
+      </td>
+     </tr>
+    </table>

@@ -1,0 +1,36 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[設定]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">1掲示板のsubject最大保持数</td>
+      <td><input type=text size=10 name=SUBMAX value="[% submax %]" ></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">1スレッドのレス最大数</td>
+      <td><input type=text size=10 name=RESMAX value="[% resmax %]" ></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">1レスのアンカー最大数(0で無制限)</td>
+      <td><input type=text size=10 name=ANKERS value="[% anchors %]" ></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">エラーログ最大保持数</td>
+      <td><input type=text size=10 name=ERRMAX value="[% errmax %]" ></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">書き込み履歴最大保持数</td>
+      <td><input type=text size=10 name=HISMAX value="[% hismax %]" ></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">管理操作ログ最大保持数</td>
+      <td><input type=text size=10 name=ADMMAX value="[% admmax %]" ></td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','LIMITTER');">
+      </td>
+     </tr>
+    </table>

@@ -1,0 +1,46 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>
+       <b>
+        <a href="javascript:SetOption('DISPST', [% prevnum %]);DoSubmit('sys.cap','DISP','LIST');">&lt;&lt; PREV</a> |
+        <a href="javascript:SetOption('DISPST', [% nextnum %]);DoSubmit('sys.cap','DISP','LIST');">NEXT &gt;&gt;</a>
+       </b>
+      </td>
+      <td colspan=2 align=right>
+       表示数 <input type=text name=DISPNUM size=4 value="[% dispnum %]">
+       <input type=button value="　表示　" onclick="DoSubmit('sys.cap','DISP','LIST');">
+      </td>
+     </tr>
+     <tr><td colspan=4><hr></td></tr>
+     <tr>
+      <th style="width:30">　</th>
+      <th class="DetailTitle" style="width:150">Cap Display Name</th>
+      <th class="DetailTitle" style="width:150">Cap Full Name</th>
+      <th class="DetailTitle" style="width:200">Explanation</th>
+     </tr>
+[% FOREACH cap IN caps -%]
+     <tr>
+[%   IF issysad -%]
+      <td><input type=checkbox name=CAPS value=[% cap.id %]></td>
+      <td>
+       <a href="javascript:SetOption('SELECT_CAP','[% cap.id %]');DoSubmit('sys.cap','DISP','EDIT')">[% cap.name %]</a>
+      </td>
+[%   ELSE -%]
+      <td><input type=checkbox></td>
+      <td>[% cap.name %]</td>
+[%   END -%]
+      <td>[% cap.full %]</td>
+      <td>[% cap.expl %]</td>
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=4><hr></td></tr>
+[% IF issysad -%]
+     <tr>
+      <td colspan=4 align=left>
+       <input type=hidden name="SELECT_CAP" value="">
+       <input type=button value="　削除　" onclick="DoSubmit('sys.cap','DISP','DELETE')" class="delete">
+      </td>
+     </tr>
+[% END -%]
+    </table>
+    <input type=hidden name="DISPST" value="">

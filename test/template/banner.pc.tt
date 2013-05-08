@@ -1,0 +1,9 @@
+[% IF banner.beforehr -%]
+<hr>
+[% END -%]
+<table border="1" cellspacing="7" cellpadding="3" width="[% banner.width %]%" bgcolor="[% banner.colorpc %]" align="center">
+[% banner.textpc -%]
+</table>
+[% IF banner.afterhr -%]
+<hr>
+[% END -%]

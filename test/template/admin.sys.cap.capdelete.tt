@@ -1,0 +1,31 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=3>以下のキャップを削除します。</td>
+     </tr>
+     <tr><td colspan=3><hr></td></tr>
+     <tr bgcolor=silver>
+      <td class="DetailTitle" style="width:150">Cap Display Name</td>
+      <td class="DetailTitle" style="width:150">Cap Full Name</td>
+      <td class="DetailTitle" style="width:200">Explanation</td>
+     </tr>
+[% FOREACH cap IN caps -%]
+     <tr>
+      <td>[% cap.name %]</td>
+      <td>[% cap.full %]</td>
+      <td>[% cap.expl %]</td>
+      <input type=hidden name="CAPS" value="[% cap.id %]">
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td bgcolor=yellow colspan=3>
+       <b><font color=red>※注：削除したキャップを元に戻すことはできません。</font></b>
+      </td>
+     </tr>
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td colspan=3 align=left>
+       <input type=button value="　削除　" onclick="DoSubmit('sys.cap','FUNC','DELETE')" class="delete">
+      </td>
+     </tr>
+    </table>

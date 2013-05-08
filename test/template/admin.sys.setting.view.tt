@@ -1,0 +1,41 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[設定]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">Read.cgi関連</td>
+     </tr>
+     <tr>
+      <td>ofuda.ccのアカウント名を入力 <small>(未入力でカウンター非表示)</small></td>
+      <td><input type=text size=60 name=COUNTER value="[% counter %]"></td>
+     </tr>
+     <tr>
+      <td>PR欄の表示文字列 <small>(未入力でPR欄非表示)</small></td>
+      <td><input type=text size=60 name=PRTEXT value="[% prtext %]"></td>
+     </tr>
+     <tr>
+      <td>PR欄のリンクURL</td>
+      <td><input type=text size=60 name=PRLINK value="[% prlink %]"></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">告知欄表示</td>
+     </tr>
+     <tr>
+      <td>index.html以外の告知欄を表示する</td>
+      <td><input type=checkbox name=BANNER [% 'checked' IF banner %] value=on></td>
+     </tr>
+     <tr bgcolor=silver>
+      <td colspan=2 class="DetailTitle">msec表示</td>
+     </tr>
+     <tr>
+      <td>ミリ秒まで表示する</small></td>
+      <td><input type=checkbox name=MSEC [% 'checked' IF msec %] value=on></td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','VIEW');">
+      </td>
+     </tr>
+    </table>

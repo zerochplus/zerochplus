@@ -1,0 +1,5 @@
+[% IF banner.textsub != '' -%]
+<div style="margin-bottom:1.2em;">
+[% banner.textsub -%]
+</div>
+[% END -%]

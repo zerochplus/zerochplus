@@ -1,0 +1,29 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>以下のカテゴリを削除します。<br><br></td>
+     </tr>
+     <tr>
+      <th class="DetailTitle" style="width:150">Category Name</th>
+      <th class="DetailTitle" style="width:150">SubScription</th>
+     </tr>
+[% FOREACH cat IN categories -%]
+     <tr>
+      <td>[% cat.name %]</td>
+      <td>[% cat.subject %]</td>
+      <input type=hidden name="CATS" value="[% cat.id %]">
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td bgcolor=yellow colspan=2>
+       <b><font color=red>※注：削除したカテゴリを元に戻すことはできません。</font></b><br>
+       ※注：所属している掲示板のカテゴリは強制的に「一般」になります。
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=right>
+       <input type=button value="　削除　" onclick="DoSubmit('sys.bbs','FUNC','CATDEL')" class="delete">
+      </td>
+     </tr>
+    </table>

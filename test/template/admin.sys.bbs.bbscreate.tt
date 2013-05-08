@@ -1,0 +1,45 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>各項目を設定して[作成]ボタンを押してください。</td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">掲示板カテゴリ</td>
+      <td>
+       <select name=BBS_CATEGORY>
+[% FOREACH cat IN categories -%]
+        <option value="[% cat.id %]">[% cat.name %]</option>
+[% END # FOREACH -%]
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">掲示板ディレクトリ</td>
+      <td><input type=text size=60 name=BBS_DIR value="[ディレクトリ名]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">掲示板名称</td>
+      <td><input type=text size=60 name=BBS_NAME value="[掲示板名]＠0ch掲示板"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">説明</td>
+      <td><input type=text size=60 name=BBS_EXPLANATION value="[説明]"></td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">掲示板設定継承</td>
+      <td>
+       <select name=BBS_INHERIT>
+        <option value="">しない</option>
+[% FOREACH board IN boards -%]
+        <option value="[% board.id %]">[% board.name %]</option>
+[% END # FOREACH -%]
+       </select>
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　作成　" onclick="DoSubmit('sys.bbs','FUNC','CREATE')">
+      </td>
+     </tr>
+    </table>

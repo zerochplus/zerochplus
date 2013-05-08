@@ -1,0 +1,103 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="ja">
+<head>
+ 
+ <meta http-equiv="Content-Type" content="text/html; charset=Shift_JIS">
+ 
+ <meta http-equiv="Content-Script-Type" content="text/javascript">
+ <meta http-equiv="Content-Style-Type" content="text/css">
+ 
+ <meta name="robots" content="noindex,nofollow">
+ 
+ <title>ぜろちゃんねるプラス管理 - [ [% title %] ]</title>
+ 
+ <link rel="stylesheet" href=".[% datapath %]/admin.css" type="text/css">
+ <script language="javascript" src=".[% datapath %]/admin.js"></script>
+ 
+</head>
+<!--nobanner-->
+<body>
+
+<form name="ADMIN" action="./admin.cgi" method="POST" [% 'onsubmit="return Submitted();"' IF mode %]>
+
+[% IF mode -%]
+<div class="MainMenu" align="right">
+[%   SWITCH mode -%]
+[%     CASE 1 -%]
+ <a href="javascript:DoSubmit('sys.top','DISP','NOTICE');">トップ</a> |
+ <a href="javascript:DoSubmit('sys.bbs','DISP','LIST');">掲示板</a> |
+ <a href="javascript:DoSubmit('sys.user','DISP','LIST');">ユーザー</a> |
+ <a href="javascript:DoSubmit('sys.cap','DISP','LIST');">キャップ</a> |
+ <a href="javascript:DoSubmit('sys.capg','DISP','LIST');">共通キャップグループ</a> |
+ <a href="javascript:DoSubmit('sys.setting','DISP','INFO');">システム設定</a> |
+ <a href="javascript:DoSubmit('sys.edit','DISP','BANNER_PC');">各種編集</a> |
+[%     CASE 2 -%]
+ <a href="javascript:DoSubmit('bbs.thread','DISP','LIST');">スレッド</a> |
+ <a href="javascript:DoSubmit('bbs.pool','DISP','LIST');">プール</a> |
+ <a href="javascript:DoSubmit('bbs.kako','DISP','LIST');">過去ログ</a> |
+ <a href="javascript:DoSubmit('bbs.setting','DISP','SETINFO');">掲示板設定</a> |
+ <a href="javascript:DoSubmit('bbs.edit','DISP','HEAD');">各種編集</a> |
+ <a href="javascript:DoSubmit('bbs.user','DISP','LIST');">管理グループ</a> |
+ <a href="javascript:DoSubmit('bbs.cap','DISP','LIST');">キャップグループ</a> |
+ <a href="javascript:DoSubmit('bbs.log','DISP','INFO');">ログ閲覧</a> |
+[%     CASE 3 -%]
+ <a href="javascript:DoSubmit('thread.res','DISP','LIST');">レス一覧</a> |
+ <a href="javascript:DoSubmit('thread.del','DISP','LIST');">削除レス一覧</a> |
+[%     CASE DEFAULT -%]
+[%   END -%]
+ <a href="javascript:DoSubmit('login','','');">ログオフ</a>
+</div>
+[% END -%]
+
+<div class="MainHead" align="right">0ch+ BBS System Manager</div>
+
+<table cellspacing="0" width="100%" height="400">
+ <tr>
+[% IF mode -%]
+  <td valign="top" class="Content">
+   <table width="95%" cellspacing="0">
+    <tr>
+     <td class="FunctionList">
+[%   FOREACH line IN menu -%]
+[%     IF line.url != '' -%]
+      <a href="javascript:DoSubmit([% line.url %]);">[% line.str %]</a><br>
+[%     ELSIF line.str != '' -%]
+      <font color="gray">[% line.str %]</font><br>
+[%     ELSE -%]
+      <hr>
+[%     END -%]
+[%   END # FOREACH -%]
+     </td>
+    </tr>
+   </table>
+  </td>
+[% END -%]
+  <td width="80%" valign="top" class="Function">
+   <div class="FuncTitle">[% title %]</div>
+[% IF intmpl -%]
+[%   INCLUDE "admin.${intmpl}.tt" # | indent('    ') -%]
+[% ELSE -%]
+[%   innerhtml # | indent('  ') -%]
+[% END -%]
+  </td>
+[% IF mode -%]
+  <!-- ▼こんなところに地下要塞(ry -->
+   <input type="hidden" name="MODULE" value="">
+   <input type="hidden" name="MODE" value="">
+   <input type="hidden" name="MODE_SUB" value="">
+   <input type="hidden" name="UserName" value="[% username %]">
+   <input type="hidden" name="SessionID" value="[% sid %]">
+  <!-- △こんなところに地下要塞(ry -->
+[% END -%]
+ </tr>
+</table>
+
+<div class="MainFoot">
+ Copyright 2001 - {=0ch+year=} 0ch+ BBS[% IF username != '' %] : Loggin User - <b>[% username %]</b>[% END %]<br>
+ Build Version:<b>[% version %]</b>[% IF isupdate %] (New Version is Available.)[% END %]
+</div>
+
+</form>
+
+</body>
+</html>

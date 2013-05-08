@@ -1,0 +1,78 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=2>
+       各項目を設定して[設定]ボタンを押してください。<br>
+       いくつかの例を挙げます。<br>
+       　例1: http://example.jp/test/admin.cgi<br>
+       　例2: http://example.net/~user/test/admin.cgi<br>
+       　例3: http://example.com/cgi-bin/test/admin.cgi
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td class="DetailTitle">
+       稼動サーバ(末尾の / は要りません)<br>
+       <span class="NormalStyle">
+        　例1: http://example.jp<br>
+        　例2: http://example.net
+       </span>
+      </td>
+      <td>
+       <input type=text size=60 name=SERVER value="[% server %]">
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">
+       CGI設置ディレクトリ(絶対パス)<br>
+       <span class="NormalStyle">
+        　例1: /test<br>
+        　例2: /~user/test<br>
+        　例3: /cgi-bin/test
+       </span>
+      </td>
+      <td>
+       <input type=text size=60 name=CGIPATH value="[% cgipath %]">
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">
+       掲示板配置ディレクトリ(相対パス)<br>
+       <span class="NormalStyle">
+        　例1: .jp/bbs1/ → <span class="UnderLine">..</span><br>
+        　例2: .net/~user/bbs2/ → <span class="UnderLine">..</span><br>
+        　例3: .com/bbs3/ → <span class="UnderLine">../..</span>
+       </span>
+      </td>
+      <td>
+       <input type=text size=60 name=BBSPATH value="[% bbspath %]">
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">
+       システム情報ディレクトリ(/ から始める)<br>
+       <span class="NormalStyle">
+        　例1: .jp/test/info → <span class="UnderLine">/info</span>
+       </span>
+      </td>
+      <td>
+       <input type=text size=60 name=INFO value="[% infopath %]">
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">
+       システムデータディレクトリ(/ から始める)<br>
+       <span class="NormalStyle">
+        　例1: .jp/test/info → <span class="UnderLine">/datas</span>
+       </span>
+      </td>
+      <td>
+       <input type=text size=60 name=DATA value="[% datapath %]">
+      </td>
+     </tr>
+     <tr><td colspan=2><hr></td></tr>
+     <tr>
+      <td colspan=2 align=left>
+       <input type=button value="　設定　" onclick="DoSubmit('sys.setting','FUNC','BASIC');">
+      </td>
+     </tr>
+    </table>

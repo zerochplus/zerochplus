@@ -1,0 +1,30 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <td colspan=3>以下の掲示板を削除します。<br><br></td>
+     </tr>
+     <tr>
+      <th class="DetailTitle" style="width:150">BBS Name</th>
+      <th class="DetailTitle" style="width:100">Category</th>
+      <th class="DetailTitle" style="width:250">SubScription</th>
+     </tr>
+[% FOREACH board IN boards -%]
+     <tr>
+      <td>[% board.name %]</td>
+      <td>[% board.category %]</td>
+      <td>[% board.subject %]</td>
+      <input type=hidden name="BBSS" value="[% board.id %]">
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td bgcolor=yellow colspan=3>
+       <b><font color=red>※注：削除した掲示板を元に戻すことはできません。</font></b>
+      </td>
+     </tr>
+     <tr><td colspan=3><hr></td></tr>
+     <tr>
+      <td colspan=3 align=right>
+       <input type=button value="　削除　" onclick="DoSubmit('sys.bbs','FUNC','DELETE')" class="delete">
+      </td>
+     </tr>
+    </table>

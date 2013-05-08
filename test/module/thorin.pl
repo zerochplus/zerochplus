@@ -8,6 +8,8 @@ package	THORIN;
 use strict;
 use warnings;
 
+use Template;
+
 #------------------------------------------------------------------------------------------------------------
 #
 #	モジュールコンストラクタ - new
@@ -22,10 +24,65 @@ sub new
 	
 	my $obj = {
 		'BUFF'	=> [],
+		'TT'	=> undef,
+		'TMPL'	=> undef,
+		'DATA'	=> undef,
 	};
 	bless $obj, $class;
 	
 	return $obj;
+}
+
+sub Init
+{
+	my $this = shift;
+	my ($tmpl) = @_;
+	
+	my $template = Template->new({
+		'RELATIVE'		=> 1,
+		'INCLUDE_PATH'	=> './template',
+		'COMPILE_DIR'	=> './template/compiled',
+	});
+	
+	$this->{'TT'} = $template;
+	$this->{'TMPL'} = $tmpl;
+	$this->{'DATA'} = {};
+}
+
+sub Set
+{
+	my $this = shift;
+	my ($data) = @_;
+	
+	my $d = $this->{'DATA'};
+	$d->{$_} = $data->{$_} foreach (keys %$data);
+}
+
+sub Output
+{
+	my $this = shift;
+	my ($ref) = @_;
+	
+	return if (!defined $this->{'TT'});
+	
+	$this->{'TT'}->process($this->{'TMPL'}, $this->{'DATA'}, $ref)
+											or warn $this->{'TT'}->error;
+}
+
+sub OutputContentType
+{
+	my $this = shift;
+	my ($type, $ref) = @_;
+	
+	if (ref($ref) eq 'SCALAR') {
+		$$ref .= "Content-Type: $type\n\n";
+	}
+	elsif (ref($ref) eq 'GLOB' && ref(*$ref{IO}) eq 'IO::File') {
+		print $ref "Content-Type: $type\n\n";
+	}
+	else {
+		print "Content-Type: $type\n\n";
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -77,18 +134,24 @@ sub HTMLInput
 sub Flush
 {
 	my $this = shift;
-	my ($flag, $perm, $path) = @_;
+	my ($flag, $perm, $ref) = @_;
 	
 	# ファイルへ出力
 	if ($flag) {
-		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
+		if (open(my $fh, (-f $ref ? '+<' : '>'), $ref)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
 			print $fh @{$this->{'BUFF'}};
 			truncate($fh, tell($fh));
 			close($fh);
 		}
-		chmod $perm, $path;
+		chmod $perm, $ref;
+	}
+	elsif (ref($ref) eq 'SCALAR') {
+		$$ref = join ('', @{$this->{'BUFF'}});
+	}
+	elsif (ref($ref) eq 'GLOB' && ref(*$ref{IO}) eq 'IO::File') {
+		print $ref @{$this->{'BUFF'}};
 	}
 	# 標準出力に出力
 	else {

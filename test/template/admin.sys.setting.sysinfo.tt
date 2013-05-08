@@ -1,0 +1,17 @@
+    <b>0ch+ BBS - Administrator Script</b>
+    <table border=0 cellspacing=2 width=100%>
+     <tr><td colspan=2><hr></td></tr>
+     <tr><td class="DetailTitle" colspan=2>Å°0ch+ Information</td></tr>
+     <tr><td class="DetailTitle">Version</td><td>[% zerover %]</td></tr>
+     <tr><td class="DetailTitle" colspan=2>Å°Perl Information</td></tr>
+     <tr><td class="DetailTitle">Version</td><td>[% perlver %]</td></tr>
+     <tr><td class="DetailTitle">Perl Path</td><td>[% perlpath %]</td></tr>
+     <tr><td class="DetailTitle">Server Software</td><td>[% serversoft %]</td></tr>
+     <tr><td class="DetailTitle">Server Name</td><td>[% servername %]</td></tr>
+     <tr><td class="DetailTitle">Server Host</td><td>[% serverhost %]</td></tr>
+     <tr><td class="DetailTitle">Script Path</td><td>[% filename %]</td></tr>
+     <tr><td class="DetailTitle" colspan=2>Å°Perl Packages (include perllib)</td></tr>
+[% FOREACH pkg IN versions -%]
+     <tr><td class="DetailTitle">[% pkg.name %]</td><td>[% pkg.version OR 'undefined' %]</td></tr>
+[% END # FOREACH -%]
+    </table>

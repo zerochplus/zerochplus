@@ -1,0 +1,22 @@
+    <table border=0 cellspacing=2 width=100%>
+     <tr>
+      <th style="width:20">　</th>
+      <th class="DetailTitle" style="width:150">Category Name</th>
+      <th class="DetailTitle" style="width:300">SubScription</th>
+      <th class="DetailTitle" style="width:50">Belonging</th>
+     </tr>
+[% FOREACH cat IN categories -%]
+     <tr>
+      <td><input type=checkbox name=CATS value=[% cat.id %]></td>
+      <td>[% cat.name %]</td>
+      <td>[% cat.subject %]</td>
+      <td align=center>[% cat.num %]</td>
+     </tr>
+[% END # FOREACH -%]
+     <tr><td colspan=4><hr></td></tr>
+     <tr>
+      <td colspan=4 align=left>
+       <input type=button value="　追加　" onclick="DoSubmit('sys.bbs','DISP','CATEGORYADD')">
+       <input type=button value="　削除　" onclick="DoSubmit('sys.bbs','DISP','CATEGORYDEL')" class="delete">
+     </tr>
+    </table>

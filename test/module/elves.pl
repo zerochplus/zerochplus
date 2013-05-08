@@ -613,7 +613,7 @@ sub Init
 		my $infopath = $Sys->Get('INFO');
 		$this->{'SOPT'} = {
 			'min'		=> 30,
-			'driver'	=> 'driver:File;serializer:storable',
+			'driver'	=> 'driver:file;serializer:default',
 			'option'	=> { Directory => ".$infopath/.session/" },
 		};
 		

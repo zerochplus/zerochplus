@@ -1,9 +1,6 @@
 #============================================================================================================
 #
 #	システム管理 - ユーザ モジュール
-#	sys.top.pl
-#	---------------------------------------------------------------------------
-#	2004.09.11 start
 #
 #============================================================================================================
 package	MODULE;
@@ -22,13 +19,12 @@ no warnings 'redefine';
 #------------------------------------------------------------------------------------------------------------
 sub new
 {
-	my $this = shift;
-	my ($obj, @LOG);
+	my $class = shift;
 	
-	$obj = {
-		'LOG'	=> \@LOG
+	my $obj = {
+		'LOG'	=> [],
 	};
-	bless $obj, $this;
+	bless $obj, $class;
 	
 	return $obj;
 }
@@ -39,46 +35,50 @@ sub new
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	MELKOR
 #	@param	$Form	SAMWISE
-#	@param	$pSys	管理システム
+#	@param	$CGI	管理システム
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub DoPrint
 {
 	my $this = shift;
-	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $BASE, $BBS, $Page);
-	
-	require './mordor/sauron.pl';
-	$BASE = SAURON->new;
+	my ($Sys, $Form, $CGI) = @_;
 	
 	# 管理マスタオブジェクトの生成
-	$Page		= $BASE->Create($Sys, $Form);
-	$subMode	= $Form->Get('MODE_SUB');
+	require './mordor/sauron.pl';
+	my $Base = SAURON->new;
+	$Base->Create($Sys, $Form);
+	
+	my $subMode = $Form->Get('MODE_SUB');
 	
 	# メニューの設定
-	SetMenuList($BASE, $pSys);
+	SetMenuList($Base, $CGI);
 	
-	if ($subMode eq 'NOTICE') {														# 通知一覧画面
+	my $indata = undef;
+	
+	# 通知一覧画面
+	if ($subMode eq 'NOTICE') {
 		CheckVersionUpdate($Sys);
-		PrintNoticeList($Page, $Sys, $Form);
+		$indata = PreparePageNoticeList($Sys, $Form);
 	}
-	elsif ($subMode eq 'NOTICE_CREATE') {											# 通知一覧画面
-		PrintNoticeCreate($Page, $Sys, $Form);
+	# 通知一覧画面
+	elsif ($subMode eq 'NOTICE_CREATE') {
+		$indata = PreparePageNoticeCreate($Sys, $Form);
 	}
-	elsif ($subMode eq 'ADMINLOG') {												# ログ閲覧画面
-		PrintAdminLog($Page, $Sys, $Form, $pSys->{'LOGGER'});
+	# ログ閲覧画面
+	elsif ($subMode eq 'ADMINLOG') {
+		$indata = PreparePageAdminLog($Sys, $Form, $CGI->{'LOGGER'});
 	}
-	elsif ($subMode eq 'COMPLETE') {												# 設定完了画面
-		$Sys->Set('_TITLE', 'Process Complete');
-		$BASE->PrintComplete('ユーザ通知処理', $this->{'LOG'});
+	# 設定完了画面
+	elsif ($subMode eq 'COMPLETE') {
+		$indata = $Base->PreparePageComplete('ユーザ通知処理', $this->{'LOG'});
 	}
-	elsif ($subMode eq 'FALSE') {													# 設定失敗画面
-		$Sys->Set('_TITLE', 'Process Failed');
-		$BASE->PrintError($this->{'LOG'});
+	# 設定失敗画面
+	elsif ($subMode eq 'FALSE') {
+		$indata = $Base->PreparePageError($this->{'LOG'});
 	}
 	
-	$BASE->Print($Sys->Get('_TITLE'), 1);
+	$Base->Print($Sys->Get('_TITLE'), 1, $indata);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -87,40 +87,43 @@ sub DoPrint
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	MELKOR
 #	@param	$Form	SAMWISE
-#	@param	$pSys	管理システム
+#	@param	$CGI	管理システム
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub DoFunction
 {
 	my $this = shift;
-	my ($Sys, $Form, $pSys) = @_;
-	my ($subMode, $err);
+	my ($Sys, $Form, $CGI) = @_;
 	
-	$subMode	= $Form->Get('MODE_SUB');
-	$err		= 0;
+	my $subMode = $Form->Get('MODE_SUB');
+	my $err = 0;
 	
-	if ($subMode eq 'CREATE') {														# 通知作成
+	# 通知作成
+	if ($subMode eq 'CREATE') {
 		$err = FunctionNoticeCreate($Sys, $Form, $this->{'LOG'});
 	}
-	elsif ($subMode eq 'DELETE') {													# 通知削除
+	# 通知削除
+	elsif ($subMode eq 'DELETE') {
 		$err = FunctionNoticeDelete($Sys, $Form, $this->{'LOG'});
 	}
-	elsif ($subMode eq 'LOG_REMOVE') {												# 操作ログ削除
-		$err = FunctionLogRemove($Sys, $Form, $pSys->{'LOGGER'}, $this->{'LOG'});
+	# 操作ログ削除
+	elsif ($subMode eq 'LOG_REMOVE') {
+		$err = FunctionLogRemove($Sys, $Form, $CGI->{'LOGGER'}, $this->{'LOG'});
 	}
 	
 	# 処理結果表示
 	if ($err) {
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_TOP($subMode)", "ERROR:$err");
+		$CGI->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_TOP($subMode)", "ERROR:$err");
 		push @{$this->{'LOG'}}, $err;
 		$Form->Set('MODE_SUB', 'FALSE');
 	}
 	else {
-		$pSys->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_TOP($subMode)", 'COMPLETE');
+		$CGI->{'LOGGER'}->Put($Form->Get('UserName'), "SYSTEM_TOP($subMode)", 'COMPLETE');
 		$Form->Set('MODE_SUB', 'COMPLETE');
 	}
-	$this->DoPrint($Sys, $Form, $pSys);
+	
+	$this->DoPrint($Sys, $Form, $CGI);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -128,21 +131,21 @@ sub DoFunction
 #	メニューリスト設定
 #	-------------------------------------------------------------------------------------
 #	@param	$Base	SAURON
-#	@param	$Sys	MELKOR
+#	@param	$CGI	
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
 sub SetMenuList
 {
-	my ($Base, $pSys) = @_;
+	my ($Base, $CGI) = @_;
 	
 	# 共通表示メニュー
 	$Base->SetMenu('ユーザ通知一覧', "'sys.top','DISP','NOTICE'");
 	$Base->SetMenu('ユーザ通知作成', "'sys.top','DISP','NOTICE_CREATE'");
 	
 	# システム管理権限のみ
-	if ($pSys->{'SECINFO'}->IsAuthority($pSys->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
-		$Base->SetMenu('<hr>', '');
+	if ($CGI->{'SECINFO'}->IsAuthority($CGI->{'USER'}, $ZP::AUTH_SYSADMIN, '*')) {
+		$Base->SetMenu('', '');
 		$Base->SetMenu('操作ログ閲覧', "'sys.top','DISP','ADMINLOG'");
 	}
 }
@@ -151,284 +154,166 @@ sub SetMenuList
 #
 #	ユーザ通知一覧の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintNoticeList
+sub PreparePageNoticeList
 {
-	my ($Page, $Sys, $Form) = @_;
-	my ($Notices, @noticeSet, $from, $subj, $text, $date, $id, $common);
-	my ($dispNum, $i, $dispSt, $dispEd, $listNum, $isAuth, $curUser);
-	my ($orz, $or2);
+	my ($Sys, $Form) = @_;
 	
-	$Sys->Set('_TITLE', 'User Notice List');
-	
-	require './module/gandalf.pl';
 	require './module/galadriel.pl';
-	$Notices = GANDALF->new;
+	require './module/gandalf.pl';
 	
 	# 通知情報の読み込み
+	my $Notices = GANDALF->new;
 	$Notices->Load($Sys);
 	
-	# 通知情報を取得
+	my @noticeSet = ();
 	$Notices->GetKeySet('ALL', '', \@noticeSet);
-	@noticeSet = sort @noticeSet;
-	@noticeSet = reverse @noticeSet;
+	@noticeSet = reverse sort @noticeSet;
+	
+	my $max = sub { $_[0] > $_[1] ? $_[0] : $_[1] };
 	
 	# 表示数の設定
-	$listNum	= @noticeSet;
-	$dispNum	= $Form->Get('DISPNUM_NOTICE', 5) || 5;
-	$dispSt		= $Form->Get('DISPST_NOTICE', 0) || 0;
-	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
-	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
+	my $listnum = scalar(@noticeSet);
+	my $dispnum = int($Form->Get('DISPNUM_NOTICE', 5) || 5);
+	my $dispst = &$max(int($Form->Get('DISPST_NOTICE') || 0), 0);
+	my $prevnum = &$max($dispst - $dispnum, 0);
+	my $nextnum = $dispst;
 	
-	$orz = $dispSt - $dispNum;
-	$or2 = $dispSt + $dispNum;
-	
-	$common		= "DoSubmit('sys.top','DISP','NOTICE');";
-	
-$Page->Print(<<HTML);
-  <table border="0" cellspacing="2" width="100%">
-   <tr>
-    <td>
-    </td>
-    <td>
-    <a href="javascript:SetOption('DISPST_NOTICE', $orz);$common">&lt;&lt; PREV</a> |
-    <a href="javascript:SetOption('DISPST_NOTICE', $or2);$common">NEXT &gt;&gt;</a>
-    </td>
-    <td align=right colspan="2">
-    表\示数 <input type=text name="DISPNUM_NOTICE" size="4" value="$dispNum">
-    <input type=button value="　表\示　" onclick="$common">
-    </td>
-   </tr>
-   <tr>
-    <td style="width:30px;"><br></td>
-    <td colspan="3" class="DetailTitle">Notification</td>
-   </tr>
-HTML
-	
-	# カレントユーザ
-	$curUser = $Sys->Get('ADMIN')->{'USER'};
+	my $CGI = $Sys->Get('ADMIN');
+	my $user = $CGI->{'USER'};
 	
 	# 通知一覧を出力
-	for ($i = $dispSt ; $i < $dispEd ; $i++) {
-		$id = $noticeSet[$i];
-		if ($Notices->IsInclude($id, $curUser) && ! $Notices->IsLimitOut($id)) {
+	my $displist = [];
+	while ($nextnum < $listnum) {
+		my $id = $noticeSet[$nextnum++];
+		
+		if ($Notices->IsInclude($id, $user) && ! $Notices->IsLimitOut($id)) {
+			my $from;
 			if ($Notices->Get('FROM', $id) eq '0000000000') {
 				$from = '0ch+管理システム';
 			}
 			else {
-				$from = $Sys->Get('ADMIN')->{'SECINFO'}->{'USER'}->Get('NAME', $Notices->Get('FROM', $id));
+				$from = $CGI->{'SECINFO'}->{'USER'}->Get('NAME', $Notices->Get('FROM', $id));
 			}
-			$subj = $Notices->Get('SUBJECT', $id);
-			$text = $Notices->Get('TEXT', $id);
-			$date = GALADRIEL::GetDateFromSerial(undef, $Notices->Get('DATE', $id), 0);
 			
-$Page->Print(<<HTML);
-   <tr>
-    <td><input type=checkbox name="NOTICES" value="$id"></td>
-    <td class="Response" colspan="3">
-    <dl style="margin:0px;">
-     <dt><b>$subj</b> <font color="blue">From：$from</font> $date</dt>
-      <dd>
-      $text<br>
-      <br></dd>
-    </dl>
-    </td>
-   </tr>
-HTML
-
-		}
-		else {
-			$dispEd++ if ($dispEd + 1 < $listNum);
+			push @$displist, {
+				'id'		=> $id,
+				'from'		=> $from,
+				'subject'	=> $Notices->Get('SUBJECT', $id),
+				'text'		=> $Notices->Get('TEXT', $id),
+				'date'		=> GALADRIEL->GetDateFromSerial($Notices->Get('DATE', $id), 0),
+			};
+			last if (scalar(@$displist) >= $dispnum);
 		}
 	}
 	
-$Page->Print(<<HTML);
-   <tr>
-    <td colspan="4" align="left">
-    <input type="button" class="delete" value="　削除　" onclick="DoSubmit('sys.top','FUNC','DELETE')">
-    </td>
-   </tr>
-  </table>
-  <input type="hidden" name="DISPST_NOTICE" value="">
-HTML
+	my $indata = {
+		'title'		=> 'User Notice List',
+		'intmpl'	=> 'sys.top.noticelist',
+		'dispnum'	=> $dispnum,
+		'prevnum'	=> $prevnum,
+		'nextnum'	=> $nextnum,
+		'notices'	=> $displist,
+	};
 	
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	ユーザ通知作成画面の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintNoticeCreate
+sub PreparePageNoticeCreate
 {
-	my ($Page, $Sys, $Form) = @_;
-	my ($isSysad, $User, @userSet, $id, $name, $full, $common);
+	my ($Sys, $Form) = @_;
 	
-	$Sys->Set('_TITLE', 'User Notice Create');
+	my $CGI = $Sys->Get('ADMIN');
+	my $Sec = $CGI->{'SECINFO'};
+	my $User = $Sec->{'USER'};
 	
-	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
-	$User = $Sys->Get('ADMIN')->{'SECINFO'}->{'USER'};
+	my $issysad = $Sec->IsAuthority($CGI->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
+	
+	my @userSet = ();
 	$User->GetKeySet('ALL', '', \@userSet);
 	
-$Page->Print(<<HTML);
-  <table border="0" cellspacing="2" width="100%">
-    <tr>
-    <td class="DetailTitle">タイトル</td>
-    <td><input type="text" size="60" name="NOTICE_TITLE"></td>
-   </tr>
-   <tr>
-    <td class="DetailTitle">本文</td>
-    <td>
-    <textarea rows="10" cols="70" name="NOTICE_CONTENT"></textarea>
-    </td>
-   </tr>
-   <tr>
-    <td class="DetailTitle">通知先ユーザ</td>
-    <td>
-    <table width="100%" cellspacing="2">
-HTML
-	
-	if ($isSysad) {
-		
-$Page->Print(<<HTML);
-     <tr>
-      <td class="DetailTitle">
-      <input type="radio" name="NOTICE_KIND" value="ALL">全体通知
-      </td>
-      <td>
-      有効期限：<input type="text" name="NOTICE_LIMIT" size="10" value="30">日
-      </td>
-     </tr>
-     <tr>
-      <td class="DetailTitle">
-      <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
-      </td>
-      <td>
-HTML
+	my $users = [];
+	foreach my $id (@userSet) {
+		push @$users, {
+			'id'		=> $id,
+			'name'		=> $User->Get('NAME', $id),
+			'fullname'	=> $User->Get('FULL', $id),
+		};
 	}
-	else {
-$Page->Print(<<HTML);
-     <tr>
-      <td class="DetailTitle">
-      <input type="radio" name="NOTICE_KIND" value="ONE" checked>個別通知
-      </td>
-      <td>
-HTML
-	}
+	my $indata = {
+		'title'		=> 'User Notice Create',
+		'intmpl'	=> 'sys.top.noticecreate',
+		'issysad'	=> $issysad,
+		'users'		=> $users,
+	};
 	
-	# ユーザ一覧を表示
-	foreach $id (@userSet) {
-		$name = $User->Get('NAME', $id);
-		$full = $User->Get('FULL', $id);
-		$Page->Print("      <input type=\"checkbox\" name=\"NOTICE_USERS\" value=\"$id\"> $name($full)<br>\n");
-	}
-	
-$Page->Print(<<HTML);
-      </td>
-     </tr>
-    </table>
-    </td>
-   </tr>
-   <tr>
-    <td colspan="2" align="left">
-    <input type="button" value="　送信　" onclick="DoSubmit('sys.top','FUNC','CREATE')">
-    </td>
-   </tr>
-  </table>
-HTML
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
 #
 #	管理操作ログ閲覧画面の表示
 #	-------------------------------------------------------------------------------------
-#	@param	$Page	ページコンテキスト
-#	@param	$SYS	システム変数
+#	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
 #	@return	なし
 #
 #------------------------------------------------------------------------------------------------------------
-sub PrintAdminLog
+sub PreparePageAdminLog
 {
-	my ($Page, $Sys, $Form, $Logger) = @_;
-	my ($common);
-	my ($dispNum, $i, $dispSt, $dispEd, $listNum, $isSysad, $data, @elem);
-	my ($orz, $or2);
+	my ($Sys, $Form, $Logger) = @_;
 	
-	$Sys->Set('_TITLE', 'Operation Log');
-	$isSysad = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_SYSADMIN, '*');
+	my $CGI = $Sys->Get('ADMIN');
+	
+	my $max = sub { $_[0] > $_[1] ? $_[0] : $_[1] };
 	
 	# 表示数の設定
-	$listNum	= $Logger->Size();
-	$dispNum	= ($Form->Get('DISPNUM_LOG') eq '' ? 10 : $Form->Get('DISPNUM_LOG'));
-	$dispSt		= ($Form->Get('DISPST_LOG') eq '' ? 0 : $Form->Get('DISPST_LOG'));
-	$dispSt		= ($dispSt < 0 ? 0 : $dispSt);
-	$dispEd		= (($dispSt + $dispNum) > $listNum ? $listNum : ($dispSt + $dispNum));
-	$common		= "DoSubmit('sys.top','DISP','ADMINLOG');";
-	
-	$orz		= $dispSt - $dispNum;
-	$or2		= $dispSt + $dispNum;
-	
-$Page->Print(<<HTML);
-  <table border="0" cellspacing="2" width="100%">
-   <tr>
-    <td colspan="2">
-    <a href="javascript:SetOption('DISPST_LOG', $orz);$common">&lt;&lt; PREV</a> |
-    <a href="javascript:SetOption('DISPST_LOG', $or2);$common">NEXT &gt;&gt;</a>
-    </td>
-    <td align="right" colspan="2">
-    表\示数 <input type="text" name="DISPNUM_LOG" size="4" value="$dispNum">
-    <input type="button" value="　表\示　" onclick="$common">
-    </td>
-   </tr>
-   <tr>
-    <td class="DetailTitle">Date</td>
-    <td class="DetailTitle">User</td>
-    <td class="DetailTitle">Operation</td>
-    <td class="DetailTitle">Result</td>
-   </tr>
-HTML
+	my $listnum = $Logger->Size();
+	my $dispnum = int($Form->Get('DISPNUM_LOG', 10) || 10);
+	my $dispst = &$max(int($Form->Get('DISPST_LOG') || 0), 0);
+	my $prevnum = &$max($dispst - $dispnum, 0);
+	my $nextnum = $dispst;
 	
 	require './module/galadriel.pl';
 	
 	# ログ一覧を出力
-	for ($i = $dispSt ; $i < $dispEd ; $i++) {
-		$data = $Logger->Get($listNum - $i - 1);
-		@elem = split(/<>/, $data);
-		if (1) {
-			$elem[0] = GALADRIEL::GetDateFromSerial(undef, $elem[0], 0);
-			$Page->Print("   <tr><td>$elem[0]</td><td>$elem[1]</td><td>$elem[2]</td><td>$elem[3]</td></tr>\n");
-		}
-		else {
-			$dispEd++ if ($dispEd + 1 < $listNum);
-		}
+	my $displog = [];
+	while ($nextnum < $listnum) {
+		my $data = $Logger->Get($listnum - $nextnum++ - 1);
+		my @elem = split(/<>/, $data, -1);
+		
+		push @$displog, {
+			'date'		=> $elem[0],
+			'user'		=> $elem[1],
+			'operation'	=> $elem[2],
+			'result'	=> $elem[3],
+		};
+		last if (scalar(@$displog) >= $dispnum);
 	}
 	
-$Page->Print(<<HTML);
-   <tr>
-    <td colspan="4"><hr></td>
-   </tr>
-   <tr>
-    <td colspan="4" align="right">
-    <input type="button" value="ログの削除" onclick="DoSubmit('sys.top','FUNC','LOG_REMOVE')" class=\"delete\">
-    </td>
-   </tr>
-  </table>
-  
-  <input type="hidden" name="DISPST_LOG" value="">
-  
-HTML
+	my $indata = {
+		'title'		=> 'Operation Log',
+		'intmpl'	=> 'sys.top.adminlog',
+		'dispnum'	=> $dispnum,
+		'prevnum'	=> $prevnum,
+		'nextnum'	=> $nextnum,
+		'logs'		=> $displog,
+	};
 	
+	return $indata;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -444,56 +329,53 @@ HTML
 sub FunctionNoticeCreate
 {
 	my ($Sys, $Form, $pLog) = @_;
-	my ($Notice, $subject, $content, $date, $limit, $users);
 	
 	# 権限チェック
-	{
-		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $Sys->Get('ADMIN')->{'USER'};
-		
-		if ($chkID eq '') {
-			return 1000;
-		}
+	my $cuser = $Sys->Get('ADMIN')->{'USER'};
+	if (!$cuser) {
+		return 1000;
 	}
+	
 	# 入力チェック
-	{
-		my @inList = ('NOTICE_TITLE', 'NOTICE_CONTENT');
-		if (! $Form->IsInput(\@inList)) {
+	if ('input check') {
+		my $inList = ['NOTICE_TITLE', 'NOTICE_CONTENT'];
+		if (!$Form->IsInput($inList)) {
 			return 1001;
 		}
-		@inList = ('NOTICE_LIMIT');
-		if ($Form->Equal('NOTICE_KIND', 'ALL') && ! $Form->IsInput(\@inList)) {
+		$inList = ['NOTICE_LIMIT'];
+		if ($Form->Equal('NOTICE_KIND', 'ALL') && !$Form->IsInput($inList)) {
 			return 1001;
 		}
-		@inList = ('NOTICE_USERS');
-		if ($Form->Equal('NOTICE_KIND', 'ONE') && ! $Form->IsInput(\@inList)) {
+		$inList = ['NOTICE_USERS'];
+		if ($Form->Equal('NOTICE_KIND', 'ONE') && !$Form->IsInput($inList)) {
 			return 1001;
 		}
 	}
+	
 	require './module/gandalf.pl';
-	$Notice = GANDALF->new;
+	my $Notice = GANDALF->new;
 	$Notice->Load($Sys);
 	
-	$date = time;
-	$subject = $Form->Get('NOTICE_TITLE');
-	$content = $Form->Get('NOTICE_CONTENT');
+	my $date = time;
+	my $subject = $Form->Get('NOTICE_TITLE');
+	my $content = $Form->Get('NOTICE_CONTENT');
+	my $users = '*';
+	my $limit = 0;
 	
 	require './module/galadriel.pl';
-	GALADRIEL::ConvertCharacter1(undef, \$subject, 0);
-	GALADRIEL::ConvertCharacter1(undef, \$content, 2);
+	GALADRIEL->ConvertCharacter1(\$subject, 0);
+	GALADRIEL->ConvertCharacter1(\$content, 2);
 	
 	if ($Form->Equal('NOTICE_KIND', 'ALL')) {
-		$users = '*';
-		$limit = $Form->Get('NOTICE_LIMIT');
+		$limit = int($Form->Get('NOTICE_LIMIT', 0) || 0);
 		$limit = $date + ($limit * 24 * 60 * 60);
 	}
 	else {
-		my @toSet = $Form->GetAtArray('NOTICE_USERS');
-		$users = join(',', @toSet);
-		$limit = 0;
+		$users = join(',', $Form->GetAtArray('NOTICE_USERS'));
 	}
+	
 	# 通知情報を追加
-	$Notice->Add($users, $Sys->Get('ADMIN')->{'USER'}, $subject, $content, $limit);
+	$Notice->Add($users, $cuser, $subject, $content, $limit);
 	$Notice->Save($Sys);
 	
 	push @$pLog, 'ユーザへの通知終了';
@@ -514,43 +396,38 @@ sub FunctionNoticeCreate
 sub FunctionNoticeDelete
 {
 	my ($Sys, $Form, $pLog) = @_;
-	my ($Notice, @noticeSet, $curUser, $id);
 	
 	# 権限チェック
-	{
-		my $SEC	= $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $Sys->Get('ADMIN')->{'USER'};
-		
-		if ($chkID eq '') {
-			return 1000;
-		}
+	my $cuser = $Sys->Get('ADMIN')->{'USER'};
+	if (!$cuser) {
+		return 1000;
 	}
+	
 	require './module/gandalf.pl';
-	$Notice = GANDALF->new;
+	my $Notice = GANDALF->new;
 	$Notice->Load($Sys);
 	
-	@noticeSet = $Form->GetAtArray('NOTICES');
-	$curUser = $Sys->Get('ADMIN')->{'USER'};
-	
-	foreach $id	(@noticeSet) {
-		next if (! defined $Notice->Get('SUBJECT', $id));
+	foreach my $id ($Form->GetAtArray('NOTICES')) {
+		my $subj = $Notice->Get('SUBJECT', $id);
+		# 存在しない通知
+		next if (!defined $subj);
+		# 全体通知
 		if ($Notice->Get('TO', $id) eq '*') {
-			if ($Notice->Get('FROM', $id) ne $curUser) {
-				my $subj = $Notice->Get('SUBJECT', $id);
+			if ($Notice->Get('FROM', $id) ne $cuser) {
 				push @$pLog, "通知「$subj」は全体通知なので削除できませんでした。";
 			}
 			else {
-				my $subj = $Notice->Get('SUBJECT', $id);
 				$Notice->Delete($id);
 				push @$pLog, "全体通知「$subj」を削除しました。";
 			}
 		}
+		# 個別通知
 		else {
-			my $subj = $Notice->Get('SUBJECT', $id);
-			$Notice->RemoveToUser($id, $curUser);
+			$Notice->RemoveToUser($id, $cuser);
 			push @$pLog, "通知「$subj」を削除しました。";
 		}
 	}
+	
 	$Notice->Save($Sys);
 	
 	return 0;
@@ -562,6 +439,7 @@ sub FunctionNoticeDelete
 #	-------------------------------------------------------------------------------------
 #	@param	$Sys	システム変数
 #	@param	$Form	フォーム変数
+#	@param	$Logger	
 #	@param	$pLog	ログ用
 #	@return	エラーコード
 #
@@ -569,17 +447,14 @@ sub FunctionNoticeDelete
 sub FunctionLogRemove
 {
 	my ($Sys, $Form, $Logger, $pLog) = @_;
-	my ($Notice, @noticeSet, $curUser, $id);
 	
 	# 権限チェック
-	{
-		my $SEC = $Sys->Get('ADMIN')->{'SECINFO'};
-		my $chkID = $Sys->Get('ADMIN')->{'USER'};
-		
-		if (($SEC->IsAuthority($chkID, $ZP::AUTH_SYSADMIN, '*')) == 0) {
-			return 1000;
-		}
+	my $Sec = $Sys->Get('ADMIN')->{'SECINFO'};
+	my $cuser = $Sys->Get('ADMIN')->{'USER'};
+	if (!$Sec->IsAuthority($cuser, $ZP::AUTH_SYSADMIN, '*')) {
+		return 1000;
 	}
+	
 	$Logger->Clear();
 	push @$pLog, '操作ログを削除しました。';
 	
@@ -591,11 +466,11 @@ sub CheckVersionUpdate
 {
 	my ($Sys) = @_;
 	
-	my $nr = $Sys->Get('ADMIN')->{'NEWRELEASE'};
+	my $Release = $Sys->Get('ADMIN')->{'NEWRELEASE'};
 	
-	if ( $nr->Get('Update') eq 1) {
-		my $newver = $nr->Get('Ver');
-		my $reldate = $nr->Get('Date');
+	if ($Release->Get('Update')) {
+		my $newver = $Release->Get('Ver');
+		my $reldate = $Release->Get('Date');
 		
 		# ユーザ通知 準備
 		require './module/gandalf.pl';
@@ -606,11 +481,11 @@ sub CheckVersionUpdate
 		# 通知時刻
 		use Time::Local;
 		$_ = [split /\./, $reldate];
-		my $date = timelocal(0, 0, 0, $_->[2], $_->[1] - 1, $_->[0]);
+		my $date = timelocal(0, 0, 0, $_->[2], $_->[1]-1, $_->[0]);
 		my $limit = 0;
 		
 		# 通知内容
-		my $note = join('<br>', @{$nr->Get('Detail')});
+		my $note = join('<br>', @{$Release->Get('Detail')});
 		my $subject = "0ch+ New Version $newver is Released.";
 		my $content = "<!-- \*Ver=$newver\* --> $note";
 		

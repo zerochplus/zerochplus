@@ -1,0 +1,31 @@
+    <table border="0" cellspacing="2" width="100%">
+     <tr>
+      <td colspan="2">
+      <a href="javascript:SetOption('DISPST_LOG', [% prevnum %]);DoSubmit('sys.top','DISP','ADMINLOG');">&lt;&lt; PREV</a> |
+      <a href="javascript:SetOption('DISPST_LOG', [% nextnum %]);DoSubmit('sys.top','DISP','ADMINLOG');">NEXT &gt;&gt;</a>
+      </td>
+      <td align="right" colspan="2">
+      表示数 <input type="text" name="DISPNUM_LOG" size="4" value="[% dispnum %]">
+      <input type="button" value="　表示　" onclick="DoSubmit('sys.top','DISP','ADMINLOG');">
+      </td>
+     </tr>
+     <tr>
+      <td class="DetailTitle">Date</td>
+      <td class="DetailTitle">User</td>
+      <td class="DetailTitle">Operation</td>
+      <td class="DetailTitle">Result</td>
+     </tr>
+[% FOREACH log IN logs -%]
+     <tr><td>[% log.date %]</td><td>[% log.user %]</td><td>[% log.operation %]</td><td>[% log.result %]</td></tr>
+[% END # FOREACH -%]
+     <tr>
+      <td colspan="4"><hr></td>
+     </tr>
+     <tr>
+      <td colspan="4" align="right">
+      <input type="button" value="ログの削除" onclick="DoSubmit('sys.top','FUNC','LOG_REMOVE')" class="delete">
+      </td>
+     </tr>
+    </table>
+    
+    <input type="hidden" name="DISPST_LOG" value="">
