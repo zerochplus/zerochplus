@@ -174,7 +174,7 @@ sub Save
 	my $fh = $this->Open($Sys) or return;
 	my $subject = $this->{'SUBJECT'};
 	
-	#$this->CustomizeOrder();
+	$this->CustomizeOrder();
 	
 	foreach (@{$this->{'SORT'}}) {
 		next if (!defined $subject->{$_});
@@ -236,7 +236,6 @@ sub OnDemand
 	}
 	
 	$this->AGE($id) if ($age);
-	$this->CustomizeOrder();
 	
 	# subject‘‚«‚İ
 	seek($fh, 0, 0);

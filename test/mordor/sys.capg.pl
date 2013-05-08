@@ -311,7 +311,7 @@ sub PrintGroupSetting
 		@user = split(/\,/, (defined ($_ = $Group->Get('CAPS', $Form->Get('SELECT_CAPGROUP'))) ? $_ : ''));
 		
 		# 権限番号マッピング配列を作成
-		for ($i = 0 ; $i < 22 ; $i++) {
+		for ($i = 0 ; $i < $ZP::CAP_MAXNUM ; $i++) {
 			$authNum[$i] = '';
 		}
 		foreach $num (@auth) {
@@ -323,7 +323,7 @@ sub PrintGroupSetting
 		$name = '';
 		$expl = '';
 		$color = '';
-		for ($i = 0 ; $i < 22 ; $i++) {
+		for ($i = 0 ; $i < $ZP::CAP_MAXNUM ; $i++) {
 			$authNum[$i] = '';
 		}
 	}
@@ -357,8 +357,9 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_DUPLICATE $authNum[10] value=on>二重書き込み規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_SHORTWRITE $authNum[11] value=on>短時間投稿規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_READONLY $authNum[12] value=on>読取専用規制解除<br>");
-	$Page->Print("<input type=checkbox name=C_IDDISP $authNum[13] value=on>ID表\示規制解除<br>");
-	$Page->Print("<input type=checkbox name=C_HOSTDISP $authNum[14] value=on>強制ホスト表\示規制解除<br>");
+	$Page->Print("<input type=checkbox name=C_IDDISP $authNum[13] value=on>ID非表\示<br>");
+	$Page->Print("<input type=checkbox name=C_NOSLIP $authNum[22] value=on>端末識別子非表\示<br>");
+	$Page->Print("<input type=checkbox name=C_HOSTDISP $authNum[14] value=on>本文ホスト非表\示<br>");
 	$Page->Print("<input type=checkbox name=C_MOBILETHREAD $authNum[15] value=on>携帯からのスレッド作成<br>");
 	$Page->Print("<input type=checkbox name=C_FIXHANLDLE $authNum[16] value=on>コテハン★表\示<br>");
 	$Page->Print("<input type=checkbox name=C_SAMBA $authNum[17] value=on>Samba規制解除<br>");

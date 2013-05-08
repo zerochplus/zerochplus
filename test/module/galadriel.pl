@@ -924,95 +924,93 @@ sub GetDateFromSerial
 #	@param	$Form	SAMWISE
 #	@param	$Sec	
 #	@param	$id		ID
-#	@param	$koyuu	端末固有識別子
-#	@param	$agent	エージェント
+#	@param	$koyuu	端末固有番号
+#	@param	$type	端末識別子
 #	@return	ID部分文字列
-#	@see	優先順位：HOST > NOID > FORCE > PASS
 #
 #------------------------------------------------------------------------------------------------------------
 sub GetIDPart
 {
 	my $this = shift;
-	my ($Set, $Form, $Sec, $id, $capID, $koyuu, $agent) = @_;
+	my ($Set, $Form, $Sec, $id, $capID, $koyuu, $type) = @_;
 	
-	my $mode = '';
+	my $noid = $Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'));
+	my $noslip = $Sec->IsAuthority($capID, $ZP::CAP_DISP_NOSLIP, $Form->Get('bbs'));
 	
-	# PC・携帯識別番号付加
-	if ($Set->Equal('BBS_SLIP', 'checked')) {
-		$mode = $agent;
-		$id .= $mode;
+	# ID表示無し
+	if ($Set->Equal('BBS_NO_ID', 'checked')) {
+		return '';
 	}
 	
 	# ホスト表示
-	if ($Set->Equal('BBS_DISP_IP', 'checked')) {
-		
-		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
-			return " ID:???$mode";
+	elsif ($Set->Equal('BBS_DISP_IP', 'checked')) {
+		my $str = '???';
+		if ($noid) {
+			$str = '???';
+		} elsif ($type eq 'O') {
+			$str = "$koyuu $ENV{'REMOTE_HOST'}";
+		} elsif ($type eq 'P') {
+			$str = "$koyuu $ENV{'REMOTE_HOST'} ($ENV{'REMOTE_ADDR'})";
+		} else {
+			$str = "$koyuu";
 		}
-		
-		if ( $mode eq 'O' ) {
-			return " HOST:$koyuu $ENV{'REMOTE_HOST'}".( $mode ne '' ? " $mode" : '' );
+		if (!$noslip && $Set->Equal('BBS_SLIP', 'checked')) {
+			$str .= " $type";
 		}
-		elsif ( $mode eq 'P' ) {
-			return " HOST:$koyuu $ENV{'REMOTE_HOST'} ($ENV{'REMOTE_ADDR'})".( $mode ne '' ? " $mode" : '' );
-		}
-		else {
-			return " HOST:$koyuu".( $mode ne '' ? " $mode" : '' );
-		}
+		return " HOST:$str";
 	}
+	
 	# IP表示 Ver.Siberia
-	if ($Set->Equal('BBS_DISP_IP', 'siberia')){
-		
-		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
-			return " 発信元:???$mode";
+	elsif ($Set->Equal('BBS_DISP_IP', 'siberia')){
+		my $str = '???';
+		if ($noid) {
+			$str = '???';
+		} elsif ($type eq 'P') {
+			$str = "$ENV{'REMOTE_P2'}";
+		} else {
+			$str = "$ENV{'REMOTE_ADDR'}";
 		}
-		
-		if ( $mode eq 'P' ) {
-			return " 発信元:$ENV{'REMOTE_P2'}".( $mode ne '' ? " $mode" : '' );
+		if (!$noslip && $Set->Equal('BBS_SLIP', 'checked')) {
+			$str .= " $type";
 		}
-		else {
-			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne '' ? " $mode" : '' );
-		}
+		return " 発信元:$str";
 	}
+	
 	# IP表示 Ver.Sakhalin
-	if ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
-		
-		# ID非表示権限有り
-		if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
-			return " 発信元:???".( $mode ne '' ? " $mode" : '' );
+	elsif ($Set->Equal('BBS_DISP_IP', 'sakhalin')) {
+		my $str = '???';
+		if ($noid) {
+			$str = '???';
+		} elsif ($type eq 'P') {
+			$str = "$ENV{'HTTP_X_P2_CLIENT_IP'} ($koyuu)";
+		} elsif ($type eq 'O') {
+			$str = "$ENV{'REMOTE_ADDR'} ($koyuu)";
+		} else {
+			$str = "$ENV{'REMOTE_ADDR'}";
 		}
-		
-		if ( $mode eq 'P' ) {
-			return " 発信元:$ENV{'HTTP_X_P2_CLIENT_IP'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
+		if (!$noslip && $Set->Equal('BBS_SLIP', 'checked')) {
+			$str .= " $type";
 		}
-		elsif ( $mode eq 'O' ) {
-			return " 発信元:$ENV{'REMOTE_ADDR'} ($koyuu)".( $mode ne '' ? " $mode" : '' );
-		}
-		else {
-			return " 発信元:$ENV{'REMOTE_ADDR'}".( $mode ne '' ? " $mode" : '' );
-		}
+		return " 発信元:$str";
 	}
 	
-	# ID表示無しならそのままリターン
-	if ($Set->Equal('BBS_NO_ID', 'checked')) {
-		return ( $mode ne '' ? " $mode" : '' );
+	# ID表示
+	else {
+		my $str = '???';
+		if ($noid) {
+			$str = '???';
+		} elsif ($Set->Equal('BBS_FORCE_ID', 'checked')) {
+			$str = $id;
+		} elsif ($Form->IsInput(['mail'])) {
+			$str = '???';
+		} else {
+			$str = $id;
+		}
+		if (!$noslip && $Set->Equal('BBS_SLIP', 'checked')) {
+			$str .= "$type";
+		}
+		return " ID:$str";
 	}
-	# ID非表示権限有り
-	if ($Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'))) {
-		return " ID:???$mode";
-	}
-	# 強制IDの場合
-	if ($Set->Equal('BBS_FORCE_ID', 'checked')) {
-		return " ID:$id";
-	}
-	# 任意IDの場合
-	if (! $Form->IsInput(['mail'])) {
-		return " ID:$id";
-	}
-	
-	return " ID:???$mode";
 }
 
 #------------------------------------------------------------------------------------------------------------
