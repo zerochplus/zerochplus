@@ -332,6 +332,7 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_DUPLICATE $authNum[10] value=on>二重書き込み規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_SHORTWRITE $authNum[11] value=on>短時間投稿規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_READONLY $authNum[12] value=on>読取専用規制解除<br>");
+	$Page->Print("<input type=checkbox name=C_CUSTOMID $authNum[23] value=on>専用ID許可<br>");
 	$Page->Print("<input type=checkbox name=C_IDDISP $authNum[13] value=on>ID非表\示<br>");
 	$Page->Print("<input type=checkbox name=C_NOSLIP $authNum[22] value=on>端末識別子非表\示<br>");
 	$Page->Print("<input type=checkbox name=C_HOSTDISP $authNum[14] value=on>本文ホスト非表\示<br>");
@@ -542,8 +543,10 @@ sub FunctionGroupSetting
 	$authNum[19]	= $Form->Equal('C_JPHOST', 'on') ? 1 : 0;
 	$authNum[20]	= $Form->Equal('C_NGUSER', 'on') ? 1 : 0;
 	$authNum[21]	= $Form->Equal('C_NGWORD', 'on') ? 1 : 0;
+	$authNum[22]	= $Form->Equal('C_NOSLIP', 'on') ? 1 : 0;
+	$authNum[23]	= $Form->Equal('C_CUSTOMID', 'on') ? 1 : 0;
 	
-	for ($i = 0 ; $i < 22 ; $i++) {
+	for ($i = 0 ; $i < $ZP::CAP_MAXNUM ; $i++) {
 		if ($authNum[$i]){
 			$auth .= ''.($i+1).',';
 		}

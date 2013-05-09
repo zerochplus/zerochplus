@@ -34,11 +34,12 @@ sub new
 	my $class = shift;
 	
 	my $obj = {
-		'NAME'	=> undef,
-		'PASS'	=> undef,
-		'FULL'	=> undef,
-		'EXPL'	=> undef,
-		'SYSAD'	=> undef,
+		'NAME'		=> undef,
+		'PASS'		=> undef,
+		'FULL'		=> undef,
+		'EXPL'		=> undef,
+		'SYSAD'		=> undef,
+		'CUSTOMID'	=> undef,
 	};
 	bless $obj, $class;
 	
@@ -64,6 +65,7 @@ sub Load
 	$this->{'FULL'} = {};
 	$this->{'EXPL'} = {};
 	$this->{'SYSAD'} = {};
+	$this->{'CUSTOMID'} = {};
 	
 	my $path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
@@ -77,10 +79,11 @@ sub Load
 			next if ($_ eq '');
 			
 			my @elem = split(/<>/, $_, -1);
-			if (scalar(@elem) < 6) {
+			if (scalar(@elem) < 6) { # 7
 				warn "invalid line in $path";
 				next;
 			}
+			push @elem, '';
 			
 			my $id = $elem[0];
 			$this->{'NAME'}->{$id} = $elem[1];
@@ -88,6 +91,7 @@ sub Load
 			$this->{'FULL'}->{$id} = $elem[3];
 			$this->{'EXPL'}->{$id} = $elem[4];
 			$this->{'SYSAD'}->{$id} = $elem[5];
+			$this->{'CUSTOMID'}->{$id} = $elem[6];
 		}
 	}
 }
@@ -119,7 +123,8 @@ sub Save
 				$this->{'PASS'}->{$_},
 				$this->{'FULL'}->{$_},
 				$this->{'EXPL'}->{$_},
-				$this->{'SYSAD'}->{$_}
+				$this->{'SYSAD'}->{$_},
+				$this->{'CUSTOMID'}->{$_},
 			);
 			
 			print $fh "$data\n";
@@ -197,14 +202,15 @@ sub Get
 sub Add
 {
 	my $this = shift;
-	my ($name, $pass, $full, $explan, $sysad) = @_;
+	my ($name, $pass, $full, $explan, $sysad, $customid) = @_;
 	
 	my $id = time;
-	$this->{'NAME'}->{$id}	= $name;
-	$this->{'PASS'}->{$id}	= $this->GetStrictPass($pass, $id);
-	$this->{'EXPL'}->{$id}	= $explan;
-	$this->{'FULL'}->{$id}	= $full;
-	$this->{'SYSAD'}->{$id}	= $sysad;
+	$this->{'NAME'}->{$id} = $name;
+	$this->{'PASS'}->{$id} = $this->GetStrictPass($pass, $id);
+	$this->{'EXPL'}->{$id} = $explan;
+	$this->{'FULL'}->{$id} = $full;
+	$this->{'SYSAD'}->{$id} = $sysad;
+	$this->{'CUSTOMID'}->{$id} = $customid;
 	
 	return $id;
 }
@@ -250,6 +256,7 @@ sub Delete
 	delete $this->{'FULL'}->{$id};
 	delete $this->{'EXPL'}->{$id};
 	delete $this->{'SYSAD'}->{$id};
+	delete $this->{'CUSTOMID'}->{$id};
 }
 
 #------------------------------------------------------------------------------------------------------------

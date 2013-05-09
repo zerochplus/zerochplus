@@ -357,6 +357,7 @@ sub PrintGroupSetting
 	$Page->Print("<input type=checkbox name=C_DUPLICATE $authNum[10] value=on>二重書き込み規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_SHORTWRITE $authNum[11] value=on>短時間投稿規制解除<br>");
 	$Page->Print("<input type=checkbox name=C_READONLY $authNum[12] value=on>読取専用規制解除<br>");
+	$Page->Print("<input type=checkbox name=C_CUSTOMID $authNum[23] value=on>専用ID許可<br>");
 	$Page->Print("<input type=checkbox name=C_IDDISP $authNum[13] value=on>ID非表\示<br>");
 	$Page->Print("<input type=checkbox name=C_NOSLIP $authNum[22] value=on>端末識別子非表\示<br>");
 	$Page->Print("<input type=checkbox name=C_HOSTDISP $authNum[14] value=on>本文ホスト非表\示<br>");
@@ -515,6 +516,7 @@ sub FunctionGroupSetting
 		'C_DUPLICATE'		=> $ZP::CAP_REG_DOUBLEPOST,
 		'C_SHORTWRITE'		=> $ZP::CAP_REG_NOTIMEPOST,
 		'C_READONLY'		=> $ZP::CAP_LIMIT_READONLY,
+		'C_CUSTOMID'		=> $ZP::CAP_DISP_CUSTOMID,
 		'C_IDDISP'			=> $ZP::CAP_DISP_NOID,
 		'C_HOSTDISP'		=> $ZP::CAP_DISP_NOHOST,
 		'C_MOBILETHREAD'	=> $ZP::CAP_LIMIT_MOBILETHREAD,

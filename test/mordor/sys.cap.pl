@@ -191,10 +191,11 @@ sub PreparePageCapList
 		my $id = $capSet[$nextnum++];
 		
 		push @$displist, {
-			'id'	=> $id,
-			'name'	=> $Cap->Get('NAME', $id),
-			'full'	=> $Cap->Get('FULL', $id),
-			'expl'	=> $Cap->Get('EXPL', $id),
+			'id'		=> $id,
+			'name'		=> $Cap->Get('NAME', $id),
+			'full'		=> $Cap->Get('FULL', $id),
+			'expl'		=> $Cap->Get('EXPL', $id),
+			'customid'	=> $Cap->Get('CUSTOMID', $id),
 		};
 		last if (scalar(@$displist) >= $dispnum);
 	}
@@ -232,11 +233,12 @@ sub PreparePageCapSetting
 	$Cap->Load($Sys);
 	
 	my $cap = {
-		'name'	=> '',
-		'pass'	=> '',
-		'expl'	=> '',
-		'full'	=> '',
-		'sysad'	=> 0,
+		'name'		=> '',
+		'pass'		=> '',
+		'expl'		=> '',
+		'full'		=> '',
+		'sysad'		=> 0,
+		'customid'	=> '',
 	};
 	
 	my $selcap = '';
@@ -249,6 +251,7 @@ sub PreparePageCapSetting
 		$cap->{'expl'} = $Cap->Get('EXPL', $selcap);
 		$cap->{'full'} = $Cap->Get('FULL', $selcap);
 		$cap->{'sysad'} = $Cap->Get('SYSAD', $selcap);
+		$cap->{'customid'} = $Cap->Get('CUSTOMID', $selcap);
 	}
 	
 	my $indata = {
@@ -336,6 +339,7 @@ sub FuncCapSetting
 	my $pass = $Form->Get('PASS');
 	my $expl = $Form->Get('EXPL');
 	my $full = $Form->Get('FULL');
+	my $customid = $Form->Get('CUSTOMID');
 	my $sysad = $Form->Equal('SYSAD', 'on') ? 1 : 0;
 	my $chg	= 0;
 	
@@ -351,10 +355,11 @@ sub FuncCapSetting
 		$Cap->Set($id, 'EXPL', $expl);
 		$Cap->Set($id, 'FULL', $full);
 		$Cap->Set($id, 'SYSAD', $sysad);
+		$Cap->Set($id, 'CUSTOMID', $customid);
 	}
 	# 登録モード
 	else {
-		$Cap->Add($name, $pass, $full, $expl, $sysad);
+		$Cap->Add($name, $pass, $full, $expl, $sysad, $customid);
 		$chg = 1;
 	}
 	
@@ -366,6 +371,7 @@ sub FuncCapSetting
 	push @$pLog, '　　　　パスワード：' . ($chg ? '********' : '変更なし');
 	push @$pLog, "　　　　フルネーム：$full";
 	push @$pLog, "　　　　説明：$expl";
+	push @$pLog, "　　　　専用ID：$customid";
 	push @$pLog, '　　　　システム管理：' . ($sysad ? '有り' : '無し');
 	
 	return 0;

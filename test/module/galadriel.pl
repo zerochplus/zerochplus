@@ -936,6 +936,7 @@ sub GetIDPart
 	
 	my $noid = $Sec->IsAuthority($capID, $ZP::CAP_DISP_NOID, $Form->Get('bbs'));
 	my $noslip = $Sec->IsAuthority($capID, $ZP::CAP_DISP_NOSLIP, $Form->Get('bbs'));
+	my $customid = $Sec->IsAuthority($capID, $ZP::CAP_DISP_CUSTOMID, $Form->Get('bbs'));
 	
 	# ID表示無し
 	if ($Set->Equal('BBS_NO_ID', 'checked')) {
@@ -992,6 +993,15 @@ sub GetIDPart
 			$str .= " $type";
 		}
 		return " 発信元:$str";
+	}
+	
+	# 各キャップ専用ID
+	elsif ($customid && $Sec->Get($capID, 'CUSTOMID', 1) ne '') {
+		my $str = $Sec->Get($capID, 'CUSTOMID', 1);
+		if (!$noslip && $Set->Equal('BBS_SLIP', 'checked')) {
+			$str .= " $type";
+		}
+		return " ID:$str";
 	}
 	
 	# ID表示

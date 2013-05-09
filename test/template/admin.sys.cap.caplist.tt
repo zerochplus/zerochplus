@@ -1,6 +1,6 @@
     <table border=0 cellspacing=2 width=100%>
      <tr>
-      <td colspan=2>
+      <td colspan=3>
        <b>
         <a href="javascript:SetOption('DISPST', [% prevnum %]);DoSubmit('sys.cap','DISP','LIST');">&lt;&lt; PREV</a> |
         <a href="javascript:SetOption('DISPST', [% nextnum %]);DoSubmit('sys.cap','DISP','LIST');">NEXT &gt;&gt;</a>
@@ -11,11 +11,12 @@
        <input type=button value="　表示　" onclick="DoSubmit('sys.cap','DISP','LIST');">
       </td>
      </tr>
-     <tr><td colspan=4><hr></td></tr>
+     <tr><td colspan=5><hr></td></tr>
      <tr>
       <th style="width:30">　</th>
-      <th class="DetailTitle" style="width:150">Cap Display Name</th>
-      <th class="DetailTitle" style="width:150">Cap Full Name</th>
+      <th class="DetailTitle" style="width:100">Cap Display Name</th>
+      <th class="DetailTitle" style="width:100">Cap Full Name</th>
+      <th class="DetailTitle" style="width:100">Custom ID</th>
       <th class="DetailTitle" style="width:200">Explanation</th>
      </tr>
 [% FOREACH cap IN caps -%]
@@ -30,13 +31,14 @@
       <td>[% cap.name %]</td>
 [%   END -%]
       <td>[% cap.full %]</td>
+      <td>[% cap.customid %]</td>
       <td>[% cap.expl %]</td>
      </tr>
 [% END # FOREACH -%]
-     <tr><td colspan=4><hr></td></tr>
+     <tr><td colspan=5><hr></td></tr>
 [% IF issysad -%]
      <tr>
-      <td colspan=4 align=left>
+      <td colspan=5 align=left>
        <input type=hidden name="SELECT_CAP" value="">
        <input type=button value="　削除　" onclick="DoSubmit('sys.cap','DISP','DELETE')" class="delete">
       </td>
