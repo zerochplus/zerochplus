@@ -288,6 +288,9 @@ sub PrintLogs
 	}
 	
 	require './module/galadriel.pl';
+	require './module/orald.pl';
+	my $Error = ORALD->new;
+	$Error->Load($Sys);
 	
 	# ƒƒOˆê——‚ğo—Í
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
@@ -295,6 +298,9 @@ sub PrintLogs
 		@elem = split(/<>/, $data);
 		if (1) {
 			$elem[0] = GALADRIEL::GetDateFromSerial(undef, $elem[0], 0);
+			if ($mode == 2) {
+				$elem[1] .= ' (' . $Error->Get($elem[1], 'SUBJECT') . ')';
+			}
 			$Page->Print("<tr><td>$elem[0]</td><td>$elem[1]</td><td>$elem[2]</td><td>$elem[3]</td></tr>\n");
 		}
 		else {
