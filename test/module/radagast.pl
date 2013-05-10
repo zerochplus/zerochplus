@@ -69,7 +69,7 @@ sub Set
 	my $this = shift;
 	my ($key, $val, $enc) = @_;
 	
-	Encode::from_to($val, 'sjis', $enc);
+	Encode::from_to($val, 'sjis', $enc) if (defined $enc);
 	$this->{'COOKIE'}->{$key} = $val;
 }
 
@@ -88,7 +88,7 @@ sub Get
 	my ($key, $default, $enc) = @_;
 	
 	my $val = $this->{'COOKIE'}->{$key};
-	Encode::from_to($val, $enc, 'sjis') if (defined $val);
+	Encode::from_to($val, $enc, 'sjis') if (defined $val && defined $enc);
 	
 	return (defined $val ? $val : (defined $default ? $default : undef));
 }
