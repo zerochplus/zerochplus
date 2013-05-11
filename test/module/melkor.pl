@@ -127,7 +127,7 @@ sub Save
 	else {
 		warn "can't save config: $path";
 	}
-	chmod 0700, $this->{'SYS'}->{'SYSFILE'};
+	chmod($this->Get('PM-ADM'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -247,12 +247,12 @@ sub InitSystemValue
 		'VERSION'	=> '0ch+ BBS {=0ch+ver=} {=0ch+date=}',					# CGIバージョン
 		'PM-DAT'	=> 0644,									# datパーミション(*)
 		'PM-TXT'	=> 0644,									# TXTパーミション(*)
-		'PM-LOG'	=> 0770,									# LOGパーミション(*)
-		'PM-ADM'	=> 0770,									# 管理ファイル群(*)
-		'PM-ADIR'	=> 0770,									# 管理DIRパーミション(*)
-		'PM-BDIR'	=> 0755,									# 板DIRパーミション(*)
-		'PM-LDIR'	=> 0770,									# ログDIRパーミション(*)
-		'PM-STOP'	=> 0604,									# スレストパーミション(*)
+		'PM-LOG'	=> 0600,									# LOGパーミション(*)
+		'PM-ADM'	=> 0600,									# 管理ファイル群(*)
+		'PM-ADIR'	=> 0700,									# 管理DIRパーミション(*)
+		'PM-BDIR'	=> 0711,									# 板DIRパーミション(*)
+		'PM-LDIR'	=> 0700,									# ログDIRパーミション(*)
+		'PM-STOP'	=> 0444,									# スレストパーミション(*)
 		'ERRMAX'	=> 500,										# エラーログ最大保持数
 		'SUBMAX'	=> 500,										# subject最大保持数
 		'RESMAX'	=> 1000,									# レス最大書き込み数
@@ -285,24 +285,20 @@ sub InitSystemValue
 		# DNSBL設定
 		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
 		'BBX'		=> 0,										# BBX(bbx.2ch.net)
-		'SPAMCH'	=> 1,										# スパムちゃんぷるー
+		
+		'PERM_EXEC'		=> 0700,
+		'PERM_DATA'		=> 0600,
+		'PERM_CONTENT'	=> 0644,
+		'PERM_SYSDIR'	=> 0700,
+		'PERM_DIR'		=> 0711,
 	);
 	
-	while (my ($key, $val) = each(%sys)) {
+	while (my ($key, $val) = each %sys) {
 		$pSys->{$key} = $val;
 	}
 	
 	# 情報保持キー
-	my @key = qw(
-		SERVER		CGIPATH		INFO		DATA		BBSPATH
-		PM-DAT		PM-TXT		PM-LOG		PM-ADM		PM-ADIR		PM-BDIR		PM-LDIR		PM-STOP
-		ERRMAX		SUBMAX		RESMAX		ADMMAX		HISMAX		ANKERS		URLLINK
-		LINKST		LINKED		PATHKIND	HEADTEXT	HEADURL		FASTMODE
-		SAMBATM		DEFSAMBA	DEFHOUSHI
-		BANNER		KAKIKO		COUNTER		PRTEXT		PRLINK		TRIP12		MSEC		BBSGET
-		CONFVER
-		BBQ			BBX			SPAMCH		UPCHECK
-	);
+	my @key = keys %sys;
 	
 	splice @$pKey, 0, scalar(@$pKey);
 	push @$pKey, @key;
@@ -315,15 +311,11 @@ sub InitSystemValue
 #	引　数：
 #	戻り値：なし
 #
-#	2011.02.12 色々
-#
 #------------------------------------------------------------------------------------------------------------
 sub NormalizeConf
 {
 	my $this = shift;
 	my ($path, $buf, $perm, $server, $cgipath);
-	
-	$this->Set('CONFVER', $this->Get('VERSION'));
 	
 	if ($this->Get('SERVER', '') eq '') {
 		my $path = $ENV{'SCRIPT_NAME'};
@@ -332,32 +324,34 @@ sub NormalizeConf
 		$this->Set('CGIPATH', $path);
 	}
 	
-	{
-		my $buf = (int rand 900000) + 100000;
-		$buf++ while (-e "$buf.dat");
-		open(my $fh, '>', "$buf.dat");
-		close($fh);
-		
-		my $perm = $this->Get('PM-STOP', 0604);
-		chmod $perm, "$buf.dat";
-		if (((stat "$buf.dat")[2] & 0777) != $perm) {
-			$this->Set('PM-STOP', 0444);
-		}
-		
-		unlink "$buf.dat";
-	}
-	
-	{
+	if ('set CGI Path') {
 		my $server = $this->Get('SERVER', '');
 		my $cgipath = $this->Get('CGIPATH', '');
-		$server =~ s|/+$||;
 		if ($server =~ m|^(http://[^/]+)(/.+)$|) {
 			$server = $1;
-			$cgipath = $2 . $cgipath;
+			$cgipath = "$2$cgipath";
 		}
 		$this->Set('SERVER', $server);
 		$this->Set('CGIPATH', $cgipath);
 	}
+	
+	if ('set Stop Permission') {
+		my $temp = (int rand 900000) + 100000;
+		$temp++ while (-e "$temp.dat");
+		$temp = "$temp~";
+		open(my $fh, '>', $temp);
+		close($fh);
+		my $dat = $this->Get('PM-DAT', 0604);
+		my $stop = $this->Get('PM-STOP', 0404);
+		chmod($stop, $temp);
+		my $perm = (stat $temp)[2] & 0777;
+		if ($perm == $dat || $perm != $stop) {
+			$this->Set('PM-STOP', 0444);
+		}
+		unlink($temp);
+	}
+	
+	$this->Set('CONFVER', $this->Get('VERSION'));
 }
 
 #============================================================================================================

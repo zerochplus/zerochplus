@@ -129,7 +129,7 @@ sub Save
 	else {
 		warn "can't save bbs info: $path";
 	}
-	chmod $Sys->Get('PM-ADM'), $path;
+	chmod($Sys->Get('PM-ADM'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -478,7 +478,7 @@ sub Save
 	else {
 		warn "can't save category info: $path";
 	}
-	chmod $Sys->Get('PM-ADM'), $path;
+	chmod($Sys->Get('PM-ADM'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------

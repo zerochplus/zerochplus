@@ -33,8 +33,7 @@ sub Copy
 		close($fh_d);
 		
 		# パーミッション設定
-		my $perm = (stat $src)[2];
-		chmod $perm, $dst;
+		chmod((stat $src)[2], $dst);
 		return 1;
 	}
 	
@@ -182,21 +181,21 @@ sub CreateDirectory
 #-------------------------------------------------------------------------------------------------------------
 sub CreateFolderHierarchy
 {
-	my ($path) = @_;
+	my ($path, $perm) = @_;
 	
 	while (1) {
 		if (-d $path) {
 			return;
 		}
 		else {
-			if (mkdir($path, 0777)) {
+			if (mkdir($path, $perm)) {
 				return;
 			}
 			# ディレクトリ作成失敗時は再帰的に1つ下の階層を作成する
 			else {
 				my $upath = $path;
 				$upath =~ s|[\\\/][^\\\/]*$||;
-				CreateFolderHierarchy($upath);
+				CreateFolderHierarchy($upath, $perm);
 			}
 		}
 	}

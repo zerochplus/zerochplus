@@ -82,7 +82,7 @@ sub Load
 		$this->{'PERM'} = GetPermission($szPath);
 		$this->{'MODE'} = $readOnly;
 		
-		chmod 0777, $szPath;
+		chmod($Sys->Get('PM-DAT'), $szPath);
 		if (open(my $fh, ($readOnly ? '<' : '+<'), $szPath)) {
 			flock($fh, 2);
 			binmode($fh);
@@ -148,7 +148,7 @@ sub Save
 			truncate($fh, tell($fh));
 			close($fh);
 			
-			chmod $this->{'PERM'}, $this->{'PATH'};
+			chmod($this->{'PERM'}, $this->{'PATH'});
 			$this->{'STAT'} = 0;
 			$this->{'HANDLE'} = undef;
 		}
@@ -176,7 +176,7 @@ sub Close
 		#truncate($handle, tell($handle));
 		close($fh);
 		
-		chmod $this->{'PERM'}, $this->{'PATH'};
+		chmod($this->{'PERM'}, $this->{'PATH'});
 		$this->{'STAT'} = 0;
 		$this->{'HANDLE'} = undef;
 	}
@@ -313,7 +313,7 @@ sub Stop
 			$this->Save($Sys);
 			
 			# パーミッションを停止用に設定する
-			chmod $Sys->Get('PM-STOP'), $this->{'PATH'};
+			chmod($Sys->Get('PM-STOP'), $this->{'PATH'});
 			return 1;
 		}
 	}
@@ -342,7 +342,7 @@ sub Start
 		$this->Save($Sys);
 		
 		# パーミッションを通常用に設定する
-		chmod $Sys->Get('PM-DAT'), $this->{'PATH'};
+		chmod($Sys->Get('PM-DAT'), $this->{'PATH'});
 		return 1;
 	}
 	
@@ -363,13 +363,13 @@ sub DirectAppend
 {
 	my ($Sys, $path, $data) = @_;
 	
-	if (GetPermission($path) ne $Sys->Get('PM-STOP')) {
+	if (GetPermission($path) != $Sys->Get('PM-STOP')) {
 		if (open(my $fh, '>>', $path)) {
 			flock($fh, 2);
 			binmode($fh);
 			print $fh "$data";
 			close($fh);
-			chmod $Sys->Get('PM-DAT'), $path;
+			chmod($Sys->Get('PM-DAT'), $path);
 			return 0;
 		}
 	}
@@ -413,7 +413,7 @@ sub GetPermission
 {
 	my ($path) = @_;
 	
-	return (-e $path ? (stat $path)[2] % 01000 : 0);
+	return (-e $path ? (stat $path)[2] & 0777 : 0);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -455,7 +455,7 @@ sub IsStopped
 	my $this = shift;
 	my ($Sys) = @_;
 	
-	return $this->{'PERM'} eq $Sys->Get('PM-STOP');
+	return $this->{'PERM'} == $Sys->Get('PM-STOP');
 }
 
 #============================================================================================================

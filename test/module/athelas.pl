@@ -21,6 +21,7 @@ sub new
 	my $class = shift;
 	
 	my $obj = {
+		'Sys'		=> undef,
 		'FILE'		=> undef,
 		'CLASS'		=> undef,
 		'NAME'		=> undef,
@@ -50,6 +51,7 @@ sub Load
 	my ($Sys) = @_;
 	
 	# ƒnƒbƒVƒ…‰Šú‰»
+	$this->{'SYS'} = $Sys;
 	$this->{'FILE'} = {};
 	$this->{'CLASS'} = {};
 	$this->{'NAME'} = {};
@@ -149,17 +151,6 @@ sub SaveConfig
 	my $this = shift;
 	my ($id) = @_;
 	
-	if (! -d './plugin_conf') {
-		if (! -e './plugin_conf') {
-			mkdir './plugin_conf';
-		}
-		else {
-			warn "can't mkdir: ./plugin_conf";
-			warn "can't save plugin config";
-			return;
-		}
-	}
-	
 	my $config = $this->{'CONFIG'}->{$id};
 	my $conftype = $this->{'CONFTYPE'}->{$id};
 	my $file = $this->{'FILE'}->{$id};
@@ -198,6 +189,7 @@ sub SaveConfig
 			
 			truncate($fh, tell($fh));
 			close($fh);
+			chmod($this->{'SYS'}->Get('PM-ADM'), $path);
 		}
 		else {
 			warn "can't save subject: $path";
@@ -290,7 +282,7 @@ sub Save
 		truncate($fh, tell($fh));
 		close($fh);
 	}
-	chmod $Sys->Get('PM-ADM'), $path;
+	chmod($Sys->Get('PM-ADM'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------

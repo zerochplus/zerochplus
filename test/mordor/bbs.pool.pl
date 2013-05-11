@@ -706,7 +706,7 @@ HTML
 	$Dat->Close();
 	
 	# ‰ß‹ŽƒƒO‚Ìo—Í
-	EARENDIL::CreateFolderHierarchy($logDir);
+	EARENDIL::CreateFolderHierarchy($logDir, $Sys->Get('PM-BDIR'));
 	EARENDIL::Copy($datPath, "$logDir/$key.dat");
 	$Page->Flush(1, $Sys->Get('PM-TXT'), $logPath);
 	

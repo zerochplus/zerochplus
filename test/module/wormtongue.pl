@@ -102,7 +102,7 @@ sub Save
 		truncate($fh, tell($fh));
 		close($fh);
 	}
-	chmod $Sys->Get('PM-ADM'), $path;
+	chmod($Sys->Get('PM-ADM'), $path);
 	
 	return 0;
 }

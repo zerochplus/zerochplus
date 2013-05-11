@@ -103,7 +103,6 @@ sub Save
 	$file[2] = '.' . $Sys->Get('INFO') . '/bannersub.cgi';
 	
 	# PC用書き込み
-	chmod 0666, $file[0];
 	if (open(my $fh, (-f $file[0] ? '+<' : '>'), $file[0])) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -113,10 +112,9 @@ sub Save
 		truncate($fh, tell($fh));
 		close($fh);
 	}
-	chmod $Sys->Get('PM-ADM'), $file[0];
+	chmod($Sys->Get('PM-ADM'), $file[0]);
 	
 	# サブバナー書き込み
-	chmod 0666, $file[2];
 	if (open(my $fh, (-f $file[2] ? '+<' : '>'), $file[2])) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -125,10 +123,9 @@ sub Save
 		truncate($fh, tell($fh));
 		close($fh);
 	}
-	chmod $Sys->Get('PM-ADM'), $file[2];
+	chmod($Sys->Get('PM-ADM'), $file[2]);
 	
 	# 携帯用書き込み
-	chmod 0666, $file[1];
 	if (open(my $fh, (-f $file[1] ? '+<' : '>'), $file[1])) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -138,7 +135,7 @@ sub Save
 		truncate($fh, tell($fh));
 		close($fh);
 	}
-	chmod $Sys->Get('PM-ADM'), $file[1];
+	chmod($Sys->Get('PM-ADM'), $file[1]);
 }
 
 #------------------------------------------------------------------------------------------------------------

@@ -114,7 +114,6 @@ sub Close
 		close($handle);
 	}
 	$this->{'HANDLE'} = undef;
-	#chmod $Sys->Get('PM-TXT'), $path;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -184,6 +183,8 @@ sub Save
 	truncate($fh, tell($fh));
 	
 	$this->Close();
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	chmod($Sys->Get('PM-TXT'), $path);
 	
 	$this->SaveAttr($Sys);
 }
@@ -248,6 +249,8 @@ sub OnDemand
 	truncate($fh, tell($fh));
 	
 	$this->Close();
+	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/subject.txt';
+	chmod($Sys->Get('PM-TXT'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -468,8 +471,8 @@ sub SaveAttr
 		
 		truncate($fh, tell($fh));
 		close($fh);
-		chmod $Sys->Get('PM-ADM'), $path;
 	}
+	chmod($Sys->Get('PM-ADM'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -879,7 +882,7 @@ sub Save
 	else {
 		warn "can't save subject: $path";
 	}
-	chmod $Sys->Get('PM-TXT'), $path;
+	chmod($Sys->Get('PM-ADM'), $path);
 	
 	$this->SaveAttr($Sys);
 }

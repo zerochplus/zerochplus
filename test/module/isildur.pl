@@ -21,6 +21,7 @@ sub new
 	my $this = shift;
 	
 	my $obj = {
+		'SYS'		=> undef,
 		'SETTING'	=> undef,
 	};
 	bless $obj, $this;
@@ -40,6 +41,8 @@ sub Load
 {
 	my $this = shift;
 	my ($Sys) = @_;
+	
+	$this->{'SYS'} = $Sys;
 	
 	my $set = $this->{'SETTING'} = {};
 	InitSettingData($set);
@@ -120,7 +123,7 @@ sub Save
 	else {
 		warn "can't save setting: $path";
 	}
-	chmod $Sys->Get('PM-TXT'), $path;
+	chmod($Sys->Get('PM-TXT'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -188,7 +191,7 @@ sub SaveAs
 	else {
 		warn "can't save setting: $path";
 	}
-	#chmod $Sys->Get('PM-TXT'), $path;
+	chmod($this->{'SYS'}->Get('PM-TXT'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------

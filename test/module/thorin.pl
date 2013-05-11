@@ -145,7 +145,7 @@ sub Flush
 			truncate($fh, tell($fh));
 			close($fh);
 		}
-		chmod $perm, $ref;
+		chmod($perm, $ref);
 	}
 	elsif (ref($ref) eq 'SCALAR') {
 		$$ref = join ('', @{$this->{'BUFF'}});

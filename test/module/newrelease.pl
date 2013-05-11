@@ -121,7 +121,7 @@ sub Check
 				truncate($fh, tell($fh));
 				close($fh);
 			}
-			chmod $hash->{'CachePM'}, $path;
+			chmod($hash->{'CachePM'}, $path);
 		}
 	}
 	

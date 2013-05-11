@@ -115,7 +115,7 @@ sub Save
 	else {
 		warn "can't save subject: $path";
 	}
-	chmod $Sys->Get('PM-DAT'), $path;
+	chmod($Sys->Get('PM-DAT'), $path);
 }
 
 #------------------------------------------------------------------------------------------------------------
