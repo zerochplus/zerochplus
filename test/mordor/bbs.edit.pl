@@ -425,8 +425,15 @@ sub PrintValidUserEdit
 	$Page->Print("<tr><td class=\"DetailTitle\">対象ホスト・<br>端末識別子一覧</td><td>");
 	$Page->Print("<textarea name=VALID_USERS rows=10 cols=70 wrap=off>");
 	
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		return $_;
+	};
 	foreach (@$pUsers) {
-		$Page->Print("$_\n");
+		$Page->Print(&$sanitize($_)."\n");
 	}
 	
 	$Page->Print("</textarea></td></tr>\n");
@@ -467,7 +474,7 @@ sub PrintValidUserEdit
 sub PrintNGWordsEdit
 {
 	my ($Page, $SYS, $Form) = @_;
-	my ($Words, $pWords, $common, $isAuth, @kind);
+	my ($Words, $pWords, $pRepls, $common, $isAuth, @kind);
 	
 	$SYS->Set('_TITLE', 'BBS NG Words Edit');
 	
@@ -478,6 +485,7 @@ sub PrintNGWordsEdit
 	# 権限取得
 	$isAuth = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_NGWORDS, $SYS->Get('BBS'));
 	$pWords = $Words->Get('NGWORD');
+	$pRepls = $Words->Get('REPLACE');
 	
 	$kind[0] = $Words->Get('METHOD', '') eq 'disable' ? 'selected' : '';
 	$kind[1] = $Words->Get('METHOD', '') eq 'host' ? 'selected' : '';
@@ -487,11 +495,21 @@ sub PrintNGWordsEdit
 	
 	$Page->Print("<center><table border=0 cellspacing=2 width=100%>");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">NGワード一覧</td><td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">NGワード一覧");
+	$Page->Print("<br><br>NGワード<br>NGワード&lt;&gt;置換文字列</td><td>");
 	$Page->Print("<textarea name=NG_WORDS rows=10 cols=70 wrap=off>");
 	
-	foreach (@$pWords) {
-		$Page->Print("$_\n");
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		return $_;
+	};
+	foreach my $i (0 .. $#$pWords) {
+		$Page->Print(&$sanitize($pWords->[$i]));
+		$Page->Print(&$sanitize('<>'.$pRepls->[$i])) if (defined $pRepls->[$i]);
+		$Page->Print("\n");
 	}
 	
 	$Page->Print("</textarea></td></tr>\n");
@@ -503,7 +521,7 @@ sub PrintNGWordsEdit
 	$Page->Print("<option value=delete $kind[2]>NGワード削除</option>");
 	$Page->Print("<option value=substitute $kind[3]>NGワード置換</option>");
 	$Page->Print("</select></td></tr>\n");
-	$Page->Print("<tr><td class=\"DetailTitle\">NGワード置換文字列</td><td>");
+	$Page->Print("<tr><td class=\"DetailTitle\">デフォルト置換文字列</td><td>");
 	$Page->Print("<input type=text name=NG_SUBSTITUTE value=\"$kind[4]\" size=60></td></tr>\n");
 	$Page->Print("<tr><td colspan=2><hr></td></tr>\n");
 	
@@ -720,10 +738,18 @@ sub FunctionValidUserEdit
 	$vUsers->Set('METHOD', $Form->Get('VALID_METHOD'));
 	
 	$vUsers->Clear();
+	
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		return $_;
+	};
 	push @$pLog, '■以下のユーザを指定';
 	foreach (@validUsers) {
 		$vUsers->Add($_);
-		push @$pLog, '　　' . $_;
+		push @$pLog, '　　' . &$sanitize($_);
 	}
 	push @$pLog, '■指定ユーザ種別：' . $Form->Get('VALID_TYPE');
 	push @$pLog, '■指定ユーザ処置：' . $Form->Get('VALID_METHOD');
@@ -766,10 +792,20 @@ sub FunctionNGWordEdit
 	$Words->Set('SUBSTITUTE', $Form->Get('NG_SUBSTITUTE'));
 	
 	$Words->Clear();
+	
+	my $sanitize = sub {
+		$_ = shift;
+		s/&/&amp;/g;
+		s/</&lt;/g;
+		s/>/&gt;/g;
+		return $_;
+	};
 	push @$pLog, '■NGワードとして以下を設定';
 	foreach (@ngWords) {
-		$Words->Add($_);
-		push @$pLog, '　　' . $_;
+		my ($word, $repl) = split(/<>/, $_, -1);
+		if ($Words->Add($word, $repl)) {
+			push @$pLog, '　　'.&$sanitize($word).(defined $repl ? &$sanitize("<>$repl") : '');
+		}
 	}
 	push @$pLog, '■NGワード処置：' . $Form->Get('NG_METHOD');
 	

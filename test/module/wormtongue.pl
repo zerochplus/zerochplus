@@ -24,6 +24,7 @@ sub new
 		'METHOD'	=> undef,
 		'SUBSTITUTE'=> undef,
 		'NGWORD'	=> undef,
+		'REPLACE'	=> undef,
 	};
 	
 	bless $obj, $class;
@@ -45,6 +46,7 @@ sub Load
 	my ($Sys) = @_;
 	
 	$this->{'NGWORD'} = [];
+	$this->{'REPLACE'} = [];
 	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/info/ngwords.cgi';
 	
 	if (open(my $fh, '<', $path)) {
@@ -57,7 +59,14 @@ sub Load
 		$this->{'METHOD'} = $head[0];
 		$this->{'SUBSTITUTE'} = $head[1];
 		
-		push @{$this->{'NGWORD'}}, @datas;
+		foreach (@datas) {
+			my ($word, $repl) = split(/<>/, $_, -1);
+			next if (!defined $word || $word eq '');
+			push @{$this->{'NGWORD'}}, $word;
+			if (defined $repl) {
+				$this->{'REPLACE'}->[$#{$this->{'NGWORD'}}] = $repl;
+			}
+		}
 		return 0;
 	}
 	return 1;
@@ -84,8 +93,10 @@ sub Save
 		binmode($fh);
 		
 		print $fh "$this->{'METHOD'}<>$this->{'SUBSTITUTE'}\n";
-		foreach (@{$this->{'NGWORD'}}) {
-			print $fh "$_\n";
+		foreach my $i (0 .. $#{$this->{'NGWORD'}}) {
+			print $fh $this->{'NGWORD'}->[$i];
+			print $fh '<>'.$this->{'REPLACE'}->[$i] if (defined $this->{'REPLACE'}->[$i]);
+			print $fh "\n";
 		}
 		
 		truncate($fh, tell($fh));
@@ -107,9 +118,18 @@ sub Save
 sub Add
 {
 	my $this = shift;
-	my ($key) = @_;
+	my ($word, $repl) = @_;
 	
-	push @{$this->{'NGWORD'}}, $key;
+	return if (!defined $word || $word eq '');
+	$word =~ s/</&lt;/g;
+	$word =~ s/>/&gt;/g;
+	push @{$this->{'NGWORD'}}, $word;
+	if (defined $repl) {
+		$repl =~ s/</&lt;/g;
+		$repl =~ s/>/&gt;/g;
+		$this->{'REPLACE'}->[$#{$this->{'NGWORD'}}] = $repl;
+	}
+	return 1;
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -161,6 +181,7 @@ sub Clear
 	my $this = shift;
 	
 	$this->{'NGWORD'} = [];
+	$this->{'REPLACE'} = [];
 }
 
 #------------------------------------------------------------------------------------------------------------
@@ -222,14 +243,17 @@ sub Method
 	}
 	else {
 		$substitute = $this->{'SUBSTITUTE'};
-		$substitute = '' if (! defined $substitute);
+		$substitute = '' if (!defined $substitute);
 	}
 	
-	foreach my $word (@{$this->{'NGWORD'}}) {
+	foreach my $i (0 .. $#{$this->{'NGWORD'}}) {
+		my $word = $this->{'NGWORD'}->[$i];
 		next if ($word eq '');
 		foreach my $key (@$pList) {
 			my $work = $Form->Get($key);
-			if ($work =~ s/\Q$word\E/$substitute/g) {
+			my $subst = $substitute;
+			$subst = $this->{'REPLACE'}->[$i] if (defined $this->{'REPLACE'}->[$i]);
+			if ($work =~ s/\Q$word\E/$subst/g) {
 				$Form->Set($key, $work);
 			}
 		}
