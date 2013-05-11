@@ -237,6 +237,7 @@ sub OnDemand
 	}
 	
 	$this->AGE($id) if ($age);
+	$this->CustomizeOrder();
 	
 	# subject‘‚«‚İ
 	seek($fh, 0, 0);

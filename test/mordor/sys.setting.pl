@@ -441,7 +441,6 @@ sub PreparePageSecSetting
 		'trip12'	=> $Sys->Get('TRIP12'),
 		'bbq'		=> $Sys->Get('BBQ'),
 		'bbx'		=> $Sys->Get('BBX'),
-		'spamch'	=> $Sys->Get('SPAMCH'),
 	};
 	
 	return $indata;
@@ -771,7 +770,6 @@ sub FunctionPlusSecSetting
 	$Sys->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
 	$Sys->Set('BBQ', ($Form->Equal('BBQ', 'on') ? 1 : 0));
 	$Sys->Set('BBX', ($Form->Equal('BBX', 'on') ? 1 : 0));
-	$Sys->Set('SPAMCH', ($Form->Equal('SPAMCH', 'on') ? 1 : 0));
 	$Sys->Save;
 	
 	# ログの設定
@@ -783,7 +781,6 @@ sub FunctionPlusSecSetting
 	push @$pLog, '　　　 12桁トリップ：' . $Sys->Get('TRIP12');
 	push @$pLog, '　　　 BBQ：' . $Sys->Get('BBQ');
 	push @$pLog, '　　　 BBX：' . $Sys->Get('BBX');
-	push @$pLog, '　　　 スパムちゃんぷるー：' . $Sys->Get('SPAMCH');
 	
 	return 0;
 }

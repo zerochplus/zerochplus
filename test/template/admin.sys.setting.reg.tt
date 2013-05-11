@@ -48,8 +48,6 @@
        <a href="http://bbq.uso800.net/" target="_blank">BBQ</a>
        <input type=checkbox name=BBX [% 'checked' IF bbx %] value=on>
        BBX
-       <input type=checkbox name=SPAMCH [% 'checked' IF spamch %] value=on>
-       <a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">ƒXƒpƒ€‚¿‚á‚ñ‚Õ‚é[</a>
       </td>
      </tr>
      <tr><td colspan=2><hr></td></tr>

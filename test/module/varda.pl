@@ -590,7 +590,6 @@ FORM
 BBS.CGI - $ver (Perl)
 @{[ $Sys->Get('BBQ') ? '+<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>' : '' ]}
 @{[ $Sys->Get('BBX') ? '+BBX' : '' ]}
-@{[ $Sys->Get('SPAMCH') ? '+<a href="http://spam-champuru.livedoor.com/dnsbl/" target="_blank">スパムちゃんぷるー</a>' : '' ]}
 +Samba24=$samba<br>
 ページのおしまいだよ。。と</div>
 
