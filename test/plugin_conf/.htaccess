@@ -1,6 +1,0 @@
-<IfModule mod_core>
-  Options All -Indexes
-</IfModule>
-
-order deny,allow
-deny from all

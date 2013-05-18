@@ -1,3 +1,0 @@
-<IfModule mod_core>
-  Options All -Indexes
-</IfModule>

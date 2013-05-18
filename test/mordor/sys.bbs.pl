@@ -558,9 +558,9 @@ sub FunctionBBSCreate
 	EARENDIL::Copy("$dataPath/default_bac.gif", "$createPath/ba.gif");
 	EARENDIL::Copy("$dataPath/default_hed.txt", "$createPath/head.txt");
 	EARENDIL::Copy("$dataPath/default_fot.txt", "$createPath/foot.txt");
-	EARENDIL::Copy("$dataPath/default_htaccess", "$createPath/log/.htaccess");
-	EARENDIL::Copy("$dataPath/default_htaccess", "$createPath/pool/.htaccess");
-	EARENDIL::Copy("$dataPath/default_htaccess", "$createPath/info/.htaccess");
+	EARENDIL::Copy("$dataPath/index.html", "$createPath/log/index.html");
+	EARENDIL::Copy("$dataPath/index.html", "$createPath/pool/index.html");
+	EARENDIL::Copy("$dataPath/index.html", "$createPath/info/index.html");
 	
 	push @$pLog, "■掲示板ディレクトリ生成完了...[$createPath]";
 	
