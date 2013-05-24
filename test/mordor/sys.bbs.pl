@@ -588,11 +588,12 @@ sub FunctionBBSCreate
 	require './module/galadriel.pl';
 	my $createPath2 = GALADRIEL::MakePath($Sys->Get('CGIPATH'), $createPath);
 	my $cookiePath = GALADRIEL::MakePath($Sys->Get('CGIPATH'), $Sys->Get('BBSPATH'));
+	$cookiePath .= '/' if ($cookiePath ne '/');
 	$bbsSetting->Set('BBS_TITLE', $bbsName);
 	$bbsSetting->Set('BBS_SUBTITLE', $bbsExplanation);
 	$bbsSetting->Set('BBS_BG_PICTURE', "$createPath2/ba.gif");
 	$bbsSetting->Set('BBS_TITLE_PICTURE', "$createPath2/kanban.gif");
-	$bbsSetting->Set('BBS_COOKIEPATH', "$cookiePath/");
+	$bbsSetting->Set('BBS_COOKIEPATH', $cookiePath);
 	
 	$bbsSetting->Save($Sys);
 	
