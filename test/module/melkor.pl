@@ -257,7 +257,7 @@ sub InitSystemValue
 		'SUBMAX'	=> 500,										# subject最大保持数
 		'RESMAX'	=> 1000,									# レス最大書き込み数
 		'ADMMAX'	=> 500,										# 管理操作ログ最大保持数
-		'HISMAX'	=> 20,										# 書き込み履歴最大保持数
+		'HSTMAX'	=> 500,										# ホストログ最大保持数
 		'ANKERS'	=> 10,										# 最大アンカー数
 		'URLLINK'	=> 'TRUE',									# URLへの自動リンク
 		'LINKST'	=> 23,										# リンク禁止開始時間

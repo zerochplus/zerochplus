@@ -20,8 +20,8 @@
       <td><input type=text size=10 name=ERRMAX value="[% errmax %]" ></td>
      </tr>
      <tr>
-      <td class="DetailTitle">書き込み履歴最大保持数</td>
-      <td><input type=text size=10 name=HISMAX value="[% hismax %]" ></td>
+      <td class="DetailTitle">ホストログ最大保持数</td>
+      <td><input type=text size=10 name=HSTMAX value="[% hstmax %]" ></td>
      </tr>
      <tr>
       <td class="DetailTitle">管理操作ログ最大保持数</td>

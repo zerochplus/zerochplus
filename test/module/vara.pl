@@ -163,8 +163,6 @@ sub Write
 			ARAGORN::DirectAppend($Sys, $datPath, $data2);
 			$resNum++;
 		}
-		# 履歴保存
-		SaveHistory($Sys, $Form, ARAGORN::GetNumFromFile($datPath));
 	}
 	# datファイル追記失敗
 	elsif ($err2 == 1) {
@@ -843,36 +841,8 @@ sub SaveHost
 	require './module/imrahil.pl';
 	my $Logger = IMRAHIL->new;
 	
-	if ($Logger->Open("$bbs/log/HOST", 500, 2 | 4) == 0) {
+	if ($Logger->Open("$bbs/log/HOST", $Sys->Get('HSTMAX'), 2 | 4) == 0) {
 		$Logger->Put($host, $Sys->Get('KEY'), $Sys->Get('MODE'));
-		$Logger->Write();
-	}
-}
-
-#------------------------------------------------------------------------------------------------------------
-#
-#	履歴ログを出力する
-#	-------------------------------------------------------------------------------------
-#	@param	$Sys	MELKOR
-#	@param	$Form	SAMWISE
-#	@param	$resNum	書き込みレス番
-#
-#------------------------------------------------------------------------------------------------------------
-sub SaveHistory
-{
-	
-	my ($Sys, $Form, $resNum) = @_;
-	
-	my $bbs = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
-	my $threadInfo = $Sys->Get('BBS') . ',' . $Sys->Get('KEY');
-	my $name = $Form->Get('FROM');
-	my $content = $Form->Get('MESSAGE');
-	
-	require './module/imrahil.pl';
-	my $Logger = IMRAHIL->new;
-	
-	if ($Logger->Open("$bbs/info/history", $Sys->Get('HISMAX'), 2 | 4) == 0) {
-		$Logger->Put($threadInfo, $resNum, $content, $name);
 		$Logger->Write();
 	}
 }

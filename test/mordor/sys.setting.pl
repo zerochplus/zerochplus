@@ -355,7 +355,7 @@ sub PreparePageLimitterSetting
 		'submax'	=> $Sys->Get('SUBMAX'),
 		'anchors'	=> $Sys->Get('ANKERS'),
 		'errmax'	=> $Sys->Get('ERRMAX'),
-		'hismax'	=> $Sys->Get('HISMAX'),
+		'hstmax'	=> $Sys->Get('HSTMAX'),
 		'admmax'	=> $Sys->Get('ADMMAX'),
 	};
 	
@@ -645,7 +645,7 @@ sub FunctionLimitterSetting
 	$Sys->Set('SUBMAX', $Form->Get('SUBMAX'));
 	$Sys->Set('ANKERS', $Form->Get('ANKERS'));
 	$Sys->Set('ERRMAX', $Form->Get('ERRMAX'));
-	$Sys->Set('HISMAX', $Form->Get('HISMAX'));
+	$Sys->Set('HSTMAX', $Form->Get('HSTMAX'));
 	$Sys->Set('ADMMAX', $Form->Get('ADMMAX'));
 	$Sys->Save;
 	
@@ -655,7 +655,7 @@ sub FunctionLimitterSetting
 	push @$pLog, '　　　 レス最大数：' . $Form->Get('RESMAX');
 	push @$pLog, '　　　 アンカー最大数：' . $Form->Get('ANKERS');
 	push @$pLog, '　　　 エラーログ最大数：' . $Form->Get('ERRMAX');
-	push @$pLog, '　　　 書き込み履歴最大数：' . $Form->Get('HISMAX');
+	push @$pLog, '　　　 ホストログ最大数：' . $Form->Get('HSTMAX');
 	push @$pLog, '　　　 管理操作ログ最大数：' . $Form->Get('ADMMAX');
 	
 	return 0;

@@ -212,25 +212,27 @@ sub Put
 	my $this = shift;
 	my (@datas) = @_;
 	
-	if ($this->{'SIZE'} + 1 > $this->{'LIMIT'}) {
-		my $old = shift @{$this->{'LOGS'}};
-		if ($this->{'MODE'} & 4) {
-			my $logName = "$this->{'PATH'}_old.cgi";
-			if (open(my $fh, '>>', $logName)) {
-				flock($fh, 2);
-				binmode($fh);
-				print $fh "$old\n";
-				close($fh);
-			}
-		}
-		$this->{'SIZE'}--;
-	}
-	
 	my $tm = time;
 	my $logData = join('<>', $tm, @datas);
 	
 	push @{$this->{'LOGS'}}, $logData;
 	$this->{'SIZE'}++;
+	
+	if ($this->{'SIZE'} + 10 > $this->{'LIMIT'}) {
+		my $logName = "$this->{'PATH'}_old.cgi";
+		if (open(my $fh, '>>', $logName)) {
+			flock($fh, 2);
+			binmode($fh);
+			while ($this->{'SIZE'} > $this->{'LIMIT'}) {
+				my $old = shift @{$this->{'LOGS'}};
+				$this->{'SIZE'}--;
+				if ($this->{'MODE'} & 4) {
+					print $fh "$old\n";
+				}
+			}
+			close($fh);
+		}
+	}
 }
 
 #------------------------------------------------------------------------------------------------------------

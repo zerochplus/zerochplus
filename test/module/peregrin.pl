@@ -57,7 +57,7 @@ sub Load
 	$this->{'KIND'}	= 0;
 	$this->{'MAX'}	= $Sys->Get('ERRMAX');
 	$this->{'MAXA'}	= $Sys->Get('ADMMAX');
-	$this->{'MAXH'}	= $Sys->Get('HISMAX');
+	$this->{'MAXH'}	= $Sys->Get('HSTMAX');
 	$this->{'MAXS'}	= $Sys->Get('SUBMAX');
 	$this->{'NUM'}	= 0;
 	
@@ -183,6 +183,7 @@ sub Set
 		if ($kind == 1) { $bf = $nm - $this->{'MAX'}; }			# エラーログ
 		if ($kind == 2) { $bf = $nm - $this->{'MAXS'}; }		# スレッドログ
 	#	if ($kind == 3) { $bf = $nm - $I->Get('timecount'); }	# 書き込みログ
+		if ($kind == 5) { $bf = $nm - $this->{'MAXH'}; }		# ホストログ
 		if ($kind == 6) { $bf = $nm - $this->{'MAX'}; }			# samba
 		if ($kind == 7) { $bf = $nm - $this->{'MAX'}; }			# houshi
 		
