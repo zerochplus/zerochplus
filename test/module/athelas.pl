@@ -79,6 +79,9 @@ sub Load
 				#next;
 			}
 			
+			eval { require "./plugin/$elem[1]"; };
+			next if ($@);
+			
 			my $id = $elem[0];
 			$this->{'FILE'}->{$id} = $elem[1];
 			$this->{'CLASS'}->{$id} = $elem[2];
