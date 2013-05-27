@@ -28,3 +28,19 @@ function Submitted()
 {
 	return postflag;
 }
+
+function toggleAll(key)
+{
+	var elems = document.ADMIN.elements[key];
+	if (elems.length == undefined) {
+		elems.checked = !elems.checked;
+	} else {
+		var isall = true;
+		for (var i = 0; i < elems.length; i++) {
+			isall = isall && elems[i].checked;
+		}
+		for (var i = 0; i < elems.length; i++) {
+			elems[i].checked = !isall;
+		}
+	}
+}

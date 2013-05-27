@@ -76,6 +76,9 @@ sub DoPrint
 	elsif ($subMode eq 'REPARE') {													# スレッド復帰確認画面
 		PrintThreadRepare($Page, $Sys, $Form);
 	}
+	elsif ($subMode eq 'CREATE') {													# 過去ログ作成確認画面
+		PrintThreadCreate($Page, $Sys, $Form);
+	}
 	elsif ($subMode eq 'DELETE') {													# スレッド削除確認画面
 		PrintThreadDelete($Page, $Sys, $Form);
 	}
@@ -211,7 +214,7 @@ sub PrintThreadList
 	$Page->Print("表\示数<input type=text name=DISPNUM size=4 value=$dispNum>");
 	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
 	$Page->Print("<tr><td colspan=5><hr></td></tr>\n");
-	$Page->Print("<tr><th style=\"width:30px\">　</th>");
+	$Page->Print("<tr><th style=\"width:30px\"><a href=\"javascript:toggleAll('THREADS')\">全</a></th>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:250px\">Thread Title</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:30px\">Thread Key</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:20px\">Res</td>");
@@ -247,7 +250,7 @@ sub PrintThreadList
 	$Page->Print("<input type=button value=\"　更新　\" $common2,'UPDATE')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\" 全更新 \" $common2,'UPDATEALL')\"> ")	if ($isUpdate);
 	$Page->Print("<input type=button value=\"　復帰　\" $common,'REPARE')\"> ")		if ($isRepare);
-	$Page->Print("<input type=button value=\"過去ログ化\" $common2,'CREATE')\"> ")	if ($isCreate);
+	$Page->Print("<input type=button value=\"過去ログ化\" $common,'CREATE')\"> ")	if ($isCreate);
 	$Page->Print("<input type=button value=\"　削除　\" $common,'DELETE')\" class=\"delete\"> ")		if ($isDelete);
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
@@ -299,6 +302,56 @@ sub PrintThreadRepare
 	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
 	$Page->Print("<tr><td colspan=3 align=left>");
 	$Page->Print("<input type=button value=\"　復帰　\" onclick=\"$common\"> ");
+	$Page->Print("</td></tr>\n");
+	$Page->Print("</table><br>");
+}
+
+#------------------------------------------------------------------------------------------------------------
+#
+#	過去ログ化確認表示
+#	-------------------------------------------------------------------------------------
+#	@param	$Page	ページコンテキスト
+#	@param	$SYS	システム変数
+#	@param	$Form	フォーム変数
+#	@return	なし
+#
+#------------------------------------------------------------------------------------------------------------
+sub PrintThreadCreate
+{
+	my ($Page, $SYS, $Form) = @_;
+	my (@threadList, $Threads, $id, $subj, $res, $common);
+	
+	$SYS->Set('_TITLE', 'Pool Thread Create');
+	
+	require './module/baggins.pl';
+	$Threads = FRODO->new;
+	
+	$Threads->Load($SYS);
+	@threadList = $Form->GetAtArray('THREADS');
+	
+	$Page->Print("<br><center><table border=0 cellspacing=2 width=100%>");
+	$Page->Print("<tr><td colspan=3>以下のPOOLスレッドを過去ログ化します。</td></tr>");
+	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
+	$Page->Print("<tr>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">Thread Title</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Thread Key</td>");
+	$Page->Print("<td class=\"DetailTitle\" style=\"width:50\">Res</td></tr>\n");
+	
+	foreach $id (@threadList) {
+		$subj	= $Threads->Get('SUBJECT', $id);
+		$res	= $Threads->Get('RES', $id);
+		
+		$Page->Print("<tr><td>$subj</a></td>");
+		$Page->Print("<td align=center>$id</td><td align=center>$res</td></tr>\n");
+		$Page->HTMLInput('hidden', 'THREADS', $id);
+	}
+	$common = "DoSubmit('bbs.pool','FUNC','CREATE')";
+	my $isDelete = $SYS->Get('ADMIN')->{'SECINFO'}->IsAuthority($SYS->Get('ADMIN')->{'USER'}, $ZP::AUTH_TREADDELETE, $SYS->Get('BBS'));
+	
+	$Page->Print("<tr><td colspan=3><hr></td></tr>\n");
+	$Page->Print("<tr><td colspan=3 align=left>");
+	$Page->Print("<input type=button value=\"過去ログ化\" onclick=\"$common\"> ");
+	$Page->Print("<label style=\"color:red;\"><input type=checkbox name=\"DELPOOL\" value=\"test\">プールスレッドを削除</label>") if ($isDelete);
 	$Page->Print("</td></tr>\n");
 	$Page->Print("</table><br>");
 }
@@ -537,7 +590,7 @@ sub FunctionCreateLogs
 {
 	my ($Sys, $Form, $pLog) = @_;
 	my ($Page, $Set, $Banner, $Dat, $Conv, $Logs);
-	my (@poolSet, $key, $basePath, $bCreate);
+	my (@poolSet, $key, $path, $bCreate, $isDelete);
 	
 	# 権限チェック
 	{
@@ -547,8 +600,11 @@ sub FunctionCreateLogs
 		if (($SEC->IsAuthority($chkID, $ZP::AUTH_KAKOCREATE, $Sys->Get('BBS'))) == 0) {
 			return 1000;
 		}
+		
+		$isDelete = $SEC->IsAuthority($chkID, $ZP::AUTH_TREADDELETE, $Sys->Get('BBS'));
 	}
 	@poolSet = $Form->GetAtArray('THREADS');
+	$isDelete &&= $Form->Get('DELPOOL', 0);
 	
 	require './module/gondor.pl';
 	require './module/thorin.pl';
@@ -567,11 +623,18 @@ sub FunctionCreateLogs
 	$Banner->Load($Sys);
 	$Logs->Load($Sys);
 	
-	$basePath = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/pool';
+	$path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS');
 	$bCreate = 0;
 	
+	my $Pools;
+	if ($isDelete) {
+		require './module/baggins.pl';
+		$Pools = FRODO->new;
+		$Pools->Load($Sys);
+	}
+	
 	foreach $key (@poolSet) {
-		if ($Dat->Load($Sys,"$basePath/$key.cgi", 1)) {
+		if ($Dat->Load($Sys,"$path/pool/$key.cgi", 1)) {
 			if (CreateKAKOLog($Page, $Sys, $Set, $Banner, $Dat, $Conv, $key)) {
 				if ($Logs->Get('KEY', $key, '') eq '') {
 					$Logs->Add($key, $Dat->GetSubject(), time, '/' . substr($key, 0, 4) . '/' . substr($key, 0, 5));
@@ -583,6 +646,14 @@ sub FunctionCreateLogs
 				}
 				$bCreate = 1;
 				push @$pLog, "■$key：過去ログ生成完了";
+				if ($isDelete) {
+					push @$pLog, "■$key：プールスレッドを削除";
+					$Pools->Delete($key);
+					$Pools->DeleteAttr($key);
+					unlink "$path/pool/$key.cgi";
+					unlink "$path/log/$key.cgi";
+					unlink "$path/log/del_$key.cgi";
+				}
 			}
 		}
 		if (! $bCreate){
@@ -591,6 +662,7 @@ sub FunctionCreateLogs
 		$bCreate = 0;
 	}
 	
+	$Pools->Save($Sys) if ($isDelete);
 	$Logs->Save($Sys);
 	
 	return 0;

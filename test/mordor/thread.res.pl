@@ -591,18 +591,20 @@ sub FunctionResDelete
 	if (open(my $f_dellog, '>>', $path)) {
 		flock($f_dellog, 2);
 		binmode($f_dellog);
-		foreach $num (sort @resSet) {
+		foreach $num (sort {$b <=> $a} @resSet) {
 			next if ($num == 0);
-			$pRes = $Dat->Get($num - $delCnt);
+			$pRes = $Dat->Get($num);
 			print $f_dellog "$tm<>$user<>$num<>$mode<>$$pRes";
 			if ($mode) {
 				$Dat->Set($num, "$abone<>$abone<>$abone<>$abone<>$abone\n");
 			}
 			else {
-				$Dat->Delete($num - $delCnt);
-				$LOG->Delete($logsize - 1 + ($num - $delCnt) - $lastnum);
-				$delCnt ++;
-				$logsize --;
+				$Dat->Delete($num);
+				$_ = $logsize - 1 + $num - $lastnum;
+				if ($_ >= 0) {
+					$LOG->Delete($_);
+					$logsize --;
+				}
 				$lastnum --;
 			}
 		}
