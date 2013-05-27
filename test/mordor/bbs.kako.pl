@@ -201,7 +201,7 @@ sub PrintKakoLogList
 	$Page->Print("<input type=button value=\"　表\示　\" onclick=\"$common\"></td></tr>\n");
 	
 	$Page->Print("<tr><td colspan=4><hr></td></tr>\n");
-	$Page->Print("<tr><th style=\"width:30\">　</th>");
+	$Page->Print("<tr><th style=\"width:30\"><a href=\"javascript:toggleAll('LOGS')\">全</a></th>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:250\">Thread Title</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Thread Key</td>");
 	$Page->Print("<td class=\"DetailTitle\" style=\"width:100\">Date</td></td>\n");
