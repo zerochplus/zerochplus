@@ -111,6 +111,7 @@ sub Save
 	
 	my $path = $this->{'SYS'}->{'SYSFILE'};
 	
+	chmod($this->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -335,20 +336,20 @@ sub NormalizeConf
 		$this->Set('CGIPATH', $cgipath);
 	}
 	
-	if ('set Stop Permission') {
-		my $temp = (int rand 900000) + 100000;
-		$temp++ while (-e "$temp.dat");
-		$temp = "$temp~";
-		open(my $fh, '>', $temp);
-		close($fh);
-		my $dat = $this->Get('PM-DAT', 0604);
-		my $stop = $this->Get('PM-STOP', 0404);
-		chmod($stop, $temp);
-		my $perm = (stat $temp)[2] & 0777;
-		if ($perm == $dat || $perm != $stop) {
+	if ($this->Get('PM-DAT', '') eq '') {
+		my $uid = (stat $ENV{'SCRIPT_FILENAME'})[4];
+		if ($uid == 0) { # root / not linux
+		} elsif ($uid == $<) { # suEXEC
+		} else {
+			$this->Set('PM-DAT', 0666);
+			$this->Set('PM-TXT', 0666);
+			$this->Set('PM-LOG', 0666);
+			$this->Set('PM-ADM', 0666);
+			$this->Set('PM-ADIR', 0777);
+			$this->Set('PM-BDIR', 0777);
+			$this->Set('PM-LDIR', 0777);
 			$this->Set('PM-STOP', 0444);
 		}
-		unlink($temp);
 	}
 	
 	$this->Set('CONFVER', $this->Get('VERSION'));

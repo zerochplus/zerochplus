@@ -102,6 +102,7 @@ sub Save
 	my $path = "$this->{'PATH'}/$this->{'FILE'}";
 	
 	if ($this->{'KIND'}) {
+		chmod($Sys->Get('PM-LOG'), $path);
 		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);

@@ -106,6 +106,7 @@ sub Save
 	
 	my $path = '.' . $Sys->Get('INFO') . '/bbss.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -457,6 +458,7 @@ sub Save
 	
 	my $path = '.' . $Sys->Get('INFO') . '/category.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

@@ -168,6 +168,7 @@ sub SaveConfig
 	}
 	
 	if (scalar(keys %$config) > 0) {
+		chmod($this->{'SYS'}->Get('PM-ADM'), $path);
 		if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
@@ -192,11 +193,11 @@ sub SaveConfig
 			
 			truncate($fh, tell($fh));
 			close($fh);
-			chmod($this->{'SYS'}->Get('PM-ADM'), $path);
 		}
 		else {
 			warn "can't save subject: $path";
 		}
+		chmod($this->{'SYS'}->Get('PM-ADM'), $path);
 	}
 	else {
 		unlink $path;
@@ -263,6 +264,7 @@ sub Save
 	
 	my $path = '.' . $Sys->Get('INFO') . '/plugins.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

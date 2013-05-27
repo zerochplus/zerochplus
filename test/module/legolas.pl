@@ -85,6 +85,7 @@ sub Save
 	
 	my $path = "$this->{'PATH'}/$this->{'FILE'}";
 	
+	chmod($Sys->Get('PM-TXT'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

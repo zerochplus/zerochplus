@@ -111,6 +111,7 @@ sub Save
 	
 	my $path = '.' . $Sys->Get('INFO') . '/caps.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);
@@ -429,6 +430,7 @@ sub Save
 	}
 	
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

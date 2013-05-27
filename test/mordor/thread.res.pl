@@ -588,6 +588,7 @@ sub FunctionResDelete
 	$Dat->Load($Sys, $datPath, 0);
 	
 	# íœ‚Æ“¯Žž‚ÉíœƒƒO‚Öíœ‚µ‚½“à—e‚ð•Û‘¶‚·‚é
+	chmod($Sys->Get('PM-LOG'), $path);
 	if (open(my $f_dellog, '>>', $path)) {
 		flock($f_dellog, 2);
 		binmode($f_dellog);

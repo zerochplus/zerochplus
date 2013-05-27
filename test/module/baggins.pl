@@ -84,14 +84,17 @@ sub Open
 		$fh = $this->{'HANDLE'};
 		seek($fh, 0, 0);
 	}
-	elsif (open($fh, (-f $path ? '+<' : '>'), $path)) {
-		flock($fh, 2);
-		binmode($fh);
-		seek($fh, 0, 0);
-		$this->{'HANDLE'} = $fh;
-	}
 	else {
-		warn "can't load subject: $path";
+		chmod($Sys->Get('PM-TXT'), $path);
+		if (open($fh, (-f $path ? '+<' : '>'), $path)) {
+			flock($fh, 2);
+			binmode($fh);
+			seek($fh, 0, 0);
+			$this->{'HANDLE'} = $fh;
+		}
+		else {
+			warn "can't load subject: $path";
+		}
 	}
 	
 	return $fh;
@@ -442,6 +445,7 @@ sub SaveAttr
 	
 	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/info/attr.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		binmode($fh);
@@ -866,6 +870,7 @@ sub Save
 	
 	my $path = $Sys->Get('BBSPATH') . '/' .$Sys->Get('BBS') . '/pool/subject.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

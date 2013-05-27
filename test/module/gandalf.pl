@@ -103,6 +103,7 @@ sub Save
 	
 	my $path = '.' . $Sys->Get('INFO') . '/notice.cgi';
 	
+	chmod($Sys->Get('PM-ADM'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

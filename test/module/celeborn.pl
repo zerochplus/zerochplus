@@ -92,6 +92,7 @@ sub Save
 	
 	my $path = $Sys->Get('BBSPATH') . '/' . $Sys->Get('BBS') . '/kako/kako.idx';
 	
+	chmod($Sys->Get('PM-DAT'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

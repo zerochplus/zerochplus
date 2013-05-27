@@ -100,6 +100,7 @@ sub Save
 	
 	my %orz = %{$this->{'SETTING'}};
 	
+	chmod($Sys->Get('PM-TXT'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		binmode($fh);
@@ -175,6 +176,7 @@ sub SaveAs
 	my $this = shift;
 	my ($path) = @_;
 	
+	chmod($this->{'SYS'}->Get('PM-TXT'), $path);
 	if (open(my $fh, (-f $path ? '+<' : '>'), $path)) {
 		flock($fh, 2);
 		seek($fh, 0, 0);

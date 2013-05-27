@@ -138,6 +138,7 @@ sub Flush
 	
 	# ファイルへ出力
 	if ($flag) {
+		chmod($perm, $ref);
 		if (open(my $fh, (-f $ref ? '+<' : '>'), $ref)) {
 			flock($fh, 2);
 			seek($fh, 0, 0);
