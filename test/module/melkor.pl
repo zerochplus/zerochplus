@@ -294,6 +294,22 @@ sub InitSystemValue
 		'PERM_DIR'		=> 0711,
 	);
 	
+	if ('Permission') {
+		my $uid = (stat $ENV{'SCRIPT_FILENAME'})[4];
+		if ($uid == 0) { # root / not linux
+		} elsif ($uid == $<) { # suEXEC
+		} else {
+			$sys{'PM-DAT'} = 0666;
+			$sys{'PM-TXT'} = 0666;
+			$sys{'PM-LOG'} = 0666;
+			$sys{'PM-ADM'} = 0666;
+			$sys{'PM-ADIR'} = 0777;
+			$sys{'PM-BDIR'} = 0777;
+			$sys{'PM-LDIR'} = 0777;
+			$sys{'PM-STOP'} = 0444;
+		}
+	}
+	
 	while (my ($key, $val) = each %sys) {
 		$pSys->{$key} = $val;
 	}
@@ -334,22 +350,6 @@ sub NormalizeConf
 		}
 		$this->Set('SERVER', $server);
 		$this->Set('CGIPATH', $cgipath);
-	}
-	
-	if ($this->Get('PM-DAT', '') eq '') {
-		my $uid = (stat $ENV{'SCRIPT_FILENAME'})[4];
-		if ($uid == 0) { # root / not linux
-		} elsif ($uid == $<) { # suEXEC
-		} else {
-			$this->Set('PM-DAT', 0666);
-			$this->Set('PM-TXT', 0666);
-			$this->Set('PM-LOG', 0666);
-			$this->Set('PM-ADM', 0666);
-			$this->Set('PM-ADIR', 0777);
-			$this->Set('PM-BDIR', 0777);
-			$this->Set('PM-LDIR', 0777);
-			$this->Set('PM-STOP', 0444);
-		}
 	}
 	
 	$this->Set('CONFVER', $this->Get('VERSION'));
