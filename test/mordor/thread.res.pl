@@ -223,7 +223,7 @@ sub PrintResList
 	my ($Page, $Sys, $Form, $Dat,$Logger) = @_;
 	my (@elem, $resNum, $dispNum, $dispSt, $dispEd, $common, $i);
 	my ($pRes, $isAbone, $isEdit, $isAccessUser, $format);
-	my ($log, @logs, $lastnum, $logsize);
+	my ($log, @logs, $datsize, $logsize);
 	
 	$Sys->Set('_TITLE', 'Res List');
 	
@@ -245,17 +245,40 @@ sub PrintResList
 	$isEdit = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_RESEDIT, $Sys->Get('BBS'));
 	$isAccessUser = $Sys->Get('ADMIN')->{'SECINFO'}->IsAuthority($Sys->Get('ADMIN')->{'USER'}, $ZP::AUTH_ACCESUSER, $Sys->Get('BBS'));
 	
-	$lastnum = $Dat->Size() - 1;
+	$datsize = $Dat->Size();
 	$logsize = $Logger->Size();
 	
-	$lastnum -= 1 if ($Dat->IsStopped($Sys));
+	$datsize -= 1 if ($Dat->IsStopped($Sys));
 	
 	# レス一覧を出力
+	my $offset = $logsize - $datsize;
 	for ($i = $dispSt ; $i < $dispEd ; $i++) {
 		$pRes	= $Dat->Get($i);
 		@elem	= split(/<>/, $$pRes);
-		$log = $Logger->Get($logsize - 1 + $i - $lastnum);
-		@logs	= split(/<>/,$log,-1) if (defined $log);
+		
+		$log = $Logger->Get($offset + $i);
+		@logs = split(/<>/, $log, -1) if (defined $log);
+		if (defined $log && $logs[2] eq $elem[2]) {
+			# ログとレスが一致
+		} else {
+			$log = $Logger->Get($offset-1 + $i);
+			@logs = split(/<>/, $log, -1) if (defined $log);
+			if (defined $log && $logs[2] eq $elem[2]) {
+				# ログとレスが一致
+				$offset--;
+			} else {
+				$log = $Logger->Get($offset+1 + $i);
+				@logs = split(/<>/, $log, -1) if (defined $log);
+				if (defined $log && $logs[2] eq $elem[2]) {
+					# ログとレスが一致
+					$offset++;
+				} else {
+					# ログ(±1)がレスに不一致
+					$log = undef;
+					@logs = ();
+				}
+			}
+		}
 		
 		foreach (0 .. $#logs) {
 			$logs[$_] =~ s/[\x0d\x0a\0]//g;
