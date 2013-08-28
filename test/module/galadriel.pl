@@ -192,6 +192,9 @@ sub ConvertURL
 					elsif ($cushion =~ m{^(?:jump\.x0\.to|nun\.nu)/$}) {
 						$$text =~ s|$reg2|<a href="http://$cushion$1://$2" target="_blank">$1://$2</a>|;
 					}
+					else {
+						$$text =~ s|$reg2|<a href="$1://$2" target="_blank">$1://$2</a>|;
+					}
 				}
 			}
 		}
