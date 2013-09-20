@@ -655,6 +655,7 @@ sub MakeIDnew
 	$ctx->add(':', $Sys->Get('SERVER'));
 	$ctx->add(':', $Sys->Get('BBS'));
 	$ctx->add(':', $Sys->Get('KOYUU'));
+	$ctx->add(':', join('-', (localtime)[3,4,5]));
 	#$ctx->add(':', $Sys->Get('KEY'));
 	
 	my $id = $ctx->b64digest;
