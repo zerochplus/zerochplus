@@ -644,6 +644,24 @@ sub MakeID
 	
 	return $ret;
 }
+sub MakeIDnew
+{
+	my $this = shift;
+	my ($Sys, $column) = @_;
+	
+	require Digest::SHA::PurePerl;
+	my $ctx = Digest::SHA::PurePerl->new;
+	$ctx->add('0ch+ ID Generation');
+	$ctx->add(':', $Sys->Get('SERVER'));
+	$ctx->add(':', $Sys->Get('BBS'));
+	$ctx->add(':', $Sys->Get('KOYUU'));
+	#$ctx->add(':', $Sys->Get('KEY'));
+	
+	my $id = $ctx->b64digest;
+	$id = substr($id, 0, $column);
+	
+	return $id;
+}
 
 #------------------------------------------------------------------------------------------------------------
 #

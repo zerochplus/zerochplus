@@ -129,7 +129,8 @@ sub Write
 	$Form->GetListData(\@elem, 'subject', 'FROM', 'mail', 'MESSAGE');
 	
 	$err = $ZP::E_SUCCESS;
-	my $id	 = $Conv->MakeID($Sys->Get('SERVER'), $Sys->Get('CLIENT'), $Sys->Get('KOYUU'), $Sys->Get('BBS'), 8);
+	#my $id	 = $Conv->MakeID($Sys->Get('SERVER'), $Sys->Get('CLIENT'), $Sys->Get('KOYUU'), $Sys->Get('BBS'), 8);
+	my $id	 = $Conv->MakeIDnew($Sys, 8);
 	my $date = $Conv->GetDate($Set, $Sys->Get('MSEC'));
 	$date .= $Conv->GetIDPart($Set, $Form, $this->{'SECURITY'}, $id, $Sys->Get('CAPID'), $Sys->Get('KOYUU'), $Sys->Get('AGENT'));
 	
