@@ -699,7 +699,7 @@ sub FunctionOtherSetting
 	push @$pLog, '　　　 　開始時間：' . $Sys->Get('LINKST');
 	push @$pLog, '　　　 　終了時間：' . $Sys->Get('LINKED');
 	push @$pLog, '　　　 PATH種別：' . $Sys->Get('PATHKIND');
-	push @$pLog, '　　　 高速モード：' . $Sys->Get('FASTMODE');
+	push @$pLog, '　　　 index.htmlを更新しない：' . $Sys->Get('FASTMODE');
 	push @$pLog, '　　　 bbs.cgiのGETメソ\ッド：' . $Sys->Get('BBSGET');
 	push @$pLog, '　　　 更新チェック間隔：' . $Sys->Get('UPCHECK');
 	

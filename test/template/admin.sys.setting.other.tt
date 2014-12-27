@@ -41,7 +41,7 @@
       <td colspan=2 class="DetailTitle">動作モード(bbs.cgi)</td>
      </tr>
      <tr>
-      <td>高速書き込みモード</td>
+      <td>書き込み時にindex.htmlを更新しない(高速書き込みモード)</td>
       <td><input type=checkbox name=FASTMODE [% 'checked' IF fastmode %] value=on></td>
      </tr>
      <tr>
