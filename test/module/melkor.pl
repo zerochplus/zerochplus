@@ -282,11 +282,7 @@ sub InitSystemValue
 		'BBSGET'	=> 0,										# bbs.cgiでGETメソッドを使用するかどうか
 		'CONFVER'	=> '',										# システム設定ファイルのバージョン
 		'UPCHECK'	=> 1,										# 更新チェック間隔(日)
-		
-		# DNSBL設定
-		'BBQ'		=> 1,										# BBQ(niku.2ch.net)
-		'BBX'		=> 0,										# BBX(bbx.2ch.net)
-		
+				
 		'PERM_EXEC'		=> 0700,
 		'PERM_DATA'		=> 0600,
 		'PERM_CONTENT'	=> 0644,

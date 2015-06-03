@@ -439,8 +439,6 @@ sub PreparePageSecSetting
 		'defsamba'	=> $Sys->Get('DEFSAMBA'),
 		'defhoushi'	=> $Sys->Get('DEFHOUSHI'),
 		'trip12'	=> $Sys->Get('TRIP12'),
-		'bbq'		=> $Sys->Get('BBQ'),
-		'bbx'		=> $Sys->Get('BBX'),
 	};
 	
 	return $indata;
@@ -768,8 +766,6 @@ sub FunctionPlusSecSetting
 	$Sys->Set('DEFSAMBA', $Form->Get('DEFSAMBA'));
 	$Sys->Set('DEFHOUSHI', $Form->Get('DEFHOUSHI'));
 	$Sys->Set('TRIP12', ($Form->Equal('TRIP12', 'on') ? 1 : 0));
-	$Sys->Set('BBQ', ($Form->Equal('BBQ', 'on') ? 1 : 0));
-	$Sys->Set('BBX', ($Form->Equal('BBX', 'on') ? 1 : 0));
 	$Sys->Save;
 	
 	# ƒƒO‚Ìİ’è

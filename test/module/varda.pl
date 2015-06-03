@@ -588,8 +588,6 @@ FORM
 <div style="margin-top:1.2em;">
 <a href="http://zerochplus.sourceforge.jp/">ぜろちゃんねるプラス</a>
 BBS.CGI - $ver (Perl)
-@{[ $Sys->Get('BBQ') ? '+<a href="http://bbq.uso800.net/" target="_blank">BBQ</a>' : '' ]}
-@{[ $Sys->Get('BBX') ? '+BBX' : '' ]}
 +Samba24=$samba<br>
 ページのおしまいだよ。。と</div>
 

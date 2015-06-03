@@ -41,15 +41,6 @@
      <tr bgcolor=silver>
       <td colspan=2 class="DetailTitle">DNSBL設定</td>
      </tr>
-     <tr>
-      <td colspan=2>
-       適用するDNSBLにチェックをいれてください<br>
-       <input type=checkbox name=BBQ [% 'checked' IF bbq %] value=on>
-       <a href="http://bbq.uso800.net/" target="_blank">BBQ</a>
-       <input type=checkbox name=BBX [% 'checked' IF bbx %] value=on>
-       BBX
-      </td>
-     </tr>
      <tr><td colspan=2><hr></td></tr>
      <tr>
       <td colspan=2 align=left>

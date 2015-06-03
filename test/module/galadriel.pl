@@ -1213,8 +1213,6 @@ sub IsProxy
 	return 0 if ($mode eq 'O' || $mode eq 'i');
 	
 	my @dnsbls = ();
-	push(@dnsbls, 'niku.2ch.net') if($Sys->Get('BBQ'));
-	push(@dnsbls, 'bbx.2ch.net') if($Sys->Get('BBX'));
 	
 	# DNSBLñ‚Ç¢çáÇÌÇπ
 	my $addr = join('.', reverse( split(/\./, $ENV{'REMOTE_ADDR'})));
